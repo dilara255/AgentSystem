@@ -1,13 +1,8 @@
 /*
 * Aux0 Notes:
 * 
-* TODO: Create a separate repo for this aux project and stop copy-pasting it : )
-* TODO: Renoear as defs para ficar mais generico do aux
-*/
-
-/*
-* Project Notes:
+* ** Aux0 is a helper project of mine. Some of it is in portuguse.
 * 
-* 1. AS can say hello
-* 2. AS_API can be asked to say hello
+* TODO: Create a separate repo for this aux project and stop copy-pasting it : )
+* TODO: Renomear as defs para ficar mais generico do aux
 */

@@ -8,23 +8,28 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
-namespace util {
+namespace az {
 
 	class Log
 	{
 	public:
 		static void init();
-		inline static std::shared_ptr<spdlog::logger>& GetRenderLogger() {
-			if (!initialized) init();  return s_RenderLogger;
+		inline static std::shared_ptr<spdlog::logger>& GetASLogger() {
+			if (!initialized) init();  return s_AgentSystemLogger;
 		}
-		inline static std::shared_ptr<spdlog::logger>& GetViewerLogger() {
-			if (!initialized) init(); return s_ViewerLogger;
+		inline static std::shared_ptr<spdlog::logger>& GetCLLogger() {
+			if (!initialized) init(); return s_CommLayerLogger;
+		}
+		inline static std::shared_ptr<spdlog::logger>& GetTALogger() {
+			if (!initialized) init(); return s_TestAppLogger;
 		}
 
 	private:
-		static std::shared_ptr<spdlog::logger> s_RenderLogger;
-		static std::shared_ptr<spdlog::logger> s_ViewerLogger;
+		static std::shared_ptr<spdlog::logger> s_AgentSystemLogger;
+		static std::shared_ptr<spdlog::logger> s_CommLayerLogger;
+		static std::shared_ptr<spdlog::logger> s_TestAppLogger;
 		static int initialized;
 	};
 
 }
+
