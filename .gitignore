@@ -4,6 +4,18 @@ bin/
 bin-int/
 _exes/
 Dependencies/glm/doc/
+Aux0/lib/Debug-windows-x86/
+Aux0/lib/Debug-windows-x86_64/
+Aux0/lib/Release-windows-x86/
+Aux0/lib/Release-windows-x86_64/
+AgentSystem/lib/Debug-windows-x86/
+AgentSystem/lib/Debug-windows-x86_64/
+AgentSystem/lib/Release-windows-x86/
+AgentSystem/lib/Release-windows-x86_64/
+CommLayer/lib/Debug-windows-x86/
+CommLayer/lib/Debug-windows-x86_64/
+CommLayer/lib/Release-windows-x86/
+CommLayer/lib/Release-windows-x86_64/
 
 #files
 *.user
@@ -13,3 +25,4 @@ CleanLibs.bat
 CleanAll.bat
 *.vcxproj
 *.filters
+*.sln
