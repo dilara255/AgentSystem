@@ -18,7 +18,7 @@
 * 4. Some cleanup so I can keep the basic tests working as I go along.
 * 5. Make sure the system to upload to github is in order and that I can build from a clone.
 *
-* > II. AS data structure:
+* >> II. AS data structure:
 * 1. Create a structure with the expected data for LAs.
 * 2. Create a structure with the expected data for GAs.
 * 3. Allocate memory and populate an array for each.
