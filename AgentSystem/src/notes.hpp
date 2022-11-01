@@ -4,11 +4,11 @@
 * 
 * 
 * Tests/Dev Milestones:
-* (curr: A.5)
+* (curr: A.II)
 *
 * ***** A. Basic Setup *****
 *
-* Initial setup:
+* I. Initial setup:
 * 1. AS can say hello, AS_API can be asked to say hello, CL can say and be asked
 * to say hello.
 * 2. CL has two APIs, one internal, one external. TA initializes AS,
@@ -16,9 +16,9 @@
 * 3. AS an CL have structure with pointer to (fixed size) data. AS copies it's data to CL.
 * TA gets the data from CL.
 * 4. Some cleanup so I can keep the basic tests working as I go along.
-* >5. Make sure the system to upload to github is in order and that I can build from a clone.
+* 5. Make sure the system to upload to github is in order and that I can build from a clone.
 *
-* AS data structure:
+* > II. AS data structure:
 * 1. Create a structure with the expected data for LAs.
 * 2. Create a structure with the expected data for GAs.
 * 3. Allocate memory and populate an array for each.
@@ -28,21 +28,21 @@
 * 7. Replicate memory structure on CL and transfer data to it.
 * 8. Querry data on TA and check it.
 *
-* Actions, stub:
+* III. Actions, stub:
 * 1. Create stub action structure and vector of those on AS.
 * 2. Pass view into it to CL (point to const, I think).
 * 3. Querry it or get a copy for TA trhough CL.
 *
-* Cleanup and fresh clone+compile test
+* IV. Cleanup and fresh clone+compile test
 *
 * ***** B. Runtime data insertion and removal *****
 *
-* AS timed loop:
+* I. AS timed loop:
 * 1. Make AS work on a timed loop, incrementing some values in a predictable manner.
 * 2. After each loop, make AS update CL's data.
 * 3. At a different time interval, TA querries CL and compares data with expected values.
 *
-* Agent data injection:
+* II. Agent data injection:
 * 1. Duplicate agent data structures on CL, plus an indexed list of fields with changes.
 * Numerical fields can have absolute, additive, multiplicative or exponential changes.
 * 2. Make it so TA can tranfer data to it (methods for field or agent).
@@ -51,7 +51,7 @@
 * 5. Before each loop, AS retrieves data from CL (CL blocks and updates the list of changes).
 * 6. Test running the AS and issuing changes.
 *
-* Actions, creation and end:
+* III. Actions, creation and end:
 * 1. Create two vectors of new actions on the CL, and a int to tell wich to use.
 * 2. Before each loop, AS asks CL to change the active vector (blocking) and adds the new
 * actions to it's vector. CL erases this vector.
@@ -62,7 +62,7 @@
 * 6. Before each loop, the AS takes a look at this and deletes any appropriate actions.
 * 7. Test adding and ending Actions.
 *
-* Cleanup and fresh clone+compile test
+* IV. Cleanup and fresh clone+compile test
 *
 * ***** C. AS loop *****
 *
