@@ -4,17 +4,19 @@
 Define macros de API para facilitar log em console. Usa spdlog.
 No momento não dá pra passar variáveis nem gravar em arquivo, 
 apesar da biblioteca suportar isso.
+
+TODO: Generalize the whole macro thingy and all that's associated with it
 */
 
 #include "core.hpp"
 
 //para os outros projetos poderem linkar as funções, declaradas em log.hpp
-#ifndef AS_BUILD_LIB
+#ifndef AUX0
     #include "../include/log.hpp"
 #endif
 
-namespace util {
-    void rzLog(const char* message, std::shared_ptr<spdlog::logger> logger
+namespace az {
+    void log(const char* message, std::shared_ptr<spdlog::logger> logger
         , const int degree, const char* file, const int line);
 }
 
@@ -24,74 +26,53 @@ namespace util {
 #define L_ERROR 3
 #define L_CRITICAL 4
 
-//MACROS log Render0
-#ifdef DISTRIB
-    #define RZ_CRITICAL(...)
-#else
-    #define RZ_CRITICAL(...) util::rzLog(__VA_ARGS__, util::Log::GetRenderLogger()\
-                                        , L_CRITICAL, __FILE__, __LINE__)
+//Only macros from here on : )
+
+//MACROS log Agent System
+
+#ifdef AS_AGENTSYSTEM
+    #define GETLOGGER az::Log::GetASLogger()
 #endif
 
-#ifdef DISTRIB
-    #define RZ_ERROR(...)
-#else
-    #define RZ_ERROR(...)    util::rzLog(__VA_ARGS__, util::Log::GetRenderLogger()\
-                                        , L_ERROR, __FILE__, __LINE__)
+#ifdef AS_COMMLAYER
+    #define GETLOGGER az::Log::GetCLLogger()
 #endif
 
-#ifdef DISTRIB
-    #define RZ_WARN(...)
-#else
-    #define RZ_WARN(...)     util::rzLog(__VA_ARGS__, util::Log::GetRenderLogger()\
-                                         , L_WARN, __FILE__, __LINE__)
+#ifdef AS_TESTAPP
+#define GETLOGGER az::Log::GetTALogger()
 #endif
 
-#ifdef DISTRIB
-    #define RZ_INFO(...)
+#ifdef AS_DISTRO
+    #define LOG_CRITICAL(...)
 #else
-    #define RZ_INFO(...)     util::rzLog(__VA_ARGS__, util::Log::GetRenderLogger()\
-                                         , L_INFO, __FILE__, __LINE__)
+    #define LOG_CRITICAL(...) az::log(__VA_ARGS__, GETLOGGER, L_CRITICAL,\
+                                      __FILE__, __LINE__)
 #endif
 
-#ifdef DISTRIB
-    #define RZ_TRACE(...)
+#ifdef AS_DISTRO
+    #define LOG_ERROR(...)
 #else
-    #define RZ_TRACE(...)    util::rzLog(__VA_ARGS__, util::Log::GetRenderLogger()\
-                                        , L_TRACE, __FILE__, __LINE__)
+    #define LOG_ERROR(...) az::log(__VA_ARGS__, GETLOGGER, L_ERROR,\
+                                   __FILE__, __LINE__)
 #endif
 
-//MACROS log Viewr0
-#ifdef DISTRIB
-    #define VZ_CRITICAL(...)
+#ifdef AS_RELEASE
+    #define LOG_WARN(...)
 #else
-    #define VZ_CRITICAL(...) util::rzLog(__VA_ARGS__, util::Log::GetViewerLogger()\
-                                        , L_CRITICAL, __FILE__, __LINE__)
+    #define LOG_WARN(...) az::log(__VA_ARGS__, GETLOGGER, L_WARN,\
+                                  __FILE__, __LINE__)
 #endif
 
-#ifdef DISTRIB
-    #define VZ_ERROR(...)
+#ifdef AS_DISTRO
+    #define LOG_INFO(...)
 #else
-    #define VZ_ERROR(...)    util::rzLog(__VA_ARGS__, util::Log::GetViewerLogger()\
-                                         , L_ERROR, __FILE__, __LINE__)
+    #define LOG_INFO(...) az::log(__VA_ARGS__, GETLOGGER, L_INFO,\
+                                  __FILE__, __LINE__)
 #endif
 
-#ifdef DISTRIB
-    #define VZ_WARN(...)
+#ifdef AS_RELEASE
+    #define LOG_TRACE(...)
 #else
-    #define VZ_WARN(...)     util::rzLog(__VA_ARGS__, util::Log::GetViewerLogger()\
-                                        , L_WARN, __FILE__, __LINE__)
-#endif
-
-#ifdef DISTRIB
-    #define VZ_INFO(...)
-#else
-    #define VZ_INFO(...)     util::rzLog(__VA_ARGS__, util::Log::GetViewerLogger()\
-                                        , L_INFO, __FILE__, __LINE__)
-#endif
-
-#ifdef DISTRIB
-    #define VZ_TRACE(...)
-#else
-    #define VZ_TRACE(...)    util::rzLog(__VA_ARGS__, util::Log::GetViewerLogger()\
-                                         , L_TRACE, __FILE__, __LINE__)
+    #define LOG_TRACE(...) az::log(__VA_ARGS__, GETLOGGER, L_TRACE,\
+                                   __FILE__, __LINE__)
 #endif

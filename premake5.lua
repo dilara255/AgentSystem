@@ -46,7 +46,7 @@ project "Aux0"
 	kind "Staticlib"
 	language "C++"
 	cppdialect "C++17"
-	staticruntime "on"
+	staticruntime "off"
 
 	pchheader "miscStdHeaders.h"
 	pchsource "%{prj.name}/src/miscStdHeaders.cpp"
@@ -98,7 +98,7 @@ project "Aux0"
 
 	filter "system:windows"
 		systemversion "latest"
-		buildoptions "/MT"
+		--buildoptions "/MT" --may cause override, should do inside filter
 
 		defines{
 			"AS_PLATFORM_WINDOWS",
@@ -106,11 +106,11 @@ project "Aux0"
 		}
 
 	filter "configurations:Debug"
-		defines "DEBUG"
+		defines "AS_DEBUG"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines	"RELEASE"
+		defines	"AS_RELEASE"
 		optimize "on" 		
 
 	filter {}
@@ -158,12 +158,13 @@ project "AgentSystem"
 		"%{IncludeDir.SPDLOG}",
 		"%{IncludeDir.COMM_API}",
 		"%{IncludeDir.AUXAPIS}",
-		"%{IncludeDir.AS_API}"		
+		"%{IncludeDir.AS_API}",
+		"%{prj.name}/include"	
 	}
 
 	filter "system:windows"
 		systemversion "latest"
-		buildoptions "/MD"
+		--buildoptions "/MD" --may cause override, should do inside filter
 
 		defines {
 			"AS_PLATFORM_WINDOWS",
@@ -177,11 +178,11 @@ project "AgentSystem"
 		defines "X86"
 
 	filter "configurations:Debug"
-		defines "DEBUG"
+		defines "AS_DEBUG"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines	"RELEASE"
+		defines	"AS_RELEASE"
 		optimize "on" 
 	
 	filter {}
@@ -229,12 +230,13 @@ project "CommLayer"
 		"%{IncludeDir.SPDLOG}",
 		"%{IncludeDir.AUXAPIS}",
 		"%{IncludeDir.AS_API}",
-		"%{IncludeDir.COMM_API}"
+		"%{IncludeDir.COMM_API}",
+		"%{prj.name}/include"
 	}
 
 	filter "system:windows"
 		systemversion "latest"
-		buildoptions "/MD"
+		--buildoptions "/MD" --may cause override, should do inside filter
 
 		defines {
 			"AS_PLATFORM_WINDOWS",
@@ -248,11 +250,11 @@ project "CommLayer"
 		defines "X86"
 
 	filter "configurations:Debug"
-		defines "DEBUG"
+		defines "AS_DEBUG"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines	"RELEASE"
+		defines	"AS_RELEASE"
 		optimize "on" 
 
 	filter {}
@@ -314,7 +316,7 @@ project "TestApp"
 
 	filter "system:windows"
 		systemversion "latest"
-		buildoptions "/MT"
+		--buildoptions "/MT" --may cause override, should do inside filter
 
 		defines{
 			"AS_PLATFORM_WINDOWS",

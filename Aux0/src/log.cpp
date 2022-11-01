@@ -1,17 +1,16 @@
 /*
-Loggers.Usa Spdlog.Exposto via macros em logAPI.hpp
-Por hora criando dois loggers, um pro renderer (dll),
-outro pro viewer (aplicação)
+Loggers. Usa Spdlog. Exposto via macros em logAPI.hpp
 */
 
 #include "miscStdHeaders.h"
 #include "log.hpp"
 #include "logAPI.hpp"
 
-namespace util {
+namespace az {
 
-	std::shared_ptr<spdlog::logger> Log::s_RenderLogger;
-	std::shared_ptr<spdlog::logger> Log::s_ViewerLogger;
+	std::shared_ptr<spdlog::logger> Log::s_AgentSystemLogger;
+	std::shared_ptr<spdlog::logger> Log::s_CommLayerLogger;
+	std::shared_ptr<spdlog::logger> Log::s_TestAppLogger;
 	int Log::initialized = 0;
 
 	void Log::init() {
@@ -19,26 +18,26 @@ namespace util {
 		if (!Log::initialized) {
 
 			spdlog::set_pattern("%^[%T] %n: %v%$");
-			s_RenderLogger = spdlog::stdout_color_mt("RENDER");
-			s_RenderLogger->set_level(spdlog::level::trace);
+			s_AgentSystemLogger = spdlog::stdout_color_mt("AGENT SYSTEM");
+			s_AgentSystemLogger->set_level(spdlog::level::trace);
 
-			s_ViewerLogger = spdlog::stdout_color_mt("VIEWER");
-			s_ViewerLogger->set_level(spdlog::level::trace);
+			s_CommLayerLogger = spdlog::stdout_color_mt("COMM LAYER");
+			s_CommLayerLogger->set_level(spdlog::level::trace);
+
+			s_TestAppLogger = spdlog::stdout_color_mt("TEST APP");
+			s_TestAppLogger->set_level(spdlog::level::trace);
 
 			Log::initialized = true;
 		}
 
-		if (initialized) {
-			RZ_INFO("Render Logger initialized");
-			VZ_INFO("Viewer Logger initialized");
-		}
-		else std::cerr << "\n\nFALHA AO INICIALIZAR LOGGERS\n\n";
+		if (!initialized)
+			std::cerr << "\n\nERROR: LOGGERS COULDN'T BE INITIALIZED\n\n";
 	}
 
 
-	void rzLog(const char* message, std::shared_ptr<spdlog::logger> logger
+	void log(const char* message, std::shared_ptr<spdlog::logger> logger
 		       , const int degree, const char* file, const int line) {
-#ifdef DEBUG
+#ifdef AS_DEBUG
 		std::cout << "\t-> " << file << " @ line " << line << ":" << std::endl;
 #endif
 		switch (degree) {

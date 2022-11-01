@@ -1,10 +1,15 @@
 #pragma once
 
 //definições para controle dos projetos, sistemas, compilação, linkagem, etc
-//TODO: Migrar parte disso pro build system?
+//TODO: This could all be on the build system. Is that preferable? 
+//Either way, go all the way EITHER there OR here
+
+#ifndef AUX0
+	#include "logAPI.hpp"
+#endif
 
 #ifdef AS_PLATFORM_WINDOWS
-	#define SYSTEM_NAME "Windows"
+	//#define SYSTEM_NAME "Windows" //Moved to the build system
 	#ifdef AS_COMMLAYER
 		#define	CL_API __declspec(dllexport)
 	#else
@@ -19,6 +24,8 @@
 	#error falta suporte pra linux ainda : /
 #endif
 
+/* These have all been moved to the build system
+
 #ifdef DEBUG
 	#define CONFIG_NAME "Debug"
 #elif RELEASE 
@@ -30,6 +37,8 @@
 #elif X86
 	#define PLATFORM_NAME "32 bits"
 #endif
+
+*/
 
 #define BIT(x) (1 << x)
 
