@@ -27,6 +27,13 @@
 * e. Make sure the system to upload to github is in order and that I can build from a clone.
 *
 * >> 2. AS data structure:
+* //Ideally, I want to have data in diferent "banks", so all the names are in one
+* //place, all the positions in another, etc. The exact design should reflect how
+* //the data is expected to be used, so at first it will be just a reasonable guess.
+* //There will be "Agent Entities" which are IDs to find the specific data, as well
+* //as access functions for the data, taking in the id. The IDs will (directly converted to)
+* //indexes on the areas were the data are. There will be a method to contruct an Agent
+* //Struct, with all it's information, which can be used for local processing, for example.
 * 
 * a. Create a structure with the expected data for LAs.
 * b. Create a structure with the expected data for GAs.
@@ -43,7 +50,7 @@
 * b. Pass view into it to CL (point to const, I think).
 * c. Querry it or get a copy for TA trhough CL.
 *
-* Cleanup and fresh clone+compile test
+* Cleanup, documentation, and fresh pull+compile test
 *
 * ***** Minor 2. Runtime data insertion and removal *****
 *
@@ -75,38 +82,38 @@
 * f. Before each loop, the AS takes a look at this and deletes any appropriate actions.
 * g. Test adding and ending Actions.
 *
-* Cleanup and fresh clone+compile test
+* Cleanup, documentation, and fresh pull+compile test
 *
 * ***** Minor 3. AS loop *****
 *
 * The goal here is to get the AS loop to work as expected, but no buisness logic yet.
 *
-* Cleanup and fresh clone+compile test
+* Cleanup, documentation, and fresh pull+compile test
 *
 * ***** Minor 4. Tooling: inspection *****
 *
 * Implement some tooling to inspect the system.
 *
-* Cleanup and fresh clone+compile test
+* Cleanup, documentation, and fresh pull+compile test
 *
 * ***** Minor 5. Basic decision making and actions *****
 *
 * A complete, but very simple version of the AS, with two possible actions for LAs and GAs.
 *
-* Fresh clone+compile test
+* Cleanup, documentation, and fresh pull+compile test
 *
 * ***** Minor 6. More groundwork *****
 *
 * Any groundwork necessary before focusing on bechaviour.
 *
-* Cleanup and fresh clone+compile test
+* Cleanup, documentation, and fresh pull+compile test
 *
 * ***** Minor 7. Behaviour *****
 *
 * Developing actions and decision procedures and checking the results.
 * The goal is to have the initial minimum expected functionality in order. Fuck Equilibrium.
 *
-* Fresh clone+compile test
+* Cleanup, documentation, and fresh pull+compile test
 *
 * ***** Major 1. Tying things up *****
 *
