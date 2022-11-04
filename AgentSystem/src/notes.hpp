@@ -10,8 +10,8 @@
 * - Versions increment when complete (that is, we start at v0.0.0 working on 0.1.1);
 * - Build #s will be the incremental commits in a given Sub;
 * 
-* - Current Version: 0.0.1
-* - Working on: 0.1.2
+* - Current Version: 0.1.0
+* - Working on: 0.2.1
 *
 * ***** Minor 1. Basic Setup *****
 *
@@ -26,7 +26,10 @@
 * d. Some cleanup so I can keep the basic tests working as I go along.
 * e. Make sure the system to upload to github is in order and that I can build from a clone.
 *
-* >> 2. AS data structure:
+* ***** Minor 2. Basic Data Structure, loading and exporting *****
+*
+* 1. AS data structure:
+* 
 * //Ideally, I want to have data in diferent "banks", so all the names are in one
 * //place, all the positions in another, etc. The exact design should reflect how
 * //the data is expected to be used, so at first it will be just a reasonable guess.
@@ -35,24 +38,29 @@
 * //indexes on the areas were the data are. There will be a method to contruct an Agent
 * //Struct, with all it's information, which can be used for local processing, for example.
 * 
-* a. Create a structure with the expected data for LAs.
-* b. Create a structure with the expected data for GAs.
-* c. Allocate memory and populate an array for each.
-* d. Create a format for text file with information on each.
-* e. Read their information from a text file.
-* f. Create structures of relevant pointers.
-* g. Replicate memory structure on CL and transfer data to it.
-* h. Querry data on TA and check it.
+* >> a. Create a structure with the expected data for LAs.
+* >> b. Create a structure with the expected data for GAs.
+* >> c. Allocate memory and populate an array for each (on initialization).
+* >> d. Create structures of relevant pointers.
+* 
+* 2. Communication and loading:
+* 
+* a. Create a format for text file with information on each.
+* b. Read their information from a text file on initialization or request.
+* c. Replicate memory structure on CL and transfer data to it.
+* d. Export data to binary file and load from it.
+* e. Querry data on TA and check it.
 *
 * 3. Actions, stub:
 * 
 * a. Create stub action structure and vector of those on AS.
 * b. Pass view into it to CL (point to const, I think).
 * c. Querry it or get a copy for TA trhough CL.
+* d. Add support for this on loading and exporting.
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
-* ***** Minor 2. Runtime data insertion and removal *****
+* ***** Minor 3. Runtime data insertion and removal *****
 *
 * 1. AS timed loop:
 * 
@@ -84,31 +92,31 @@
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
-* ***** Minor 3. AS loop *****
+* ***** Minor 4. AS loop *****
 *
-* The goal here is to get the AS loop to work as expected, but no buisness logic yet.
+* The goal here is to get the AS loop to work as expected, but no decision making yet.
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
-* ***** Minor 4. Tooling: inspection *****
+* ***** Minor 5. Tooling: inspection *****
 *
 * Implement some tooling to inspect the system.
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
-* ***** Minor 5. Basic decision making and actions *****
+* ***** Minor 6. Basic decision making and actions *****
 *
 * A complete, but very simple version of the AS, with two possible actions for LAs and GAs.
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
-* ***** Minor 6. More groundwork *****
+* ***** Minor 7. More groundwork *****
 *
-* Any groundwork necessary before focusing on bechaviour.
+* Any groundwork necessary before focusing on behaviour.
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
-* ***** Minor 7. Behaviour *****
+* ***** Minor 8. Behaviour *****
 *
 * Developing actions and decision procedures and checking the results.
 * The goal is to have the initial minimum expected functionality in order. Fuck Equilibrium.
