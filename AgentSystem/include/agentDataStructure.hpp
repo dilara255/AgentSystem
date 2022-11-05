@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 1) Each LA's data will be comprised of:
  
@@ -31,7 +33,7 @@
 
 #define NAME_LENGHT 30
 
-namespace AS{
+namespace AS {
 	typedef struct {
 		float x;
 		float y;
@@ -48,7 +50,7 @@ namespace AS{
 		float currentUpkeep;
 	} strenght_t;
 
-	typedef struct{
+	typedef struct {
 		float thr1;
 		float thr2;
 		float thr3;
@@ -79,7 +81,8 @@ namespace AS{
 		pos_t position;
 		int firstConnectedNeighborId;
 		int numberConnectedNeighbors;
-		bitfield_t connectedNeighbors;	
+		bitfield_t connectedNeighborsFirstElement; //FIX: hacky, may need more than one
+		//this has to remain the last item. FIX BEFOR NEXT VERSION
 	} locationAndConnectionDataLA_t;
 
 	typedef struct {
@@ -94,78 +97,103 @@ namespace AS{
 		float* informationAboutNeighbors_list;
 	} neighborRelationPtrs_t;
 
-	typedef struct{
+	typedef char agentName_t[NAME_LENGHT + 1];
+
+	typedef struct {
 		//for "exporting"
 		int id; //defined on load, trying to minimize the id-distance between neighbors
-		
-		char name[NAME_LENGHT];
-		
+
+		agentName_t name;
+
 		bool on;
-		
+
 		parametersLA_t resourcesAndStrenght;
-		
+
 		locationAndConnectionDataLA_t locationAndConnections;
-		
+
 		//arrays created on load, 
 		//fixed size == locationAndConnections.numberConnectedNeighbors
 		neighborRelationPtrs_t neighborRelation_ptrs;
-		
+
 		thresholdsAndGAinfluenceOnLA_t thresholdsAndGAinfluence;
 	} localAgent_t;
 
 	typedef int GApersonality[4];
 
-	enum gaPersonalityTraits {/*add some*/};
+	enum gaPersonalityTraits {/*add some*/ };
 
-	typedef struct{
+	typedef struct {
+		parametersLA_t resourcesAndStrenghtLAs;
+		bitfield_t localAgentsBelongingToThis; //Should be same size as LA onOff list
+		//FIX: HACKY: this has to remain the last item. FIX BEFOR NEXT VERSION
+	} associatedLAparameters_t;
+
+	typedef struct {
 		//for "exporting"
 		int id;
-		
-		char name[NAME_LENGHT];
-		
+
+		agentName_t name;
+
 		bool on;
-		
-		bitfield_t localAgentsBelongingToThis;
-		resources_t resourceTotalOfLAs;
-		strenght_t strengthTotalOfLAs;
-		
-		pos_t position;
-		int numberConnectedGAs; //set on load, never changes
+
+		associatedLAparameters_t accumulatedLAparameters;
+
 		bitfield_t connectedGAs;
-		
+
 		//arrays created on load, fixed size == numberConnectedGAs
-		float* dispositionsToConnectedGAs_list; 
-		int* diplomaticStanceToConnectedGAs_list; 
-		float* informationAboutToConnectedGAs_list;
-			
+		neighborRelationPtrs_t neighborRelation_ptrs;
+
 		GApersonality traits;
 	} globalAgent_t;
+}
 
-namespace LA{
+namespace LA {
 	//memory layout for AS: each field is contiguous between all agents, on it's system.
 	//6 "systems", indexed by id.
 	//For AS "on" will actually be just a bitfield you check against the id. 
 	//For the "export" structure it's a bool. 
 
 	//calss LocalAgent with id as only member and constructors as only methods. 
-	
-	typedef struct{
-		char** nameList_ptr; //fixed NAME_LENGHT size (maybe this can be cleaned up a bit)
-		int* onOffList_ptr; //I need ceil(NUMBER_OF_LAs/sizeof(int*8)) ints
-		parametersLA_t* parameterList_ptr;
-		locationAndConnectionDataLA_t* locationAndConnectionData_ptr;
-		neighborRelationPtrs_t* neighborRelationsList_ptr;
-		thresholdsAndGAinfluenceOnLA_t* tresholdsAndInfluenceData_ptr;
-	} systemsPointers_t;
 
-	systemsPointers_t LAsystemPtrs;
+	typedef struct {
+		AS::agentName_t* nameList_ptr;
+		AS::bitfield_t* onOffList_ptr; //I need ceil(NUMBER_OF_LAs/sizeof(int*8)) ints
+		AS::parametersLA_t* parameterList_ptr;
+		AS::locationAndConnectionDataLA_t* locationAndConnectionData_ptr;
+		AS::neighborRelationPtrs_t* neighborRelationsList_ptr;
+		AS::thresholdsAndGAinfluenceOnLA_t* tresholdsAndInfluenceData_ptr;
+	} systemsPointers_t;
 }
 
-namespace GA{
+namespace GA {
 	//memory layout for AS: names / on / resources and strenghts / positions and connections  / 
 	// neighbor stuff / personality
 	//6 "systems", indexed by id, similar to LAs
 	//For AS "on" will actually be just a bitfield you check against the id. For the "export" structure it's a bool.
+
+	typedef struct {
+		AS::agentName_t* nameList_ptr;
+		AS::bitfield_t* onOffList_ptr; //I need ceil(NUMBER_OF_LAs/sizeof(int*8)) ints
+		AS::associatedLAparameters_t* LAparameterList_ptr;
+		AS::bitfield_t* GAconnectionsList_ptr;
+		AS::neighborRelationPtrs_t* neighborRelationsList_ptr;
+		AS::GApersonality* personalitiesList_ptr;
+	} systemsPointers_t;
+}
+
+namespace AS {
+	typedef struct {
+		int numberOfLAs;
+		int numberOfGAs;
+
+		int neighborMaxLAs;
+
+		int lengthLAonOffList;
+		int lengthGAonOffList;
+
+		GA::systemsPointers_t GAsystemsPtrs;
+		LA::systemsPointers_t LAsystemsPtrs;
+	} agentsControl_t;
 }
 
 /*
@@ -175,8 +203,5 @@ Graph Reordering for Cache-Efficient Near Neighbor Search https://arxiv.org/pdf/
 ... - neighbor4 - neighbor2 - maxNeighbors - neighbor1 - neighbor3 -n1n1 - n1n2 - n1n1n1 
 
 TODO:
-1. Simplify GA data structure (as LA is);
-2. Finish creating the pointers and stuff for LAs;
-3. Do the same for GAs;
-4. Create simple initialization to allocate all this and relay the info;
+Create simple initialization to allocate all this and relay the info;
 */

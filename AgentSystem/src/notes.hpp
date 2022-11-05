@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 * Project Notes:
 *
@@ -11,7 +13,7 @@
 * - Build #s will be the incremental commits in a given Sub;
 * 
 * - Current Version: 0.1.0
-* - Working on: 0.2.1
+* - Working on: finishing 0.2.1
 *
 * ***** Minor 1. Basic Setup *****
 *
