@@ -17,6 +17,7 @@ TO DO: STATE:
 -A position;
 -A quantity of resources and its update rate;
 -A strength;
+-Strength threshold to start costing upkeep and current upkeep;
 -The id of the GA it belongs to, if any;
 -The information about which LAs it's connected to (as a bitfield);
 -A list of the disposition towards each connected LA (can be positive or negative);
@@ -24,9 +25,8 @@ TO DO: STATE:
 
 TO DO: DECISION:
 -A list of how much information it has on each connected LA;
--A list of LA-decision-related thresholds, which act as the "personality" of the agent;
--A list of active constraints/incentives given by the associated GA;
-TO DO: -Strength threshold to start costing upkeep and current upkeep;
+-A list of LA decision offsets, which act as the "personality" of the agent;
+-A list of active LA decision offsets given by the associated GA;
 TO DO: -A list of the expected values, for each neighbor, of:
         resources, income, strenght, diplomacy and relations to this LA.
 		TO DO: should evaluate personality and priorities as well? LEANING NO (NOT NOW)
@@ -55,7 +55,8 @@ TO DO: -A list of the expected values, for each neighbor, of:
 TO DO: -Desires, Impediments and Potential Actions Data;
 */
 
-#define NAME_LENGHT 30
+#include "fixedParameters.hpp"
+#include "flagFields.hpp"
 
 namespace AS {
 	typedef struct {
@@ -74,30 +75,9 @@ namespace AS {
 		float currentUpkeep;
 	} strenght_t;
 
-	//TO DO: define MACRO an use an array
 	typedef struct {
-		float thr1;
-		float thr2;
-		float thr3;
-		float thr4;
-		float thr5;
-		float thr6;
-		/*...*/
-	} localAgentThresholds_t;
-
-	//TO DO: define MACRO an use an array
-	typedef struct {
-		float incentiveOrConstraint1;
-		float incentiveOrConstraint2;
-		float incentiveOrConstraint3;
-		float incentiveOrConstraint4;
-		float incentiveOrConstraint5;
-		float incentiveOrConstraint6;
-		/*...*/
-	} incentivesAndConstraints_t;
-
-	typedef int bitfield_t; //TO DO: change to Class with uint_64 field[N], N(MAX_AGENTS)
-	//Also change name to void confusion with built-in
+		float thresholds[NUMBER_LA_OFFSETS];
+	} LAdecisionOffsets_t;
 
 	typedef struct {
 		resources_t resources;
@@ -108,126 +88,191 @@ namespace AS {
 		pos_t position;
 		int firstConnectedNeighborId;
 		int numberConnectedNeighbors;
-		bitfield_t connectedNeighborsFirstElement; //TO DO: FIX: hacky, 
-		//may need more than one. This has to remain the last item (WHY?). 
-		//FIX BEFORE NEXT VERSION
+		LAflagField_t connectedNeighbors;
 	} locationAndConnectionDataLA_t;
 
 	typedef struct {
 		int GAid;
-		incentivesAndConstraints_t incentivesAndConstraintsFromGA;
-		localAgentThresholds_t thresholds;
-	} thresholdsAndGAinfluenceOnLA_t;
+		LAdecisionOffsets_t incentivesAndConstraintsFromGA;
+		LAdecisionOffsets_t personality;
+	} personalityAndGAinfluenceOnLA_t;
 
 	typedef struct {
-		float* dispositionsToNeighbors_list;
-		int* diplomaticStanceToNeighbors_list;
-		float* informationAboutNeighbors_list;
-	} neighborRelationPtrs_t;
+		int diplomaticStanceToNeighbors[MAX_LA_NEIGHBOURS];
+		float dispositionToNeighbors_t[MAX_LA_NEIGHBOURS];
+	} LAneighborRelations_t;
+
+	typedef	float LAinfiltrationOnNeighbors_t[MAX_LA_NEIGHBOURS];
 
 	typedef char agentName_t[NAME_LENGHT + 1];
 
-	//TO DO: Make into a Class, on separate file
-	typedef struct {
-		//for "exporting"
-		int id; //defined on load, trying to minimize the id-distance between neighbors
-
-		agentName_t name;
-
-		bool on;
-
-		parametersLA_t resourcesAndStrenght;
-
-		locationAndConnectionDataLA_t locationAndConnections;
-
-		//arrays created on load, 
-		//fixed size == locationAndConnections.numberConnectedNeighbors
-		neighborRelationPtrs_t neighborRelation_ptrs;
-
-		thresholdsAndGAinfluenceOnLA_t thresholdsAndGAinfluence;
-	} localAgent_t;
-
 	typedef int GApersonality[4];
 
-	//TO DO: Rellocate this?
-	enum gaPersonalityTraits {/*add some*/ };
+	typedef struct {
+		int diplomaticStanceToNeighbors[MAX_GA_QUANTITY];
+		float dispositionToNeighbors_t[MAX_GA_QUANTITY];
+	} GAneighborRelations_t;
+
+	typedef	float GAinfiltrationOnNeighbors_t[MAX_GA_QUANTITY];
 
 	typedef struct {
 		parametersLA_t resourcesAndStrenghtLAs;
-		bitfield_t localAgentsBelongingToThis; //Should be same size as LA onOff list
-		//TO DO: FIX: HACKY: this has to remain the last item (WHY?). 
-		//FIX BEFOR NEXT VERSION
+		LAflagField_t localAgentsBelongingToThis;
 	} associatedLAparameters_t;
-
-	//TO DO: Make into a Class, on separate file
-	typedef struct {
-		//for "exporting"
-		int id;
-
-		agentName_t name;
-
-		bool on;
-
-		associatedLAparameters_t accumulatedLAparameters;
-
-		bitfield_t connectedGAs;
-
-		//arrays created on load, fixed size == numberConnectedGAs
-		neighborRelationPtrs_t neighborRelation_ptrs;
-
-		GApersonality traits;
-	} globalAgent_t;
 }
 
 namespace LA {
-	//TO DO: REWORK, based on LA: State, Decision, Cold Systems, as Classes
-	//Old:
-	//memory layout for AS: each field is contiguous between all agents, on its system.
-	//6 "systems", indexed by id.
-	//For AS "on" will actually be just a bitfield you check against the id. 
-	//For the "export" structure it's a bool. 
-
-	//calss LocalAgent with id as only member and constructors as only methods. 
 
 	typedef struct {
-		AS::agentName_t* nameList_ptr;
-		AS::bitfield_t* onOffList_ptr; //I need ceil(NUMBER_OF_LAs/sizeof(int*8)) ints
-		AS::parametersLA_t* parameterList_ptr;
-		AS::locationAndConnectionDataLA_t* locationAndConnectionData_ptr;
-		AS::neighborRelationPtrs_t* neighborRelationsList_ptr;
-		AS::thresholdsAndGAinfluenceOnLA_t* tresholdsAndInfluenceData_ptr;
-	} systemsPointers_t;
+
+	} coldData_t;
+
+	typedef struct {
+
+	} stateData_t;
+
+	typedef struct {
+
+	} decisionData_t;
+
+	class ColdDataController {
+	public:
+		ColdDataController(uint32_t numberOfAgents) {
+			data.reserve(numberOfAgents);
+		}
+
+		void addAgentData(coldData_t agentData) {
+			data.push_back(agentData);
+		}
+
+		bool getAgentData(uint32_t agentID, coldData_t* recepient) {
+			if (agentID > (data.size() - 1)) return false;
+
+			*recepient = data[agentID];
+			return true;
+		}
+
+	private:
+		std::vector <coldData_t> data;
+	};
+
+	class StateController {
+	public:
+		StateController(uint32_t numberOfAgents) {
+			data.reserve(numberOfAgents);
+		}
+
+		void addAgentData(stateData_t agentData) {
+			data.push_back(agentData);
+		}
+
+		bool getAgentData(uint32_t agentID, stateData_t* recepient) {
+			if (agentID > (data.size() - 1)) return false;
+
+			*recepient = data[agentID];
+			return true;
+		}
+
+	private:
+		std::vector <stateData_t> data;
+	};
+
+	class DecisionSystem {
+	public:
+		DecisionSystem(uint32_t numberOfAgents) {
+			data.reserve(numberOfAgents);
+		}
+
+		void addAgentData(decisionData_t agentData) {
+			data.push_back(agentData);
+		}
+
+		bool getAgentData(uint32_t agentID, decisionData_t* recepient) {
+			if (agentID > (data.size() - 1)) return false;
+
+			*recepient = data[agentID];
+			return true;
+		}
+
+	private:
+		std::vector <decisionData_t> data;
+	};
 }
 
 namespace GA {
-	//TO DO: REWORK, based on GA: State, Decision, Cold Systems, as Classes
-	//Old:
-	//memory layout for AS: names / on / resources and strenghts / positions and connections  / 
-	// neighbor stuff / personality
-	//6 "systems", indexed by id, similar to LAs
-	//For AS "on" will actually be just a bitfield you check against the id. For the "export" structure it's a bool.
 
 	typedef struct {
-		AS::agentName_t* nameList_ptr;
-		AS::bitfield_t* onOffList_ptr; //I need ceil(NUMBER_OF_LAs/sizeof(int*8)) ints
-		AS::associatedLAparameters_t* LAparameterList_ptr;
-		AS::bitfield_t* GAconnectionsList_ptr;
-		AS::neighborRelationPtrs_t* neighborRelationsList_ptr;
-		AS::GApersonality* personalitiesList_ptr;
-	} systemsPointers_t;
-}
 
-namespace AS { //TO DO: MAKE CLASS, change in AS_internal.hpp, rellocate
+	} coldData_t;
+
 	typedef struct {
-		int numberOfLAs;
-		int numberOfGAs;
 
-		int neighborMaxLAs;
+	} stateData_t;
 
-		int lengthLAonOffList;
-		int lengthGAonOffList;
+	typedef struct {
 
-		GA::systemsPointers_t GAsystemsPtrs;
-		LA::systemsPointers_t LAsystemsPtrs;
-	} agentsControl_t;
+	} decisionData_t;
+
+	class ColdDataController {
+	public:
+		ColdDataController(uint32_t numberOfAgents) {
+			data.reserve(numberOfAgents);
+		}
+
+		void addAgentData(coldData_t agentData) {
+			data.push_back(agentData);
+		}
+
+		bool getAgentData(uint32_t agentID, coldData_t* recepient) {
+			if (agentID > (data.size() - 1)) return false;
+
+			*recepient = data[agentID];
+			return true;
+		}
+
+	private:
+		std::vector <coldData_t> data;
+	};
+
+	class StateController {
+	public:
+		StateController(uint32_t numberOfAgents) {
+			data.reserve(numberOfAgents);
+		}
+
+		void addAgentData(stateData_t agentData) {
+			data.push_back(agentData);
+		}
+
+		bool getAgentData(uint32_t agentID, stateData_t* recepient) {
+			if (agentID > (data.size()-1)) return false;
+
+			*recepient = data[agentID];
+			return true;
+		}
+
+	private:
+		std::vector <stateData_t> data;
+	};
+
+	class DecisionSystem {
+	public:
+		DecisionSystem(uint32_t numberOfAgents) {
+			data.reserve(numberOfAgents);
+		}
+
+		void addAgentData(decisionData_t agentData) {
+			data.push_back(agentData);
+		}
+
+		bool getAgentData(uint32_t agentID, decisionData_t* recepient) {
+			if (agentID > (data.size() - 1)) return false;
+
+			*recepient = data[agentID];
+			return true;
+		}
+
+	private:
+		std::vector <decisionData_t> data;
+	};
 }

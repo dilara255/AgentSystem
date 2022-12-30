@@ -4,7 +4,7 @@
 * Project Notes:
 *
 * Some of the Specs have been changed to better accomodate the decision-making proccess.
-* The spec doc is NOT updated yet.
+* LA Thresholds have become "score offsets" instead. The spec doc is NOT updated yet.
 * 
 * TO DO: Update it after version 0.6
 * 
@@ -46,27 +46,20 @@
 * //indexes on the areas were the data are. There will be a method to contruct an Agent
 * //Class, with all it's information, which can be used for local processing, for example.
 * 
-* >> a. Create a structure with the expected data for LAs.
-* >> b. Create a structure with the expected data for GAs.
-* >> c. Allocate memory and populate an array for each (on initialization).
-* >> d. Create structures of relevant pointers.
-* 
-* ^THIS CHANGED TO:
-* 
 * >> a. Create structures with the expected State and Cold Data for LAs.
 * >> b. Create structures with the expected State and Cold Data for GAs.
-* >> c. Allocate memory and populate an array for each (on initialization).
-* >> d. Create initial version of relevant control systems.
+* >> c. Create initial version of relevant control systems.
+* >> d. Allocate memory and populate an array for each (on initialization).
 * 
 * Note: State and Decision data will assume maxNeighbours.
+* Note: first part of Decision data structures are actually implemented here.
 * 
 * 2. Communication and loading:
 * 
 * a. Create a format for text file with information on each.
 * b. Read their information from a text file on initialization or request.
 * c. Replicate memory structure on CL and transfer data to it.
-* X-- d. Export data to binary file and load from it. --X BINARY NOT NEEDED FOR PROTOTYPE
-* e. Querry data on TA and check it.
+* d. Querry data on TA and check it.
 *
 * 3. Actions, stub:
 * 
