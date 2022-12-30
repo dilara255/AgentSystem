@@ -15,8 +15,8 @@
 * - Versions increment when complete (that is, we start at v0.0.0 working on 0.1.1);
 * - Build #s will be the incremental commits in a given Sub;
 * 
-* - Current Version: 0.1.0
-* - Working on: finishing 0.2.1
+* - Current Version: 0.1.1
+* - Working on: finishing 0.2.2
 *
 * ***** Minor 1. Basic Setup *****
 *
@@ -46,15 +46,15 @@
 * //indexes on the areas were the data are. There will be a method to contruct an Agent
 * //Class, with all it's information, which can be used for local processing, for example.
 * 
-* >> a. Create structures with the expected State and Cold Data for LAs.
-* >> b. Create structures with the expected State and Cold Data for GAs.
-* >> c. Create initial version of relevant control systems.
-* >> d. Allocate memory and populate an array for each (on initialization).
+* a. Create structures with the expected State and Cold Data for LAs.
+* b. Create structures with the expected State and Cold Data for GAs.
+* c. Create initial version of relevant control systems.
+* d. Allocate memory and populate an array for each (on initialization).
 * 
 * Note: State and Decision data will assume maxNeighbours.
-* Note: first part of Decision data structures are actually implemented here.
+* Note: first parts of Decision data structures are actually implemented here.
 * 
-* 2. Communication and loading:
+* >> 2. Communication and loading:
 * 
 * a. Create a format for text file with information on each.
 * b. Read their information from a text file on initialization or request.

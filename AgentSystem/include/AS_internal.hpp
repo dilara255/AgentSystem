@@ -3,5 +3,5 @@
 #include "agentDataStructure.hpp"
 
 namespace AS {
-	agentsControl_t agentControlSystem_ptr;
+	//agentsControl_t agentControlSystem_ptr;
 }

@@ -4,6 +4,8 @@
 #include "AS_API.hpp"
 #include "CL_internalAPI.hpp"
 
+#include "agentDataStructure.hpp"
+
 #include "AS_tst.hpp"
 
 int initTestNumber;
@@ -25,6 +27,8 @@ void AS::initializeASandCL() {
 	CLtestArray_ptr = CL::getTestArrayPtr();
 
 	AS::transferData(CLtestArray_ptr);
+
+	createAgentDataControllers(MAX_LA_NEIGHBOURS, MAX_GA_QUANTITY);
 
 	LOG_INFO("Initialized");
 
