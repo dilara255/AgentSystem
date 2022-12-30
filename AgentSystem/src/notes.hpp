@@ -3,7 +3,10 @@
 /*
 * Project Notes:
 *
+* Some of the Specs have been changed to better accomodate the decision-making proccess.
+* The spec doc is NOT updated yet.
 * 
+* TO DO: Update it after version 0.6
 * 
 * Versioning:
 * 
@@ -32,25 +35,37 @@
 *
 * 1. AS data structure:
 * 
-* //Ideally, I want to have data in diferent "banks", so all the names are in one
-* //place, all the positions in another, etc. The exact design should reflect how
-* //the data is expected to be used, so at first it will be just a reasonable guess.
+* //Most of the AS Data will be in arrays. These will be separated in PRNs, Control,
+* //and, with a version each for LAs and GAs: Action, Decision, State, and Cold Data.
+* //These will be controlled by a Control System (PRNs, Control and Cold Data), an Action 
+* //System, a State System and a Decision System.
+* //The exact design should reflect how the data is expected to be used, so at first it 
+* //will be just a reasonable guess.
 * //There will be "Agent Entities" which are IDs to find the specific data, as well
-* //as access functions for the data, taking in the id. The IDs will (directly converted to)
+* //as access functions for the data, taking in the id. The IDs are (directly converted to)
 * //indexes on the areas were the data are. There will be a method to contruct an Agent
-* //Struct, with all it's information, which can be used for local processing, for example.
+* //Class, with all it's information, which can be used for local processing, for example.
 * 
 * >> a. Create a structure with the expected data for LAs.
 * >> b. Create a structure with the expected data for GAs.
 * >> c. Allocate memory and populate an array for each (on initialization).
 * >> d. Create structures of relevant pointers.
 * 
+* ^THIS CHANGED TO:
+* 
+* >> a. Create structures with the expected State and Cold Data for LAs.
+* >> b. Create structures with the expected State and Cold Data for GAs.
+* >> c. Allocate memory and populate an array for each (on initialization).
+* >> d. Create initial version of relevant control systems.
+* 
+* Note: State and Decision data will assume maxNeighbours.
+* 
 * 2. Communication and loading:
 * 
 * a. Create a format for text file with information on each.
 * b. Read their information from a text file on initialization or request.
 * c. Replicate memory structure on CL and transfer data to it.
-* d. Export data to binary file and load from it.
+* X-- d. Export data to binary file and load from it. --X BINARY NOT NEEDED FOR PROTOTYPE
 * e. Querry data on TA and check it.
 *
 * 3. Actions, stub:
@@ -59,44 +74,54 @@
 * b. Pass view into it to CL (point to const, I think).
 * c. Querry it or get a copy for TA trhough CL.
 * d. Add support for this on loading and exporting.
+* 
+* ^THIS CHANGED TO:
+* 
+* a. Create Action Data Structure and array of maxActions*agents of those on AS.
+* b. Transfer it's data into the CL.
+* c. Querry it or get a copy for TA trhough CL.
+* d. Add support for this on loading and exporting.
 *
-* Cleanup, documentation, and fresh pull+compile test
+* Cleanup, documentation (in-code), and fresh pull+compile test
 *
 * ***** Minor 3. Runtime data insertion and removal *****
 *
 * 1. AS timed loop:
 * 
-* a. Make AS work on a timed loop, incrementing some values in a predictable manner.
+* a. Make AS work on a timed loop, incrementing some of its values in a predictable manner.
 * b. After each loop, make AS update CL's data.
 * c. At a different time interval, TA querries CL and compares data with expected values.
 *
-* 2. Agent data injection:
+* 2. Decision Data:
 * 
-* a. Duplicate agent data structures on CL, plus an indexed list of fields with changes.
-* Numerical fields can have absolute, additive, multiplicative or exponential changes.
-* b. Make it so TA can tranfer data to it (methods for field or agent).
-* c. When the data is received by the CL, it updates the list of changed fields (blocking).
+* a. Create LA and GA Decision Data structure stub (just part of the necessary Data will
+* be known at this point, specially expected values and last step relations for each
+* neighbor. Will assume maxNeighbors for all agents.
+* b. Create an array of each, with an element for each agent.
+* 
+* 3. Data injection:
+* 
+* a. Duplicate State and Action Data on CL, plus an indexed list of fields with the tick of 
+* their last changes.
+* TO DO: SHOULD DUPLICATE Decision Data too?
+* b. Make it so TA can tranfer data to it (methods for field or whole State or Action from
+* Agent Object).
+* c. When the data is received by the CL, it updates the list of changed fields.
 * d. Make it so AS can read the fields with changes and absorb them (pointer to const?).
-* e. Before each loop, AS retrieves data from CL (CL blocks and updates the list of changes).
-* f. Test running the AS and issuing changes.
-*
-* 3. Actions, creation and end:
-* 
-* a. Create two vectors of new actions on the CL, and a int to tell wich to use.
-* b. Before each loop, AS asks CL to change the active vector (blocking) and adds the new
-* actions to it's vector. CL erases this vector.
-* c. TA can ask CL to add new actions. These go to the opposite bank.
-* d. Create an index of active actions, which is to be kept updated by the AS.
-* e. Create two secondary indexes on the CL. The TA can mark actions for premature deletion.
-* These indexes will "rotate" the same way as the vectors.
-* f. Before each loop, the AS takes a look at this and deletes any appropriate actions.
-* g. Test adding and ending Actions.
+* e. Before each loop, AS retrieves data from CL which was changed after its last check.
+* f. Test running the AS, issuing changes from the TA and reading the data. 
+
+* Note: changing an action to "innactive" essentially ends it, but there could also be 
+* methods to advance actions to the moment before tehir completion. The TA can then chack 
+* again a bit later if this is part of a multi-step process.
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
 * ***** Minor 4. AS loop *****
 *
-* The goal here is to get the AS loop to work as expected, but no decision making yet.
+* The goal here is to get the AS loop to work as expected.
+* No actual decision making yet, just a couple stub decisions, but updating expected values.
+* Couple of stub actions as well, that simply run their course and have a simple resolution.
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
@@ -106,15 +131,20 @@
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
-* ***** Minor 6. Basic decision making and actions *****
-*
-* A complete, but very simple version of the AS, with two possible actions for LAs and GAs.
-*
-* Cleanup, documentation, and fresh pull+compile test
-*
-* ***** Minor 7. More groundwork *****
+* * ***** Minor 6. More groundwork *****
 *
 * Any groundwork necessary before focusing on behaviour.
+* Specially the sub-loops of different systems (eg Decision and Action).
+*
+* Cleanup, documentation (update specs), and fresh pull+compile test
+* 
+* ***** Minor 7. Basic decision making and actions *****
+*
+* A complete, but very simple version of the AS.
+* Very simple versions of all initially expected actions.
+* One Action for GAs and another for LAs made in more detail.
+* 
+* Validation of the basic system and initial exploration of the decision process.
 *
 * Cleanup, documentation, and fresh pull+compile test
 *

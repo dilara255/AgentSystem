@@ -4,6 +4,16 @@
 #include "agentDataStructure.hpp"
 #include "AS_internal.hpp"
 
+/*
+* * Note: all structures have a fixed size once maxNeighbours is defined;
+* TO DO: create a MAX_NEIGHBORURS macro.
+* 
+* TO DO : Complete Rework.
+* Use vectors to gold the Data, even though their size won't change after load.
+* (so adding elements on load and clearing is very simple, and no(direct) malloc is used)
+* (performance impact should be negligible with optimizations.TO DO : quick test of this)
+*/
+
 void allocateMemoryForAgentSystems(int numberLAs, int numberGAs, int neighborMaxLAs) {
 	//Allocates the entire thing and sets pointers.
 	//See agentDataStructure.hpp for the layout.
@@ -58,9 +68,9 @@ void allocateMemoryForAgentSystems(int numberLAs, int numberGAs, int neighborMax
 		(AS::GApersonality*)malloc(
 			sizeof(AS::GApersonality) * numberGAs);
 
-	//TODO: set internal pointers 
+	//TO DO: set internal pointers 
 	//actually, re-think pointers inside "internal" structs
-	//TODO: tie this to some initialization function and also set and verify some values
+	//TO DO: tie this to some initialization function and also set and verify some values
 }
 
 

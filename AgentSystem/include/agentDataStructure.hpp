@@ -1,34 +1,58 @@
 #pragma once
 
 /*
+* NOTE: we assume all LAs have maxNeighbours, which makes all agent's Data of a same,
+* definite size after the network is initialized.
+* 
+* TO DO: Rework the structures : )
+* TO DO: use fixed width types!
+* 
 1) Each LA's data will be comprised of:
- 
+
+TO DO: COLD:
+-A name (of fixed maximum size); 
+
+TO DO: STATE:
 -On/off boolean, to signal whether it should be taken in account or ignored by the system (say, because the location has been destroyed);
 -A position;
--A name (of fixed maximum size);
 -A quantity of resources and its update rate;
--A strength and a strength threshold to start costing upkeep;
--The current upkeep;
+-A strength;
 -The id of the GA it belongs to, if any;
 -The information about which LAs it's connected to (as a bitfield);
 -A list of the disposition towards each connected LA (can be positive or negative);
 -The diplomatic stance towards each connected LA (eg: hostile, neutral, trade, ally);
+
+TO DO: DECISION:
 -A list of how much information it has on each connected LA;
 -A list of LA-decision-related thresholds, which act as the "personality" of the agent;
--A list of active constraints/incentives given by the associated GA.
+-A list of active constraints/incentives given by the associated GA;
+TO DO: -Strength threshold to start costing upkeep and current upkeep;
+TO DO: -A list of the expected values, for each neighbor, of:
+        resources, income, strenght, diplomacy and relations to this LA.
+		TO DO: should evaluate personality and priorities as well? LEANING NO (NOT NOW)
+TO DO: -Desires, Impediments and Potential Actions Data;
 
 2) Each GA's data will be comprised of:
 
--On/off, as in the LAs;
+TO DO: COLD:
 -A name (of fixed maximum size);
+
+TO DO: STATE:
+-On/off, as in the LAs;
 -The information about which LAs belong to it (as a bitfield);
 -The information about which other GAs it’s connected to (as a bitfield);
+-GA resources (used to pay for Actions, acquired as % of LA incomes);
 -A list of the disposition towards each connected GA (can be positive or negative);
 -The diplomatic stance towards each connected GA (eg: hostile, neutral, trade, ally);
--A list of how much information it has on each connected GA;
--Four traits (4 ids), which will influence the GAs "personality";
 -Total resources and accumulation rates of the connected LAs;
 -Total strength of the connected LAs.
+
+TO DO: DECISION:
+-A list of how much information it has on each connected GA;
+-Four traits (4 ids), which will influence the GAs "personality";
+TO DO: -A list of the expected values, for each neighbor, of:
+       GA resources, totals, diplomacy and relations.
+TO DO: -Desires, Impediments and Potential Actions Data;
 */
 
 #define NAME_LENGHT 30
@@ -50,6 +74,7 @@ namespace AS {
 		float currentUpkeep;
 	} strenght_t;
 
+	//TO DO: define MACRO an use an array
 	typedef struct {
 		float thr1;
 		float thr2;
@@ -60,6 +85,7 @@ namespace AS {
 		/*...*/
 	} localAgentThresholds_t;
 
+	//TO DO: define MACRO an use an array
 	typedef struct {
 		float incentiveOrConstraint1;
 		float incentiveOrConstraint2;
@@ -70,7 +96,8 @@ namespace AS {
 		/*...*/
 	} incentivesAndConstraints_t;
 
-	typedef int bitfield_t; //ver direito isso
+	typedef int bitfield_t; //TO DO: change to Class with uint_64 field[N], N(MAX_AGENTS)
+	//Also change name to void confusion with built-in
 
 	typedef struct {
 		resources_t resources;
@@ -81,8 +108,9 @@ namespace AS {
 		pos_t position;
 		int firstConnectedNeighborId;
 		int numberConnectedNeighbors;
-		bitfield_t connectedNeighborsFirstElement; //FIX: hacky, may need more than one
-		//this has to remain the last item. FIX BEFOR NEXT VERSION
+		bitfield_t connectedNeighborsFirstElement; //TO DO: FIX: hacky, 
+		//may need more than one. This has to remain the last item (WHY?). 
+		//FIX BEFORE NEXT VERSION
 	} locationAndConnectionDataLA_t;
 
 	typedef struct {
@@ -99,6 +127,7 @@ namespace AS {
 
 	typedef char agentName_t[NAME_LENGHT + 1];
 
+	//TO DO: Make into a Class, on separate file
 	typedef struct {
 		//for "exporting"
 		int id; //defined on load, trying to minimize the id-distance between neighbors
@@ -120,14 +149,17 @@ namespace AS {
 
 	typedef int GApersonality[4];
 
+	//TO DO: Rellocate this?
 	enum gaPersonalityTraits {/*add some*/ };
 
 	typedef struct {
 		parametersLA_t resourcesAndStrenghtLAs;
 		bitfield_t localAgentsBelongingToThis; //Should be same size as LA onOff list
-		//FIX: HACKY: this has to remain the last item. FIX BEFOR NEXT VERSION
+		//TO DO: FIX: HACKY: this has to remain the last item (WHY?). 
+		//FIX BEFOR NEXT VERSION
 	} associatedLAparameters_t;
 
+	//TO DO: Make into a Class, on separate file
 	typedef struct {
 		//for "exporting"
 		int id;
@@ -148,7 +180,9 @@ namespace AS {
 }
 
 namespace LA {
-	//memory layout for AS: each field is contiguous between all agents, on it's system.
+	//TO DO: REWORK, based on LA: State, Decision, Cold Systems, as Classes
+	//Old:
+	//memory layout for AS: each field is contiguous between all agents, on its system.
 	//6 "systems", indexed by id.
 	//For AS "on" will actually be just a bitfield you check against the id. 
 	//For the "export" structure it's a bool. 
@@ -166,6 +200,8 @@ namespace LA {
 }
 
 namespace GA {
+	//TO DO: REWORK, based on GA: State, Decision, Cold Systems, as Classes
+	//Old:
 	//memory layout for AS: names / on / resources and strenghts / positions and connections  / 
 	// neighbor stuff / personality
 	//6 "systems", indexed by id, similar to LAs
@@ -181,7 +217,7 @@ namespace GA {
 	} systemsPointers_t;
 }
 
-namespace AS {
+namespace AS { //TO DO: MAKE CLASS, change in AS_internal.hpp, rellocate
 	typedef struct {
 		int numberOfLAs;
 		int numberOfGAs;
@@ -195,13 +231,3 @@ namespace AS {
 		LA::systemsPointers_t LAsystemsPtrs;
 	} agentsControl_t;
 }
-
-/*
-Notes:
-
-Graph Reordering for Cache-Efficient Near Neighbor Search https://arxiv.org/pdf/2104.03221.pdf
-... - neighbor4 - neighbor2 - maxNeighbors - neighbor1 - neighbor3 -n1n1 - n1n2 - n1n1n1 
-
-TODO:
-Create simple initialization to allocate all this and relay the info;
-*/

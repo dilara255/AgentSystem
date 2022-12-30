@@ -6,6 +6,7 @@
 
 #include "CL_tst.hpp"
 
+//TO DO: TEST DATA STRUCTURE
 initTestNumbers_t initNumbers;
 int* testArray_ptr;
 bool tstArrayInitialized;
@@ -31,7 +32,7 @@ void CL::setTstArrayHasInitialized(bool hasInitialized) {
 }
 
 int* CL::getTestArrayPtr() {
-	if (!tstArrayInitialized) LOG_WARN("Test array not initialized");
+	if (!tstArrayInitialized) LOG_WARN("Test array not initialized yet");
 	if (!testArray_ptr) LOG_WARN("Test array ptr null. Will crash : )");
 	
 	return testArray_ptr;

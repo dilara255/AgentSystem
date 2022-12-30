@@ -1,7 +1,7 @@
 #pragma once
 
 //definições para controle dos projetos, sistemas, compilação, linkagem, etc
-//TODO: This could all be on the build system. Is that preferable? 
+//TO DO: This could all be on the build system. Is that preferable? 
 //Either way, go all the way EITHER there OR here
 
 #ifndef AUX0

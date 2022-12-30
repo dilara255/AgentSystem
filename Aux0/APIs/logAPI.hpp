@@ -5,7 +5,7 @@ Define macros de API para facilitar log em console. Usa spdlog.
 No momento não dá pra passar variáveis nem gravar em arquivo, 
 apesar da biblioteca suportar isso.
 
-TODO: Generalize the whole macro thingy and all that's associated with it
+TO DO: Generalize the whole macro thingy and all that's associated with it
 */
 
 #include "core.hpp"
