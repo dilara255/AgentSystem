@@ -11,3 +11,5 @@
 #include <memory>
 #include <cstdlib>
 #include <thread>
+#include <cstdint>
+#include <cfloat>
