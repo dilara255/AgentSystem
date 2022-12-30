@@ -2,17 +2,16 @@
 
 /*
 * NOTE: we assume all LAs have maxNeighbours, which makes all agent's Data of a same,
-* definite size after the network is initialized.
+* definite size after the network is initialized. We also assume maxLAs and maxGAs.
+* See fixedParameters.hpp.
 * 
-* TO DO: Rework the structures : )
-* TO DO: use fixed width types!
 * 
 1) Each LA's data will be comprised of:
 
-TO DO: COLD:
+COLD:
 -A name (of fixed maximum size); 
 
-TO DO: STATE:
+STATE:
 -On/off boolean, to signal whether it should be taken in account or ignored by the system (say, because the location has been destroyed);
 -A position;
 -A quantity of resources and its update rate;
@@ -23,7 +22,7 @@ TO DO: STATE:
 -A list of the disposition towards each connected LA (can be positive or negative);
 -The diplomatic stance towards each connected LA (eg: hostile, neutral, trade, ally);
 
-TO DO: DECISION:
+DECISION:
 -A list of how much information it has on each connected LA;
 -A list of LA decision offsets, which act as the "personality" of the agent;
 -A list of active LA decision offsets given by the associated GA;
@@ -34,10 +33,10 @@ TO DO: -Desires, Impediments and Potential Actions Data;
 
 2) Each GA's data will be comprised of:
 
-TO DO: COLD:
+COLD:
 -A name (of fixed maximum size);
 
-TO DO: STATE:
+STATE:
 -On/off, as in the LAs;
 -The information about which LAs belong to it (as a bitfield);
 -The information about which other GAs it’s connected to (as a bitfield);
@@ -47,7 +46,7 @@ TO DO: STATE:
 -Total resources and accumulation rates of the connected LAs;
 -Total strength of the connected LAs.
 
-TO DO: DECISION:
+DECISION:
 -A list of how much information it has on each connected GA;
 -Four traits (4 ids), which will influence the GAs "personality";
 TO DO: -A list of the expected values, for each neighbor, of:
@@ -58,7 +57,11 @@ TO DO: -Desires, Impediments and Potential Actions Data;
 #include "fixedParameters.hpp"
 #include "flagFields.hpp"
 
+//TO DO: remove from here
+void createAgentDataControllers(uint32_t numberOfLAs, uint32_t numberOfGAs);
+
 namespace AS {
+	//General:
 	typedef struct {
 		float x;
 		float y;
@@ -75,6 +78,9 @@ namespace AS {
 		float currentUpkeep;
 	} strenght_t;
 
+	typedef char agentName_t[NAME_LENGHT + 1];
+
+	//LA related:
 	typedef struct {
 		float thresholds[NUMBER_LA_OFFSETS];
 	} LAdecisionOffsets_t;
@@ -82,20 +88,19 @@ namespace AS {
 	typedef struct {
 		resources_t resources;
 		strenght_t strenght;
-	} parametersLA_t;
+	} LAparameters_t;
 
 	typedef struct {
 		pos_t position;
 		int firstConnectedNeighborId;
 		int numberConnectedNeighbors;
 		LAflagField_t connectedNeighbors;
-	} locationAndConnectionDataLA_t;
+	} LAlocationAndConnectionData_t;
 
 	typedef struct {
-		int GAid;
 		LAdecisionOffsets_t incentivesAndConstraintsFromGA;
 		LAdecisionOffsets_t personality;
-	} personalityAndGAinfluenceOnLA_t;
+	} LApersonalityAndGAinfluence_t;
 
 	typedef struct {
 		int diplomaticStanceToNeighbors[MAX_LA_NEIGHBOURS];
@@ -104,8 +109,7 @@ namespace AS {
 
 	typedef	float LAinfiltrationOnNeighbors_t[MAX_LA_NEIGHBOURS];
 
-	typedef char agentName_t[NAME_LENGHT + 1];
-
+	//GA specific:
 	typedef int GApersonality[4];
 
 	typedef struct {
@@ -116,163 +120,59 @@ namespace AS {
 	typedef	float GAinfiltrationOnNeighbors_t[MAX_GA_QUANTITY];
 
 	typedef struct {
-		parametersLA_t resourcesAndStrenghtLAs;
-		LAflagField_t localAgentsBelongingToThis;
-	} associatedLAparameters_t;
+		resources_t LAesourceTotals;
+		float LAstrenghtTotal;
+		float GAresources;
+	} GAparameterTotals_t;
 }
 
 namespace LA {
-
+	
 	typedef struct {
-
+		AS::agentName_t name;
 	} coldData_t;
 
 	typedef struct {
-
+		bool onOff;
+		AS::LAneighborRelations_t relations;
+		AS::LAlocationAndConnectionData_t locationAndConnections;
+		AS::LAparameters_t parameters;
+		unsigned GAid;
 	} stateData_t;
 
 	typedef struct {
+		AS::LAinfiltrationOnNeighbors_t infiltration;
+		AS::LApersonalityAndGAinfluence_t offsets;
 
+		//TO DO: -A list of the expected values, for each neighbor, of:
+		//resources, income, strenght, diplomacyand relations to this LA.
+			
+		//TO DO : -Desires, Impediments and Potential Actions Data;
 	} decisionData_t;
-
-	class ColdDataController {
-	public:
-		ColdDataController(uint32_t numberOfAgents) {
-			data.reserve(numberOfAgents);
-		}
-
-		void addAgentData(coldData_t agentData) {
-			data.push_back(agentData);
-		}
-
-		bool getAgentData(uint32_t agentID, coldData_t* recepient) {
-			if (agentID > (data.size() - 1)) return false;
-
-			*recepient = data[agentID];
-			return true;
-		}
-
-	private:
-		std::vector <coldData_t> data;
-	};
-
-	class StateController {
-	public:
-		StateController(uint32_t numberOfAgents) {
-			data.reserve(numberOfAgents);
-		}
-
-		void addAgentData(stateData_t agentData) {
-			data.push_back(agentData);
-		}
-
-		bool getAgentData(uint32_t agentID, stateData_t* recepient) {
-			if (agentID > (data.size() - 1)) return false;
-
-			*recepient = data[agentID];
-			return true;
-		}
-
-	private:
-		std::vector <stateData_t> data;
-	};
-
-	class DecisionSystem {
-	public:
-		DecisionSystem(uint32_t numberOfAgents) {
-			data.reserve(numberOfAgents);
-		}
-
-		void addAgentData(decisionData_t agentData) {
-			data.push_back(agentData);
-		}
-
-		bool getAgentData(uint32_t agentID, decisionData_t* recepient) {
-			if (agentID > (data.size() - 1)) return false;
-
-			*recepient = data[agentID];
-			return true;
-		}
-
-	private:
-		std::vector <decisionData_t> data;
-	};
 }
 
+//Data Controller Class declarations
 namespace GA {
 
 	typedef struct {
-
+		AS::agentName_t name;
 	} coldData_t;
 
 	typedef struct {
-
+		bool onOff;
+		AS::GAneighborRelations_t relations;
+		AS::LAflagField_t localAgentsBelongingToThis;
+		AS::GAparameterTotals_t parameters;
+		AS::GAflagField_t connectedGAs;
 	} stateData_t;
 
 	typedef struct {
+		AS::GAinfiltrationOnNeighbors_t infiltration;
+		AS::GApersonality personality;
 
+		//TO DO: -A list of the expected values, for each neighbor, of:
+		//GA resources, totals, diplomacy and relations.
+
+		//TO DO : -Desires, Impediments and Potential Actions Data;
 	} decisionData_t;
-
-	class ColdDataController {
-	public:
-		ColdDataController(uint32_t numberOfAgents) {
-			data.reserve(numberOfAgents);
-		}
-
-		void addAgentData(coldData_t agentData) {
-			data.push_back(agentData);
-		}
-
-		bool getAgentData(uint32_t agentID, coldData_t* recepient) {
-			if (agentID > (data.size() - 1)) return false;
-
-			*recepient = data[agentID];
-			return true;
-		}
-
-	private:
-		std::vector <coldData_t> data;
-	};
-
-	class StateController {
-	public:
-		StateController(uint32_t numberOfAgents) {
-			data.reserve(numberOfAgents);
-		}
-
-		void addAgentData(stateData_t agentData) {
-			data.push_back(agentData);
-		}
-
-		bool getAgentData(uint32_t agentID, stateData_t* recepient) {
-			if (agentID > (data.size()-1)) return false;
-
-			*recepient = data[agentID];
-			return true;
-		}
-
-	private:
-		std::vector <stateData_t> data;
-	};
-
-	class DecisionSystem {
-	public:
-		DecisionSystem(uint32_t numberOfAgents) {
-			data.reserve(numberOfAgents);
-		}
-
-		void addAgentData(decisionData_t agentData) {
-			data.push_back(agentData);
-		}
-
-		bool getAgentData(uint32_t agentID, decisionData_t* recepient) {
-			if (agentID > (data.size() - 1)) return false;
-
-			*recepient = data[agentID];
-			return true;
-		}
-
-	private:
-		std::vector <decisionData_t> data;
-	};
 }

@@ -1,12 +1,14 @@
 #include "miscStdHeaders.h"
 #include "core.hpp"
 
-#include "agentDataStructure.hpp"
+#include "logAPI.hpp"
+
+#include "agentDataControllers.hpp"
 #include "AS_internal.hpp"
+
 
 /*
 * * Note: all structures have a fixed size once maxNeighbours is defined;
-* TO DO: create a MAX_NEIGHBORURS macro.
 * 
 * TO DO : Complete Rework.
 * Use vectors to gold the Data, even though their size won't change after load.
@@ -14,6 +16,143 @@
 * (performance impact should be negligible with optimizations.TO DO : quick test of this)
 */
 
+LA::ColdDataController* LAcoldDataController_ptr;
+LA::StateController* LAstateController_ptr;
+LA::DecisionSystem* LAdecisionDataController_ptr;
+GA::ColdDataController* GAcoldDataController_ptr;
+GA::StateController* GAstateController_ptr;
+GA::DecisionSystem* GAdecisionDataController_ptr;
+bool dataControllersCreated = false;
+
+void createAgentDataControllers(uint32_t numberOfLAs, uint32_t numberOfGAs){
+	LOG_TRACE("Trying to create Agent Data Controllers\n");
+
+	if (dataControllersCreated) {
+		LOG_WARN("Data Controllers already exist: aborting re-creation\n");
+		return;
+	}
+
+	LAcoldDataController_ptr = new LA::ColdDataController(numberOfLAs);
+	LAstateController_ptr = new LA::StateController(numberOfLAs);
+	LAdecisionDataController_ptr = new LA::DecisionSystem(numberOfLAs);
+	GAcoldDataController_ptr = new GA::ColdDataController(numberOfGAs);
+	GAstateController_ptr = new GA::StateController(numberOfGAs);
+	GAdecisionDataController_ptr = new GA::DecisionSystem(numberOfGAs);
+
+	dataControllersCreated = true;
+
+	LOG_INFO("Data Controllers created\n");
+}
+
+namespace LA {
+	
+	ColdDataController::ColdDataController(uint32_t numberOfAgents) {
+			if (numberOfAgents > MAX_LA_QUANTITY) numberOfAgents = MAX_LA_QUANTITY;
+			data.reserve(numberOfAgents);
+	}
+
+	void ColdDataController::addAgentData(coldData_t agentData) {
+		data.push_back(agentData);
+	}
+
+	bool ColdDataController::getAgentData(uint32_t agentID, coldData_t* recepient) {
+		if (agentID > (data.size() - 1)) return false;
+
+		*recepient = data[agentID];
+		return true;
+	}
+
+	
+	StateController::StateController(uint32_t numberOfAgents) {
+		if (numberOfAgents > MAX_LA_QUANTITY) numberOfAgents = MAX_LA_QUANTITY;
+		data.reserve(numberOfAgents);
+	}
+
+	void StateController::addAgentData(stateData_t agentData) {
+		data.push_back(agentData);
+	}
+
+	bool StateController::getAgentData(uint32_t agentID, stateData_t* recepient) {
+		if (agentID > (data.size() - 1)) return false;
+
+		*recepient = data[agentID];
+		return true;
+	}
+
+	
+	DecisionSystem::DecisionSystem(uint32_t numberOfAgents) {
+		if (numberOfAgents > MAX_LA_QUANTITY) numberOfAgents = MAX_LA_QUANTITY;
+		data.reserve(numberOfAgents);
+	}
+
+	void DecisionSystem::addAgentData(decisionData_t agentData) {
+		data.push_back(agentData);
+	}
+
+	bool DecisionSystem::getAgentData(uint32_t agentID, decisionData_t* recepient) {
+		if (agentID > (data.size() - 1)) return false;
+
+		*recepient = data[agentID];
+		return true;
+	}
+}
+
+namespace GA {
+	ColdDataController::ColdDataController(uint32_t numberOfAgents) {
+		if (numberOfAgents > MAX_GA_QUANTITY) numberOfAgents = MAX_GA_QUANTITY;
+		data.reserve(numberOfAgents);
+	}
+
+	void ColdDataController::addAgentData(coldData_t agentData) {
+		data.push_back(agentData);
+	}
+
+	bool ColdDataController::getAgentData(uint32_t agentID, coldData_t* recepient) {
+		if (agentID > (data.size() - 1)) return false;
+
+		*recepient = data[agentID];
+		return true;
+	}
+
+
+	StateController::StateController(uint32_t numberOfAgents) {
+		if (numberOfAgents > MAX_GA_QUANTITY) numberOfAgents = MAX_GA_QUANTITY;
+		data.reserve(numberOfAgents);
+	}
+
+	void StateController::addAgentData(stateData_t agentData) {
+		data.push_back(agentData);
+	}
+
+	bool StateController::getAgentData(uint32_t agentID, stateData_t* recepient) {
+		if (agentID > (data.size() - 1)) return false;
+
+		*recepient = data[agentID];
+		return true;
+	}
+
+
+	DecisionSystem::DecisionSystem(uint32_t numberOfAgents) {
+		if (numberOfAgents > MAX_GA_QUANTITY) numberOfAgents = MAX_GA_QUANTITY;
+		data.reserve(numberOfAgents);
+	}
+
+	void DecisionSystem::addAgentData(decisionData_t agentData) {
+		data.push_back(agentData);
+	}
+
+	bool DecisionSystem::getAgentData(uint32_t agentID, decisionData_t* recepient) {
+		if (agentID > (data.size() - 1)) return false;
+
+		*recepient = data[agentID];
+		return true;
+	}
+}
+
+/*DEPRECATED, didn't used set maximuns and assumptions around them.
+* Keeping here for a couple versions just to be sure I don't need it.
+* TO DO: DELETE
+* 
 void allocateMemoryForAgentSystems(int numberLAs, int numberGAs, int neighborMaxLAs) {
 	//Allocates the entire thing and sets pointers.
 	//See agentDataStructure.hpp for the layout.
@@ -72,6 +211,6 @@ void allocateMemoryForAgentSystems(int numberLAs, int numberGAs, int neighborMax
 	//actually, re-think pointers inside "internal" structs
 	//TO DO: tie this to some initialization function and also set and verify some values
 }
-
+*/
 
 
