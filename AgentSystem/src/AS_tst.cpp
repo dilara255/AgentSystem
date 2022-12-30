@@ -10,6 +10,7 @@ int initTestNumber;
 int* AStestArray_ptr;
 int* CLtestArray_ptr;
 
+//TO DO: Separate from testing
 void AS::initializeASandCL() {
 
 	LOG_INFO("Loggers Initialized");
