@@ -28,7 +28,9 @@ void AS::initializeASandCL() {
 
 	AS::transferData(CLtestArray_ptr);
 
-	createAgentDataControllers(MAX_LA_NEIGHBOURS, MAX_GA_QUANTITY);
+	getchar();
+
+	createAgentDataControllers(MAX_LA_QUANTITY, MAX_GA_QUANTITY);
 
 	LOG_INFO("Initialized");
 
