@@ -4,7 +4,8 @@
 #include "AS_API.hpp"
 #include "CL_internalAPI.hpp"
 
-#include "agentDataStructure.hpp"
+#include "agentData/dataStructures.hpp"
+#include "agentData/agentClasses.hpp"
 
 #include "AS_tst.hpp"
 
@@ -31,6 +32,16 @@ void AS::initializeASandCL() {
 	getchar();
 
 	createAgentDataControllers(MAX_LA_QUANTITY, MAX_GA_QUANTITY);
+
+	LA::coldData_t LAcoldData = LA::coldData_t();
+	LA::stateData_t LAstate = LA::stateData_t();
+	LA::decisionData_t LAdecisionData = LA::decisionData_t();
+	GA::coldData_t GAcoldData = GA::coldData_t();
+	GA::stateData_t GAstate = GA::stateData_t();
+	GA::decisionData_t GAdecisionData = GA::decisionData_t();
+
+	AS::LAdata LAagentDataObject(LAcoldData, LAstate, LAdecisionData);
+	AS::GAdata GAagentDataObject(GAcoldData, GAstate, GAdecisionData);
 
 	LOG_INFO("Initialized");
 

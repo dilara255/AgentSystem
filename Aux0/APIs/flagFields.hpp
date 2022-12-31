@@ -7,7 +7,8 @@
 //TO DO: TEST
 namespace AZ {
 	class FlagField32 {
-
+	
+	public:
 		FlagField32() { field = 0; }
 
 		void loadField(uint32_t flagsToLoad) {
@@ -48,6 +49,7 @@ namespace AZ {
 
 	class FlagField128 {
 
+	public:
 		FlagField128() { field[0] = 0; field[1] = 0; field[2] = 0; field[3] = 0;}
 
 		bool loadField(uint32_t flagsToLoad, unsigned toWhichField) {

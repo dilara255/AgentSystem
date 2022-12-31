@@ -1,6 +1,6 @@
 #pragma once
 
-#include "agentDataStructure.hpp"
+#include "agentData/dataStructures.hpp"
 
 //defined on agendData.cpp
 //TO DO: too much repetition. Also, make these Classes singleton or something
