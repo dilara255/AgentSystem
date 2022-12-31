@@ -1,6 +1,6 @@
 #pragma once
 
-#include "agentDataStructure.hpp"
+#include "agentData/dataStructures.hpp"
 
 namespace AS {
 	//agentsControl_t agentControlSystem_ptr;
