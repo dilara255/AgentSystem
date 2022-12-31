@@ -95,6 +95,7 @@ namespace AS {
 		int firstConnectedNeighborId;
 		int numberConnectedNeighbors;
 		LAflagField_t connectedNeighbors;
+		int neighbourIDs[MAX_LA_NEIGHBOURS];
 	} LAlocationAndConnectionData_t;
 
 	typedef struct {

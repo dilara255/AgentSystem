@@ -56,19 +56,12 @@
 * 
 * >> 2. Communication and loading:
 * 
-* a. Create a format for text file with information on each.
-* b. Read their information from a text file on initialization or request.
+* a. Create a format for text file with network information.
+* b. Read information from a text file on initialization or request.
 * c. Replicate memory structure on CL and transfer data to it.
 * d. Querry data on TA and check it.
 *
 * 3. Actions, stub:
-* 
-* a. Create stub action structure and vector of those on AS.
-* b. Pass view into it to CL (point to const, I think).
-* c. Querry it or get a copy for TA trhough CL.
-* d. Add support for this on loading and exporting.
-* 
-* ^THIS CHANGED TO:
 * 
 * a. Create Action Data Structure and array of maxActions*agents of those on AS.
 * b. Transfer it's data into the CL.

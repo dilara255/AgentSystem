@@ -24,7 +24,9 @@ GA::StateController* GAstateController_ptr;
 GA::DecisionSystem* GAdecisionDataController_ptr;
 bool dataControllersCreated = false;
 
-void createAgentDataControllers(uint32_t numberOfLAs, uint32_t numberOfGAs){
+void testDataContainerCapacity(uint32_t numberOfLAs, uint32_t numberOfGAs);
+
+void createAgentDataControllers(uint32_t numberOfLAs, uint32_t numberOfGAs) {
 	LOG_TRACE("Trying to create Agent Data Controllers\n");
 
 	if (dataControllersCreated) {
@@ -41,11 +43,57 @@ void createAgentDataControllers(uint32_t numberOfLAs, uint32_t numberOfGAs){
 
 	dataControllersCreated = true;
 
+	testDataContainerCapacity(numberOfLAs, numberOfGAs);
+
 	LOG_INFO("Data Controllers created\n");
 }
 
+void testDataContainerCapacity(uint32_t numberOfLAs, uint32_t numberOfGAs){
+#ifdef DEBUG
+	printf("\nData structure sizes (bytes):\n");
+	printf("LA: Cold: %zi, State : %zi Decision : %zi\n",
+		sizeof(LA::coldData_t), sizeof(LA::stateData_t), sizeof(LA::decisionData_t));
+	printf("GA: Cold: %zi, State : %zi Decision : %zi\n",
+		sizeof(GA::coldData_t), sizeof(GA::stateData_t), sizeof(GA::decisionData_t));
+#endif // DEBUG
+
+	size_t LAagentSize = sizeof(LA::coldData_t) + sizeof(LA::stateData_t) + sizeof(LA::decisionData_t);
+	size_t GAagentSize = sizeof(GA::coldData_t) + sizeof(GA::stateData_t) + sizeof(GA::decisionData_t);
+
+	size_t LAtotalSize = LAagentSize * numberOfLAs;
+	size_t GAtotalSize = GAagentSize * numberOfGAs;
+
+#ifdef DEBUG
+	printf("Bytes per LA: %zi, per GA: %zi\n", LAagentSize, GAagentSize);
+	printf("LA total bytes: %zi, GA total: %zi\n", LAtotalSize, GAtotalSize);
+#endif // DEBUG
+
+	size_t actualLAsize = LAcoldDataController_ptr->capacityForDataInBytes() +
+		     		      LAstateController_ptr->capacityForDataInBytes() +
+					      LAdecisionDataController_ptr->capacityForDataInBytes();
+
+	size_t actualGAsize = GAcoldDataController_ptr->capacityForDataInBytes() +
+					      GAstateController_ptr->capacityForDataInBytes() +
+					      GAdecisionDataController_ptr->capacityForDataInBytes();
+
+	if (actualLAsize != LAtotalSize) {
+		LOG_ERROR("LA data capacity at controller doesn't match expected");
+		printf("--> is %zi instead\n", actualLAsize);
+	}
+	else { 
+		LOG_TRACE("LA data capacity at controller is as expected");
+	}
+	if (actualGAsize != GAtotalSize) {
+		LOG_ERROR("GA data capacity at controller doesn't match expected");
+		printf("--> is %zi instead\n", actualGAsize);
+	}
+	else {
+		LOG_TRACE("GA data capacity at controller is as expected");
+	}
+}
+
 namespace LA {
-	
+	//Cold:
 	ColdDataController::ColdDataController(uint32_t numberOfAgents) {
 			if (numberOfAgents > MAX_LA_QUANTITY) numberOfAgents = MAX_LA_QUANTITY;
 			data.reserve(numberOfAgents);
@@ -62,7 +110,15 @@ namespace LA {
 		return true;
 	}
 
-	
+	size_t ColdDataController::sizeOfDataInBytes() {
+		return data.size() * sizeof(data[0]);
+	}
+
+	size_t ColdDataController::capacityForDataInBytes() {
+		return data.capacity() * sizeof(data[0]);
+	}
+
+	//State:
 	StateController::StateController(uint32_t numberOfAgents) {
 		if (numberOfAgents > MAX_LA_QUANTITY) numberOfAgents = MAX_LA_QUANTITY;
 		data.reserve(numberOfAgents);
@@ -79,7 +135,15 @@ namespace LA {
 		return true;
 	}
 
-	
+	size_t StateController::sizeOfDataInBytes() {
+		return data.size() * sizeof(data[0]);
+	}
+
+	size_t StateController::capacityForDataInBytes() {
+		return data.capacity() * sizeof(data[0]);
+	}
+
+	//Decision:
 	DecisionSystem::DecisionSystem(uint32_t numberOfAgents) {
 		if (numberOfAgents > MAX_LA_QUANTITY) numberOfAgents = MAX_LA_QUANTITY;
 		data.reserve(numberOfAgents);
@@ -95,9 +159,18 @@ namespace LA {
 		*recepient = data[agentID];
 		return true;
 	}
+
+	size_t DecisionSystem::sizeOfDataInBytes() {
+		return data.size() * sizeof(data[0]);
+	}
+
+	size_t DecisionSystem::capacityForDataInBytes() {
+		return data.capacity() * sizeof(data[0]);
+	}
 }
 
 namespace GA {
+	//Cold:
 	ColdDataController::ColdDataController(uint32_t numberOfAgents) {
 		if (numberOfAgents > MAX_GA_QUANTITY) numberOfAgents = MAX_GA_QUANTITY;
 		data.reserve(numberOfAgents);
@@ -114,7 +187,15 @@ namespace GA {
 		return true;
 	}
 
+	size_t ColdDataController::sizeOfDataInBytes() {
+		return data.size() * sizeof(data[0]);
+	}
 
+	size_t ColdDataController::capacityForDataInBytes() {
+		return data.capacity() * sizeof(data[0]);
+	}
+
+	//State:
 	StateController::StateController(uint32_t numberOfAgents) {
 		if (numberOfAgents > MAX_GA_QUANTITY) numberOfAgents = MAX_GA_QUANTITY;
 		data.reserve(numberOfAgents);
@@ -131,7 +212,15 @@ namespace GA {
 		return true;
 	}
 
+	size_t StateController::sizeOfDataInBytes() {
+		return data.size() * sizeof(data[0]);
+	}
 
+	size_t StateController::capacityForDataInBytes() {
+		return data.capacity() * sizeof(data[0]);
+	}
+
+	//Decision:
 	DecisionSystem::DecisionSystem(uint32_t numberOfAgents) {
 		if (numberOfAgents > MAX_GA_QUANTITY) numberOfAgents = MAX_GA_QUANTITY;
 		data.reserve(numberOfAgents);
@@ -146,6 +235,14 @@ namespace GA {
 
 		*recepient = data[agentID];
 		return true;
+	}
+
+	size_t DecisionSystem::sizeOfDataInBytes() {
+		return data.size() * sizeof(data[0]);
+	}
+
+	size_t DecisionSystem::capacityForDataInBytes() {
+		return data.capacity() * sizeof(data[0]);
 	}
 }
 
