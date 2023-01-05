@@ -10,6 +10,7 @@
 
 COLD:
 -A name (of fixed maximum size); 
+-An ID;
 
 STATE:
 -On/off boolean, to signal whether it should be taken in account or ignored by the system (say, because the location has been destroyed);
@@ -35,6 +36,7 @@ TO DO: -Desires, Impediments and Potential Actions Data;
 
 COLD:
 -A name (of fixed maximum size);
+-An ID;
 
 STATE:
 -On/off, as in the LAs;
@@ -131,6 +133,7 @@ namespace LA {
 	
 	typedef struct {
 		AS::agentName_t name;
+		unsigned id;
 	} coldData_t;
 
 	typedef struct {
@@ -157,6 +160,7 @@ namespace GA {
 
 	typedef struct {
 		AS::agentName_t name;
+		unsigned id;
 	} coldData_t;
 
 	typedef struct {

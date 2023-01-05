@@ -15,6 +15,7 @@ These parameters are fixed and represent a "kind" of network.
 #define MAX_LA_NEIGHBOURS 10
 #define MAX_GA_QUANTITY 16 //NOTE: actually one less, one is reserved to "no GA"
 #define MAX_LA_QUANTITY 128
+#define MAX_ACTIONS_PER_AGENT 10
 
 namespace AS {
 	typedef AZ::FlagField128 LAflagField_t;

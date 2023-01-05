@@ -6,6 +6,7 @@
 
 #include "agentData/dataStructures.hpp"
 #include "agentData/agentClasses.hpp"
+#include "network/fileFormat.hpp"
 
 #include "AS_tst.hpp"
 
@@ -42,6 +43,23 @@ void AS::initializeASandCL() {
 
 	AS::LAdata LAagentDataObject(LAcoldData, LAstate, LAdecisionData);
 	AS::GAdata GAagentDataObject(GAcoldData, GAstate, GAdecisionData);
+
+	std::string name = "testNetworkNoDefaults.txt";
+	int result = createEmptyNetworkFile(name, name,	TST_NUMBER_LAS, TST_NUMBER_GAS, 
+										MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
+										false);
+
+	std::string name2 = "testNetworkWithDefaults.txt";
+	result *= createEmptyNetworkFile(name2, name2, TST_NUMBER_LAS, TST_NUMBER_GAS, 
+		                             MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
+									 true);
+
+	if (result) {
+		LOG_INFO("Test Empty Network Files created with and without defaults");
+	}
+	else {
+		LOG_CRITICAL("Test Empty Network File Creation Failed (check if they already exist)");
+	}
 
 	LOG_INFO("Initialized");
 
