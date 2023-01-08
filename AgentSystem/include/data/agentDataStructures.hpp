@@ -56,7 +56,7 @@ TO DO: -A list of the expected values, for each neighbor, of:
 TO DO: -Desires, Impediments and Potential Actions Data;
 */
 
-#include "network/fixedParameters.hpp"
+#include "network/parameters.hpp"
 #include "flagFields.hpp"
 
 //TO DO: remove from here

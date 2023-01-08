@@ -1,8 +1,23 @@
+/*
+Handles creation of:
+- "Empty" network file, given a few parameters, to be filled in later. Optionally include
+some default values, or leave blank with format specifiers;
+- "Saved" network, in a new file, taking in a reference to a data structure from which
+to get the network data.
+
+NOTE: network specificed MUST be within confines of the fixed parameters (see includes)
+
+WARNING: WON'T overwrite existing files. Dealing with that is left to the app.
+
+TO DO: this has a lot of repetition. Text files may be palceholder, so this should be
+reevaluated once the actual format and save system needs are known.
+*/
+
 #include "miscStdHeaders.h"
 
 #include "logAPI.hpp"
 
-#include "network/fixedParameters.hpp"
+#include "network/parameters.hpp"
 #include "network/fileFormat.hpp"
 
 int createEmptyNetworkFile(std::string name, std::string comment, int numberLAs,

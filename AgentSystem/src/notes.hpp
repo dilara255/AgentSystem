@@ -8,6 +8,8 @@
 * 
 * TO DO: Update it after version 0.6
 * 
+* TO DO: Use constexpr instead of defines where possible; 
+* 
 * Versioning:
 * 
 * - Major version: 0, until deliverable;
@@ -57,9 +59,11 @@
 * >> 2. Communication and loading:
 * 
 * a. Create a format for text file with network information.
-* b. Read information from a text file on initialization or request.
-* c. Replicate memory structure on CL and transfer data to it.
-* d. Querry data on TA and check it.
+* b. Create file with empty or default fields.
+* >> c. Read information from a text file on initialization or request.
+* d. Save data to a text file on request (and ask on shut down).
+* e. Replicate memory structure on CL and transfer data to it.
+* f. Querry data on TA and check it.
 *
 * 3. Actions, stub:
 * 

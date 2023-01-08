@@ -10,26 +10,9 @@
 
 #define FILE_FORMAT_VERSION 1
 
-#define DEFAULT_ONOFF (true)
-#define DEFAULT_GA_RESOURCES 0
-#define DEFAULT_GA_STANCE 2
-#define DEFAULT_GA_DISPOSITION (0.0)
-#define DEFAULT_LA_STRENGHT (10.0)
-#define DEFAULT_LA_UPKEEP_PER_STRENGHT (0.5)
-#define DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP (100.0)
-#define DEFAULT_LA_RESOURCES (100.0)
-#define DEFAULT_LA_INCOME (0.5)
-#define DEFAULT_LA_STANCE 2
-#define DEFAULT_LA_DISPOSITION (0.0)
-#define DEFAULT_LA_DISTANCE 10
-#define DEFAULT_LAs_PER_LINE 3
 static const char* defaultGAnamePrefix = "GA_";
 static const char* defaultLAnamePrefix = "LA_";
 static const char* defaultFilePath = "networkFiles\\";
-
-int createEmptyNetworkFile(std::string name, std::string comment, int numberLAs,
-                           int numberGAs, int maxNeighbors, int maxActions,
-                           bool setDefaults);
 
 int insertGAsWithDefaults(int numberGAs, FILE* fp);
 int insertGAsWithoutDefaults(int numberGAs, FILE* fp);

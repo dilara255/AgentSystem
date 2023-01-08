@@ -4,11 +4,11 @@
 #include "AS_API.hpp"
 #include "CL_internalAPI.hpp"
 
-#include "agentData/dataStructures.hpp"
-#include "agentData/agentClasses.hpp"
-#include "network/fileFormat.hpp"
+#include "data/agentDataStructures.hpp"
+#include "data/agentClasses.hpp"
+#include "fileManager.hpp"
 
-#include "AS_tst.hpp"
+#include "testing/AS_tst.hpp"
 
 int initTestNumber;
 int* AStestArray_ptr;
