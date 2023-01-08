@@ -1,9 +1,9 @@
 #pragma once
 
-#include "agentData/dataStructures.hpp"
+#include "data/agentDataStructures.hpp"
 
-//defined on agendData.cpp
-//TO DO: too much repetition. Also, make these Classes singleton or something
+//TO DO: too much repetition
+//TO DO: make these Classes singleton
 namespace LA {
 	class ColdDataController {
 	public:

@@ -11,7 +11,7 @@
 */
 
 #include "logAPI.hpp"
-#include "agentData/dataStructures.hpp"
+#include "data/agentDataStructures.hpp"
 
 namespace AS {
 
