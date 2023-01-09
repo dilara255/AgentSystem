@@ -8,18 +8,31 @@ void test1SayHello(void);
 void test2Initialization(void);
 void test3PointersToMockData(void);
 
+#define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
+
+//TO DO: make all tests return bool and count results, than match with expected
 int main(void) {
 	
 	test1SayHello();
+	getchar();
+
+	LOG_WARN("\n\nWill try loading file before initialization... should fail");
+	AS::loadNetworkFromFile(fileNameNoDefaults);
+	LOG_WARN("Failing should happen above. Tests bellow should pass\n\n");
+	getchar();
 
 	//these tests poke at wether communication between the app and DLLs is working and 
 	//data is being held as expected:
 	test2Initialization();
+	getchar();
 	test3PointersToMockData();
 	AS::testContainersAndAgentObjectCreation();
+	getchar();
 
 	//these are tests of specific functionality:
 	AS::testFileCreation();
+	getchar();
+	AS::loadNetworkFromFile(fileNameNoDefaults);
 
 
 	LOG_TRACE("Tests ended. Press return to exit");
@@ -35,7 +48,7 @@ void test3PointersToMockData(void) {
 	}
 	else {
 		LOG_ERROR("AS test array numbers relayed INCORRECTLY");
-		if (tstArray_ptr[0] == -842150451) { //MS debuging malloc initializes to this
+		if (tstArray_ptr[0] == MS_DEBUG_MALLOC_INIT_VALUE) {
 			LOG_TRACE("(it seems like no value was copied to CL's test array)");
 		}
 	}

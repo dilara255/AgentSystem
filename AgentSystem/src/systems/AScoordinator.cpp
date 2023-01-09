@@ -85,24 +85,36 @@ void AS::clearNetwork() {
 	LOG_TRACE("Network Cleared");
 }
 
-void AS::loadNetworkFromFile(std::string name) {
-	LOG_TRACE("Trying to load network from a file");
+bool AS::loadNetworkFromFile(std::string name) {
+	LOG_INFO("Trying to load network from a file");
+
+	if (!isInitialized) {
+		LOG_ERROR("Agent System and Communications Layer must be initialized before loading. Aborting.");
+		return false;
+	}
 
 	FILE* fp = acquireFilePointerToLoad(name);
 
 	if (fp == NULL) {
 		LOG_ERROR("Failed to open file, aborting load. Current network preserved.");
-		return;
+		return false;
 	}
 
 	if (!fileIsCompatible(fp)) {
 		LOG_ERROR("File format version incompatible. Aborting load. Current network preserved.");
-		return;
+		fclose(fp);
+		LOG_TRACE("File closed");
+		return false;
 	}
 
 	LOG_TRACE("File Acquired and of compatiple version. Clearing current network");
-
 	clearNetwork();
-	bool result = loadNetworkFromFileToDataControllers(fp, agentDataControllers, 
-		                                               currentNetworkParams);
+
+	bool result;
+	result = loadNetworkFromFileToDataControllers(fp, agentDataControllers, currentNetworkParams);
+
+	fclose(fp);
+	LOG_TRACE("File closed");
+
+	return result;
 }
