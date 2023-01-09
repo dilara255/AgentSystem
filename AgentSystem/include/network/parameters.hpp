@@ -59,6 +59,4 @@ namespace AS {
 	} networkParameters_t;
 }
 
-extern AS::networkParameters_t currentNetworkParams;
-
 enum gaPersonalityTraits {/*add some*/ };

@@ -1,9 +1,17 @@
+//TO DO: tests:
+//- Test clearing a network (sizes should equal zero).
+//- Create default values network;
+//- Load from it, test some values (and data objects);
+//- Change those values, save new network with them, run prevous tests again for this file;
+
+
 #include "miscStdHeaders.h"
 #include "core.hpp"
 
 #include "AS_API.hpp"
 #include "CL_internalAPI.hpp"
 
+#include "systems/AScoordinator.hpp"
 #include "data/agentDataStructures.hpp"
 #include "data/agentClasses.hpp"
 #include "fileManager.hpp"
@@ -63,18 +71,18 @@ namespace AS {
 
 void AS::testContainersAndAgentObjectCreation() 
 {
-	AS::testDataContainerCapacity();
+	AS::testDataContainerCapacity(AS::agentDataControllers_cptr);
 	AS::testAgentDataClassCreation();
 }
 
 void AS::testFileCreation() {
 	std::string name = "testNetworkNoDefaults.txt";
-	int result = createEmptyNetworkFile(name, name, TST_NUMBER_LAS, TST_NUMBER_GAS,
+	int result = AS::createEmptyNetworkFile(name, name, TST_NUMBER_LAS, TST_NUMBER_GAS,
 		MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
 		false);
 
 	std::string name2 = "testNetworkWithDefaults.txt";
-	result *= createEmptyNetworkFile(name2, name2, TST_NUMBER_LAS, TST_NUMBER_GAS,
+	result *= AS::createEmptyNetworkFile(name2, name2, TST_NUMBER_LAS, TST_NUMBER_GAS,
 		MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
 		true);
 

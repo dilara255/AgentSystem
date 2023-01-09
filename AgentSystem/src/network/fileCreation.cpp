@@ -17,10 +17,12 @@ reevaluated once the actual format and save system needs are known.
 
 #include "logAPI.hpp"
 
+#include "fileManager.hpp"
+
 #include "network/parameters.hpp"
 #include "network/fileFormat.hpp"
 
-int createEmptyNetworkFile(std::string name, std::string comment, int numberLAs,
+int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int numberLAs,
     int numberGAs, int maxNeighbors, int maxActions, bool setDefaults) {
 
     LOG_TRACE("Creating new Network File");
@@ -35,15 +37,15 @@ int createEmptyNetworkFile(std::string name, std::string comment, int numberLAs,
 
     FILE* fp;
 
-    name = defaultFilePath + name;
-    fp = fopen(name.c_str(), "r");
+    fileName = defaultFilePath + fileName;
+    fp = fopen(fileName.c_str(), "r");
     if (fp != NULL) {
         LOG_ERROR("File name already exists, aborting creation...");
         fclose(fp);
         return 0;
     }
 
-    fp = fopen(name.c_str(), "w");
+    fp = fopen(fileName.c_str(), "w");
     if (fp == NULL) {
         LOG_ERROR("Couldn't create the file (check if folders exist), aborting creation...");
         return 0;
@@ -54,9 +56,14 @@ int createEmptyNetworkFile(std::string name, std::string comment, int numberLAs,
 
     //Header, with version control, network sizes and comment
     resultAux = fprintf(fp, headerLine,
-        FILE_FORMAT_VERSION, numberGAs, numberLAs, maxNeighbors, maxActions, comment.c_str());
-
+        FILE_FORMAT_VERSION, numberGAs, numberLAs, maxNeighbors, maxActions);
     result *= (resultAux > 0); //fprintf returns negative number on error
+    
+    resultAux = fprintf(fp, commentLine, comment.c_str());
+    result *= (resultAux > 0);
+
+    resultAux = fputs(commentSeparator, fp);
+    if (resultAux == EOF) result = 0; //fputs returns EOF on error
 
     if (setDefaults) {
         result *= insertGAsWithDefaults(numberGAs, fp);

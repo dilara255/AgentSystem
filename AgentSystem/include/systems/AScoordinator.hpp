@@ -6,5 +6,14 @@ coordination of the AS.
 This includes:
 - Coordinating initialization and termination;
 - Main loop; and
-- Access/references to the different systems.
+- Access/references to the different systems (right now through externs : p).
 */
+
+#include "data/agentDataControllers.hpp"
+
+namespace AS {
+	void clearNetwork();
+
+	extern const networkParameters_t* currentNetworkParams_cptr;
+	extern const dataControllerPointers_t* agentDataControllers_cptr;
+}

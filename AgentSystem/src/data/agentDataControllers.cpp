@@ -18,24 +18,23 @@
 #include "logAPI.hpp"
 
 #include "data/agentDataControllers.hpp"
-#include "AS_internal.hpp"
 
-void AS::createAgentDataControllers() {
+void AS::createAgentDataControllers(AS::dataControllerPointers_t* agentDataControllers_ptr) {
 	LOG_TRACE("Trying to create Agent Data Controllers\n");
 
-	if (agentDataControllers.haveBeenCreated) {
+	if (agentDataControllers_ptr->haveBeenCreated) {
 		LOG_WARN("Data Controllers already exist: aborting re-creation\n");
 		return;
 	}
 
-	agentDataControllers.LAcoldData_ptr = new LA::ColdDataController(MAX_LA_QUANTITY);
-	agentDataControllers.LAstate_ptr = new LA::StateController(MAX_LA_QUANTITY);
-	agentDataControllers.LAdecision_ptr = new LA::DecisionSystem(MAX_LA_QUANTITY);
-	agentDataControllers.GAcoldData_ptr = new GA::ColdDataController(MAX_GA_QUANTITY);
-	agentDataControllers.GAstate_ptr = new GA::StateController(MAX_GA_QUANTITY);
-	agentDataControllers.GAdecision_ptr = new GA::DecisionSystem(MAX_GA_QUANTITY);
+	agentDataControllers_ptr->LAcoldData_ptr = new LA::ColdDataController(MAX_LA_QUANTITY);
+	agentDataControllers_ptr->LAstate_ptr = new LA::StateController(MAX_LA_QUANTITY);
+	agentDataControllers_ptr->LAdecision_ptr = new LA::DecisionSystem(MAX_LA_QUANTITY);
+	agentDataControllers_ptr->GAcoldData_ptr = new GA::ColdDataController(MAX_GA_QUANTITY);
+	agentDataControllers_ptr->GAstate_ptr = new GA::StateController(MAX_GA_QUANTITY);
+	agentDataControllers_ptr->GAdecision_ptr = new GA::DecisionSystem(MAX_GA_QUANTITY);
 
-	agentDataControllers.haveBeenCreated = true;
+	agentDataControllers_ptr->haveBeenCreated = true;
 
 	LOG_INFO("Data Controllers created\n");
 }
@@ -66,6 +65,10 @@ namespace LA {
 		return data.capacity() * sizeof(data[0]);
 	}
 
+	void ColdDataController::clearData() {
+		data.clear();
+	}
+
 	//State:
 	StateController::StateController(uint32_t numberOfAgents) {
 		if (numberOfAgents > MAX_LA_QUANTITY) numberOfAgents = MAX_LA_QUANTITY;
@@ -91,6 +94,10 @@ namespace LA {
 		return data.capacity() * sizeof(data[0]);
 	}
 
+	void StateController::clearData() {
+		data.clear();
+	}
+
 	//Decision:
 	DecisionSystem::DecisionSystem(uint32_t numberOfAgents) {
 		if (numberOfAgents > MAX_LA_QUANTITY) numberOfAgents = MAX_LA_QUANTITY;
@@ -114,6 +121,10 @@ namespace LA {
 
 	size_t DecisionSystem::capacityForDataInBytes() {
 		return data.capacity() * sizeof(data[0]);
+	}
+
+	void DecisionSystem::clearData() {
+		data.clear();
 	}
 }
 
@@ -143,6 +154,10 @@ namespace GA {
 		return data.capacity() * sizeof(data[0]);
 	}
 
+	void ColdDataController::clearData() {
+		data.clear();
+	}
+
 	//State:
 	StateController::StateController(uint32_t numberOfAgents) {
 		if (numberOfAgents > MAX_GA_QUANTITY) numberOfAgents = MAX_GA_QUANTITY;
@@ -166,6 +181,10 @@ namespace GA {
 
 	size_t StateController::capacityForDataInBytes() {
 		return data.capacity() * sizeof(data[0]);
+	}
+
+	void StateController::clearData() {
+		data.clear();
 	}
 
 	//Decision:
@@ -192,10 +211,14 @@ namespace GA {
 	size_t DecisionSystem::capacityForDataInBytes() {
 		return data.capacity() * sizeof(data[0]);
 	}
+
+	void DecisionSystem::clearData() {
+		data.clear();
+	}
 }
 
 namespace AS {
-	void testDataContainerCapacity() {
+	void testDataContainerCapacity(const dataControllerPointers_t* agentDataControllers_cptr) {
 #ifdef DEBUG
 		printf("\nData structure sizes (bytes):\n");
 		printf("LA: Cold: %zi, State : %zi Decision : %zi\n",
@@ -214,15 +237,20 @@ namespace AS {
 #ifdef DEBUG
 		printf("Bytes per LA: %zi, per GA: %zi\n", LAagentSize, GAagentSize);
 		printf("LA total bytes: %zi, GA total: %zi\n", LAtotalSize, GAtotalSize);
+		printf("\n\nData Controllers NON-CONST ptr: %p\n", agentDataControllers_cptr);
+		printf("LAcoldData_ptr: %p\n\n", agentDataControllers_cptr->LAcoldData_ptr);
+
 #endif // DEBUG
+		
+		size_t actualLAsize = 
+			agentDataControllers_cptr->LAcoldData_ptr->capacityForDataInBytes() +
+			agentDataControllers_cptr->LAstate_ptr->capacityForDataInBytes() +
+			agentDataControllers_cptr->LAdecision_ptr->capacityForDataInBytes();
 
-		size_t actualLAsize = agentDataControllers.LAcoldData_ptr->capacityForDataInBytes() +
-			agentDataControllers.LAstate_ptr->capacityForDataInBytes() +
-			agentDataControllers.LAdecision_ptr->capacityForDataInBytes();
-
-		size_t actualGAsize = agentDataControllers.GAcoldData_ptr->capacityForDataInBytes() +
-			agentDataControllers.GAstate_ptr->capacityForDataInBytes() +
-			agentDataControllers.GAdecision_ptr->capacityForDataInBytes();
+		size_t actualGAsize = 
+			agentDataControllers_cptr->GAcoldData_ptr->capacityForDataInBytes() +
+			agentDataControllers_cptr->GAstate_ptr->capacityForDataInBytes() +
+			agentDataControllers_cptr->GAdecision_ptr->capacityForDataInBytes();
 
 		if (actualLAsize != LAtotalSize) {
 			LOG_CRITICAL("LA data capacity at controller doesn't match expected");
