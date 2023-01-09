@@ -15,6 +15,10 @@
 namespace AS {
 	
 	AS_API void initializeASandCL();
+	
+	//WARNING: loading clears current network, no confirmation needed!
+	//Logic to save current network first and etc should be handled by the CLIENT
+	AS_API void loadNetworkFromFile(std::string name);
 
 	//****For Testing****
 	AS_API void CLinitTest();

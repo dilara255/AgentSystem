@@ -1,7 +1,19 @@
 #pragma once
 
 #include "miscStdHeaders.h"
+#include "data/agentDataControllers.hpp"
+#include "network/parameters.hpp"
 
-int createEmptyNetworkFile(std::string name, std::string comment, int numberLAs,
-    int numberGAs, int maxNeighbors, int maxActions,
-    bool setDefaults);
+namespace AS{
+    int createEmptyNetworkFile(std::string fileName, std::string comment, int numberLAs,
+                               int numberGAs, int maxNeighbors, int maxActions,
+                               bool setDefaults);
+
+    bool loadNetworkFromFileToDataControllers(FILE* fp, 
+                                           dataControllerPointers_t agentDataControllers,
+                                           networkParameters_t currentNetworkParams);
+
+    bool fileIsCompatible(FILE* fp);
+
+    FILE* acquireFilePointerToLoad(std::string name);
+}

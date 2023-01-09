@@ -9,6 +9,7 @@
 #include "miscStdHeaders.h"
 
 #define FILE_FORMAT_VERSION 1
+#define MAX_LINE_LENGHT 500
 
 static const char* defaultGAnamePrefix = "GA_";
 static const char* defaultLAnamePrefix = "LA_";
@@ -21,7 +22,9 @@ int insertLAsWithoutDefaults(int numberLAs, int maxNeighbors, FILE* fp);
 int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE* fp);
 int insertActionsWithoutDefaults(int numberLAs, int numberGAs, int maxActions, FILE* fp);
 
-static const char* headerLine = "Version: %i\nGAs: %i, LAs: %i, maxNeighbors: %i, maxActions: %i\n#%s\n\n";
+static const char* headerLine = "Version: %i\nGAs: %i, LAs: %i, maxNeighbors: %i, maxActions: %i\n";
+static const char* commentLine = "# %s\n";
+static const char* commentSeparator = "!\n";
 static const char* GAsectiontittle = "#Global Agent Data:\n";
 static const char* LAsectiontittle = "#Local Agent Data:\n";
 static const char* GAactionsSectionTittle = "\n#GA Action Data (placeholder):\n\n";
