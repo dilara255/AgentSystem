@@ -1,8 +1,11 @@
 #pragma once
 
+#include "data/agentDataControllers.hpp"
+
 namespace AS {
 	void transferData(int* CLtestArray_ptr);
 	void initTstArray();
+	void testDataContainerCapacity();
 }
 
 #define TST_ARRAY_SIZE 2

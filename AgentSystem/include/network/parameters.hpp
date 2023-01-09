@@ -49,6 +49,7 @@ namespace AS {
 	typedef AZ::FlagField32 GAflagField_t;
 
 	typedef struct {
+		bool isNetworkInitialized;
 		int numberLAs;
 		int numberGAs;
 		int maxLAneighbours;

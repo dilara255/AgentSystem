@@ -14,45 +14,69 @@ int initTestNumber;
 int* AStestArray_ptr;
 int* CLtestArray_ptr;
 
-//TO DO: Separate from testing
-void AS::initializeASandCL() {
+namespace AS {
+	void testAgentDataClassCreation() {
+		int testLAid = 0;
+		float testOffset = 0.5;
+		int testGAid = 1;
+		int testPersonality = 99;
+		bool testGAonOFF = true;
+		
+		LA::coldData_t LAcoldData = LA::coldData_t();
+		LA::stateData_t LAstate = LA::stateData_t();
+		LA::decisionData_t LAdecisionData = LA::decisionData_t();
+		GA::coldData_t GAcoldData = GA::coldData_t();
+		GA::stateData_t GAstate = GA::stateData_t();
+		GA::decisionData_t GAdecisionData = GA::decisionData_t();
 
-	LOG_INFO("Loggers Initialized");
+		AS::LAdata LAagentDataObject(LAcoldData, LAstate, LAdecisionData);
+		AS::GAdata GAagentDataObject(GAcoldData, GAstate, GAdecisionData);
 
-	initTestNumber = AS_TST_INIT_EXPECTED_NUMBER;
+		//TO DO: implement actual testing : )
+		//(load from default network and compare values with defaults)
+		LAagentDataObject.m_coldData.id = testLAid;
+		LAagentDataObject.m_decisionData.offsets.personality.offsets[0] = testOffset;
+		LAagentDataObject.m_state.GAid = testGAid;
 
-	CL::init(initTestNumber, TST_ARRAY_SIZE);
+		GAagentDataObject.m_coldData.id = testGAid;
+		GAagentDataObject.m_decisionData.personality[0] = testPersonality;
+		GAagentDataObject.m_state.onOff = testGAonOFF;
 
-	LOG_TRACE("\nWill initialize Test Array");
-	AS::initTstArray();
+		bool result = true;
 
-	CLtestArray_ptr = CL::getTestArrayPtr();
+		result &= (LAagentDataObject.m_coldData.id == testLAid);
+		result &= (LAagentDataObject.m_decisionData.offsets.personality.offsets[0] == testOffset);
+		result &= (LAagentDataObject.m_state.GAid == testGAid);
 
-	AS::transferData(CLtestArray_ptr);
+		result &= (GAagentDataObject.m_coldData.id == testGAid);
+		result &= (GAagentDataObject.m_decisionData.personality[0] == testPersonality);
+		result &= (GAagentDataObject.m_state.onOff == testGAonOFF);
 
-	getchar();
+		if (result) {
+			LOG_INFO("Local and Global Agent Data Object instances have been created and accessed");
+		}
+		else {
+			LOG_CRITICAL("Something went wrong with creation and or/ access to Local and/or Global Agent Data Object instances!");
+		}
+	}
+}
 
-	createAgentDataControllers(MAX_LA_QUANTITY, MAX_GA_QUANTITY);
+void AS::testContainersAndAgentObjectCreation() 
+{
+	AS::testDataContainerCapacity();
+	AS::testAgentDataClassCreation();
+}
 
-	LA::coldData_t LAcoldData = LA::coldData_t();
-	LA::stateData_t LAstate = LA::stateData_t();
-	LA::decisionData_t LAdecisionData = LA::decisionData_t();
-	GA::coldData_t GAcoldData = GA::coldData_t();
-	GA::stateData_t GAstate = GA::stateData_t();
-	GA::decisionData_t GAdecisionData = GA::decisionData_t();
-
-	AS::LAdata LAagentDataObject(LAcoldData, LAstate, LAdecisionData);
-	AS::GAdata GAagentDataObject(GAcoldData, GAstate, GAdecisionData);
-
+void AS::testFileCreation() {
 	std::string name = "testNetworkNoDefaults.txt";
-	int result = createEmptyNetworkFile(name, name,	TST_NUMBER_LAS, TST_NUMBER_GAS, 
-										MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
-										false);
+	int result = createEmptyNetworkFile(name, name, TST_NUMBER_LAS, TST_NUMBER_GAS,
+		MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
+		false);
 
 	std::string name2 = "testNetworkWithDefaults.txt";
-	result *= createEmptyNetworkFile(name2, name2, TST_NUMBER_LAS, TST_NUMBER_GAS, 
-		                             MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
-									 true);
+	result *= createEmptyNetworkFile(name2, name2, TST_NUMBER_LAS, TST_NUMBER_GAS,
+		MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
+		true);
 
 	if (result) {
 		LOG_INFO("Test Empty Network Files created with and without defaults");
@@ -60,13 +84,27 @@ void AS::initializeASandCL() {
 	else {
 		LOG_CRITICAL("Test Empty Network File Creation Failed (check if they already exist)");
 	}
+}
 
-	LOG_INFO("Initialized");
+void AS::CLinitTest() {
+	initTestNumber = AS_TST_INIT_EXPECTED_NUMBER;
 
-	return;
+	CL::initTest(initTestNumber, TST_ARRAY_SIZE);
+
+	AS::initTstArray();
+
+	CLtestArray_ptr = CL::getTestArrayPtr();
+
+	AS::transferData(CLtestArray_ptr);
+
+	//TO DO: ADD RESULTS FFS
+
+	getchar();
 }
 
 void AS::initTstArray() {
+
+	LOG_TRACE("\nWill initialize Test Array");
 
 	AStestArray_ptr = (int*)malloc(TST_ARRAY_SIZE * sizeof(int));
 	

@@ -59,9 +59,6 @@ TO DO: -Desires, Impediments and Potential Actions Data;
 #include "network/parameters.hpp"
 #include "flagFields.hpp"
 
-//TO DO: remove from here
-void createAgentDataControllers(uint32_t numberOfLAs, uint32_t numberOfGAs);
-
 namespace AS {
 	//General:
 	typedef struct {
@@ -84,7 +81,7 @@ namespace AS {
 
 	//LA related:
 	typedef struct {
-		float thresholds[NUMBER_LA_OFFSETS];
+		float offsets[NUMBER_LA_OFFSETS];
 	} LAdecisionOffsets_t;
 
 	typedef struct {

@@ -17,6 +17,9 @@ namespace AS {
 	AS_API void initializeASandCL();
 
 	//****For Testing****
+	AS_API void CLinitTest();
+	AS_API void testContainersAndAgentObjectCreation();
 	AS_API void sayHello();
+	AS_API void testFileCreation();
 	//*******************
 }
