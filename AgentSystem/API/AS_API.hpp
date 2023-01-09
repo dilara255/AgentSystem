@@ -10,6 +10,8 @@
 #define AS_TST_INIT_EXPECTED_NUMBER 5619419
 #define AS_TST_EXPECTED_ARR0 231879
 #define AS_TST_EXPECTED_ARR1 954263
+static const char* fileNameNoDefaults = "testNetworkNoDefaults.txt";
+static const char* fileNameWithDefaults = "testNetworkWithDefaults.txt";
 //*******************
 
 namespace AS {
@@ -18,7 +20,7 @@ namespace AS {
 	
 	//WARNING: loading clears current network, no confirmation needed!
 	//Logic to save current network first and etc should be handled by the CLIENT
-	AS_API void loadNetworkFromFile(std::string name);
+	AS_API bool loadNetworkFromFile(std::string name);
 
 	//****For Testing****
 	AS_API void CLinitTest();

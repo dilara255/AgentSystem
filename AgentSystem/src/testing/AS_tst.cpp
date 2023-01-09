@@ -76,12 +76,12 @@ void AS::testContainersAndAgentObjectCreation()
 }
 
 void AS::testFileCreation() {
-	std::string name = "testNetworkNoDefaults.txt";
+	std::string name = fileNameNoDefaults;
 	int result = AS::createEmptyNetworkFile(name, name, TST_NUMBER_LAS, TST_NUMBER_GAS,
 		MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
 		false);
 
-	std::string name2 = "testNetworkWithDefaults.txt";
+	std::string name2 = fileNameWithDefaults;
 	result *= AS::createEmptyNetworkFile(name2, name2, TST_NUMBER_LAS, TST_NUMBER_GAS,
 		MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
 		true);
