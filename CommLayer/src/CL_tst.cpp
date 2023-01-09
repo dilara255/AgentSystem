@@ -11,7 +11,13 @@ initTestNumbers_t initNumbers;
 int* testArray_ptr;
 bool tstArrayInitialized;
 
-void CL::init(int ASnumber, int tstArraySize) {
+void CL::init() {
+	LOG_INFO("CL Mock initialization Called");
+}
+
+void CL::initTest(int ASnumber, int tstArraySize) {
+	LOG_TRACE("Will initialize basic CL/AS communication test");
+
 	initNumbers.ASnumber = ASnumber;
 	initNumbers.CLnumber = CL_TST_INIT_EXPECTED_NUMBER;
 

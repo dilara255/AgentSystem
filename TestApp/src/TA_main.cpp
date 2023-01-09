@@ -10,8 +10,17 @@ void test3PointersToMockData(void);
 
 int main(void) {
 	
+	test1SayHello();
+
+	//these tests poke at wether communication between the app and DLLs is working and 
+	//data is being held as expected:
 	test2Initialization();
 	test3PointersToMockData();
+	AS::testContainersAndAgentObjectCreation();
+
+	//these are tests of specific functionality:
+	AS::testFileCreation();
+
 
 	LOG_TRACE("Tests ended. Press return to exit");
 	getchar();
@@ -43,6 +52,8 @@ void test3PointersToMockData(void) {
 void test2Initialization(void) {
 
 	AS::initializeASandCL();
+
+	AS::CLinitTest();
 
 	int numberAS = CL::getASnumber();
 	int numberCL = CL::getCLnumber();

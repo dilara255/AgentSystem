@@ -2,6 +2,10 @@
 
 #include "data/agentDataStructures.hpp"
 
+namespace AS {
+	void createAgentDataControllers();
+}
+
 //TO DO: too much repetition
 //TO DO: make these Classes singleton
 namespace LA {
@@ -72,4 +76,18 @@ namespace GA {
 	private:
 		std::vector <decisionData_t> data;
 	};
+}
+
+namespace AS {
+	typedef struct {
+		bool haveBeenCreated;
+		LA::ColdDataController* LAcoldData_ptr;
+		LA::StateController* LAstate_ptr;
+		LA::DecisionSystem* LAdecision_ptr;
+		GA::ColdDataController* GAcoldData_ptr;
+		GA::StateController* GAstate_ptr;
+		GA::DecisionSystem* GAdecision_ptr;
+	} dataControllerPointers_t;
+
+	extern dataControllerPointers_t agentDataControllers;
 }

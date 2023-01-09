@@ -7,8 +7,8 @@
 * LA Thresholds have become "score offsets" instead. The spec doc is NOT updated yet.
 * 
 * TO DO: Update it after version 0.6
-* 
 * TO DO: Use constexpr instead of defines where possible; 
+* TO DO: On these notes, correct uses of array when actually we're using vectors;
 * 
 * Versioning:
 * 
@@ -37,21 +37,25 @@
 *
 * 1. AS data structure:
 * 
-* //Most of the AS Data will be in arrays. These will be separated in PRNs, Control,
+* //Most of the AS Data will be in vectors. These will be separated in PRNs, Control,
 * //and, with a version each for LAs and GAs: Action, Decision, State, and Cold Data.
 * //These will be controlled by a Control System (PRNs, Control and Cold Data), an Action 
 * //System, a State System and a Decision System.
 * //The exact design should reflect how the data is expected to be used, so at first it 
 * //will be just a reasonable guess.
-* //There will be "Agent Entities" which are IDs to find the specific data, as well
-* //as access functions for the data, taking in the id. The IDs are (directly converted to)
-* //indexes on the areas were the data are. There will be a method to contruct an Agent
-* //Class, with all it's information, which can be used for local processing, for example.
+* //There will be access functions for the data, taking in the id of the agent. 
+* //The IDs are (directly converted to) indexes on the areas were the data are. 
+* //There will be a method to contruct an Agent Class, with all its information, 
+* //which can be used for local processing, for example.
 * 
 * a. Create structures with the expected State and Cold Data for LAs.
 * b. Create structures with the expected State and Cold Data for GAs.
-* c. Create initial version of relevant control systems.
-* d. Allocate memory and populate an array for each (on initialization).
+* c. Create LA and GA Decision Data structure stub (just part of the necessary Data will
+* be known at this point, specially expected values and last step relations for each
+* neighbor. Will assume maxNeighbors for all agents.
+* d. Create an array of each, with an element for each agent.
+* e. Create initial version of relevant control systems.
+* f. Allocate memory and populate an array for each (on initialization).
 * 
 * Note: State and Decision data will assume maxNeighbours.
 * Note: first parts of Decision data structures are actually implemented here.
@@ -82,14 +86,7 @@
 * b. After each loop, make AS update CL's data.
 * c. At a different time interval, TA querries CL and compares data with expected values.
 *
-* 2. Decision Data:
-* 
-* a. Create LA and GA Decision Data structure stub (just part of the necessary Data will
-* be known at this point, specially expected values and last step relations for each
-* neighbor. Will assume maxNeighbors for all agents.
-* b. Create an array of each, with an element for each agent.
-* 
-* 3. Data injection:
+* 2. Data injection:
 * 
 * a. Duplicate State and Action Data on CL, plus an indexed list of fields with the tick of 
 * their last changes.
