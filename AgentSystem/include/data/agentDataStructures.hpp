@@ -104,7 +104,7 @@ namespace AS {
 
 	typedef struct {
 		int diplomaticStanceToNeighbors[MAX_LA_NEIGHBOURS];
-		float dispositionToNeighbors_t[MAX_LA_NEIGHBOURS];
+		float dispositionToNeighbors[MAX_LA_NEIGHBOURS];
 	} LAneighborRelations_t;
 
 	typedef	float LAinfiltrationOnNeighbors_t[MAX_LA_NEIGHBOURS];
@@ -114,7 +114,7 @@ namespace AS {
 
 	typedef struct {
 		int diplomaticStanceToNeighbors[MAX_GA_QUANTITY];
-		float dispositionToNeighbors_t[MAX_GA_QUANTITY];
+		float dispositionToNeighbors[MAX_GA_QUANTITY];
 	} GAneighborRelations_t;
 
 	typedef	float GAinfiltrationOnNeighbors_t[MAX_GA_QUANTITY];

@@ -38,44 +38,251 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
 
     fgets(pp->comment, COMMENT_LENGHT, fp);
 
-    char readSeparator[COMMENT_LENGHT]; //will store a separator used after the comment line
+    char separatorRead[COMMENT_LENGHT]; //will store a separator used after the comment line
 
     LOG_TRACE("And check if all of it was consumed...");
     //if the comment line wasn't consumed to the end, this will load the rest of it
     //instead of the expected separator
-    tokensRead = fscanf(fp, "%s", readSeparator);
+    tokensRead = fscanf(fp, commentSeparatorFormat, separatorRead);
     result &= (tokensRead == 1);
+    if (!result) {
+        LOG_ERROR("Failed to read part of the header. Will abort file loading.");
+    }
 
-    //which USUALLY fails this test, pointing to the error
-    if (readSeparator[0] != commentSeparator[0]) {
+#ifdef DEBUG
+    printf("\nSeparator read:      %s\n", separatorRead);
+#endif // DEBUG   
+
+    //which fails this test*, pointing to the error
+    //*unless the comment line goes out of it's way to make this work
+    char expectedSeparator[COMMENT_LENGHT];
+    sscanf(commentSeparator, commentSeparatorFormat, expectedSeparator);
+
+#ifdef DEBUG
+    printf("Expected separator: %s\n\n", expectedSeparator);
+#endif // DEBUG   
+
+    if (strcmp(separatorRead, expectedSeparator) != 0) {
         LOG_ERROR("Didn't properly consume the comment line. Aborting load");
         return false;
-    } //TO DO: this test is kinda bad (can fail with an strategically placed "!" in the
-      //current version).
-
-    if (!result) {
-        LOG_ERROR("Header not properly loaded. Will abort file loading.");
-    }
-    else {
-        LOG_TRACE("File header information loaded.");
     }
 
-    return result;
-}
-
-bool addGAfromFile() {
+    LOG_TRACE("File header information loaded.");
     return true;
 }
 
-bool addLAfromFile() {
+bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEffectiveGAs) {
+    //TO DO: add logic to load decision data once that's added to the file format
+    
+    int tokens; //to test how many have been read in each call to scanf
+
+    GA::coldData_t cold;
+    GA::stateData_t state;
+    GA::decisionData_t decision;
+
+    int onOff = -99;//TO DO: set a "TEST_INTEGER_VALUE" or something?
+
+    tokens = fscanf(fp, GAidentity, &cold.id, &onOff);
+    if (tokens != 2 ) {
+        LOG_ERROR("Error reading identity tokens from GA. Aborting load.");
+#ifdef DEBUG
+        printf("GA: %i, Tokens read = %i, Cold.id = %i, onOff = %i\n\n", 
+                id, tokens, cold.id, onOff);
+#endif // DEBUG
+        return false;
+    }
+    state.onOff = onOff;
+
+    //Load name. Will check to make sure it's not too long
+    int maxLenght = strlen(GAname) - 2 + NAME_LENGHT; //-2 to account for the "%s" (becomes "name")
+    char buffer[COMMENT_LENGHT]; //should always be much longer, maybe set some "BUFFER_LENGHT"?
+    fgets(buffer, COMMENT_LENGHT, fp); //buffer has the name line
+ 
+    if (strlen(buffer) > maxLenght) {
+        LOG_ERROR("GA Name line too long. Will abort loading.");
+        return false;
+    }
+
+    tokens = sscanf(buffer, GAname, cold.name);
+    if (tokens != 1) {
+        LOG_ERROR("Error reading the name of the GA. Aborting load.");
+        return false;
+    }
+
+    tokens = fscanf(fp, GAresources, &state.parameters.GAresources);
+    if (tokens != 1) {
+        LOG_ERROR("Error reading resource tokens from GA. Aborting load.");
+        return false;
+    }
+    
+    if (state.localAgentsBelongingToThis.getNumberOfBlocks() != GA_CONNECTED_LA_FIELDS) {
+        LOG_ERROR("File incompatible with FlagField Class used (different number of blocks). Aborting load.");
+        return false;
+    }
+
+    uint32_t connectedLAfields[GA_CONNECTED_LA_FIELDS];
+    tokens = fscanf(fp, connectedLAbitfield, &connectedLAfields[0], &connectedLAfields[1],
+                        &connectedLAfields[2], &connectedLAfields[3]);
+    if (tokens != GA_CONNECTED_LA_FIELDS) {
+        LOG_ERROR("Error reading LA connection tokens from GA. Aborting load.");
+        return false;
+    }
+    for (int i = 0; i < GA_CONNECTED_LA_FIELDS; i++) {
+        state.localAgentsBelongingToThis.loadField(connectedLAfields[i], i);
+    }
+    
+    uint32_t connectedGAsFlagField;
+    tokens = fscanf(fp, connectedGAbitfield, &connectedGAsFlagField);
+    if (tokens != 1) {
+        LOG_ERROR("Error reading GA connection tokens from GA. Aborting load.");
+        return false;
+    }
+    state.connectedGAs.loadField(connectedGAsFlagField);
+
+    for (int i = 0; i < numEffectiveGAs; i++) {
+        if (i != id) {
+            int otherId, stance;
+            float disposition;
+            
+            tokens = fscanf(fp, GArelationsInfo, &otherId, &stance, &disposition);
+            if (tokens != 3) {
+                LOG_ERROR("Error reading GA relation tokens. Aborting load.");
+#ifdef DEBUG
+                printf("\n\nGA: %i, Tokens read: %i, otherId: %i, stance: %i, disposition: %f\n",
+                        id, tokens, otherId, stance, disposition);
+#endif // DEBUG
+                return false;
+            }
+            if (otherId != i) {
+                LOG_ERROR("Expected data relating to one GA but read from another. Aborting load.");
+                return false;
+            }
+
+            state.relations.diplomaticStanceToNeighbors[otherId] = stance;
+            state.relations.dispositionToNeighbors[otherId] = disposition;
+        }
+    }
+
+    dp->GAcoldData_ptr->addAgentData(cold);
+    dp->GAstate_ptr->addAgentData(state);
+    //dp->GAdecision_ptr->addAgentData(decision);
+
     return true;
 }
 
-bool addGAactionFromFile() {
+bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNeighbours) {
+    //TO DO: add logic to load decision data once that's added to the file format
+
+    int tokens; //to test how many have been read in each call to scanf
+
+    LA::coldData_t cold;
+    LA::stateData_t state;
+    LA::decisionData_t decision;
+
+    int onOff = -99;//TO DO: set a "TEST_INTEGER_VALUE" or something?
+
+    tokens = fscanf(fp, LAidentity, &cold.id, &state.GAid, &onOff);
+    if (tokens != 3) {
+        LOG_ERROR("Error reading identity tokens from LA. Aborting load.");
+#ifdef DEBUG
+        printf("LA: %i, Tokens read = %i, Cold.id = %i, state.GAid = %i, onOff = %i\n\n",
+            id, tokens, cold.id, state.GAid, onOff);
+#endif // DEBUG
+        return false;
+    }
+    state.onOff = onOff;
+
+    //Load name. Will check to make sure it's not too long
+    int maxLenght = strlen(LAname) - 2 + NAME_LENGHT; //-2 to account for the "%s" (becomes "name")
+    char buffer[COMMENT_LENGHT]; //should always be much longer, maybe set some "BUFFER_LENGHT"?
+    fgets(buffer, COMMENT_LENGHT, fp); //buffer has the name line
+
+    if (strlen(buffer) > maxLenght) {
+        LOG_ERROR("LA Name line too long. Will abort loading.");
+        return false;
+    }
+
+    tokens = sscanf(buffer, LAname, cold.name);
+    if (tokens != 1) {
+        LOG_ERROR("Error reading the name of the LA. Aborting load.");
+        return false;
+    }
+
+    float x, y;
+    tokens = fscanf(fp, LAposition, &x, &y);
+    if (tokens != 2) {
+        LOG_ERROR("Error reading position tokens from GA. Aborting load.");
+        return false;
+    }
+    state.locationAndConnections.position.x = x;
+    state.locationAndConnections.position.y = y;
+
+    tokens = fscanf(fp, LAstrenght, &state.parameters.strenght.current,
+                    &state.parameters.strenght.thresholdToCostUpkeep);
+    if (tokens != 2) {
+        LOG_ERROR("Error reading resource tokens from GA. Aborting load.");
+        return false;
+    }
+
+    tokens = fscanf(fp, LAresources, &state.parameters.resources.current,
+        &state.parameters.resources.updateRate, &state.parameters.strenght.currentUpkeep);
+    if (tokens != 3) {
+        LOG_ERROR("Error reading resource tokens from GA. Aborting load.");
+        return false;
+    }
+
+    //GA_CONNECTED_LA_FIELDS is also the number of blocks to hold flags for all LAs
+    if (state.locationAndConnections.connectedNeighbors.getNumberOfBlocks() 
+                                                 != GA_CONNECTED_LA_FIELDS) {
+        LOG_ERROR("Format incompatible with FlagField Class used (different number of blocks). Aborting load.");
+        return false;
+    }
+
+    uint32_t connectedLAfields[GA_CONNECTED_LA_FIELDS];
+    tokens = fscanf(fp, connectedLAbitfield, &connectedLAfields[0], &connectedLAfields[1],
+        &connectedLAfields[2], &connectedLAfields[3]);
+    if (tokens != GA_CONNECTED_LA_FIELDS) {
+        LOG_ERROR("Error reading LA connection tokens from LA. Aborting load.");
+        return false;
+    }
+    for (int i = 0; i < GA_CONNECTED_LA_FIELDS; i++) {
+        state.locationAndConnections.connectedNeighbors.loadField(connectedLAfields[i], i);
+    }
+
+    for (int i = 0; i < maxNeighbours; i++) {
+        int otherId, stance;
+        float disposition;
+
+        tokens = fscanf(fp, LArelationsInfo, &otherId, &stance, &disposition);
+        if (tokens != 3) {
+            LOG_ERROR("Error reading LA relation tokens. Aborting load.");
+            return false;
+        }
+        if (otherId != i) {
+            LOG_ERROR("Expected data relating to one GA but read from another. Aborting load.");
+            return false;
+        }
+
+        state.relations.diplomaticStanceToNeighbors[otherId] = stance;
+        state.relations.dispositionToNeighbors[otherId] = disposition;
+    }
+
+    dp->LAcoldData_ptr->addAgentData(cold);
+    dp->LAstate_ptr->addAgentData(state);
+    //dp->LAdecision_ptr->addAgentData(decision);
+
     return true;
 }
 
-bool addLAactionFromFile() {
+bool addGAactionFromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp) {
+    //TO DO: add once action format is in place
+
+    return true;
+}
+
+bool addLAactionFromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp) {
+    //TO DO: add once action format is in place
+
     return true;
 }
 
@@ -84,10 +291,29 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
 
     LOG_TRACE("Will load the actual network data...");
 
-    fscanf(fp, GAsectiontittle);
+    char buffer[COMMENT_LENGHT];
+    fgets(buffer, COMMENT_LENGHT, fp);
 
-    for (int i = 0; i < pp->numberGAs; i++) {
-        result = addGAfromFile();
+    //Since fgets has no easy way of checking wether we reached a \n or COMMENT_LENGHT:
+    //We'll check a "comment separator line" to see if the comment was properly red:
+
+    if (strcmp(buffer, GAsectiontittle) != 0) { //try again (don't abort because of trailing newline)
+#ifdef DEBUG
+        printf("\n\nLeu %s em vez de \"%s\"\nVamos tentar mais uma linha...",
+            buffer, GAsectiontittle);
+#endif // DEBUG
+        fgets(buffer, COMMENT_LENGHT, fp);
+        if (strcmp(buffer, GAsectiontittle) != 0) { //two failures -> abort, format should be wrong
+            LOG_ERROR("Start of GA data section is not where it`s expected. Aborting...");
+            return false;
+        }
+    }    
+
+    //Now we start adding the actual data:
+
+    int numEffectiveGAs = pp->numberGAs - 1;//one GA is left to represent "belongs to no GA"
+    for (int i = 0; i < numEffectiveGAs; i++) {
+        result = addGAfromFile(i, fp, dp, numEffectiveGAs);
         if (!result) break;
     }
     if (!result) {
@@ -95,10 +321,11 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
         return false;
     }
 
+    fscanf(fp, lastGAwarning);
     fscanf(fp, LAsectiontittle);
 
-    for (int i = 0; i < pp->numberLAs; i++) {
-        result = addLAfromFile();
+    for (int i = 0; i < numEffectiveGAs; i++) {
+        result = addLAfromFile(i, fp, dp, pp->maxLAneighbours);
 
         if (!result) break;
     }
@@ -109,8 +336,8 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
     
     fscanf(fp, GAactionsSectionTittle);
 
-    for (int i = 0; i < pp->numberGAs * pp->maxActions; i++) {
-        result = addGAactionFromFile();
+    for (int i = 0; i < numEffectiveGAs * pp->maxActions; i++) {
+        result = addGAactionFromFile(i, fp, dp);
        
         if (!result) break;
     }
@@ -122,7 +349,7 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
     fscanf(fp, LAactionsSectionTittle);
 
     for (int i = 0; i < pp->numberLAs * pp->maxActions; i++) {
-        result = addLAactionFromFile();
+        result = addLAactionFromFile(i, fp, dp);
 
         if (!result) break;
     }
@@ -144,16 +371,14 @@ bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
 
     bool result = loadHeaderFromFp(fp, &currentNetworkParams);
     if (!result) {
-        LOG_ERROR("Couldn't read all tokens from the file header area. Aborting load (will clear network)");
-        AS::clearNetwork();
+        LOG_ERROR("Couldn't read all tokens from the file header area. Aborting load");
         return false;
     }
     LOG_TRACE("Header read, parameters updated. Will load data.");
 
     result = loadDataFromFp(fp, &currentNetworkParams, &agentDataControllers);    
     if (!result) {
-        LOG_ERROR("Loading aborted - will clear network");
-        AS::clearNetwork();
+        LOG_ERROR("Couldn't load data, loading aborted");
         return false;
     }
     else {

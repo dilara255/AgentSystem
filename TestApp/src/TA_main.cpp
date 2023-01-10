@@ -5,52 +5,86 @@
 #include "CL_ExternalAPI.hpp"
 
 void test1SayHello(void);
-void test2Initialization(void);
-void test3PointersToMockData(void);
+bool test2Initialization(void);
+bool test3PointersToMockData(void);
 
 #define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
+#define BASIC_INIT_COMM_TESTS 3
+#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 2
+#define TOTAL_TESTS (BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS)
 
 //TO DO: make all tests return bool and count results, than match with expected
 int main(void) {
 	
 	test1SayHello();
+
+	LOG_INFO("AS, CL-internal and CL-external should have said hello above...\n");
 	getchar();
 
 	LOG_WARN("\n\nWill try loading file before initialization... should fail");
 	AS::loadNetworkFromFile(fileNameNoDefaults);
-	LOG_WARN("Failing should happen above. Tests bellow should pass\n\n");
+	LOG_WARN("Failing should happen above. Tests bellow should pass...\n\n");
 	getchar();
 
-	//these tests poke at wether communication between the app and DLLs is working and 
-	//data is being held as expected:
-	test2Initialization();
+	LOG_INFO("\n\nBasic App, AS and CL communicaton and data storage tests:\n\n");
+	int resultsBattery1 = (int)test2Initialization();
 	getchar();
-	test3PointersToMockData();
-	AS::testContainersAndAgentObjectCreation();
+	resultsBattery1 += (int)test3PointersToMockData();
+	getchar();
+	resultsBattery1 += (int)AS::testContainersAndAgentObjectCreation();
+	getchar();
+	if (resultsBattery1 != BASIC_INIT_COMM_TESTS) {
+		LOG_CRITICAL("Not all of these tests passed:");
+		printf("%i out of %i failed", BASIC_INIT_COMM_TESTS - resultsBattery1, BASIC_INIT_COMM_TESTS);
+	}
+	else {
+		LOG_INFO("All of these tests passed!");
+	}
 	getchar();
 
-	//these are tests of specific functionality:
-	AS::testFileCreation();
+	LOG_INFO("\n\nSpecific functionality tests (DATA manipulation):\n\n");
+	int resultsBattery2 = (int)AS::testFileCreation();
 	getchar();
-	AS::loadNetworkFromFile(fileNameNoDefaults);
+	resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults);
+	getchar();
+	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
+		LOG_CRITICAL("Not all of these tests passed:");
+		printf("%i out of %i failed", SPECIFIC_DATA_FUNCTIONALITY_TESTS - resultsBattery2, 
+			                     SPECIFIC_DATA_FUNCTIONALITY_TESTS);
+	}
+	else {
+		LOG_INFO("All of these tests passed!");
+	}
+	getchar();
 
+	int totalPassed = resultsBattery1 + resultsBattery2;
+	if (totalPassed == TOTAL_TESTS) {
+		LOG_INFO("All automatically checked tests passed!");
+	}
+	else {
+		LOG_CRITICAL("Not all automatically checked tests were passed!");
+		printf("%i out of %i failed\n", TOTAL_TESTS - totalPassed, TOTAL_TESTS);
+	}
 
 	LOG_TRACE("Tests ended. Press return to exit");
 	getchar();
 	return 1;
 }
 
-void test3PointersToMockData(void) {
+bool test3PointersToMockData(void) {
+	bool result;
 
 	int* tstArray_ptr = CL::getTestArrayPtr();
 	if (tstArray_ptr[0] == AS_TST_EXPECTED_ARR0 && tstArray_ptr[1] == AS_TST_EXPECTED_ARR1) {
 		LOG_INFO("AS test array numbers relayed correctly");
+		result = true;
 	}
 	else {
 		LOG_ERROR("AS test array numbers relayed INCORRECTLY");
 		if (tstArray_ptr[0] == MS_DEBUG_MALLOC_INIT_VALUE) {
 			LOG_TRACE("(it seems like no value was copied to CL's test array)");
 		}
+		result = false;
 	}
 
 #ifdef AS_DEBUG
@@ -58,11 +92,10 @@ void test3PointersToMockData(void) {
 		   tstArray_ptr[0], tstArray_ptr[1]);
 #endif
 
-	getchar();
-	return;
+	return result;
 }
 
-void test2Initialization(void) {
+bool test2Initialization(void) {
 
 	AS::initializeASandCL();
 
@@ -71,14 +104,17 @@ void test2Initialization(void) {
 	int numberAS = CL::getASnumber();
 	int numberCL = CL::getCLnumber();
 
-	if (numberAS == AS_TST_INIT_EXPECTED_NUMBER) LOG_INFO("AS initialization test number is Right");
-	else LOG_ERROR("AS initialization test number is WRONG");
+	bool result = numberAS == AS_TST_INIT_EXPECTED_NUMBER;
+	result &= numberCL == CL_TST_INIT_EXPECTED_NUMBER;
 
-	if (numberCL == CL_TST_INIT_EXPECTED_NUMBER) LOG_INFO("CL initialization test number is Right");
-	else LOG_ERROR("CL initialization test number is WRONG");
+	if (result) {
+		LOG_INFO("AS and CL initialization and basic communication test numbers are Right");
+	}
+	else {
+		LOG_ERROR("AS and/or CL initialization and basic communication test numbers are WRONG");
+	}
 
-	getchar();
-	return;
+	return result;
 }
 
 void test1SayHello(void) {

@@ -56,6 +56,7 @@ namespace AZ {
 			if (toWhichField > 3) return false; //doesn't exist: not active
 
 			field[toWhichField] = flagsToLoad;
+			return true;
 		}
 
 		uint32_t getField(unsigned whichField) {
@@ -91,6 +92,14 @@ namespace AZ {
 			field[element] = field[element] & (~(BIT(bit)));
 		}
 
+		int getNumberOfBlocks() {
+			return blocks;
+		}
+
+		size_t sizeOfBlockInBytes() {
+			return sizeof(field[0]);
+		}
+
 		/*TO DO: implement toggle
 		void toggleBit(int bit) {
 
@@ -98,6 +107,7 @@ namespace AZ {
 		*/
 
 	private:
+		int blocks = 4;
 		uint32_t field[4];
 	};
 }

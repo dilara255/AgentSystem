@@ -108,13 +108,19 @@ bool AS::loadNetworkFromFile(std::string name) {
 	}
 
 	LOG_TRACE("File Acquired and of compatiple version. Clearing current network");
-	clearNetwork();
+	clearNetwork(); //in order to load the new one
 
 	bool result;
 	result = loadNetworkFromFileToDataControllers(fp, agentDataControllers, currentNetworkParams);
+	if (!result) {
+		LOG_ERROR("Load failed. Will clear the network.");
+		clearNetwork(); //we don't leave an incomplete state behind. Marks data as not initialized.
+	}
 
 	fclose(fp);
 	LOG_TRACE("File closed");
 
-	return result;
+	//TO DO: check capacities and sizes to make sure things are in order
+
+	return result; //not much information is given, but the app may decide what to do on failure
 }

@@ -218,7 +218,7 @@ namespace GA {
 }
 
 namespace AS {
-	void testDataContainerCapacity(const dataControllerPointers_t* agentDataControllers_cptr) {
+	bool testDataContainerCapacity(const dataControllerPointers_t* agentDataControllers_cptr) {
 #ifdef DEBUG
 		printf("\nData structure sizes (bytes):\n");
 		printf("LA: Cold: %zi, State : %zi Decision : %zi\n",
@@ -252,19 +252,18 @@ namespace AS {
 			agentDataControllers_cptr->GAstate_ptr->capacityForDataInBytes() +
 			agentDataControllers_cptr->GAdecision_ptr->capacityForDataInBytes();
 
-		if (actualLAsize != LAtotalSize) {
-			LOG_CRITICAL("LA data capacity at controller doesn't match expected");
-			printf("--> is %zi instead\n", actualLAsize);
+		bool result = actualLAsize == LAtotalSize;
+		result &= actualGAsize == GAtotalSize;
+
+		if (!result) {
+			LOG_CRITICAL("LA and OR data capacity at controllers doesn't match expected");
+			printf("--> LA is %zi instead of %zi\n", actualLAsize, LAtotalSize);
+			printf("--> GA is %zi instead of %zi\n", actualGAsize, GAtotalSize);
+			return false;
 		}
 		else {
-			LOG_TRACE("LA data capacity at controller is as expected");
-		}
-		if (actualGAsize != GAtotalSize) {
-			LOG_CRITICAL("GA data capacity at controller doesn't match expected");
-			printf("--> is %zi instead\n", actualGAsize);
-		}
-		else {
-			LOG_TRACE("GA data capacity at controller is as expected");
+			LOG_TRACE("LA and GA data capacity at controllers is as expected");
+			return true;
 		}
 	}
 }
