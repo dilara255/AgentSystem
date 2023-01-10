@@ -60,17 +60,17 @@
 * Note: State and Decision data will assume maxNeighbours.
 * Note: first parts of Decision data structures are actually implemented here.
 * 
-* >> 2. Basic saving and loading:
+* 2. Basic saving and loading:
 * 
 * a. Create a format for text file with network information.
 * b. Create file with empty or default fields.
 * c. Read information from a text file on initialization or request.
 * d. Save data to a text file on request.
-* >> e. Add to file format and functions the decision data already in place.
+* e. Add to file format and functions the decision data already in place.
 *
-* 3. Actions (stub), communication, more saving and loading:
+* >> 3. Actions (stub), communication, more saving and loading:
 * 
-* a. Create Action Data Structure and controller.
+* >> a. Create Action Data Structure and controller.
 * b. Update file format and file functions to support it.
 * c. Create functionality to updata data and parameters derived from loaded data
 *    (eg: number of connections, neighbour ids, etc)

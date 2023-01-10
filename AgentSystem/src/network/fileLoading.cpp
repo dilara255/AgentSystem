@@ -16,6 +16,7 @@ TO DO: should get the file name into the "network name" from the parameters file
 
 #include "systems/AScoordinator.hpp"
 #include "fileManager.hpp"
+#include "systems/actionSystem.hpp"
 
 #include "network/parameters.hpp"
 #include "network/fileFormat.hpp"
@@ -110,6 +111,14 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
         return false;
     }
 
+    tokens = fscanf(fp, GApersonality, &decision.personality[0],
+                    &decision.personality[1], &decision.personality[2], 
+                    &decision.personality[3]);
+    if (tokens != 4) {
+        LOG_ERROR("Error reading personality tokens from GA. Aborting load.");
+        return false;
+    }
+
     tokens = fscanf(fp, GAresources, &state.parameters.GAresources);
     if (tokens != 1) {
         LOG_ERROR("Error reading resource tokens from GA. Aborting load.");
@@ -143,10 +152,11 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     for (int i = 0; i < numEffectiveGAs; i++) {
         if (i != id) {
             int otherId, stance;
-            float disposition;
+            float disposition, infiltration;
             
-            tokens = fscanf(fp, GArelationsInfo, &otherId, &stance, &disposition);
-            if (tokens != 3) {
+            tokens = fscanf(fp, GArelationsInfo, &otherId, &stance, 
+                            &disposition, &infiltration);
+            if (tokens != 4) {
                 LOG_ERROR("Error reading GA relation tokens. Aborting load.");
 #ifdef DEBUG
                 printf("\n\nGA: %i, Tokens read: %i, otherId: %i, stance: %i, disposition: %f\n",
@@ -161,15 +171,8 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
 
             state.relations.diplomaticStanceToNeighbors[otherId] = stance;
             state.relations.dispositionToNeighbors[otherId] = disposition;
+            decision.infiltration[otherId] = infiltration;
         }
-    }
-
-    //TO DO: STUB: JUST LOADING SOME "DEFAULTS" - UPDATE WHEN FILE FORMATE INCLUDES THESE
-    for (int i = 0; i < MAX_GA_QUANTITY; i++) {
-        decision.infiltration[i] = 0;
-    }
-    for (int i = 0; i < GA_PERSONALITY_TRAITS; i++) {
-        decision.personality[i] = 0;
     }
 
     dp->GAcoldData_ptr->addAgentData(cold);
@@ -217,7 +220,6 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
         return false;
     }
 
-    float x, y;
     tokens = fscanf(fp, LAposition, &state.locationAndConnections.position.x,
                                     &state.locationAndConnections.position.y);
     if (tokens != 2) {
@@ -262,10 +264,11 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     state.locationAndConnections.numberConnectedNeighbors = connections;
     for (int i = 0; i < connections; i++) {
         int otherId, stance;
-        float disposition;
+        float disposition, infiltration;
 
-        tokens = fscanf(fp, LArelationsInfo, &otherId, &stance, &disposition);
-        if (tokens != 3) {
+        tokens = fscanf(fp, LArelationsInfo, &otherId, &stance,
+                        &disposition, &infiltration);
+        if (tokens != 4) {
             LOG_ERROR("Error reading LA relation tokens. Will Abort loading.");
             return false;
         }
@@ -276,15 +279,32 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
 
         state.relations.diplomaticStanceToNeighbors[otherId] = stance;
         state.relations.dispositionToNeighbors[otherId] = disposition;
+        decision.infiltration[otherId] = infiltration;
     }
 
-    //TO DO: STUB: JUST LOADING SOME "DEFAULTS" - UPDATE WHEN FILE FORMATE INCLUDES THESE
-    for (int i = 0; i < MAX_LA_NEIGHBOURS; i++) {
-        decision.infiltration[i] = 0;
+    fscanf(fp, LAoffsetsTitle);
+
+    constexpr int localAndGlobal = 2;
+    float offsets[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES][localAndGlobal];
+
+    for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+        int category;
+        tokens = fscanf(fp, LAcategoryOffsets, &category,
+                                               &offsets[i][0][0], &offsets[i][0][1],
+                                               &offsets[i][1][0], &offsets[i][1][1],
+                                               &offsets[i][2][0], &offsets[i][2][1]);
     }
-    for (int i = 0; i < NUMBER_LA_OFFSETS; i++) {
-        decision.offsets.incentivesAndConstraintsFromGA.offsets[i] = 0;
-        decision.offsets.personality.offsets[i] = 0;
+    if (tokens != (AS::TOTAL_MODES*localAndGlobal + 1) ) {
+        LOG_ERROR("Error reading LA offset tokens. Will Abort loading.");
+        return false;
+    }
+
+    for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+        for (int j = 0; j < AS::TOTAL_MODES; j++) {
+            decision.offsets.personality.offsets[i][j] = offsets[i][j][AS::LOCAL];
+            decision.offsets.incentivesAndConstraintsFromGA.offsets[i][j] 
+                                                          = offsets[i][j][AS::GLOBAL];
+        }
     }
 
     dp->LAcoldData_ptr->addAgentData(cold);

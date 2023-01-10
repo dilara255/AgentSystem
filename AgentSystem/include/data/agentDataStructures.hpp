@@ -57,6 +57,8 @@ TO DO: -Desires, Impediments and Potential Actions Data;
 */
 
 #include "network/parameters.hpp"
+#include "systems/actionSystem.hpp"
+
 #include "flagFields.hpp"
 
 namespace AS {
@@ -81,7 +83,7 @@ namespace AS {
 
 	//LA related:
 	typedef struct {
-		float offsets[NUMBER_LA_OFFSETS];
+		float offsets[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES];
 	} LAdecisionOffsets_t;
 
 	typedef struct {

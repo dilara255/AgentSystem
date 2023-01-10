@@ -45,6 +45,13 @@ and sizes static.
 #define DEFAULT_LA_DISTANCE 10
 #define DEFAULT_LAs_PER_LINE 3
 #define DEFAULT_LA_NEIGHBOUR_QUOTIENT 2 //Default connections = max/this
+#define DEFAULT_GA_INFILTRATION (0.0)
+#define DEFAULT_LA_INFILTRATION (0.0)
+#define DEFAULT_GA_PERSONA_0 0
+#define DEFAULT_GA_PERSONA_1 1
+#define DEFAULT_GA_PERSONA_2 2
+#define DEFAULT_GA_PERSONA_3 3
+#define DEFAULT_LA_OFFSET (0.0)
 
 namespace AS {
 	typedef AZ::FlagField128 LAflagField_t;
