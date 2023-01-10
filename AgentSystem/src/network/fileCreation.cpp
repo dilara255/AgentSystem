@@ -24,6 +24,7 @@ reevaluated once the actual format and save system needs are known.
 
 int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int numberLAs,
     int numberGAs, int maxNeighbors, int maxActions, bool setDefaults) {
+    //TO DO: add logic to insert decision data once that's added to the file format
 
     LOG_TRACE("Creating new Network File");
 
@@ -96,9 +97,13 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
     if (resultAux == EOF) result = 0; //fputs returns EOF on error
 
     for (int i = 0; i < (numberGAs - 1); i++) {
+        
+        resultAux = fprintf(fp, GAidentity, i, DEFAULT_ONOFF);
+        if (resultAux <= 0) result = 0;
+
         std::string name = defaultGAnamePrefix;
         name += std::to_string(i);
-        resultAux = fprintf(fp, GAidentity, i, name.c_str(), DEFAULT_ONOFF);
+        resultAux = fprintf(fp, GAname, name.c_str());
         if (resultAux <= 0) result = 0;
 
         resultAux = fprintf(fp, GAresources, DEFAULT_GA_RESOURCES);
@@ -138,6 +143,9 @@ int insertGAsWithoutDefaults(int numberGAs, FILE* fp) {
         resultAux = fputs(GAidentity, fp);
         if (resultAux == EOF) result = 0;
 
+        resultAux = fputs(GAname, fp);
+        if (resultAux == EOF) result = 0;
+
         resultAux = fputs(GAresources, fp);
         if (resultAux == EOF) result = 0;
 
@@ -169,9 +177,14 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
     if (resultAux == EOF) result = 0;
 
     for (int i = 0; i < numberLAs; i++) {
+        
+        resultAux = fprintf(fp, LAidentity, i, numberGAs - 1, DEFAULT_ONOFF);
+        if (resultAux <= 0) result = 0;
+
         std::string name = defaultLAnamePrefix;
         name += std::to_string(i);
-        resultAux = fprintf(fp, LAidentity, i, name.c_str(), numberGAs - 1, DEFAULT_ONOFF);
+
+        resultAux = fprintf(fp, LAname, name.c_str());
         if (resultAux <= 0) result = 0;
 
         int lineLenght = DEFAULT_LA_DISTANCE * (DEFAULT_LAs_PER_LINE);
@@ -215,6 +228,9 @@ int insertLAsWithoutDefaults(int numberLAs, int maxNeighbors, FILE* fp) {
 
     for (int i = 0; i < numberLAs; i++) {
         resultAux = fputs(LAidentity, fp);
+        if (resultAux == EOF) result = 0;
+
+        resultAux = fputs(LAname, fp);
         if (resultAux == EOF) result = 0;
 
         resultAux = fputs(LAposition, fp);

@@ -24,8 +24,8 @@ namespace AS {
 
 	//****For Testing****
 	AS_API void CLinitTest();
-	AS_API void testContainersAndAgentObjectCreation();
+	AS_API bool testContainersAndAgentObjectCreation();
 	AS_API void sayHello();
-	AS_API void testFileCreation();
+	AS_API bool testFileCreation();
 	//*******************
 }

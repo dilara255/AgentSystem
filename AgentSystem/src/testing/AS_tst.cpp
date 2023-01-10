@@ -22,8 +22,9 @@ int initTestNumber;
 int* AStestArray_ptr;
 int* CLtestArray_ptr;
 
+//TO DO: Add reasonable return values to all tests : )
 namespace AS {
-	void testAgentDataClassCreation() {
+	bool testAgentDataClassCreation() {
 		int testLAid = 0;
 		float testOffset = 0.5;
 		int testGAid = 1;
@@ -66,16 +67,19 @@ namespace AS {
 		else {
 			LOG_CRITICAL("Something went wrong with creation and or/ access to Local and/or Global Agent Data Object instances!");
 		}
+
+		return result;
 	}
 }
 
-void AS::testContainersAndAgentObjectCreation() 
+bool AS::testContainersAndAgentObjectCreation() 
 {
-	AS::testDataContainerCapacity(AS::agentDataControllers_cptr);
-	AS::testAgentDataClassCreation();
+	bool result = AS::testDataContainerCapacity(AS::agentDataControllers_cptr);
+	result &= AS::testAgentDataClassCreation();
+	return result;
 }
 
-void AS::testFileCreation() {
+bool AS::testFileCreation() {
 	std::string name = fileNameNoDefaults;
 	int result = AS::createEmptyNetworkFile(name, name, TST_NUMBER_LAS, TST_NUMBER_GAS,
 		MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
@@ -92,6 +96,8 @@ void AS::testFileCreation() {
 	else {
 		LOG_CRITICAL("Test Empty Network File Creation Failed (check if they already exist)");
 	}
+
+	return result;
 }
 
 void AS::CLinitTest() {
@@ -106,8 +112,6 @@ void AS::CLinitTest() {
 	AS::transferData(CLtestArray_ptr);
 
 	//TO DO: ADD RESULTS FFS
-
-	getchar();
 }
 
 void AS::initTstArray() {
