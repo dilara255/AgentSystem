@@ -10,7 +10,7 @@ bool test3PointersToMockData(void);
 
 #define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
 #define BASIC_INIT_COMM_TESTS 3
-#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 2
+#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 4
 #define TOTAL_TESTS (BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS)
 
 //TO DO: make all tests return bool and count results, than match with expected
@@ -33,6 +33,7 @@ int main(void) {
 	getchar();
 	resultsBattery1 += (int)AS::testContainersAndAgentObjectCreation();
 	getchar();
+
 	if (resultsBattery1 != BASIC_INIT_COMM_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%i out of %i failed", BASIC_INIT_COMM_TESTS - resultsBattery1, BASIC_INIT_COMM_TESTS);
@@ -47,6 +48,11 @@ int main(void) {
 	getchar();
 	resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults);
 	getchar();
+	resultsBattery2 += (int)AS::saveNetworkToFile();
+	getchar();
+	resultsBattery2 += (int)AS::saveNetworkToFile("TestFileCustomName.txt");
+	getchar();
+
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%i out of %i failed", SPECIFIC_DATA_FUNCTIONALITY_TESTS - resultsBattery2, 

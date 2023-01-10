@@ -110,7 +110,7 @@ namespace AS {
 	typedef	float LAinfiltrationOnNeighbors_t[MAX_LA_NEIGHBOURS];
 
 	//GA specific:
-	typedef int GApersonality[4];
+	typedef int GApersonality[GA_PERSONALITY_TRAITS];
 
 	typedef struct {
 		int diplomaticStanceToNeighbors[MAX_GA_QUANTITY];

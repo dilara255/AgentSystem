@@ -36,7 +36,9 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
 
     LOG_TRACE("Will load the comment line...");
 
-    fgets(pp->comment, COMMENT_LENGHT, fp);
+    char tempComment[COMMENT_LENGHT];
+    fgets(tempComment, COMMENT_LENGHT, fp);
+    sscanf(tempComment, commentLine, pp->comment); //to get rid of the "initial #" in the format
 
     char separatorRead[COMMENT_LENGHT]; //will store a separator used after the comment line
 
@@ -72,8 +74,7 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
 }
 
 bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEffectiveGAs) {
-    //TO DO: add logic to load decision data once that's added to the file format
-    
+
     int tokens; //to test how many have been read in each call to scanf
 
     GA::coldData_t cold;
@@ -94,7 +95,7 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     state.onOff = onOff;
 
     //Load name. Will check to make sure it's not too long
-    int maxLenght = strlen(GAname) - 2 + NAME_LENGHT; //-2 to account for the "%s" (becomes "name")
+    size_t maxLenght = strlen(GAname) - 2 + NAME_LENGHT; //-2 to account for the "%s" (becomes "name")
     char buffer[COMMENT_LENGHT]; //should always be much longer, maybe set some "BUFFER_LENGHT"?
     fgets(buffer, COMMENT_LENGHT, fp); //buffer has the name line
  
@@ -163,9 +164,17 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
         }
     }
 
+    //TO DO: STUB: JUST LOADING SOME "DEFAULTS" - UPDATE WHEN FILE FORMATE INCLUDES THESE
+    for (int i = 0; i < MAX_GA_QUANTITY; i++) {
+        decision.infiltration[i] = 0;
+    }
+    for (int i = 0; i < GA_PERSONALITY_TRAITS; i++) {
+        decision.personality[i] = 0;
+    }
+
     dp->GAcoldData_ptr->addAgentData(cold);
     dp->GAstate_ptr->addAgentData(state);
-    //dp->GAdecision_ptr->addAgentData(decision);
+    dp->GAdecision_ptr->addAgentData(decision);
 
     return true;
 }
@@ -193,7 +202,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     state.onOff = onOff;
 
     //Load name. Will check to make sure it's not too long
-    int maxLenght = strlen(LAname) - 2 + NAME_LENGHT; //-2 to account for the "%s" (becomes "name")
+    size_t maxLenght = strlen(LAname) - 2 + NAME_LENGHT; //-2 to account for the "%s" (becomes "name")
     char buffer[COMMENT_LENGHT]; //should always be much longer, maybe set some "BUFFER_LENGHT"?
     fgets(buffer, COMMENT_LENGHT, fp); //buffer has the name line
 
@@ -209,13 +218,13 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     }
 
     float x, y;
-    tokens = fscanf(fp, LAposition, &x, &y);
+    tokens = fscanf(fp, LAposition, &state.locationAndConnections.position.x,
+                                    &state.locationAndConnections.position.y);
     if (tokens != 2) {
         LOG_ERROR("Error reading position tokens from GA. Aborting load.");
         return false;
     }
-    state.locationAndConnections.position.x = x;
-    state.locationAndConnections.position.y = y;
+    
 
     tokens = fscanf(fp, LAstrenght, &state.parameters.strenght.current,
                     &state.parameters.strenght.thresholdToCostUpkeep);
@@ -249,17 +258,19 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
         state.locationAndConnections.connectedNeighbors.loadField(connectedLAfields[i], i);
     }
 
-    for (int i = 0; i < maxNeighbours; i++) {
+    int connections = state.locationAndConnections.connectedNeighbors.howManyAreOn();
+    state.locationAndConnections.numberConnectedNeighbors = connections;
+    for (int i = 0; i < connections; i++) {
         int otherId, stance;
         float disposition;
 
         tokens = fscanf(fp, LArelationsInfo, &otherId, &stance, &disposition);
         if (tokens != 3) {
-            LOG_ERROR("Error reading LA relation tokens. Aborting load.");
+            LOG_ERROR("Error reading LA relation tokens. Will Abort loading.");
             return false;
         }
         if (otherId != i) {
-            LOG_ERROR("Expected data relating to one GA but read from another. Aborting load.");
+            LOG_ERROR("Expected data relating to one GA but read from another.Will Abort loading.");
             return false;
         }
 
@@ -267,9 +278,18 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
         state.relations.dispositionToNeighbors[otherId] = disposition;
     }
 
+    //TO DO: STUB: JUST LOADING SOME "DEFAULTS" - UPDATE WHEN FILE FORMATE INCLUDES THESE
+    for (int i = 0; i < MAX_LA_NEIGHBOURS; i++) {
+        decision.infiltration[i] = 0;
+    }
+    for (int i = 0; i < NUMBER_LA_OFFSETS; i++) {
+        decision.offsets.incentivesAndConstraintsFromGA.offsets[i] = 0;
+        decision.offsets.personality.offsets[i] = 0;
+    }
+
     dp->LAcoldData_ptr->addAgentData(cold);
     dp->LAstate_ptr->addAgentData(state);
-    //dp->LAdecision_ptr->addAgentData(decision);
+    dp->LAdecision_ptr->addAgentData(decision);
 
     return true;
 }
@@ -324,7 +344,7 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
     fscanf(fp, lastGAwarning);
     fscanf(fp, LAsectiontittle);
 
-    for (int i = 0; i < numEffectiveGAs; i++) {
+    for (int i = 0; i < pp->numberLAs; i++) {
         result = addLAfromFile(i, fp, dp, pp->maxLAneighbours);
 
         if (!result) break;
@@ -364,19 +384,19 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
 
 bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
                                dataControllerPointers_t agentDataControllers,
-                               networkParameters_t currentNetworkParams) {
+                               networkParameters_t* currentNetworkParams_ptr) {
     
     LOG_TRACE("Will rewind the file pointer to begin loading");
     rewind(fp);
 
-    bool result = loadHeaderFromFp(fp, &currentNetworkParams);
+    bool result = loadHeaderFromFp(fp, currentNetworkParams_ptr);
     if (!result) {
         LOG_ERROR("Couldn't read all tokens from the file header area. Aborting load");
         return false;
     }
-    LOG_TRACE("Header read, parameters updated. Will load data.");
+    LOG_TRACE("Header read, parameters updated. Will load data."); 
 
-    result = loadDataFromFp(fp, &currentNetworkParams, &agentDataControllers);    
+    result = loadDataFromFp(fp, currentNetworkParams_ptr, &agentDataControllers);
     if (!result) {
         LOG_ERROR("Couldn't load data, loading aborted");
         return false;
@@ -384,7 +404,7 @@ bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
     else {
         LOG_INFO("File Loaded.");
         return true;
-    }    
+    }   
 }
 
 FILE* AS::acquireFilePointerToLoad(std::string name) {

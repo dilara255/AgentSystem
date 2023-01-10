@@ -17,6 +17,9 @@ reevaluated once the actual format and save system needs are known.
 
 #include "logAPI.hpp"
 
+#include "systems/AScoordinator.hpp"
+#include "data/agentDataControllers.hpp"
+
 #include "fileManager.hpp"
 
 #include "network/parameters.hpp"
@@ -206,10 +209,23 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
             upkeep);
         if (resultAux <= 0) result = 0;
 
-        resultAux = fprintf(fp, connectedLAbitfield, 0, 0, 0, 0);
+        AZ::FlagField128 connectionField;
+        int connections = MAX_LA_NEIGHBOURS / DEFAULT_LA_NEIGHBOUR_QUOTIENT;
+        for (int j = 0; j < connections; j++) {
+            int other = i + j;
+            if (other >= numberLAs) {
+                other -= numberLAs;
+            }
+            connectionField.setBitOn(other);
+        }
+
+        resultAux = fprintf(fp, connectedLAbitfield, connectionField.getField(0),
+                                                    connectionField.getField(1), 
+                                                    connectionField.getField(2), 
+                                                    connectionField.getField(3));
         if (resultAux <= 0) result = 0;
 
-        for (int j = 0; j < maxNeighbors; j++) {
+        for (int j = 0; j < connections; j++) {
             resultAux = fprintf(fp, LArelationsInfo, j,
                 DEFAULT_LA_STANCE, DEFAULT_LA_DISPOSITION);
             if (resultAux <= 0) result = 0;
@@ -298,6 +314,217 @@ int insertActionsWithoutDefaults(int numberLAs, int numberGAs, int maxActions, F
         resultAux = fprintf(fp, LAaction, i, i / (maxActions));
         if (resultAux < 0) result = 0;
     }
+
+    return result;
+}
+
+FILE* AS::acquireFilePointerToSave(std::string name) {
+    name = defaultFilePath + name;
+
+    FILE* fp = fopen(name.c_str(), "r");
+    if (fp == NULL) {
+        return fopen(name.c_str(), "w");
+    }
+    else {
+        LOG_WARN("File already exists. Will append a number to the end of the name");
+    }
+
+    std::string tempName = "";
+    int i = 0;
+    const char delim = '.';
+    while ( (name.c_str()[i] != '\0') && (name.c_str()[i] != delim)) {
+        tempName += name.c_str()[i];
+        i++;
+    }
+
+    std::string restOfName = "";
+    while (name.c_str()[i] != '\0') {
+        restOfName += name.c_str()[i];
+        i++;
+    }
+   
+    std::string newName;
+    int append = 1;
+    while (fp != NULL) {
+        fclose(fp);
+
+        append++;
+        newName = tempName + std::to_string(append) + restOfName;
+
+        fp = fopen(newName.c_str(), "r");
+    }
+
+#ifdef DEBUG
+    printf("\nFinal file name to save: %s\n", newName.c_str());
+#endif // DEBUG
+        
+    return fopen(newName.c_str(), "w");
+}
+
+bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
+    const AS::networkParameters_t* pp) {
+
+    LOG_TRACE("Will write the GAs to file...");
+
+    int result = 1;
+    int resultAux;
+
+    resultAux = fputs(GAsectiontittle, fp);
+    if (resultAux == EOF) result = 0; //fputs returns EOF on error
+
+    for (int i = 0; i < (pp->numberGAs - 1); i++) {
+
+        GA::coldData_t cold;
+        GA::stateData_t state;
+        GA::decisionData_t decision;
+
+        dp->GAcoldData_ptr->getAgentData(i, &cold);
+        dp->GAstate_ptr->getAgentData(i, &state);
+        dp->GAdecision_ptr->getAgentData(i, &decision);
+
+        resultAux = fprintf(fp, GAidentity, cold.id, state.onOff);
+        if (resultAux <= 0) result = 0;
+
+        resultAux = fprintf(fp, GAname, cold.name);
+        if (resultAux <= 0) result = 0;
+
+        resultAux = fprintf(fp, GAresources, state.parameters.GAresources);
+        if (resultAux <= 0) result = 0;
+
+        resultAux = fprintf(fp, connectedLAbitfield, 
+                            state.localAgentsBelongingToThis.getField(0),
+                            state.localAgentsBelongingToThis.getField(1), 
+                            state.localAgentsBelongingToThis.getField(2), 
+                            state.localAgentsBelongingToThis.getField(3));
+        if (resultAux <= 0) result = 0;
+       
+        resultAux = fprintf(fp, connectedGAbitfield, state.connectedGAs.getField(0));
+        if (resultAux <= 0) result = 0;
+
+        for (int j = 0; j < (pp->numberGAs - 1); j++) {
+            if (j != i) {
+                resultAux = fprintf(fp, GArelationsInfo, j,
+                    state.relations.diplomaticStanceToNeighbors[j], 
+                    state.relations.dispositionToNeighbors[j]);
+                if (resultAux <= 0) result = 0;
+            }
+        }
+    }
+
+    resultAux = fputs(lastGAwarning, fp);
+    if (resultAux == EOF) result = 0;
+
+    return (bool)result;
+}
+
+bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
+    const AS::networkParameters_t* pp) {
+
+    LOG_TRACE("Will write the LAs to file...");
+
+    int result = 1;
+    int resultAux;
+
+    resultAux = fputs(LAsectiontittle, fp);
+    if (resultAux == EOF) result = 0;
+
+    for (int i = 0; i < pp->numberLAs; i++) {
+
+        LA::coldData_t cold;
+        LA::stateData_t state;
+        LA::decisionData_t decision;
+
+        dp->LAcoldData_ptr->getAgentData(i, &cold);
+        dp->LAstate_ptr->getAgentData(i, &state);
+        dp->LAdecision_ptr->getAgentData(i, &decision);
+
+        resultAux = fprintf(fp, LAidentity, cold.id, state.GAid, state.onOff);
+        if (resultAux <= 0) result = 0;
+
+        resultAux = fprintf(fp, LAname, cold.name);
+        if (resultAux <= 0) result = 0;
+
+        resultAux = fprintf(fp, LAposition, state.locationAndConnections.position.x, 
+                                            state.locationAndConnections.position.y);
+        if (resultAux <= 0) result = 0;
+
+        resultAux = fprintf(fp, LAstrenght, state.parameters.strenght.current,
+                                state.parameters.strenght.thresholdToCostUpkeep);
+        if (resultAux <= 0) result = 0;
+
+        resultAux = fprintf(fp, LAresources, state.parameters.resources.current,
+                             state.parameters.resources.updateRate, 
+                             state.parameters.strenght.currentUpkeep);
+        if (resultAux <= 0) result = 0;
+
+        resultAux = fprintf(fp, connectedLAbitfield, 
+                    state.locationAndConnections.connectedNeighbors.getField(0),
+                    state.locationAndConnections.connectedNeighbors.getField(1),
+                    state.locationAndConnections.connectedNeighbors.getField(2),
+                    state.locationAndConnections.connectedNeighbors.getField(3));
+        if (resultAux <= 0) result = 0;
+
+        for (int j = 0; j < state.locationAndConnections.numberConnectedNeighbors; j++) {
+            resultAux = fprintf(fp, LArelationsInfo, j,
+                                state.relations.diplomaticStanceToNeighbors[j],
+                                state.relations.dispositionToNeighbors[j]);
+            if (resultAux <= 0) result = 0;
+        }
+    }
+
+    return (bool)result;
+}
+
+bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
+    const AS::networkParameters_t* pp) {
+
+    LOG_TRACE("Will write the Actions to file... (stub)");
+    //TO DO: Actually write once the data structures and loading are in place
+
+    int result = 1;
+    int resultAux;
+
+    resultAux = fputs(GAactionsSectionTittle, fp);
+    if (resultAux == EOF) result = 0;
+
+    int totalActions = (pp->numberGAs - 1) * pp->maxActions;
+    for (int i = 0; i < totalActions; i++) {
+        resultAux = fprintf(fp, GAaction, i, i / (pp->maxActions));
+        if (resultAux < 0) result = 0;
+    }
+
+    resultAux = fputs(LAactionsSectionTittle, fp);
+    if (resultAux == EOF) result = 0;
+    totalActions = (pp->numberLAs)*pp->maxActions;
+    for (int i = 0; i < totalActions; i++) {
+        resultAux = fprintf(fp, LAaction, i, i / (pp->maxActions));
+        if (resultAux < 0) result = 0;
+    }
+
+    return (bool)result;
+}
+
+bool AS::createNetworkFileFromData(FILE* fp,
+                            const AS::dataControllerPointers_t* dp,
+                            const AS::networkParameters_t* pp) {
+
+    bool result = true;
+    int resultAux = 0;
+
+    //Header, with version control, network sizes and comment
+    resultAux = fprintf(fp, headerLine, FILE_FORMAT_VERSION, pp->numberGAs, 
+                        pp->numberLAs, pp->maxLAneighbours, pp->maxActions);
+    result &= (resultAux > 0); //fprintf returns negative number on error
+
+    resultAux = fprintf(fp, commentLine, pp->comment);
+    result &= (resultAux > 0);
+
+    resultAux = fputs(commentSeparator, fp);
+    if (resultAux == EOF) result = 0; //fputs returns EOF on error
+
+    result &= insertGAsFromNetwork(fp, dp, pp);
+    result &= insertLAsFromNetwork(fp, dp, pp);
+    result &= insertActionsFromNetwork(fp, dp, pp);
 
     return result;
 }

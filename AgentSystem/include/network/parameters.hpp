@@ -28,6 +28,7 @@ and sizes static.
 #define MAX_GA_QUANTITY 16 //NOTE: last one is reserved to "belong to no GA"
 #define MAX_LA_QUANTITY 128
 #define MAX_ACTIONS_PER_AGENT 10
+#define GA_PERSONALITY_TRAITS 4
 
 //Default values for new network creation:
 #define DEFAULT_ONOFF (true)
@@ -43,6 +44,7 @@ and sizes static.
 #define DEFAULT_LA_DISPOSITION (0.0)
 #define DEFAULT_LA_DISTANCE 10
 #define DEFAULT_LAs_PER_LINE 3
+#define DEFAULT_LA_NEIGHBOUR_QUOTIENT 2 //Default connections = max/this
 
 namespace AS {
 	typedef AZ::FlagField128 LAflagField_t;
