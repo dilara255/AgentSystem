@@ -19,6 +19,15 @@ namespace AZ {
 			return field;
 		}
 
+		int howManyAreOn() {
+			int amount = 0;
+
+			for (int i = 0; i < (sizeof(field) * 8); i++) {
+					amount += ((field & BIT(i)) != 0);
+			}
+			return amount;
+		}
+
 		bool isBitOn(unsigned bit) {
 			if (bit > 31) return false; //doesn't exist: not active
 
@@ -63,6 +72,17 @@ namespace AZ {
 			if (whichField > 3) return 0; //doesn't exist: not active
 
 			return field[whichField];
+		}
+
+		int howManyAreOn() {
+			int amount = 0;
+
+			for (int i = 0; i < blocks; i++) {
+				for (int j = 0; j < (sizeof(field[0]) * 8); j++) {
+					amount += ( (field[i] & BIT(j)) != 0);
+				}
+			}
+			return amount;
 		}
 
 		bool isBitOn(int bit) {

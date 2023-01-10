@@ -60,21 +60,23 @@
 * Note: State and Decision data will assume maxNeighbours.
 * Note: first parts of Decision data structures are actually implemented here.
 * 
-* >> 2. Communication and loading:
+* >> 2. Basic saving and loading:
 * 
 * a. Create a format for text file with network information.
 * b. Create file with empty or default fields.
-* >> c. Read information from a text file on initialization or request.
-* d. Save data to a text file on request (and ask on shut down).
-* e. Replicate memory structure on CL and transfer data to it.
-* f. Querry data on TA and check it.
+* c. Read information from a text file on initialization or request.
+* d. Save data to a text file on request.
+* >> e. Add to file format and functions the decision data already in place.
 *
-* 3. Actions, stub:
+* 3. Actions (stub), communication, more saving and loading:
 * 
-* a. Create Action Data Structure and array of maxActions*agents of those on AS.
-* b. Transfer it's data into the CL.
-* c. Querry it or get a copy for TA trhough CL.
-* d. Add support for this on loading and exporting.
+* a. Create Action Data Structure and controller.
+* b. Update file format and file functions to support it.
+* c. Create functionality to updata data and parameters derived from loaded data
+*    (eg: number of connections, neighbour ids, etc)
+* d. Replicate all data and params on CL (transfer on command).
+* e. Querry data on TA and check it.
+* f. Add simple functionality to change data DIRECTLY and test load/save/read.
 *
 * Cleanup, documentation (in-code), and fresh pull+compile test
 *

@@ -92,5 +92,6 @@ namespace AS {
 		GA::DecisionSystem* GAdecision_ptr;
 	} dataControllerPointers_t;
 
+	void createActionDataControllers(dataControllerPointers_t* agentDataControllers_ptr);
 	void createAgentDataControllers(dataControllerPointers_t* agentDataControllers_ptr);
 }
