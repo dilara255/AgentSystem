@@ -109,6 +109,11 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
         resultAux = fprintf(fp, GAname, name.c_str());
         if (resultAux <= 0) result = 0;
 
+        resultAux = fprintf(fp, GApersonality, DEFAULT_GA_PERSONA_0,
+                            DEFAULT_GA_PERSONA_1, DEFAULT_GA_PERSONA_2,
+                            DEFAULT_GA_PERSONA_3);
+        if (resultAux <= 0) result = 0;
+
         resultAux = fprintf(fp, GAresources, DEFAULT_GA_RESOURCES);
         if (resultAux <= 0) result = 0;
 
@@ -123,7 +128,7 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
         for (int j = 0; j < (numberGAs - 1); j++) {
             if (j != i) {
                 resultAux = fprintf(fp, GArelationsInfo, j,
-                    DEFAULT_GA_STANCE, DEFAULT_GA_DISPOSITION);
+                    DEFAULT_GA_STANCE, DEFAULT_GA_DISPOSITION, DEFAULT_GA_INFILTRATION);
                 if (resultAux <= 0) result = 0;
             }
         }
@@ -149,6 +154,9 @@ int insertGAsWithoutDefaults(int numberGAs, FILE* fp) {
         resultAux = fputs(GAname, fp);
         if (resultAux == EOF) result = 0;
 
+        resultAux = fputs(GApersonality, fp);
+        if (resultAux == EOF) result = 0;
+
         resultAux = fputs(GAresources, fp);
         if (resultAux == EOF) result = 0;
 
@@ -160,7 +168,7 @@ int insertGAsWithoutDefaults(int numberGAs, FILE* fp) {
 
         for (int j = 0; j < (numberGAs - 1); j++) {
             if (j != i) {
-                resultAux = fprintf(fp, GArelationsInfo, j, 0, 0);
+                resultAux = fprintf(fp, GArelationsInfo, j, 0, 0, 0);
                 if (resultAux <= 0) result = 0;
             }
         }
@@ -227,7 +235,19 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
         for (int j = 0; j < connections; j++) {
             resultAux = fprintf(fp, LArelationsInfo, j,
-                DEFAULT_LA_STANCE, DEFAULT_LA_DISPOSITION);
+                DEFAULT_LA_STANCE, DEFAULT_LA_DISPOSITION, DEFAULT_LA_INFILTRATION);
+            if (resultAux <= 0) result = 0;
+        }
+
+        resultAux = fputs(LAoffsetsTitle, fp);
+        if (resultAux == EOF) result = 0;
+     
+        for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+
+            resultAux = fprintf(fp, LAcategoryOffsets, i,
+                DEFAULT_LA_OFFSET, DEFAULT_LA_OFFSET,
+                DEFAULT_LA_OFFSET, DEFAULT_LA_OFFSET,
+                DEFAULT_LA_OFFSET, DEFAULT_LA_OFFSET);
             if (resultAux <= 0) result = 0;
         }
     }
@@ -262,8 +282,17 @@ int insertLAsWithoutDefaults(int numberLAs, int maxNeighbors, FILE* fp) {
         if (resultAux == EOF) result = 0;
 
         for (int j = 0; j < maxNeighbors; j++) {
-                resultAux = fprintf(fp, LArelationsInfo, j, 0, 0);
-                if (resultAux <= 0) result = 0;
+            resultAux = fputs(LArelationsInfo, fp);
+            if (resultAux == EOF) result = 0;
+        }
+
+        resultAux = fputs(LAoffsetsTitle, fp);
+        if (resultAux == EOF) result = 0;
+
+        for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+
+            resultAux = fputs(LAcategoryOffsets, fp);
+            if (resultAux == EOF) result = 0;
         }
     }
 
@@ -388,6 +417,11 @@ bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         resultAux = fprintf(fp, GAname, cold.name);
         if (resultAux <= 0) result = 0;
 
+        resultAux = fprintf(fp, GApersonality, decision.personality[0],
+                            decision.personality[1], decision.personality[2],
+                            decision.personality[3]);
+        if (resultAux <= 0) result = 0;
+
         resultAux = fprintf(fp, GAresources, state.parameters.GAresources);
         if (resultAux <= 0) result = 0;
 
@@ -405,7 +439,8 @@ bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
             if (j != i) {
                 resultAux = fprintf(fp, GArelationsInfo, j,
                     state.relations.diplomaticStanceToNeighbors[j], 
-                    state.relations.dispositionToNeighbors[j]);
+                    state.relations.dispositionToNeighbors[j],
+                    decision.infiltration[j]);
                 if (resultAux <= 0) result = 0;
             }
         }
@@ -467,7 +502,23 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         for (int j = 0; j < state.locationAndConnections.numberConnectedNeighbors; j++) {
             resultAux = fprintf(fp, LArelationsInfo, j,
                                 state.relations.diplomaticStanceToNeighbors[j],
-                                state.relations.dispositionToNeighbors[j]);
+                                state.relations.dispositionToNeighbors[j],
+                                decision.infiltration[j]);
+            if (resultAux <= 0) result = 0;
+        }
+
+        resultAux = fputs(LAoffsetsTitle, fp);
+        if (resultAux == EOF) result = 0;
+
+        for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+
+            resultAux = fprintf(fp, LAcategoryOffsets, i,
+                            decision.offsets.personality.offsets[i][0], 
+                            decision.offsets.incentivesAndConstraintsFromGA.offsets[i][0],
+                            decision.offsets.personality.offsets[i][1],
+                            decision.offsets.incentivesAndConstraintsFromGA.offsets[i][1],
+                            decision.offsets.personality.offsets[i][2],
+                            decision.offsets.incentivesAndConstraintsFromGA.offsets[i][2]);
             if (resultAux <= 0) result = 0;
         }
     }

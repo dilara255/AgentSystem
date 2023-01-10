@@ -1,9 +1,17 @@
-//TO DO: tests:
-//- Test clearing a network (sizes should equal zero).
-//- Create default values network;
-//- Load from it, test some values (and data objects);
-//- Change those values, save new network with them, run prevous tests again for this file;
+/*
+TO DO: tests:
 
+- Test clearing a network (sizes should equal zero);
+
+- Test AS::Action class methods;
+
+- Load default values network it, test some values (and data objects);
+- Change those values, save new network with them, run prevous tests again for this file;
+
+- Full test from loaded against defaults/expected and between files;
+
+- Add all of these to the test sequence;
+*/
 
 #include "miscStdHeaders.h"
 #include "core.hpp"
@@ -44,7 +52,7 @@ namespace AS {
 		//TO DO: implement actual testing : )
 		//(load from default network and compare values with defaults)
 		LAagentDataObject.m_coldData.id = testLAid;
-		LAagentDataObject.m_decisionData.offsets.personality.offsets[0] = testOffset;
+		LAagentDataObject.m_decisionData.offsets.personality.offsets[0][0] = testOffset;
 		LAagentDataObject.m_state.GAid = testGAid;
 
 		GAagentDataObject.m_coldData.id = testGAid;
@@ -54,7 +62,8 @@ namespace AS {
 		bool result = true;
 
 		result &= (LAagentDataObject.m_coldData.id == testLAid);
-		result &= (LAagentDataObject.m_decisionData.offsets.personality.offsets[0] == testOffset);
+		result &= (LAagentDataObject.m_decisionData.offsets.personality.offsets[0][0]
+			                                                              == testOffset);
 		result &= (LAagentDataObject.m_state.GAid == testGAid);
 
 		result &= (GAagentDataObject.m_coldData.id == testGAid);
