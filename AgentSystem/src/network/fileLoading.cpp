@@ -312,22 +312,44 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     return true;
 }
 
-bool addGAactionFromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp) {
-    //TO DO: add once action format is in place
+bool addGAactionFromFile(int id, FILE* fp, AS::ActionDataController* ap) {
+    
+    AS::actionData_t action;
 
-    return true;
+    int actionID, agentID;
+    int tokens = fscanf(fp, GAaction, &actionID, &agentID, &action.ids, 
+                                      &action.ticks.initial, &action.ticks.lastProcessed, 
+                                      &action.details.intensity, &action.details.processingAux);
+    if (tokens != 7) {
+        LOG_ERROR("Error reading GA Action tokens from file. Aborting load.");
+        return false;
+    }
+
+    return ap->addActionData(action);
 }
 
-bool addLAactionFromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp) {
-    //TO DO: add once action format is in place
+bool addLAactionFromFile(int id, FILE* fp, AS::ActionDataController* ap) {
+   
+    AS::actionData_t action;
 
-    return true;
+    int actionID, agentID;
+    int tokens = fscanf(fp, LAaction, &actionID, &agentID, &action.ids,
+                                      &action.ticks.initial, &action.ticks.lastProcessed,
+                                      &action.details.intensity, &action.details.processingAux);
+    if (tokens != 7) {
+        LOG_ERROR("Error reading GA Action tokens from file. Aborting load.");
+        return false;
+    }
+
+    return ap->addActionData(action);
 }
 
-bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPointers_t* dp) {
+//TO DO: extect functions?
+bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPointers_t* dp,
+                                                               AS::ActionDataController* ap) {
     bool result;
 
-    LOG_TRACE("Will load the actual network data...");
+    LOG_TRACE("Will load Agent and Action Data...");
 
     char buffer[COMMENT_LENGHT];
     fgets(buffer, COMMENT_LENGHT, fp);
@@ -347,7 +369,7 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
         }
     }    
 
-    //Now we start adding the actual data:
+    LOG_TRACE("Loading Global Agent Data...");
 
     int numEffectiveGAs = pp->numberGAs - 1;//one GA is left to represent "belongs to no GA"
     for (int i = 0; i < numEffectiveGAs; i++) {
@@ -358,6 +380,8 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
         LOG_ERROR("Couldn't load all GAs. Aborting");
         return false;
     }
+
+    LOG_TRACE("Global Agent Data Loaded. Will load Local Agent Data...");
 
     fscanf(fp, lastGAwarning);
     fscanf(fp, LAsectiontittle);
@@ -371,11 +395,13 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
         LOG_ERROR("Couldn't load all LAs. Aborting");
         return false;
     }
+
+    LOG_TRACE("Local Agent Data loaded. Will load Action Data...");
     
     fscanf(fp, GAactionsSectionTittle);
 
     for (int i = 0; i < numEffectiveGAs * pp->maxActions; i++) {
-        result = addGAactionFromFile(i, fp, dp);
+        result = addGAactionFromFile(i, fp, ap);
        
         if (!result) break;
     }
@@ -384,10 +410,12 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
         return false;
     }
 
+    LOG_TRACE("Local Actions loaded. Will load Global Action Data...");
+
     fscanf(fp, LAactionsSectionTittle);
 
     for (int i = 0; i < pp->numberLAs * pp->maxActions; i++) {
-        result = addLAactionFromFile(i, fp, dp);
+        result = addLAactionFromFile(i, fp, ap);
 
         if (!result) break;
     }
@@ -400,10 +428,10 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
     return true;
 }
 
-bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
-                               dataControllerPointers_t agentDataControllers,
-                               networkParameters_t* currentNetworkParams_ptr) {
-    
+bool AS::loadNetworkFromFileToDataControllers(FILE* fp, 
+                                dataControllerPointers_t agentDataControllers, 
+                                networkParameters_t* currentNetworkParams_ptr, 
+                                ActionDataController* actionDataController_ptr) {    
     LOG_TRACE("Will rewind the file pointer to begin loading");
     rewind(fp);
 
@@ -414,7 +442,10 @@ bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
     }
     LOG_TRACE("Header read, parameters updated. Will load data."); 
 
-    result = loadDataFromFp(fp, currentNetworkParams_ptr, &agentDataControllers);
+    actionDataController_ptr->setMaxActionsPerAgent(currentNetworkParams_ptr->maxActions);
+    
+    result = loadDataFromFp(fp, currentNetworkParams_ptr, &agentDataControllers,
+                                                          actionDataController_ptr);
     if (!result) {
         LOG_ERROR("Couldn't load data, loading aborted");
         return false;

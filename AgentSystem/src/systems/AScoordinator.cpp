@@ -39,6 +39,7 @@ namespace AS {
 }
 
 bool AS::initializeASandCL() {
+//TO DO: possibly extract functions
 
 	if (isInitialized) {
 		LOG_ERROR("AS already initialized. Aborting initialization.");
@@ -47,6 +48,7 @@ bool AS::initializeASandCL() {
 
 	LOG_INFO("Loggers Initialized");
 
+	//Agent Data and Network Parameters:
 	currentNetworkParams.isNetworkInitialized = false;
 	agentDataControllerPtrs.haveBeenCreated = false;
 	agentDataControllerPtrs.haveData = false;
@@ -56,15 +58,6 @@ bool AS::initializeASandCL() {
 	agentDataControllers_cptr = (const dataControllerPointers_t*)&agentDataControllerPtrs;
 
 	createAgentDataControllers(&agentDataControllerPtrs);
-
-	actionSystem.initialize(&actionSystem_cptr);
-	bool result = actionSystem_cptr->isInitialized();
-	if (!result) {
-		LOG_CRITICAL("Something went wrong initialing the Action System!");
-		return false;
-	}
-
-	actionSystem.initializeDataController(currentNetworkParams_cptr, &actionDataController_cptr);
 
 #ifdef DEBUG
 	printf("\n\nData Controllers NON-CONST ptr: %p\n", &agentDataControllerPtrs);
@@ -84,12 +77,29 @@ bool AS::initializeASandCL() {
 		return false;
 	}
 
+	//Action System:
+	bool result = actionSystem.initialize(&actionSystem_cptr);
+	result &= actionSystem_cptr->isInitialized();
+	if (!result) {
+		LOG_CRITICAL("Something went wrong initialing the Action System!");
+		return false;
+	}
+
+	result = actionSystem.initializeDataController(currentNetworkParams_cptr,
+		&actionDataController_cptr);
+	if (!result) {
+		LOG_CRITICAL("Something went wrong initialing the Action Data Controlers!");
+		return false;
+	}
+
+	//Communications Layer:
 	result = CL::init();
 	if (!result) {
 		LOG_CRITICAL("Something went wrong initialing the Communications Layer!");
 		return false;
 	}
 
+	//Done!
 	isInitialized = true;
 
 	LOG_INFO("Initialized");
@@ -97,18 +107,23 @@ bool AS::initializeASandCL() {
 	return true;
 }
 
-void AS::clearNetwork() {
-	agentDataControllerPtrs.GAcoldData_ptr->clearData();
-	agentDataControllerPtrs.LAcoldData_ptr->clearData();
-	agentDataControllerPtrs.GAstate_ptr->clearData();
-	agentDataControllerPtrs.LAstate_ptr->clearData();
-	agentDataControllerPtrs.GAdecision_ptr->clearData();
-	agentDataControllerPtrs.LAdecision_ptr->clearData();
-	agentDataControllerPtrs.haveData = false;
-	currentNetworkParams.isNetworkInitialized = false;
+namespace AS {
+	void clearNetwork() {
+		agentDataControllerPtrs.GAcoldData_ptr->clearData();
+		agentDataControllerPtrs.LAcoldData_ptr->clearData();
+		agentDataControllerPtrs.GAstate_ptr->clearData();
+		agentDataControllerPtrs.LAstate_ptr->clearData();
+		agentDataControllerPtrs.GAdecision_ptr->clearData();
+		agentDataControllerPtrs.LAdecision_ptr->clearData();
+		agentDataControllerPtrs.haveData = false;
+		currentNetworkParams.isNetworkInitialized = false;
 
-	LOG_TRACE("Network Cleared");
+		actionSystem.data.clearData();
+
+		LOG_TRACE("Network Cleared");
+	}
 }
+
 
 bool AS::loadNetworkFromFile(std::string name) {
 	LOG_INFO("Trying to load network from a file");
@@ -138,7 +153,8 @@ bool AS::loadNetworkFromFile(std::string name) {
 
 	bool result;
 	result = loadNetworkFromFileToDataControllers(fp, agentDataControllerPtrs, 
-		                                              currentNetworkParams_ptr);
+		                                              currentNetworkParams_ptr,
+		                                                     &actionSystem.data);
 	if (!result) {
 		LOG_ERROR("Load failed. Will clear the network.");
 		clearNetwork(); //we don't leave an incomplete state behind. Marks data as not initialized.
@@ -191,7 +207,8 @@ bool AS::saveNetworkToFile(std::string name) {
 	LOG_TRACE("File Acquired. Will save network");
 	
 	bool result = createNetworkFileFromData(fp, agentDataControllers_cptr, 
-									        currentNetworkParams_cptr);
+									        currentNetworkParams_cptr,
+		                                    actionDataController_cptr);
 	if (!result) {
 		LOG_ERROR("Saving failed!");
 	}

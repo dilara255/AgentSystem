@@ -11,11 +11,13 @@ namespace AS{
 
     bool createNetworkFileFromData(FILE* fp,
                         const AS::dataControllerPointers_t* agentDataControllers_cptr,
-                        const AS::networkParameters_t* currentNetworkParams_cptr);
+                        const AS::networkParameters_t* currentNetworkParams_cptr,
+                        const AS::ActionDataController* actionDataController_cptr);
 
     bool loadNetworkFromFileToDataControllers(FILE* fp, 
                                            dataControllerPointers_t agentDataControllers,
-                                           networkParameters_t* currentNetworkParams_ptr);
+                                           networkParameters_t* currentNetworkParams_ptr,
+                                           ActionDataController* actionDataController_ptr);
 
     bool fileIsCompatible(FILE* fp);
 

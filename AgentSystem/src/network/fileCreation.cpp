@@ -22,6 +22,7 @@ reevaluated once the actual format and save system needs are known.
 
 #include "fileManager.hpp"
 
+#include "data/actionData.hpp"
 #include "network/parameters.hpp"
 #include "network/fileFormat.hpp"
 
@@ -77,7 +78,7 @@ int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int nu
     else {
         result *= insertGAsWithoutDefaults(numberGAs, fp);
         result *= insertLAsWithoutDefaults(numberLAs, maxNeighbors, fp);
-        result *= insertActionsWithDefaults(numberLAs, numberGAs, maxActions, fp);
+        result *= insertActionsWithoutDefaults(numberLAs, numberGAs, maxActions, fp);
     }
 
     fclose(fp);
@@ -303,17 +304,32 @@ int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE
     resultAux = fputs(GAactionsSectionTittle, fp);
     if (resultAux == EOF) result = 0;
 
-    int totalActions = (numberGAs - 1) * maxActions;
-    for (int i = 0; i < totalActions; i++) {
-        resultAux = fprintf(fp, GAaction, i, i / (maxActions));
+    int totalGlobalActions = (numberGAs - 1) * maxActions;
+
+    AS::ids_t actionID; //this is a bitfield
+    uint32_t* actionID_ptr = (uint32_t*)&actionID;
+    *actionID_ptr = 0; //makes sure sampleID is all zeroes to start
+    actionID.scope = AS::GLOBAL; //turns the scope bit to global
+    
+    for (int i = 0; i < totalGlobalActions; i++) {
+        resultAux = fprintf(fp, GAaction, i, i / (maxActions),
+                                    actionID, DEFAULT_FIRST_TICK, DEFAULT_LAST_TICK,
+                                    DEFAULT_INTENSITY, DEFAULT_ACTION_AUX);
         if (resultAux < 0) result = 0;
     }
 
     resultAux = fputs(LAactionsSectionTittle, fp);
     if (resultAux == EOF) result = 0;
-    totalActions = (numberLAs)*maxActions;
-    for (int i = 0; i < totalActions; i++) {
-        resultAux = fprintf(fp, LAaction, i, i / (maxActions));
+    
+    int totalLocalActions = (numberLAs)*maxActions;
+
+    *actionID_ptr = 0; //makes sure sampleID is all zeroes to start
+    actionID.scope = AS::LOCAL; //turns the scope bit to local
+
+    for (int i = 0; i < totalLocalActions; i++) {
+        resultAux = fprintf(fp, LAaction, i, i / (maxActions),
+                                    actionID, DEFAULT_FIRST_TICK, DEFAULT_LAST_TICK,
+                                    DEFAULT_INTENSITY, DEFAULT_ACTION_AUX);
         if (resultAux < 0) result = 0;
     }
 
@@ -327,18 +343,21 @@ int insertActionsWithoutDefaults(int numberLAs, int numberGAs, int maxActions, F
     resultAux = fputs(GAactionsSectionTittle, fp);
     if (resultAux == EOF) result = 0;
 
-    int totalActions = (numberGAs - 1) * maxActions;
-    for (int i = 0; i < totalActions; i++) {
-        resultAux = fprintf(fp, GAaction, i, i / (maxActions));
-        if (resultAux < 0) result = 0;
+    int totalGlobalActions = (numberGAs - 1) * maxActions;
+
+    for (int i = 0; i < totalGlobalActions; i++) {
+        resultAux = fputs(GAaction, fp);
+        if (resultAux == EOF) result = 0;
     }
 
     resultAux = fputs(LAactionsSectionTittle, fp);
     if (resultAux == EOF) result = 0;
-    totalActions = (numberLAs)*maxActions;
-    for (int i = 0; i < totalActions; i++) {
-        resultAux = fprintf(fp, LAaction, i, i / (maxActions));
-        if (resultAux < 0) result = 0;
+
+    int totalLocalActions = (numberLAs)*maxActions;
+
+    for (int i = 0; i < totalLocalActions; i++) {
+        resultAux = fputs(LAaction, fp);
+        if (resultAux == EOF) result = 0;
     }
 
     return result;
@@ -526,9 +545,9 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
 }
 
 bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
-    const AS::networkParameters_t* pp) {
+    const AS::networkParameters_t* pp, const AS::ActionDataController* ap) {
 
-    LOG_TRACE("Will write the Actions to file... (stub)");
+    LOG_TRACE("Will write the Actions to file...");
     //TO DO: Actually write once the data structures and loading are in place
 
     int result = 1;
@@ -537,17 +556,31 @@ bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
     resultAux = fputs(GAactionsSectionTittle, fp);
     if (resultAux == EOF) result = 0;
 
-    int totalActions = (pp->numberGAs - 1) * pp->maxActions;
-    for (int i = 0; i < totalActions; i++) {
-        resultAux = fprintf(fp, GAaction, i, i / (pp->maxActions));
+    int totalGlobalActions = (pp->numberGAs - 1) * pp->maxActions;
+
+    for (int i = 0; i < totalGlobalActions; i++) {
+        
+        AS::actionData_t action;
+        if (!ap->getAction(AS::GLOBAL, i, &action)) { return false; }
+
+        resultAux = fprintf(fp, GAaction, i, i / (pp->maxActions),
+                                action.ids, action.ticks.initial, action.ticks.lastProcessed,
+                                action.details.intensity, action.details.processingAux);
         if (resultAux < 0) result = 0;
     }
 
     resultAux = fputs(LAactionsSectionTittle, fp);
     if (resultAux == EOF) result = 0;
-    totalActions = (pp->numberLAs)*pp->maxActions;
-    for (int i = 0; i < totalActions; i++) {
-        resultAux = fprintf(fp, LAaction, i, i / (pp->maxActions));
+
+    int totalLocalActions = (pp->numberLAs)*pp->maxActions;
+
+    for (int i = 0; i < totalLocalActions; i++) {
+        AS::actionData_t action;
+        ap->getAction(AS::LOCAL, i, &action);
+
+        resultAux = fprintf(fp, LAaction, i, i / (pp->maxActions),
+                                action.ids, action.ticks.initial, action.ticks.lastProcessed,
+                                action.details.intensity, action.details.processingAux);
         if (resultAux < 0) result = 0;
     }
 
@@ -556,7 +589,8 @@ bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
 
 bool AS::createNetworkFileFromData(FILE* fp,
                             const AS::dataControllerPointers_t* dp,
-                            const AS::networkParameters_t* pp) {
+                            const AS::networkParameters_t* pp,
+                            const AS::ActionDataController* ap) {
 
     bool result = true;
     int resultAux = 0;
@@ -574,7 +608,7 @@ bool AS::createNetworkFileFromData(FILE* fp,
 
     result &= insertGAsFromNetwork(fp, dp, pp);
     result &= insertLAsFromNetwork(fp, dp, pp);
-    result &= insertActionsFromNetwork(fp, dp, pp);
+    result &= insertActionsFromNetwork(fp, dp, pp, ap);
 
     return result;
 }

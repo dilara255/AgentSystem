@@ -10,6 +10,7 @@ This file declares the classes:
 #include "miscStdHeaders.h"
 
 #include "data/actionData.hpp"
+#include "network/parameters.hpp"
 
 namespace AS {	
 	//TO DO: singleton, initialize, test
@@ -17,7 +18,9 @@ namespace AS {
 	public:
 		bool initialize(int maxActionsPerAgent, int numberLas, int numberGAs);
 		bool addActionData(actionData_t actionData);
-		bool getAgentData(int localOrGlobal, uint32_t agentID, actionData_t* recepient) const;
+		bool getAction(int localOrGlobal, uint32_t actionID, actionData_t* recepient) const;
+		bool getAgentData(int localOrGlobal, uint32_t agentID, int actionNumber, 
+			                                             actionData_t* recepient) const;
 		size_t sizeOfDataInBytesLAs() const;
 		size_t sizeOfDataInBytesGAs() const;
 		size_t capacityForDataInBytesLAs() const;
@@ -25,11 +28,25 @@ namespace AS {
 		void clearData();
 		bool isInitialized() const { return m_isInitialized; }
 		bool hasData() const { return m_hasData; }
+		int getMaxActionsPerAgent() const { return m_maxActionsPerAgent; }
+		bool setMaxActionsPerAgent(int newMax) {
+			if ( (newMax > 0) && (newMax <= MAX_ACTIONS_PER_AGENT) ) {
+				m_maxActionsPerAgent = newMax;
+				LOG_TRACE("New maximum set for actions per agent");
+				return true;
+			}
+			else {
+				LOG_ERROR("Failed to set new maximum of actions per agent: out of allowed bounds");
+				return false;
+			}
+		}
+				
 	private:
 		std::vector <actionData_t> dataLAs;
 		std::vector <actionData_t> dataGAs;
 		bool m_isInitialized = false;
 		bool m_hasData = false;
+		int m_maxActionsPerAgent = 0;
 	};
 
 	//TO DO: singleton, initialize, test
