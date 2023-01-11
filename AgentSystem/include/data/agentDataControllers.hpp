@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core.hpp"
-
 #include "agentDataStructures.hpp"
 
 //TO DO: too much repetition

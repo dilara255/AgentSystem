@@ -5,11 +5,13 @@
 #include "CL_externalAPI.hpp"
 #include "CL_internalAPI.hpp"
 
-#include "Systems/CLcontrol.hpp"
+#include "systems/dataMirror.hpp"
 
 namespace CL {
 
-	DataMirror mirror;
+	DataMirrorSystem mirror;
+
+	mirror_t mirrorData;
 
 	bool init() {
 		LOG_INFO("initializing CL");

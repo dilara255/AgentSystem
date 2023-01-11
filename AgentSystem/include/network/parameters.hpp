@@ -17,6 +17,7 @@ constraints for any network to be loaded. They help make things predictable
 and sizes static.
 */
 
+#include "core.hpp"
 #include "flagFields.hpp"
 
 #define NAME_LENGHT 30
@@ -47,10 +48,10 @@ and sizes static.
 #define DEFAULT_LA_NEIGHBOUR_QUOTIENT 2 //Default connections = max/this
 #define DEFAULT_GA_INFILTRATION (0.0)
 #define DEFAULT_LA_INFILTRATION (0.0)
-#define DEFAULT_GA_PERSONA_0 0
-#define DEFAULT_GA_PERSONA_1 1
-#define DEFAULT_GA_PERSONA_2 2
-#define DEFAULT_GA_PERSONA_3 3
+#define DEFAULT_GA_PERSONA_0 GA_PERS_0
+#define DEFAULT_GA_PERSONA_1 GA_PERS_1
+#define DEFAULT_GA_PERSONA_2 GA_PERS_2
+#define DEFAULT_GA_PERSONA_3 GA_PERS_3
 #define DEFAULT_LA_OFFSET (0.0)
 #define DEFAULT_REINFORCEMENT (0.0)
 #define DEFAULT_ACTION_ID 0
@@ -71,7 +72,9 @@ namespace AS {
 		int maxActions;
 		char name[NAME_LENGHT];
 		char comment[COMMENT_LENGHT];
-	} networkParameters_t;
+	} AS_API networkParameters_t;
 }
 
-enum gaPersonalityTraits {/*add some*/ };
+enum gaPersonalityTraits {GA_PERS_0, GA_PERS_1, GA_PERS_2, GA_PERS_3,
+						  GA_PERS_4, GA_PERS_5, GA_PERS_6, GA_PERS_7,
+					      TOTAL_GA_PERS};
