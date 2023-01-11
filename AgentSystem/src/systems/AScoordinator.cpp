@@ -2,18 +2,21 @@
 Classes and functions on this file are responsible for the coordination of the AS.
 This includes:
 - Coordinating initialization and termination;
-- Main loop; and
-- Access/references to the different systems.
+- Main loop;
+- Access/references to the different systems;
+- Bulk data transfer to/from CL;
+(may separete some if this file gets too large)
 */
 
 #include "AS_API.hpp"
+
 #include "CL_internalAPI.hpp"
 
 #include "network/parameters.hpp" //exposes "currentNetworkParams"
 #include "data/agentDataControllers.hpp" //exposes "dataControllers"
 #include "systems/actionSystem.hpp"
 
-#include "fileManager.hpp"
+#include "network/fileManager.hpp"
 
 #include "systems/AScoordinator.hpp"
 
@@ -57,7 +60,8 @@ bool AS::initializeASandCL() {
 	currentNetworkParams_ptr = &currentNetworkParams;
 	agentDataControllers_cptr = (const dataControllerPointers_t*)&agentDataControllerPtrs;
 
-	createAgentDataControllers(&agentDataControllerPtrs);
+	bool result = createAgentDataControllers(&agentDataControllerPtrs);
+	if (!result) { return false; }
 
 #ifdef DEBUG
 	printf("\n\nData Controllers NON-CONST ptr: %p\n", &agentDataControllerPtrs);
@@ -78,7 +82,7 @@ bool AS::initializeASandCL() {
 	}
 
 	//Action System:
-	bool result = actionSystem.initialize(&actionSystem_cptr);
+	result = actionSystem.initialize(&actionSystem_cptr);
 	result &= actionSystem_cptr->isInitialized();
 	if (!result) {
 		LOG_CRITICAL("Something went wrong initialing the Action System!");

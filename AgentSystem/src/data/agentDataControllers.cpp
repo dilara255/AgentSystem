@@ -19,12 +19,12 @@
 
 #include "data/agentDataControllers.hpp"
 
-void AS::createAgentDataControllers(AS::dataControllerPointers_t* agentDataControllers_ptr) {
+bool AS::createAgentDataControllers(AS::dataControllerPointers_t* agentDataControllers_ptr) {
 	LOG_TRACE("Trying to create Agent Data Controllers\n");
 
 	if (agentDataControllers_ptr->haveBeenCreated) {
 		LOG_WARN("Data Controllers already exist: aborting re-creation\n");
-		return;
+		return false;
 	}
 
 	agentDataControllers_ptr->LAcoldData_ptr = new LA::ColdDataController(MAX_LA_QUANTITY);
@@ -37,6 +37,7 @@ void AS::createAgentDataControllers(AS::dataControllerPointers_t* agentDataContr
 	agentDataControllers_ptr->haveBeenCreated = true;
 
 	LOG_INFO("Data Controllers created\n");
+	return true;
 }
 
 namespace LA {

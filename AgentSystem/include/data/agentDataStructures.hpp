@@ -58,8 +58,15 @@ TO DO: -A list of the expected values, for each neighbor, of:
 TO DO: -Desires, Impediments and Potential Actions Data;
 */
 
-#include "network/parameters.hpp"
-#include "systems/actionSystem.hpp"
+#ifdef AS_COMMLAYER
+	#include "../include/network/parameters.hpp"
+	#include "../include/systems/actionSystem.hpp"
+#endif // AS_COMMLAYER
+
+#ifdef AS_AGENTSYSTEM
+	#include "network/parameters.hpp"
+	#include "systems/actionSystem.hpp"
+#endif // AS_AGENTSYSTEM
 
 #include "flagFields.hpp"
 
