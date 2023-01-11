@@ -75,6 +75,7 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
 }
 
 bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEffectiveGAs) {
+    //TO DO: extract functions
 
     int tokens; //to test how many have been read in each call to scanf
 
@@ -179,8 +180,47 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     return true;
 }
 
-bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNeighbours) {
-    //TO DO: add logic to load decision data once that's added to the file format
+bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int numberLAs) {
+    int neighboursFound = 0;
+    
+    uint32_t i = 0;
+    while ( (neighboursFound < data_ptr->numberConnectedNeighbors) 
+                                      && (i < numberLAs) ) {
+        if (data_ptr->connectedNeighbors.isBitOn(i)) {
+            data_ptr->neighbourIDs[neighboursFound] = i;
+            neighboursFound++;
+        }
+        i++;
+    }
+    data_ptr->firstConnectedNeighborId = data_ptr->neighbourIDs[0];
+
+    if (neighboursFound < data_ptr->numberConnectedNeighbors) {
+        LOG_ERROR("Found less neighbours than expected when updating LA connection data!");
+
+        printf("\nFIELDS: %i, %i, %i, %i", data_ptr->connectedNeighbors.getField(0),
+                                            data_ptr->connectedNeighbors.getField(1),
+                                            data_ptr->connectedNeighbors.getField(2),
+                                            data_ptr->connectedNeighbors.getField(3));
+        printf("\nID first: %i, ID[0]: %i, ID[1] %i, ID[2] %i, ID[3]: %i, ID[%i]: %i",
+                                data_ptr->firstConnectedNeighborId,
+                                data_ptr->neighbourIDs[0],
+                                data_ptr->neighbourIDs[1],
+                                data_ptr->neighbourIDs[2],
+                                data_ptr->neighbourIDs[3],
+                                data_ptr->numberConnectedNeighbors - 1,
+                                data_ptr->neighbourIDs[data_ptr->numberConnectedNeighbors - 1]);
+        
+        getchar();
+
+        return false;
+    }
+    
+    return true;
+}
+
+bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNeighbours, 
+                                                                            int numberLAs) {
+    //TO DO: extract functions
 
     int tokens; //to test how many have been read in each call to scanf
 
@@ -260,6 +300,9 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
 
     int connections = state.locationAndConnections.connectedNeighbors.howManyAreOn();
     state.locationAndConnections.numberConnectedNeighbors = connections;
+
+    setLAneighbourIDsAndFirst(&state.locationAndConnections, numberLAs);
+
     for (int i = 0; i < connections; i++) {
         int otherId, stance;
         float disposition, infiltration;
@@ -387,7 +430,7 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
     fscanf(fp, LAsectiontittle);
 
     for (int i = 0; i < pp->numberLAs; i++) {
-        result = addLAfromFile(i, fp, dp, pp->maxLAneighbours);
+        result = addLAfromFile(i, fp, dp, pp->maxLAneighbours, pp->numberLAs);
 
         if (!result) break;
     }
