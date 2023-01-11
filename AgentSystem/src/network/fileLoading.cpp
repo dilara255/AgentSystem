@@ -15,7 +15,7 @@ TO DO: should get the file name into the "network name" from the parameters file
 #include "logAPI.hpp"
 
 #include "systems/AScoordinator.hpp"
-#include "fileManager.hpp"
+#include "network/fileManager.hpp"
 #include "systems/actionSystem.hpp"
 
 #include "network/parameters.hpp"
@@ -185,7 +185,7 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
     
     uint32_t i = 0;
     while ( (neighboursFound < data_ptr->numberConnectedNeighbors) 
-                                      && (i < numberLAs) ) {
+                                      && (i < (uint32_t)numberLAs) ) {
         if (data_ptr->connectedNeighbors.isBitOn(i)) {
             data_ptr->neighbourIDs[neighboursFound] = i;
             neighboursFound++;
@@ -196,7 +196,7 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
 
     if (neighboursFound < data_ptr->numberConnectedNeighbors) {
         LOG_ERROR("Found less neighbours than expected when updating LA connection data!");
-
+#ifdef DEBUG
         printf("\nFIELDS: %i, %i, %i, %i", data_ptr->connectedNeighbors.getField(0),
                                             data_ptr->connectedNeighbors.getField(1),
                                             data_ptr->connectedNeighbors.getField(2),
@@ -208,10 +208,8 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
                                 data_ptr->neighbourIDs[2],
                                 data_ptr->neighbourIDs[3],
                                 data_ptr->numberConnectedNeighbors - 1,
-                                data_ptr->neighbourIDs[data_ptr->numberConnectedNeighbors - 1]);
-        
-        getchar();
-
+                                data_ptr->neighbourIDs[data_ptr->numberConnectedNeighbors - 1]);        
+#endif // DEBUG
         return false;
     }
     

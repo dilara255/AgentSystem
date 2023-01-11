@@ -4,17 +4,12 @@
 #include "CL_internalAPI.hpp"
 #include "CL_externalAPI.hpp"
 
-#include "CL_tst.hpp"
+#include "testing/CL_tst.hpp"
 
 //TO DO: TEST DATA STRUCTURE
 initTestNumbers_t initNumbers;
 int* testArray_ptr;
 bool tstArrayInitialized;
-
-bool CL::init() {
-	LOG_INFO("CL Mock initialization Called - will just return true");
-	return true;
-}
 
 void CL::initTest(int ASnumber, int tstArraySize) {
 	LOG_TRACE("Will initialize basic CL/AS communication test");

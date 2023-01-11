@@ -7,14 +7,22 @@ This file declares the classes:
 -- Action Variations class, wich warps information about which action variations are possible;
 - TO DO: the base ActionCategoy class.
 */
+
 #include "miscStdHeaders.h"
 
-#include "data/actionData.hpp"
-#include "network/parameters.hpp"
+#ifdef AS_COMMLAYER
+#include "../include/data/actionData.hpp"
+#include "../include/network/parameters.hpp"
+#endif // AS_COMMLAYER
+
+#ifdef AS_AGENTSYSTEM
+	#include "data/actionData.hpp"
+	#include "network/parameters.hpp"
+#endif // AS_AGENTSYSTEM
 
 namespace AS {	
 	//TO DO: singleton, initialize, test
-	class ActionDataController {		
+	class ActionDataController {
 	public:
 		bool initialize(int maxActionsPerAgent, int numberLas, int numberGAs);
 		bool addActionData(actionData_t actionData);

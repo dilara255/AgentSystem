@@ -22,7 +22,7 @@ TO DO: tests:
 #include "systems/AScoordinator.hpp"
 #include "data/agentDataStructures.hpp"
 #include "data/agentClasses.hpp"
-#include "fileManager.hpp"
+#include "network/fileManager.hpp"
 
 #include "testing/AS_tst.hpp"
 
@@ -156,8 +156,8 @@ void AS::transferData(int* CLtestArray_ptr) {
 	CL::setTstArrayHasInitialized(true);
 
 #ifdef AS_DEBUG
-	printf("Copied Test Array to CL (%i):\nCLtstArray[0]: %i\nCLtstArray[1]: %i\n",
-		   (int)CLtestArray_ptr, CLtestArray_ptr[0], CLtestArray_ptr[1]);
+	printf("Copied Test Array to CL (%p):\nCLtstArray[0]: %i\nCLtstArray[1]: %i\n",
+		                 CLtestArray_ptr, CLtestArray_ptr[0], CLtestArray_ptr[1]);
 #endif
 
 	return;

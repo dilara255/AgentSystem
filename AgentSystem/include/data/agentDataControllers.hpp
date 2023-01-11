@@ -1,6 +1,8 @@
 #pragma once
 
-#include "data/agentDataStructures.hpp"
+#include "core.hpp"
+
+#include "agentDataStructures.hpp"
 
 //TO DO: too much repetition
 //TO DO: make these Classes singleton
@@ -92,5 +94,5 @@ namespace AS {
 		GA::DecisionSystem* GAdecision_ptr;
 	} dataControllerPointers_t;
 
-	void createAgentDataControllers(dataControllerPointers_t* agentDataControllers_ptr);
+	bool createAgentDataControllers(dataControllerPointers_t* agentDataControllers_ptr);
 }
