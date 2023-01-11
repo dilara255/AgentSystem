@@ -12,8 +12,7 @@ This includes:
 #include "data/agentDataControllers.hpp"
 
 namespace AS {
-	void clearNetwork();
-
 	extern const networkParameters_t* currentNetworkParams_cptr;
 	extern const dataControllerPointers_t* agentDataControllers_cptr;
+	extern const ActionDataController* actionDataController_cptr;
 }

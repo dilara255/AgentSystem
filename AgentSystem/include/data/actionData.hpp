@@ -43,13 +43,13 @@ namespace AS {
 	} ids_t;
 
 	typedef struct {
-		uint32_t initialTick;
-		uint32_t lastProcessedTick;
+		uint32_t initial;
+		uint32_t lastProcessed;
 	} tickInfo_t;
 
 	typedef struct {
 		int32_t intensity;
-		int32_t actionProcessingAux;
+		int32_t processingAux;
 	} details_t;
 
 	typedef struct {

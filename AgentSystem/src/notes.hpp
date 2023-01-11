@@ -70,9 +70,9 @@
 *
 * >> 3. Actions (stub), communication, more saving and loading:
 * 
-* >> a. Create Action Data Structure and controller.
+* a. Create Action Data Structure and controller.
 * b. Update file format and file functions to support it.
-* c. Create functionality to updata data and parameters derived from loaded data
+* >> c. Create functionality to update data and parameters derived from loaded data
 *    (eg: number of connections, neighbour ids, etc)
 * d. Replicate all data and params on CL (transfer on command).
 * e. Querry data on TA and check it.

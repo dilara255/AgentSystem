@@ -18,12 +18,8 @@ int main(void) {
 	
 	test1SayHello();
 
-	LOG_INFO("AS, CL-internal and CL-external should have said hello above...\n");
-	getchar();
-
-	LOG_WARN("\n\nWill try loading file before initialization... should fail");
-	AS::loadNetworkFromFile(fileNameNoDefaults);
-	LOG_WARN("Failing should happen above. Tests bellow should pass...\n\n");
+	LOG_INFO("AS, CL-internal and CL-external should have said hello above : )");
+	LOG_TRACE("This will run a few batteries of tests...\n");
 	getchar();
 
 	LOG_INFO("\n\nBasic App, AS and CL communicaton and data storage tests:\n\n");
@@ -72,6 +68,7 @@ int main(void) {
 		printf("%i out of %i failed\n", TOTAL_TESTS - totalPassed, TOTAL_TESTS);
 	}
 
+	getchar();
 	LOG_TRACE("Tests ended. Press return to exit");
 	getchar();
 	return 1;
