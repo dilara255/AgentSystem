@@ -217,11 +217,10 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
         AZ::FlagField128 connectionField;
         int connections = MAX_LA_NEIGHBOURS / DEFAULT_LA_NEIGHBOUR_QUOTIENT;
+        //DEFAULT: each LA is connected to the next *connections* LAs after it
         for (int j = 0; j < connections; j++) {
-            int other = i + j;
-            if (other >= numberLAs) {
-                other -= numberLAs;
-            }
+            
+            int other = (i + 1 + j) % numberLAs; //which warps around if necessary   
             connectionField.setBitOn(other);
         }
 
