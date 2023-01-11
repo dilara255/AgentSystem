@@ -11,8 +11,9 @@ initTestNumbers_t initNumbers;
 int* testArray_ptr;
 bool tstArrayInitialized;
 
-void CL::init() {
-	LOG_INFO("CL Mock initialization Called");
+bool CL::init() {
+	LOG_INFO("CL Mock initialization Called - will just return true");
+	return true;
 }
 
 void CL::initTest(int ASnumber, int tstArraySize) {
@@ -38,8 +39,8 @@ void CL::setTstArrayHasInitialized(bool hasInitialized) {
 }
 
 int* CL::getTestArrayPtr() {
-	if (!tstArrayInitialized) LOG_WARN("Test array not initialized yet");
-	if (!testArray_ptr) LOG_WARN("Test array ptr null. Will crash : )");
+	if (!tstArrayInitialized) { LOG_WARN("Test array not initialized yet"); }
+	if (!testArray_ptr) { LOG_WARN("Test array ptr null. Will crash : )"); }
 	
 	return testArray_ptr;
 }

@@ -16,7 +16,7 @@ static const char* fileNameWithDefaults = "testNetworkWithDefaults.txt";
 
 namespace AS {
 	
-	AS_API void initializeASandCL();
+	AS_API bool initializeASandCL();
 	
 	//WARNING: loading clears current network, no confirmation needed!
 	//Logic to save current network first and etc should be handled by the CLIENT

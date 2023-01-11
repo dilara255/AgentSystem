@@ -41,13 +41,13 @@ static const char* GApersonality = "Personality Traits: %i %i %i %i\n";
 static const char* GAresources = "Resources: %f\n";
 static const char* connectedLAbitfield = "Connected LAs (bitfield): %i %i %i %i\n";
 static const char* connectedGAbitfield = "Connected GAs (bitfield): %i\n";
-static const char* GArelationsInfo = "Relation with GA %i: stance: %i, disposition: %f, infiltration: %f\n";
+static const char* GArelationsInfo = "Relation with GA %i: stance: %i, disposition: %f (last step: %f), infiltration: %f\n";
 static const char* lastGAwarning = "\n#The last GA is reserved for local agents not belonging to any GA\n\n";
 
 static const char* LAidentity = "\nLA Id: %i, belongs to GA: %i, On? %d\n";
 static const char* LAname = "Name: %s\n";
 static const char* LAposition = "Pos: X %f, Y %f\n";
-static const char* LAstrenght = "Strenght: %f, Threshold to cost upkeed: %f\n";
+static const char* LAstrenght = "Strenght: %f (plus %f reinforcement), Threshold to cost upkeed: %f\n";
 static const char* LAresources = "Current Resources: %f, income: %f, upkeep: %f\n";
 static const char* LArelationsInfo = "Relation with Neighbor %i: stance: %i, disposition: %f, infiltration: %f\n";
 static const char* LAcategoryOffsets = "Category %i: immediate: {%f | %f}, request:  {%f | %f}, self: {%f | %f}\n";

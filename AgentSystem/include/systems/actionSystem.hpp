@@ -1,39 +1,45 @@
 #pragma once
 
+/*
+This file declares the classes:
+- The ActionSystem itself, which includes:
+-- ActionDataController class, with two bundles of action data: for LAs and GAs;
+-- Action Variations class, wich warps information about which action variations are possible;
+- TO DO: the base ActionCategoy class.
+*/
 #include "miscStdHeaders.h"
 
-namespace AS {
+#include "data/actionData.hpp"
 
-	enum actionCategories {
-		STRENGHT, RESOURCES, ATTACK, GUARD,
-		SPY, SABOTAGE, DIPLOMACY, CONQUEST,
-		TOTAL_CATEGORIES
+namespace AS {	
+	//TO DO: singleton, initialize, test
+	class ActionDataController {		
+	public:
+		bool initialize(int maxActionsPerAgent, int numberLas, int numberGAs);
+		bool addActionData(actionData_t actionData);
+		bool getAgentData(int localOrGlobal, uint32_t agentID, actionData_t* recepient) const;
+		size_t sizeOfDataInBytesLAs() const;
+		size_t sizeOfDataInBytesGAs() const;
+		size_t capacityForDataInBytesLAs() const;
+		size_t capacityForDataInBytesGAs() const;
+		void clearData();
+		bool isInitialized() const { return m_isInitialized; }
+		bool hasData() const { return m_hasData; }
+	private:
+		std::vector <actionData_t> dataLAs;
+		std::vector <actionData_t> dataGAs;
+		bool m_isInitialized = false;
+		bool m_hasData = false;
 	};
-	//TO DO: brief description of each
 
-	enum actionModes {
-		IMMEDIATE, REQUEST, SELF,
-		TOTAL_MODES
-	};
-	//TO DO: brief description of each
-
-	enum actionScopes {
-		LOCAL, GLOBAL,
-		TOTAL_SCOPES
-	};
-
-	enum actionAvailability { NOT_AVAILABE, SPECIFIC = 1, STANDARD = -1 };
-	//WARNING: any updates to this should be reflected on the initialization of
-	//Actions::availableVariations
-
-	//TO DO: singleton
-	class Actions {
+	//TO DO: singleton, initialize, test
+	class ActionVariations {
 	public:
 
 		//see AS::actionAvailability enum (now: 0: not, 1: specific, -1: standard)
 		int isVariationValid(int category, int mode, int scope) {
 			return availableVariations[category][mode][scope];
-		}
+		}	
 
 		int localVariations() {
 			int amount = 0;
@@ -140,6 +146,28 @@ namespace AS {
 			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
 			{{  1,  1 }, {  1,  1 }, {  0,  1 }},  {{  1, -1 }, { -1, -1 }, {  0, -1 }},
 		};
+	};
+
+	//TO DO: singleton, initialize, test
+	class ActionSystem {
+	public:
+		ActionDataController data; //all action data is here!
+		ActionVariations variations; //which sorts of actions are possible
+
+		bool initializeDataController(const networkParameters_t* pp,
+			                     const ActionDataController** actionDataController_cptr_ptr);
+		//TO DO: the actual system to use these
+
+		bool initialize(const ActionSystem** actionSystem_cptr_ptr) {
+			LOG_TRACE("Initializing Action System (stub)");
+			m_isInitialized = true;
+			(*actionSystem_cptr_ptr) = (const ActionSystem*)this;
+			return true;
+		}
+		bool isInitialized() const { return m_isInitialized; }
+
+	private:
+		bool m_isInitialized = false;
 	};
 }
 

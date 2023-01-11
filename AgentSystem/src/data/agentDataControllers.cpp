@@ -46,27 +46,29 @@ namespace LA {
 		data.reserve(numberOfAgents);
 	}
 
-	void ColdDataController::addAgentData(coldData_t agentData) {
+	bool ColdDataController::addAgentData(coldData_t agentData) {
 		if (data.size() > (MAX_LA_QUANTITY - 1)) {
 			LOG_ERROR("Couldn't add LA's cold data: MAX_LA_QUANTITY reached");
+			return false;
 		}
 		else{
 			data.push_back(agentData);
+			return true;
 		}
 	}
 
-	bool ColdDataController::getAgentData(uint32_t agentID, coldData_t* recepient) {
+	bool ColdDataController::getAgentData(uint32_t agentID, coldData_t* recepient) const {
 		if (agentID > (data.size() - 1)) return false;
 
 		*recepient = data[agentID];
 		return true;
 	}
 
-	size_t ColdDataController::sizeOfDataInBytes() {
+	size_t ColdDataController::sizeOfDataInBytes() const {
 		return data.size() * sizeof(data[0]);
 	}
 
-	size_t ColdDataController::capacityForDataInBytes() {
+	size_t ColdDataController::capacityForDataInBytes() const {
 		return data.capacity() * sizeof(data[0]);
 	}
 
@@ -80,27 +82,29 @@ namespace LA {
 		data.reserve(numberOfAgents);
 	}
 
-	void StateController::addAgentData(stateData_t agentData) {
+	bool StateController::addAgentData(stateData_t agentData) {
 		if (data.size() > (MAX_LA_QUANTITY - 1)) {
 			LOG_ERROR("Couldn't add LA's state data: MAX_LA_QUANTITY reached");
+			return false;
 		}
 		else {
 			data.push_back(agentData);
+			return true;
 		}
 	}
 
-	bool StateController::getAgentData(uint32_t agentID, stateData_t* recepient) {
+	bool StateController::getAgentData(uint32_t agentID, stateData_t* recepient) const {
 		if (agentID > (data.size() - 1)) return false;
 
 		*recepient = data[agentID];
 		return true;
 	}
 
-	size_t StateController::sizeOfDataInBytes() {
+	size_t StateController::sizeOfDataInBytes() const {
 		return data.size() * sizeof(data[0]);
 	}
 
-	size_t StateController::capacityForDataInBytes() {
+	size_t  StateController::capacityForDataInBytes() const {
 		return data.capacity() * sizeof(data[0]);
 	}
 
@@ -114,27 +118,29 @@ namespace LA {
 		data.reserve(numberOfAgents);
 	}
 
-	void DecisionSystem::addAgentData(decisionData_t agentData) {
+	bool DecisionSystem::addAgentData(decisionData_t agentData) {
 		if (data.size() > (MAX_LA_QUANTITY - 1)) {
 			LOG_ERROR("Couldn't add LA's decision data: MAX_LA_QUANTITY reached");
+			return false;
 		}
 		else {
 			data.push_back(agentData);
+			return true;
 		}
 	}
 
-	bool DecisionSystem::getAgentData(uint32_t agentID, decisionData_t* recepient) {
+	bool DecisionSystem::getAgentData(uint32_t agentID, decisionData_t* recepient) const {
 		if (agentID > (data.size() - 1)) return false;
 
 		*recepient = data[agentID];
 		return true;
 	}
 
-	size_t DecisionSystem::sizeOfDataInBytes() {
+	size_t DecisionSystem::sizeOfDataInBytes() const {
 		return data.size() * sizeof(data[0]);
 	}
 
-	size_t DecisionSystem::capacityForDataInBytes() {
+	size_t DecisionSystem::capacityForDataInBytes() const {
 		return data.capacity() * sizeof(data[0]);
 	}
 
@@ -150,27 +156,29 @@ namespace GA {
 		data.reserve(numberOfAgents);
 	}
 
-	void ColdDataController::addAgentData(coldData_t agentData) {
+	bool ColdDataController::addAgentData(coldData_t agentData) {
 		if (data.size() > (MAX_GA_QUANTITY - 1)) {
 			LOG_ERROR("Couldn't add GA's cold data: MAX_LA_QUANTITY reached");
+			return false;
 		}
 		else {
 			data.push_back(agentData);
+			return true;
 		}
 	}
 
-	bool ColdDataController::getAgentData(uint32_t agentID, coldData_t* recepient) {
+	bool ColdDataController::getAgentData(uint32_t agentID, coldData_t* recepient) const {
 		if (agentID > (data.size() - 1)) return false;
 
 		*recepient = data[agentID];
 		return true;
 	}
 
-	size_t ColdDataController::sizeOfDataInBytes() {
+	size_t ColdDataController::sizeOfDataInBytes() const {
 		return data.size() * sizeof(data[0]);
 	}
 
-	size_t ColdDataController::capacityForDataInBytes() {
+	size_t ColdDataController::capacityForDataInBytes() const {
 		return data.capacity() * sizeof(data[0]);
 	}
 
@@ -184,27 +192,29 @@ namespace GA {
 		data.reserve(numberOfAgents);
 	}
 
-	void StateController::addAgentData(stateData_t agentData) {
+	bool StateController::addAgentData(stateData_t agentData) {
 		if (data.size() > (MAX_GA_QUANTITY - 1)) {
 			LOG_ERROR("Couldn't add GA's state data: MAX_LA_QUANTITY reached");
+			return false;
 		}
 		else {
 			data.push_back(agentData);
+			return true;
 		}
 	}
 
-	bool StateController::getAgentData(uint32_t agentID, stateData_t* recepient) {
+	bool StateController::getAgentData(uint32_t agentID, stateData_t* recepient) const {
 		if (agentID > (data.size() - 1)) return false;
 
 		*recepient = data[agentID];
 		return true;
 	}
 
-	size_t StateController::sizeOfDataInBytes() {
+	size_t StateController::sizeOfDataInBytes() const {
 		return data.size() * sizeof(data[0]);
 	}
 
-	size_t StateController::capacityForDataInBytes() {
+	size_t StateController::capacityForDataInBytes() const {
 		return data.capacity() * sizeof(data[0]);
 	}
 
@@ -218,28 +228,30 @@ namespace GA {
 		data.reserve(numberOfAgents);
 	}
 
-	void DecisionSystem::addAgentData(decisionData_t agentData) {
+	bool DecisionSystem::addAgentData(decisionData_t agentData) {
 		if (data.size() > (MAX_GA_QUANTITY - 1)) {
 			LOG_ERROR("Couldn't add GA's decision data: MAX_LA_QUANTITY reached");
+			return false;
 		}
 		else {
 			data.push_back(agentData);
+			return true;
 		}
 	}
 
 	//this is crashing
-	bool DecisionSystem::getAgentData(uint32_t agentID, decisionData_t* recepient) {
+	bool DecisionSystem::getAgentData(uint32_t agentID, decisionData_t* recepient) const {
 		if (agentID > (data.size() - 1)) return false;
 
 		*recepient = data[agentID];
 		return true;
 	}
 
-	size_t DecisionSystem::sizeOfDataInBytes() {
+	size_t DecisionSystem::sizeOfDataInBytes() const {
 		return data.size() * sizeof(data[0]);
 	}
 
-	size_t DecisionSystem::capacityForDataInBytes() {
+	size_t DecisionSystem::capacityForDataInBytes() const {
 		return data.capacity() * sizeof(data[0]);
 	}
 

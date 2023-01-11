@@ -9,10 +9,66 @@ per agent, so the size of all data structures is fixed for a given network.
 #include "logAPI.hpp"
 
 #include "data/agentDataControllers.hpp"
+#include "systems/agentSystems.hpp"
 
-void AS::createActionDataControllers(dataControllerPointers_t* agentDataControllers_ptr) {
+namespace AS {
+	bool ActionSystem::initializeDataController(const networkParameters_t* pp,
+								const ActionDataController** actionDataController_cptr_ptr) {
 
-	LOG_WARN("STUB: this is where the Action Data controllers should be created and linked");
+	LOG_TRACE("Will create (empty) Action Data controllers for LAs and GAs");
 
-	return;
+	*actionDataController_cptr_ptr = (const ActionDataController*)&(this->data);
+	this->data.initialize(pp->maxActions, pp->numberLAs, pp->numberGAs);
+
+	if (!(*actionDataController_cptr_ptr)->isInitialized()) {
+		LOG_CRITICAL("Couldn't initialize Action Data Controllers!");
+		return false;
+	}		
+
+	return true;
+}
+
+	bool ActionDataController::initialize(int maxActionsPerAgent, int numberLas, int numberGAs) {
+
+		LOG_TRACE("Initializing LA and GA Action Data Controllers and setting capacity");
+
+		m_isInitialized = true;
+		return true;
+	}
+
+	bool ActionDataController::addActionData(actionData_t actionData) {
+
+		return true;
+	}
+
+	bool ActionDataController::getAgentData(int localOrGlobal, uint32_t agentID, actionData_t* recepient) const {
+
+		return true;
+	}
+
+	size_t ActionDataController::sizeOfDataInBytesLAs() const {
+
+		return 1;
+	}
+
+	size_t ActionDataController::sizeOfDataInBytesGAs() const {
+
+		return 1;
+	}
+
+	size_t ActionDataController::capacityForDataInBytesLAs() const {
+
+		return 1;
+	}
+
+	size_t ActionDataController::capacityForDataInBytesGAs() const {
+
+		return 1;
+	}
+
+	void ActionDataController::clearData() {
+
+	}
+
+
 }

@@ -11,6 +11,7 @@ This includes:
 
 #include "network/parameters.hpp" //exposes "currentNetworkParams"
 #include "data/agentDataControllers.hpp" //exposes "dataControllers"
+#include "systems/actionSystem.hpp"
 
 #include "fileManager.hpp"
 
@@ -22,20 +23,26 @@ This includes:
 bool isInitialized = false;
 
 namespace AS {
+	//these are the control structures/objects for the AS's main systems;
+	//they're kinda in global scope for this file for now : )
+	
 	networkParameters_t currentNetworkParams;
 
+	ActionSystem actionSystem; 
 	dataControllerPointers_t agentDataControllerPtrs;
 	networkParameters_t* currentNetworkParams_ptr;
 
+	const ActionSystem* actionSystem_cptr;
+	const ActionDataController* actionDataController_cptr;
 	const networkParameters_t* currentNetworkParams_cptr;
 	const dataControllerPointers_t* agentDataControllers_cptr;
 }
 
-void AS::initializeASandCL() {
+bool AS::initializeASandCL() {
 
 	if (isInitialized) {
 		LOG_ERROR("AS already initialized. Aborting initialization.");
-		return;
+		return false;
 	}
 
 	LOG_INFO("Loggers Initialized");
@@ -44,37 +51,50 @@ void AS::initializeASandCL() {
 	agentDataControllerPtrs.haveBeenCreated = false;
 	agentDataControllerPtrs.haveData = false;
 
-	createAgentDataControllers(&agentDataControllerPtrs);
-	createActionDataControllers(&agentDataControllerPtrs);
-
 	currentNetworkParams_cptr = (const networkParameters_t*)&currentNetworkParams;
 	currentNetworkParams_ptr = &currentNetworkParams;
 	agentDataControllers_cptr = (const dataControllerPointers_t*)&agentDataControllerPtrs;
+
+	createAgentDataControllers(&agentDataControllerPtrs);
+
+	actionSystem.initialize(&actionSystem_cptr);
+	bool result = actionSystem_cptr->isInitialized();
+	if (!result) {
+		LOG_CRITICAL("Something went wrong initialing the Action System!");
+		return false;
+	}
+
+	actionSystem.initializeDataController(currentNetworkParams_cptr, &actionDataController_cptr);
 
 #ifdef DEBUG
 	printf("\n\nData Controllers NON-CONST ptr: %p\n", &agentDataControllerPtrs);
 	printf("Data Controllers CONST ptr:     %p\n\n", agentDataControllers_cptr);
 	printf("\n\nLAcoldData_ptr             : %p\n", agentDataControllers_cptr->LAcoldData_ptr);
 	printf("LAcoldData_ptr(from const) : % p\n\n", agentDataControllerPtrs.LAcoldData_ptr);
-	
 #endif // DEBUG
 
 	if (agentDataControllers_cptr !=
 		(const dataControllerPointers_t*)&agentDataControllerPtrs) {
 		LOG_CRITICAL("Pointer and Const Pointer to Data Control are not matching!");
+		return false;
 	}
 
 	if (agentDataControllerPtrs.LAcoldData_ptr == NULL) {
 		LOG_CRITICAL("DATA CONTROLLERS NOT CREATED: ptr to LAcold is NULL");
+		return false;
 	}
 
-	CL::init();
+	result = CL::init();
+	if (!result) {
+		LOG_CRITICAL("Something went wrong initialing the Communications Layer!");
+		return false;
+	}
 
 	isInitialized = true;
 
 	LOG_INFO("Initialized");
 
-	return;
+	return true;
 }
 
 void AS::clearNetwork() {
