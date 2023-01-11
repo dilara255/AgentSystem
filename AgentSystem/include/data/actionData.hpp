@@ -5,7 +5,10 @@ This file:
 - Describes the data structure of actions;
 - Has enums for action categories, modes, scopes and availability;
 - WARNING: MIGHT BE EXPOSED TO THE APPLICATION!
+- TO DO: MOVE TO API FOLDER
 */
+
+#include "core.hpp"
 
 #include "miscStdHeaders.h"
 
@@ -40,21 +43,21 @@ namespace AS {
 		uint32_t category : 3;
 		uint32_t scope : 1;
 		uint32_t mode : 1;
-	} ids_t;
+	} AS_API ids_t;
 
 	typedef struct {
 		uint32_t initial;
 		uint32_t lastProcessed;
-	} tickInfo_t;
+	} AS_API tickInfo_t;
 
 	typedef struct {
 		int32_t intensity;
 		int32_t processingAux;
-	} details_t;
+	} AS_API details_t;
 
 	typedef struct {
 		ids_t ids;
 		tickInfo_t ticks;
 		details_t details;
-	} actionData_t;
+	} AS_API actionData_t;
 }

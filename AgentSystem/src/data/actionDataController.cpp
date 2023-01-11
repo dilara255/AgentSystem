@@ -12,7 +12,7 @@ per agent, so the size of all data structures is fixed for a given network.
 #include "logAPI.hpp"
 
 #include "data/agentDataControllers.hpp"
-#include "systems/agentSystems.hpp"
+#include "systems/actionSystem.hpp"
 
 namespace AS {
 	bool ActionSystem::initializeDataController(const networkParameters_t* pp,

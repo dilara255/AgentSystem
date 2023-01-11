@@ -4,16 +4,18 @@
 
 #include "CL_internalAPI.hpp"
 
+#include "systems/dataMirror.hpp"
+
 namespace CL {
 
-	bool DataMirror::initialize() {
+	bool DataMirrorSystem::initialize() {
 		
-		//m_isInitialized = AS::createAgentDataControllers(&data.agentControllerPtrs);
-		m_isInitialized = true;
+		//m_isInitialized = CL::createAgentDataControllers(&data.agentControllerPtrs);
+		m_isInitialized = (AS::GLOBAL == 1);
 		return m_isInitialized;
 	}
 
-	bool DataMirror::clearAllData() {
+	bool DataMirrorSystem::clearAllData() {
 		if (!m_isInitialized) {
 			LOG_ERROR("Can't clear mirror data - the instance is not initialized");
 			return false;
@@ -39,7 +41,7 @@ namespace CL {
 		return true;
 	}
 
-	bool DataMirror::updateHasData() {
+	bool DataMirrorSystem::updateHasData() {
 		m_hasData = true;
 		/*
 		m_hasData &= data.networkParams.isNetworkInitialized;
@@ -49,35 +51,40 @@ namespace CL {
 		return m_hasData;
 	}
 
-	bool DataMirror::receiveParams(const AS::networkParameters_t* params_cptr) {
+	bool DataMirrorSystem::receiveParams(const AS::networkParameters_t* params_cptr) {
 
-		return true;
+		LOG_WARN("This function is not implemented yet - returning false...");
+		return false;
 	}
 
-	bool DataMirror::receiveAgentData(const AS::dataControllerPointers_t dataPtrs) {
+	bool DataMirrorSystem::receiveAgentData(const CL::agentMirrorControllerPtrs_t dataPtrs) {
 
-		return true;
+		LOG_WARN("This function is not implemented yet - returning false...");
+        return false;
 	}
 
-	bool DataMirror::receiveActionData(const AS::ActionDataController* actions_cptr) {
+	bool DataMirrorSystem::receiveActionData(const CL::ActionMirrorController* actions_cptr) {
 
-		return true;
+		LOG_WARN("This function is not implemented yet - returning false...");
+		return false;
 	}
 
+	bool DataMirrorSystem::transferParams(AS::networkParameters_t* recepient_ptr) const {
 
-	bool DataMirror::transferParams(AS::networkParameters_t* recepient_ptr) const {
-
-		return true;
+		LOG_WARN("This function is not implemented yet - returning false...");
+		return false;
 	}
 
-	bool DataMirror::transferAgentData(AS::dataControllerPointers_t* recepient_ptr) const {
+	bool DataMirrorSystem::transferAgentData(CL::agentMirrorControllerPtrs_t* recepient_ptr) const {
 
-		return true;
+		LOG_WARN("This function is not implemented yet - returning false...");
+        return false;
 	}
 
-	bool DataMirror::transferActionData(AS::ActionDataController* recepient_ptr) const {
+	bool DataMirrorSystem::transferActionData(CL::ActionMirrorController* recepient_ptr) const {
 
-		return true;
+		LOG_WARN("This function is not implemented yet - returning false...");
+		return false;
 	}
 }
 

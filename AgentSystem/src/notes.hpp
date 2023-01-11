@@ -9,7 +9,6 @@
 * TO DO: Update it after version 0.6
 * TO DO: Use constexpr instead of defines where possible; 
 * TO DO: On these notes, correct uses of array when actually we're using vectors;
-* TO DO: Get rid of conditional includes : );
 * 
 * Versioning:
 * 
