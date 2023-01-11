@@ -1,6 +1,8 @@
 #pragma once
 
 /*
+* WARNING: THIS FILE MIGHT BE EXPOSED TO THE APPLICATION!
+* 
 * NOTE: we assume all LAs have maxNeighbours, which makes all agent's Data of a same,
 * definite size after the network is initialized. We also assume maxLAs and maxGAs.
 * See fixedParameters.hpp.
@@ -75,6 +77,7 @@ namespace AS {
 
 	typedef struct {
 		float current;
+		float externalGuard;
 		float thresholdToCostUpkeep;
 		float currentUpkeep;
 	} strenght_t;
@@ -82,9 +85,7 @@ namespace AS {
 	typedef char agentName_t[NAME_LENGHT + 1];
 
 	//LA related:
-	typedef struct {
-		float offsets[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES];
-	} LAdecisionOffsets_t;
+	typedef float LAdecisionOffsets_t[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES];
 
 	typedef struct {
 		resources_t resources;
@@ -107,6 +108,7 @@ namespace AS {
 	typedef struct {
 		int diplomaticStanceToNeighbors[MAX_LA_NEIGHBOURS];
 		float dispositionToNeighbors[MAX_LA_NEIGHBOURS];
+		float dispositionToNeighborsLastStep[MAX_LA_NEIGHBOURS];
 	} LAneighborRelations_t;
 
 	typedef	float LAinfiltrationOnNeighbors_t[MAX_LA_NEIGHBOURS];
@@ -117,6 +119,7 @@ namespace AS {
 	typedef struct {
 		int diplomaticStanceToNeighbors[MAX_GA_QUANTITY];
 		float dispositionToNeighbors[MAX_GA_QUANTITY];
+		float dispositionToNeighborsLastStep[MAX_GA_QUANTITY];
 	} GAneighborRelations_t;
 
 	typedef	float GAinfiltrationOnNeighbors_t[MAX_GA_QUANTITY];

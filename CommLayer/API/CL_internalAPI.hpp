@@ -3,7 +3,7 @@
 #include "core.hpp"
 
 namespace CL {
-	CL_API void init();
+	CL_API bool init();
 
 	//****For Testing****
 	CL_API void initTest(int ASinitTestNumber, int tstArraySize);

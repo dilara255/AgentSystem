@@ -52,7 +52,7 @@ namespace AS {
 		//TO DO: implement actual testing : )
 		//(load from default network and compare values with defaults)
 		LAagentDataObject.m_coldData.id = testLAid;
-		LAagentDataObject.m_decisionData.offsets.personality.offsets[0][0] = testOffset;
+		LAagentDataObject.m_decisionData.offsets.personality[0][0] = testOffset;
 		LAagentDataObject.m_state.GAid = testGAid;
 
 		GAagentDataObject.m_coldData.id = testGAid;
@@ -62,7 +62,7 @@ namespace AS {
 		bool result = true;
 
 		result &= (LAagentDataObject.m_coldData.id == testLAid);
-		result &= (LAagentDataObject.m_decisionData.offsets.personality.offsets[0][0]
+		result &= (LAagentDataObject.m_decisionData.offsets.personality[0][0]
 			                                                              == testOffset);
 		result &= (LAagentDataObject.m_state.GAid == testGAid);
 

@@ -103,14 +103,15 @@ bool test3PointersToMockData(void) {
 
 bool test2Initialization(void) {
 
-	AS::initializeASandCL();
+	bool result = AS::initializeASandCL();
+	if (!result) { return false; }
 
 	AS::CLinitTest();
 
 	int numberAS = CL::getASnumber();
 	int numberCL = CL::getCLnumber();
 
-	bool result = numberAS == AS_TST_INIT_EXPECTED_NUMBER;
+	result = numberAS == AS_TST_INIT_EXPECTED_NUMBER;
 	result &= numberCL == CL_TST_INIT_EXPECTED_NUMBER;
 
 	if (result) {

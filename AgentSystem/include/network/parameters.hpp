@@ -52,6 +52,7 @@ and sizes static.
 #define DEFAULT_GA_PERSONA_2 2
 #define DEFAULT_GA_PERSONA_3 3
 #define DEFAULT_LA_OFFSET (0.0)
+#define DEFAULT_REINFORCEMENT (0.0)
 
 namespace AS {
 	typedef AZ::FlagField128 LAflagField_t;

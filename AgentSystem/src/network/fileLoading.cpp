@@ -152,16 +152,12 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     for (int i = 0; i < numEffectiveGAs; i++) {
         if (i != id) {
             int otherId, stance;
-            float disposition, infiltration;
+            float disposition, dispositionLastStep, infiltration;
             
             tokens = fscanf(fp, GArelationsInfo, &otherId, &stance, 
-                            &disposition, &infiltration);
-            if (tokens != 4) {
+                            &disposition, &dispositionLastStep, &infiltration);
+            if (tokens != 5) {
                 LOG_ERROR("Error reading GA relation tokens. Aborting load.");
-#ifdef DEBUG
-                printf("\n\nGA: %i, Tokens read: %i, otherId: %i, stance: %i, disposition: %f\n",
-                        id, tokens, otherId, stance, disposition);
-#endif // DEBUG
                 return false;
             }
             if (otherId != i) {
@@ -171,6 +167,7 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
 
             state.relations.diplomaticStanceToNeighbors[otherId] = stance;
             state.relations.dispositionToNeighbors[otherId] = disposition;
+            state.relations.dispositionToNeighborsLastStep[otherId] = dispositionLastStep;
             decision.infiltration[otherId] = infiltration;
         }
     }
@@ -229,8 +226,9 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     
 
     tokens = fscanf(fp, LAstrenght, &state.parameters.strenght.current,
-                    &state.parameters.strenght.thresholdToCostUpkeep);
-    if (tokens != 2) {
+                                    &state.parameters.strenght.externalGuard,
+                                    &state.parameters.strenght.thresholdToCostUpkeep);
+    if (tokens != 3) {
         LOG_ERROR("Error reading resource tokens from GA. Aborting load.");
         return false;
     }
@@ -301,8 +299,8 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
 
     for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
         for (int j = 0; j < AS::TOTAL_MODES; j++) {
-            decision.offsets.personality.offsets[i][j] = offsets[i][j][AS::LOCAL];
-            decision.offsets.incentivesAndConstraintsFromGA.offsets[i][j] 
+            decision.offsets.personality[i][j] = offsets[i][j][AS::LOCAL];
+            decision.offsets.incentivesAndConstraintsFromGA[i][j] 
                                                           = offsets[i][j][AS::GLOBAL];
         }
     }
