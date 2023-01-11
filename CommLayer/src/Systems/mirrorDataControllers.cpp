@@ -11,11 +11,6 @@
 
 namespace CL {
 
-    bool createAgentDataControllers(agentMirrorControllerPtrs_t* agentDataControllers_ptr) {
-        //TO DO: this first
-        return true;
-    }
-
     bool ActionMirrorController::getAction(int localOrGlobal, uint32_t actionID,
                                                         actionData_t* recepient) const {
         
