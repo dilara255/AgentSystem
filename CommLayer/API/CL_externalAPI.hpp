@@ -10,7 +10,7 @@
 
 namespace CL {
 
-	extern mirror_t mirrorData;
+	extern mirror_t* mirrorData_ptr;
 
 	//****For Testing****
 	CL_API void sayHelloExternal();

@@ -74,8 +74,8 @@
 * b. Update file format and file functions to support it.
 * c. Create functionality to update data and parameters derived from loaded data
 *    (eg: number of connections, neighbour ids, actionController.m_maxNeighbours)
-* >> d. Replicate all data and params on CL (transfer on command).
-* e. Querry data on TA and check it.
+* d. Replicate all data and params on CL (transfer on command).
+* >> e. Querry data on TA and check it.
 * f. Add simple functionality to change data DIRECTLY and test load/save/read.
 *
 * Cleanup, documentation (in-code), and fresh pull+compile test

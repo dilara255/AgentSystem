@@ -6,6 +6,8 @@
  //                       (how, tho?)                         \\
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\
 
+#include "miscStdHeaders.h"
+
 #include "AS_internal.hpp"
 
 namespace CL {
@@ -19,6 +21,7 @@ namespace CL {
 							dataGAs.reserve(size * MAX_GA_QUANTITY);
 							m_maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
 							m_isInitialized = true;
+							return m_isInitialized;
 	    }
 
 		bool replaceDataLAs(const std::vector <actionData_t>& newData) { dataLAs = newData; }
@@ -162,11 +165,23 @@ namespace CL {
 		DecisionSystemGA* GAdecision_ptr;
 	} agentMirrorControllerPtrs_t;
 
-	bool createAgentDataControllers(agentMirrorControllerPtrs_t* agentDataControllers_ptr);
-
 	typedef struct {
 		AS::networkParameters_t networkParams;
 		CL::agentMirrorControllerPtrs_t agentMirrorPtrs;
 		CL::ActionMirrorController actionMirror;
 	}mirror_t;
+
+	typedef struct {
+		const std::vector <LA::coldData_t>* coldDataLAs_cptr;
+		const std::vector <LA::stateData_t>* stateLAs_cptr;
+		const std::vector <LA::decisionData_t>* decisionLAs_cptr;
+		const std::vector <GA::coldData_t>* coldDataGAs_cptr;
+		const std::vector <GA::stateData_t>* stateGAs_cptr;
+		const std::vector <GA::decisionData_t>* decisionGAs_cptr;
+	} agentToMirrorVectorPtrs_t;
+
+	typedef struct {
+		const std::vector <AS::actionData_t>* actionsLAs_cptr;
+		const std::vector <AS::actionData_t>* actionsGAs_cptr;
+	} actionToMirrorVectorPtrs_t;
 }
