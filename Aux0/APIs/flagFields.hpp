@@ -15,7 +15,7 @@ namespace AZ {
 			field = flagsToLoad;
 		}
 
-		uint32_t getField(unsigned whichField) {
+		uint32_t getField() {
 			return field;
 		}
 

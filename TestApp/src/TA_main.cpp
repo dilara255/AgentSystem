@@ -4,83 +4,283 @@
 #include "AS_API.hpp"
 #include "CL_ExternalAPI.hpp"
 
-void test1SayHello(void);
-bool test2Initialization(void);
-bool test3PointersToMockData(void);
+void testSayHello(void);
+bool testMockData(void);
+bool testFromTAifCLhasInitialized(void);
+bool testReadingCLdataFromTA(void);
+bool testChangingCLdataFromTAandRetrievingFromAS(void);
 
 #define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
-#define BASIC_INIT_COMM_TESTS 3
-#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 4
+#define BASIC_INIT_COMM_TESTS 4
+#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 7
 #define TOTAL_TESTS (BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS)
+
+#ifdef AS_DEBUG
+	#define GETCHAR_PAUSE getchar();
+#else
+	#define GETCHAR_PAUSE puts("\n");
+#endif // AS_DEBUG
+
 
 //TO DO: make all tests return bool and count results, than match with expected
 int main(void) {
 	
-	test1SayHello();
+	testSayHello();
 
 	LOG_INFO("AS, CL-internal and CL-external should have said hello above : )");
-	LOG_TRACE("This will run a few batteries of tests...\n");
-	getchar();
+	LOG_TRACE("This will run a few batteries of tests...\n"); GETCHAR_PAUSE
 
 	LOG_INFO("\n\nBasic App, AS and CL communicaton and data storage tests:\n\n");
-	int resultsBattery1 = (int)test2Initialization();
-	getchar();
-	resultsBattery1 += (int)test3PointersToMockData();
-	getchar();
-	resultsBattery1 += (int)AS::testContainersAndAgentObjectCreation();
-	getchar();
+	int resultsBattery1 = (int)testMockData(); GETCHAR_PAUSE
+	
+	LOG_TRACE("Actual initialization tests...");
+	resultsBattery1 += (int)AS::initializeASandCL(); GETCHAR_PAUSE
+
+	resultsBattery1 += (int)AS::testContainersAndAgentObjectCreation(); GETCHAR_PAUSE
+
+	resultsBattery1 += (int)testFromTAifCLhasInitialized(); GETCHAR_PAUSE
 
 	if (resultsBattery1 != BASIC_INIT_COMM_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%i out of %i failed", BASIC_INIT_COMM_TESTS - resultsBattery1, BASIC_INIT_COMM_TESTS);
+		GETCHAR_PAUSE
 	}
 	else {
-		LOG_INFO("All of these tests passed!");
+		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
 	}
-	getchar();
 
 	LOG_INFO("\n\nSpecific functionality tests (DATA manipulation):\n\n");
-	int resultsBattery2 = (int)AS::testFileCreation();
-	getchar();
-	resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults);
-	getchar();
-	resultsBattery2 += (int)AS::saveNetworkToFile();
-	getchar();
-	resultsBattery2 += (int)AS::saveNetworkToFile("TestFileCustomName.txt");
-	getchar();
+	int resultsBattery2 = (int)AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
+	GETCHAR_PAUSE
 
+		resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults); GETCHAR_PAUSE
+
+		resultsBattery2 += (int)AS::saveNetworkToFile(); GETCHAR_PAUSE
+
+		resultsBattery2 += (int)AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE
+
+		resultsBattery2 += (int)testReadingCLdataFromTA(); GETCHAR_PAUSE
+
+		resultsBattery2 += (int)testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE
+
+		resultsBattery2 += (int)AS::saveNetworkToFile(customFilename); GETCHAR_PAUSE
+	
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%i out of %i failed", SPECIFIC_DATA_FUNCTIONALITY_TESTS - resultsBattery2, 
-			                     SPECIFIC_DATA_FUNCTIONALITY_TESTS);
+			                                             SPECIFIC_DATA_FUNCTIONALITY_TESTS);
+		GETCHAR_PAUSE
 	}
 	else {
-		LOG_INFO("All of these tests passed!");
+		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
 	}
-	getchar();
+	
+	LOG_TRACE("\nTests ended...\n"); GETCHAR_PAUSE
 
 	int totalPassed = resultsBattery1 + resultsBattery2;
 	if (totalPassed == TOTAL_TESTS) {
-		LOG_INFO("All automatically checked tests passed!");
+		LOG_INFO("All automatically checked tests passed!"); GETCHAR_PAUSE
 	}
 	else {
-		LOG_CRITICAL("Not all automatically checked tests were passed!");
+		LOG_CRITICAL("Not all tests were passed (as far as we checked)!");
 		printf("%i out of %i failed\n", TOTAL_TESTS - totalPassed, TOTAL_TESTS);
+		GETCHAR_PAUSE
 	}
 
+	LOG_WARN("Check that you have (at least): one network file with format specifiers, with default values and one with modified values");
+	printf("-The one with specifiers is %s\n-%s should have the defaults\n-%s received modifications from TA\n",
+		                              fileNameNoDefaults, fileNameWithDefaults, customFilename);
+	printf("\nThe modified file has different data - the comment's first letter should be an %c. Besides:\n",TST_COMMENT_LETTER_CHANGE);
+	printf("last GA`s id = %i and connected GAs = %i, last LA`s reinforcement = %f, offset[%i][%i][1] = %f and last actions aux =%i\n",
+		TST_GA_ID, TST_GA_CONNECTIONS, TST_LA_REINFORCEMENT, TST_CHANGED_CATEGORY, TST_CHANGED_MODE, TST_LA_OFFSET, TST_LAST_ACTION_AUX);
 	getchar();
-	LOG_TRACE("Tests ended. Press return to exit");
-	getchar();
-	return 1;
+
+	LOG_INFO("Done! Enter to exit"); getchar();
+	
+	return (1 + (totalPassed - TOTAL_TESTS));
 }
 
-bool test3PointersToMockData(void) {
-	bool result;
+bool testChangingCLdataFromTAandRetrievingFromAS(void) {
+
+	LOG_INFO("TA will try to change some data in CL so AS can check it...");
+
+	CL::mirrorData_ptr->networkParams.comment[0] = TST_COMMENT_LETTER_CHANGE;
+
+	GA::coldData_t newGAcoldData = CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data.back();
+	CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data.pop_back();
+	newGAcoldData.id = TST_GA_ID;
+	CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data.push_back(newGAcoldData);
+
+	GA::stateData_t newGAstate = CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data.back();
+	CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data.pop_back();
+	newGAstate.connectedGAs.loadField(TST_GA_CONNECTIONS);
+	CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data.push_back(newGAstate);
+
+	LA::stateData_t newLAdstate = CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data.back();
+	CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data.pop_back();
+	newLAdstate.parameters.strenght.externalGuard = TST_LA_REINFORCEMENT;
+	CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data.push_back(newLAdstate);
+
+
+	LA::decisionData_t newLAdecision = CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data.back();
+	CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data.pop_back();
+	newLAdecision.offsets.incentivesAndConstraintsFromGA[TST_CHANGED_CATEGORY][TST_CHANGED_MODE] 
+		                                                               = (float)TST_LA_OFFSET;
+	CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data.push_back(newLAdecision);
+
+	AS::actionData_t newLAaction = CL::mirrorData_ptr->actionMirror.dataLAs.back();
+	CL::mirrorData_ptr->actionMirror.dataLAs.pop_back();
+	newLAaction.details.processingAux = TST_LAST_ACTION_AUX;
+	CL::mirrorData_ptr->actionMirror.dataLAs.push_back(newLAaction);
+
+	return AS::testGotNewValuesFromASthroughCL();
+}
+
+bool testReadingCLdataFromTA(void) {
+
+	LOG_TRACE("TA will try to read data from CL...");
+
+	bool result = CL::mirrorData_ptr->agentMirrorPtrs.haveData;
+	result &= CL::mirrorData_ptr->networkParams.isNetworkInitialized;
+	result &= CL::mirrorData_ptr->actionMirror.hasData();
+	if (!result) {
+		LOG_ERROR("CL Mirror data controllers say they have no data!");
+		return false;
+	}
+	LOG_TRACE("Data Flags ok. Will try to read data...");
+
+	result = (CL::mirrorData_ptr->networkParams.numberGAs == TST_NUMBER_GAS);
+	result &= (CL::mirrorData_ptr->networkParams.numberLAs == TST_NUMBER_LAS);
+	if (!result) {
+		LOG_ERROR("Agent amounts were not as expected according to CL. Aborting test.");
+		return false;
+	}
+
+	//strcmp returns 0 on perfect match
+	if (strcmp(CL::mirrorData_ptr->networkParams.name, fileNameWithDefaults) != 0) {
+		LOG_ERROR("Network name doesn't match expected.");
+		result = false;
+	}
+	
+	AS::actionData_t firstGAaction =
+		CL::mirrorData_ptr->actionMirror.dataGAs[0];
+	AS::actionData_t lastLAaction =
+		CL::mirrorData_ptr->actionMirror.dataLAs[(TST_NUMBER_LAS * MAX_ACTIONS_PER_AGENT) - 1];
+
+	bool resultAux = (firstGAaction.ticks.initial == DEFAULT_FIRST_TICK);
+	resultAux &= (lastLAaction.details.processingAux == DEFAULT_ACTION_AUX);
+	if (!resultAux) {
+		LOG_ERROR("Test action data doesn't match expected.");
+		result = false;
+	}
+
+	GA::coldData_t firstGAcold = CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data[0];
+	LA::decisionData_t lastLAdecision = CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data[TST_NUMBER_LAS-1];
+
+	resultAux = (firstGAcold.id == 0);
+	resultAux &= (lastLAdecision.offsets.personality[0][0] == (float)DEFAULT_LA_OFFSET);
+	if (!resultAux) {
+		LOG_ERROR("Test agent data doesn't match expected.");
+		result = false;
+	}
+
+	if (!result) {
+		LOG_ERROR("Test failed");
+		return false;
+	}
+
+	LOG_INFO("TA read data from CL as expected!");
+	return true;
+}
+
+bool testFromTAifCLhasInitialized(void) {
+
+	LOG_TRACE("TA will querry wether CL's Data Controller are properly initialized...");
+
+	bool result = CL::mirrorData_ptr->actionMirror.isInitialized();
+	result &= CL::mirrorData_ptr->agentMirrorPtrs.haveBeenCreated;
+	if (!result) {
+		LOG_ERROR("CL Mirror data controllers not initialized or bad pointer");
+		return false;
+	}
+	LOG_TRACE("Initialization flags ok. Checking capacities...");
+	
+	//Dividing by sizeof to get back to quantity of items, which is easier to check expected
+	size_t capLAact = CL::mirrorData_ptr->actionMirror.capacityForDataInBytesLAs();
+	size_t sizeLAact = sizeof(CL::mirrorData_ptr->actionMirror.dataLAs[0]);
+
+	size_t capGAact = CL::mirrorData_ptr->actionMirror.capacityForDataInBytesGAs();
+	size_t sizeGAact = sizeof(CL::mirrorData_ptr->actionMirror.dataGAs[0]);
+
+	size_t capLAcold = CL::mirrorData_ptr->agentMirrorPtrs.LAcoldData_ptr->capacityForDataInBytes();
+	size_t sizeLAcold = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.LAcoldData_ptr->data[0]);
+
+	size_t capGAcold = CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->capacityForDataInBytes();
+	size_t sizeGAcold = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data[0]);
+
+	size_t capLAstate = CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->capacityForDataInBytes();
+	size_t sizeLAstate = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data[0]);
+
+	size_t capGAstate = CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->capacityForDataInBytes();
+	size_t sizeGAstate = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data[0]);
+
+	size_t capLAdecs = CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->capacityForDataInBytes();
+	size_t sizeLAdecs = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data[0]);
+
+	size_t capGAdecs = CL::mirrorData_ptr->agentMirrorPtrs.GAdecision_ptr->capacityForDataInBytes();
+	size_t sizeGAdecs = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.GAdecision_ptr->data[0]);
+
+	int failed = 0;
+
+	failed += capLAact != (MAX_LA_QUANTITY * MAX_ACTIONS_PER_AGENT * sizeLAact);
+	failed += capGAact != (MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT * sizeGAact);
+
+	failed += capLAcold != (MAX_LA_QUANTITY* sizeLAcold);
+	failed += capGAcold != (MAX_GA_QUANTITY* sizeGAcold);
+	failed += capLAstate != (MAX_LA_QUANTITY* sizeLAstate);
+	failed += capGAstate != (MAX_GA_QUANTITY*sizeGAstate);
+	failed += capLAdecs != (MAX_LA_QUANTITY* sizeLAdecs);
+	failed += capGAdecs != (MAX_GA_QUANTITY* sizeGAdecs);
+
+	if (failed) {
+		LOG_ERROR("Some CL data controller capacities don't match the expected!");
+#ifdef AS_DEBUG
+		printf("Failed on %i out of 8 checks\nsizeLAact; %zi, sizeGAact: %zi\n", failed,
+											sizeLAact, sizeGAact);
+		printf("capLAact: %zi, expected: %zi - capGAact: %zi, expected: %zi\n",
+			capLAact, (MAX_LA_QUANTITY * MAX_ACTIONS_PER_AGENT * sizeLAact), capGAact,
+			(MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT* sizeLAact));
+#endif // AS_DEBUG
+		GETCHAR_PAUSE
+		return false;
+	}
+	
+	LOG_INFO("CL data controller capacities are as expected. CL Initialization seems ok : )");
+	return true;
+}
+
+bool testMockData(void) {
+
+	LOG_TRACE("Sanity checks for the communication between APP and DLLs (with mock initialization");
+
+	AS::CLsanityTest();
+
+	int numberAS = CL::getASnumber();
+	int numberCL = CL::getCLnumber();
+
+	bool result = numberAS == AS_TST_INIT_EXPECTED_NUMBER;
+	result &= numberCL == CL_TST_INIT_EXPECTED_NUMBER;
+
+	if (result) {
+		LOG_INFO("AS and CL initialization and basic communication test numbers are Right");
+	}
+	else {
+		LOG_ERROR("AS and/or CL initialization and basic communication test numbers are WRONG");
+	}
 
 	int* tstArray_ptr = CL::getTestArrayPtr();
 	if (tstArray_ptr[0] == AS_TST_EXPECTED_ARR0 && tstArray_ptr[1] == AS_TST_EXPECTED_ARR1) {
 		LOG_INFO("AS test array numbers relayed correctly");
-		result = true;
 	}
 	else {
 		LOG_ERROR("AS test array numbers relayed INCORRECTLY");
@@ -98,35 +298,11 @@ bool test3PointersToMockData(void) {
 	return result;
 }
 
-bool test2Initialization(void) {
-
-	bool result = AS::initializeASandCL();
-	if (!result) { return false; }
-
-	AS::CLinitTest();
-
-	int numberAS = CL::getASnumber();
-	int numberCL = CL::getCLnumber();
-
-	result = numberAS == AS_TST_INIT_EXPECTED_NUMBER;
-	result &= numberCL == CL_TST_INIT_EXPECTED_NUMBER;
-
-	if (result) {
-		LOG_INFO("AS and CL initialization and basic communication test numbers are Right");
-	}
-	else {
-		LOG_ERROR("AS and/or CL initialization and basic communication test numbers are WRONG");
-	}
-
-	return result;
-}
-
-void test1SayHello(void) {
+void testSayHello(void) {
 	
 	AS::sayHello();
 
 	CL::sayHelloExternal();
 	
-	getchar();
-	return;
+	GETCHAR_PAUSE
 }

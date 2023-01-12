@@ -16,10 +16,9 @@ namespace CL {
 	class ActionMirrorController {
 	public:
 
-		bool initialize() { size_t size = MAX_ACTIONS_PER_AGENT*sizeof(actionData_t);
-							dataLAs.reserve(size * MAX_LA_QUANTITY);
-							dataGAs.reserve(size * MAX_GA_QUANTITY);
-							m_maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
+		bool initialize() {	m_maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
+							dataLAs.reserve(m_maxActionsPerAgent * MAX_LA_QUANTITY);
+							dataGAs.reserve(m_maxActionsPerAgent * MAX_GA_QUANTITY);
 							m_isInitialized = true;
 							return m_isInitialized;
 	    }
@@ -42,6 +41,8 @@ namespace CL {
 		bool hasData() const { return m_hasData; }
 		int getMaxActionsPerAgent() const { return m_maxActionsPerAgent; }
 
+		void setHasData(bool hasData) { m_hasData = hasData; }
+
 		std::vector <actionData_t> dataLAs;
 		std::vector <actionData_t> dataGAs;
 
@@ -56,7 +57,7 @@ namespace CL{
 
 	class ColdDataControllerLA {
 	public:
-		ColdDataControllerLA() { data.reserve(MAX_LA_QUANTITY*sizeof(LA::coldData_t)); }
+		ColdDataControllerLA() { data.reserve(MAX_LA_QUANTITY); }
 
 		bool replaceData(const std::vector <LA::coldData_t> &newData) { data = newData; }
 
@@ -72,7 +73,7 @@ namespace CL{
 
 	class StateControllerLA {
 	public:
-		StateControllerLA() { data.reserve(MAX_LA_QUANTITY * sizeof(LA::stateData_t)); }
+		StateControllerLA() { data.reserve(MAX_LA_QUANTITY); }
 
 		bool replaceData(const std::vector <LA::stateData_t>& newData) { data = newData; }
 
@@ -88,7 +89,7 @@ namespace CL{
 
 	class DecisionSystemLA {
 	public:
-		DecisionSystemLA() { data.reserve(MAX_LA_QUANTITY * sizeof(LA::decisionData_t)); }
+		DecisionSystemLA() { data.reserve(MAX_LA_QUANTITY); }
 
 		bool replaceData(const std::vector <LA::decisionData_t>& newData) { data = newData; }
 
@@ -106,7 +107,7 @@ namespace CL{
 namespace CL {
 	class ColdDataControllerGA {
 	public:
-		ColdDataControllerGA() { data.reserve(MAX_LA_QUANTITY * sizeof(GA::coldData_t)); }
+		ColdDataControllerGA() { data.reserve(MAX_GA_QUANTITY); }
 
 		bool replaceData(const std::vector <GA::coldData_t>& newData) { data = newData; }
 
@@ -122,7 +123,7 @@ namespace CL {
 
 	class StateControllerGA {
 	public:
-		StateControllerGA() { data.reserve(MAX_LA_QUANTITY * sizeof(GA::stateData_t)); }
+		StateControllerGA() { data.reserve(MAX_GA_QUANTITY); }
 
 		bool replaceData(const std::vector <GA::stateData_t>& newData) { data = newData; }
 
@@ -138,7 +139,7 @@ namespace CL {
 
 	class DecisionSystemGA {
 	public:
-		DecisionSystemGA() { data.reserve(MAX_LA_QUANTITY * sizeof(GA::decisionData_t)); }
+		DecisionSystemGA() { data.reserve(MAX_GA_QUANTITY); }
 
 		bool replaceData(const std::vector <GA::decisionData_t>& newData) { data = newData; }
 
