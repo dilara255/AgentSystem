@@ -9,18 +9,35 @@
 namespace CL {
 
 	bool DataMirrorSystem::initialize(mirror_t** mirror_ptr_ptr) {
-		
-		//m_isInitialized = CL::createAgentDataControllers(&data.agentControllerPtrs);
-		(*mirror_ptr_ptr) = &data;
-		
+			
+		LOG_TRACE("Initializing Data Mirror System...");
+
+		if (!AS::GLOBAL == 1) {
+			LOG_CRITICAL("Couldn't read critical enum - Initialization failed...");
+			return false;
+		}
+
 		bool result = data.actionMirror.initialize();
 		if (!result) {
 			LOG_CRITICAL("Couldn't initialize Data Mirror System!");
 			return false;
 		}
 
-		m_isInitialized = (AS::GLOBAL == 1); //tests if enums are working or something
-		return m_isInitialized;
+		m_isInitialized = true; //provisionally
+
+		result = createAgentDataControllers();
+		if (!result) {
+			LOG_CRITICAL("Aborting...");
+			m_isInitialized = false;
+			m_hasData = false;
+			return false;
+		}
+
+		(*mirror_ptr_ptr) = &data;
+
+		LOG_INFO("Data Mirror System Initialized!");
+
+		return true;
 	}
 
 	bool DataMirrorSystem::clearAllData() {
@@ -51,9 +68,14 @@ namespace CL {
 	bool DataMirrorSystem::createAgentDataControllers() {
 		LOG_TRACE("Trying to create Agent Data Controllers\n");
 
-		if (data.agentMirrorPtrs.haveBeenCreated) {
-			LOG_WARN("Data Controllers already exist: aborting re-creation\n");
+		if (!m_isInitialized) {
+			LOG_ERROR("Can't create controllers before initializing the Data Mirror System");
 			return false;
+		}
+
+		if (data.agentMirrorPtrs.haveBeenCreated) {
+			LOG_WARN("Data Controllers already exist: aborting re-creation (returns true)\n");
+			return true;
 		}
 		
 		data.agentMirrorPtrs.LAcoldData_ptr = new ColdDataControllerLA();
@@ -70,31 +92,45 @@ namespace CL {
 	}
 
 	bool DataMirrorSystem::updateHasData() {
-		m_hasData &= data.networkParams.isNetworkInitialized;
-		m_hasData &= data.agentMirrorPtrs.haveData;
-		return m_hasData &= data.actionMirror.hasData();
+
+		m_hasData = true;
+		m_hasData &= isNetworkInitialized();
+		m_hasData &= hasAgentData();
+		m_hasData &= hasActionData();
+			
+		return (m_hasData &= data.actionMirror.hasData());
 	}
 
-	bool DataMirrorSystem::receiveParams(const AS::networkParameters_t* params_cptr) {
+	bool DataMirrorSystem::receiveReplacementParams(const AS::networkParameters_t* params_cptr) {
 
 		LOG_TRACE("Receiving new parameters");
 
 		data.networkParams.isNetworkInitialized = params_cptr->isNetworkInitialized;
+		if (!data.networkParams.isNetworkInitialized) {
+			LOG_WARN("Network being read says it wasnt initialized! Will proceed, but errors are to be expected");
+		}
 		data.networkParams.maxActions = params_cptr->maxActions;
 		data.networkParams.maxLAneighbours = params_cptr->maxLAneighbours;
 		data.networkParams.numberGAs = params_cptr->numberGAs;
 		data.networkParams.numberLAs = params_cptr->numberLAs;
 		
 		size_t nameSize = NAME_LENGHT * sizeof(char);
+
 		int result = strcpy_s(data.networkParams.name, nameSize, params_cptr->name);
-		if (!result) { //strcpy_s returns 0 on success
+		if (result != 0) { //strcpy_s returns 0 on success
 			LOG_ERROR("Failed to receive network name...");
+
+#ifdef AS_DEBUG
+			printf("name expected : % s | name read : % s\n", params_cptr->name,
+													 data.networkParams.name);
+#endif // AS_DEBUG
+
 			return false;
 		}
 
 		size_t commentSize = COMMENT_LENGHT * sizeof(char);
 		result = strcpy_s(data.networkParams.comment, commentSize, params_cptr->comment);
-		if (!result) { //strcpy_s returns 0 on success
+		if (result != 0) { //strcpy_s returns 0 on success
 			LOG_ERROR("Failed to receive network comment line...");
 			return false;
 		}
@@ -102,7 +138,7 @@ namespace CL {
 		return true;
 	}
 
-	bool DataMirrorSystem::receiveAgentData(const CL::agentToMirrorVectorPtrs_t dataPtrs) {
+	bool DataMirrorSystem::receiveReplacementAgentData(const CL::agentToMirrorVectorPtrs_t dataPtrs) {
 
 		LOG_TRACE("Receiving new agent data...");
 
@@ -124,7 +160,7 @@ namespace CL {
         return true;
 	}
 
-	bool DataMirrorSystem::receiveActionData(actionToMirrorVectorPtrs_t actionPtrs) {
+	bool DataMirrorSystem::receiveReplacementActionData(actionToMirrorVectorPtrs_t actionPtrs) {
 
 		LOG_TRACE("Receiving new action data...");
 
@@ -135,6 +171,8 @@ namespace CL {
 
 		data.actionMirror.dataLAs = *actionPtrs.actionsLAs_cptr;
 		data.actionMirror.dataGAs = *actionPtrs.actionsGAs_cptr;
+
+		data.actionMirror.setHasData(true);
 
 		return true;
 	}

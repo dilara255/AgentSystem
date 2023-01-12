@@ -16,12 +16,30 @@ namespace CL {
 	//TO DO: fix, this is just for initial testing
 
 	bool init() {
-		LOG_INFO("initializing CL");
+		LOG_INFO("initializing CL...");
 
-		return mirror.initialize(&mirrorData_ptr);
+		bool result = mirror.initialize(&mirrorData_ptr);
+		if (!result) {
+			LOG_CRITICAL("CL INITIALIZATION FAILED!");
+			return false;
+		}
+
+		if (!mirror.isInitialized()) {
+			LOG_CRITICAL("CL INITIALIZATION FAILED! (instance lost maybe?)");
+			return false;
+		}
+
+		if ((!mirrorData_ptr->agentMirrorPtrs.haveBeenCreated) ||
+			(!mirrorData_ptr->actionMirror.isInitialized())) {
+			LOG_CRITICAL("CL INITIALIZATION FAILED! (pointer copy / container initialization)");
+			return false;
+		}
+
+		LOG_INFO("CL INITIALIZED!");
+		return true;
 	}
 
-	bool acceptNewData(const AS::networkParameters_t* params,
+	bool acceptReplacementData(const AS::networkParameters_t* params,
 					   const std::vector <AS::actionData_t>* actionsLAs_cptr,
 					   const std::vector <AS::actionData_t>* actionsGAs_cptr,
 					   const std::vector <LA::coldData_t>* coldDataLAs_cptr,
@@ -31,7 +49,7 @@ namespace CL {
 					   const std::vector <GA::stateData_t>* stateGAs_cptr,
 					   const std::vector <GA::decisionData_t>* decisionGAs_cptr) {
 
-		LOG_TRACE("Will accept new data from the AS");
+		LOG_TRACE("Will accept replacement data from the AS");
 
 		CL::agentToMirrorVectorPtrs_t agentDataPtrs;
 
@@ -48,12 +66,12 @@ namespace CL {
 		actionPtrs.actionsLAs_cptr = actionsLAs_cptr;
 		actionPtrs.actionsGAs_cptr = actionsGAs_cptr;
 
-		LOG_INFO("Created Data bundles. Will clear current mirror data and transfer new...");
+		LOG_TRACE("Created Data bundles. Will clear current mirror data and transfer new...");
 		bool result = mirror.clearAllData();
 		
-		result &= mirror.receiveParams(params);
-		result &= mirror.receiveAgentData(agentDataPtrs);
-		result &= mirror.receiveActionData(actionPtrs);
+		result &= mirror.receiveReplacementParams(params);
+		result &= mirror.receiveReplacementAgentData(agentDataPtrs);
+		result &= mirror.receiveReplacementActionData(actionPtrs);
 
 		if (!result) { 
 			LOG_ERROR("Aborting transfer, will clear mirror"); 
@@ -61,6 +79,12 @@ namespace CL {
 		}
 
 		mirror.updateHasData();
+		if (!mirror.hasData()) {
+			LOG_ERROR("Mirror System says some data controllers read as not initialized");				
+			return false;
+		}
+
+		LOG_TRACE("Data received...");
 		return result;
 	}
 }

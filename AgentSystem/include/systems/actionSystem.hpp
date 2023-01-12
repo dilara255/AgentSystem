@@ -19,9 +19,22 @@ namespace AS {
 	public:
 		bool initialize(int maxActionsPerAgent, int numberLas, int numberGAs);
 		bool addActionData(actionData_t actionData);
+		
+		const std::vector <AS::actionData_t>* getActionsLAsCptr() const {
+			return (const std::vector <AS::actionData_t>*) & dataLAs; }
+
+		const std::vector <AS::actionData_t>* getActionsGAsCptr() const {
+			return (const std::vector <AS::actionData_t>*) & dataGAs; }
+
 		bool getAction(int localOrGlobal, uint32_t actionID, actionData_t* recepient) const;
 		bool getAgentData(int localOrGlobal, uint32_t agentID, int actionNumber, 
 			                                             actionData_t* recepient) const;
+
+		void pushBackLAaction(actionData_t action) { dataLAs.push_back(action); }
+		void pushBackGAaction(actionData_t action) { dataGAs.push_back(action); }
+		void popBackLAaction() { dataLAs.pop_back(); }
+		void popBackGAaction() { dataGAs.pop_back(); }
+
 		size_t sizeOfDataInBytesLAs() const;
 		size_t sizeOfDataInBytesGAs() const;
 		size_t capacityForDataInBytesLAs() const;

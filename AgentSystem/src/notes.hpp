@@ -17,8 +17,8 @@
 * - Versions increment when complete (that is, we start at v0.0.0 working on 0.1.1);
 * - Build #s will be the incremental commits in a given Sub;
 * 
-* - Current Version: 0.1.1
-* - Working on: finishing 0.2.2
+* - Current Version: 0.2.0
+* - Working on: finishing 0.3.1
 *
 * ***** Minor 1. Basic Setup *****
 *
@@ -68,21 +68,21 @@
 * d. Save data to a text file on request.
 * e. Add to file format and functions the decision data already in place.
 *
-* >> 3. Actions (stub), communication, more saving and loading:
+* 3. Actions (stub), communication, more saving and loading:
 * 
 * a. Create Action Data Structure and controller.
 * b. Update file format and file functions to support it.
 * c. Create functionality to update data and parameters derived from loaded data
 *    (eg: number of connections, neighbour ids, actionController.m_maxNeighbours)
 * d. Replicate all data and params on CL (transfer on command).
-* >> e. Querry data on TA and check it.
+* e. Querry data on TA and check it.
 * f. Add simple functionality to change data DIRECTLY and test load/save/read.
 *
 * Cleanup, documentation (in-code), and fresh pull+compile test
 *
 * ***** Minor 3. Runtime data insertion and removal *****
 *
-* 1. AS timed loop:
+* >> 1. AS timed loop:
 * 
 * a. Make AS work on a timed loop, incrementing some of its values in a predictable manner.
 * b. After each loop, make AS update CL's data.

@@ -111,6 +111,20 @@ bool AS::initializeASandCL() {
 	return true;
 }
 
+bool AS::sendReplacementDataToCL() {
+
+//agentDataControllers_cptr.
+	return  CL::acceptReplacementData(currentNetworkParams_cptr,
+				actionDataController_cptr->getActionsLAsCptr(),
+				actionDataController_cptr->getActionsGAsCptr(),
+				agentDataControllers_cptr->LAcoldData_ptr->getDataCptr(),
+				agentDataControllers_cptr->LAstate_ptr->getDataCptr(),
+				agentDataControllers_cptr->LAdecision_ptr->getDataCptr(),
+				agentDataControllers_cptr->GAcoldData_ptr->getDataCptr(),
+				agentDataControllers_cptr->GAstate_ptr->getDataCptr(),
+				agentDataControllers_cptr->GAdecision_ptr->getDataCptr());	
+}
+
 namespace AS {
 	void clearNetwork() {
 		agentDataControllerPtrs.GAcoldData_ptr->clearData();

@@ -32,6 +32,105 @@ int* CLtestArray_ptr;
 
 //TO DO: Add reasonable return values to all tests : )
 namespace AS {
+
+	extern ActionSystem actionSystem;
+	extern dataControllerPointers_t agentDataControllerPtrs;
+	extern networkParameters_t* currentNetworkParams_ptr;
+
+	bool testGotNewValuesFromASthroughCL() {
+		
+		GA::coldData_t newGAcoldData;
+		GA::stateData_t newGAstate;
+		LA::stateData_t newLAdstate;
+		LA::decisionData_t newLAdecision;
+		AS::actionData_t newLAaction;
+
+		bool result = CL::sendDataChangedForTest(&currentNetworkParams_ptr->comment[0],
+			&newGAcoldData, &newGAstate, &newLAdstate, &newLAdecision, &newLAaction);
+		if (!result) {
+			LOG_ERROR("Failed to receive modified data from CL");
+			return false;
+		}
+
+		int failed = 0;
+
+		if (currentNetworkParams_cptr->comment[0] != TST_COMMENT_LETTER_CHANGE) {
+			failed++; 
+			LOG_TRACE("Value read is not as expected"); }
+		
+		if (newGAcoldData.id != TST_GA_ID) { 
+			failed++; 
+			LOG_TRACE("Value read is not as expected"); }
+
+		agentDataControllerPtrs.GAcoldData_ptr->popLastAgent();
+		agentDataControllerPtrs.GAcoldData_ptr->addAgentData(newGAcoldData);
+
+		if (newGAstate.connectedGAs.getField() != TST_GA_CONNECTIONS) {
+			failed++;
+			LOG_TRACE("Value read is not as expected"); }
+
+		agentDataControllerPtrs.GAstate_ptr->popLastAgent();
+		agentDataControllerPtrs.GAstate_ptr->addAgentData(newGAstate);
+
+		if (newLAdstate.parameters.strenght.externalGuard != (float)TST_LA_REINFORCEMENT) { 
+			failed++; 
+			LOG_TRACE("Value read is not as expected"); }
+
+		agentDataControllerPtrs.LAstate_ptr->popLastAgent();
+		agentDataControllerPtrs.LAstate_ptr->addAgentData(newLAdstate);
+		
+		int ctmp = TST_CHANGED_CATEGORY; int mtmp = TST_CHANGED_MODE;
+		if (newLAdecision.offsets.incentivesAndConstraintsFromGA[ctmp][mtmp]
+																!= (float)TST_LA_OFFSET) {
+			failed++; 
+			LOG_TRACE("Value read is not as expected!"); }
+
+		agentDataControllerPtrs.LAdecision_ptr->popLastAgent();
+		agentDataControllerPtrs.LAdecision_ptr->addAgentData(newLAdecision);
+
+		if (newLAaction.details.processingAux != TST_LAST_ACTION_AUX) { 
+			failed++; 
+			LOG_TRACE("Value read is not as expected"); }
+
+		actionSystem.data.popBackLAaction();
+		actionSystem.data.pushBackLAaction(newLAaction);
+
+		if (failed) {
+			LOG_ERROR("Some of the values modified by the TA werent read back from the CL as expected");
+#ifdef AS_DEBUG
+			printf("\n%i out of 6 failed. Test action aux: %i - expected %i", failed,
+				newLAaction.details.processingAux, TST_LAST_ACTION_AUX);
+			printf("\nGA connection data: %i - expected %i", newGAstate.connectedGAs.getField(),
+				TST_GA_CONNECTIONS);
+			printf(" | comment first letter: %c - expected %c", currentNetworkParams_cptr->comment[0],
+				                                               TST_COMMENT_LETTER_CHANGE);
+			printf("\nGA id: %i - expected %i", newGAcoldData.id, TST_GA_ID);
+			printf(" | LA reinforcement : %f - expected %f",
+						newLAdstate.parameters.strenght.externalGuard, TST_LA_REINFORCEMENT);
+			printf("\nLA disposition offset: %f - expected %f\n",
+				newLAdecision.offsets.incentivesAndConstraintsFromGA[ctmp][mtmp], TST_LA_OFFSET);
+			getchar();
+#endif // AS_DEBUG
+			return false;
+		}
+
+		LOG_INFO("Numbers modified by the TA read back from the CL as expected and updated on AS (see saved file to check this)");
+		return true;
+	}
+
+	bool testDataTransferFromAStoCL(void) {
+
+		LOG_INFO("Will Try to transfer data from AS to CL...");
+
+		bool result = AS::sendReplacementDataToCL();
+		if (!result) {
+			LOG_CRITICAL("OOH NOOOES : (");
+		}
+		
+		LOG_INFO("Data sent!");
+		return result;
+	}
+
 	bool testAgentDataClassCreation() {
 		int testLAid = 0;
 		float testOffset = 0.5;
@@ -83,21 +182,19 @@ namespace AS {
 
 bool AS::testContainersAndAgentObjectCreation() 
 {
+	LOG_TRACE("Going to test AS data containers and Agent Object instantiation...");
 	bool result = AS::testDataContainerCapacity(AS::agentDataControllers_cptr);
 	result &= AS::testAgentDataClassCreation();
 	return result;
 }
 
-bool AS::testFileCreation() {
-	std::string name = fileNameNoDefaults;
-	int result = AS::createEmptyNetworkFile(name, name, TST_NUMBER_LAS, TST_NUMBER_GAS,
-		MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
-		false);
+bool AS::testFileCreation(std::string nameNoDefaults, std::string nameWithDefaults) {
+	
+	int result = AS::createEmptyNetworkFile(nameNoDefaults, nameNoDefaults, TST_NUMBER_LAS, 
+						    TST_NUMBER_GAS, MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT, false);
 
-	std::string name2 = fileNameWithDefaults;
-	result *= AS::createEmptyNetworkFile(name2, name2, TST_NUMBER_LAS, TST_NUMBER_GAS,
-		MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT,
-		true);
+	result *= AS::createEmptyNetworkFile(nameWithDefaults, nameWithDefaults, TST_NUMBER_LAS, 
+			                 TST_NUMBER_GAS, MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT, true);
 
 	if (result) {
 		LOG_INFO("Test Empty Network Files created with and without defaults");
@@ -109,10 +206,10 @@ bool AS::testFileCreation() {
 	return result;
 }
 
-void AS::CLinitTest() {
+void AS::CLsanityTest() {
 	initTestNumber = AS_TST_INIT_EXPECTED_NUMBER;
 
-	CL::initTest(initTestNumber, TST_ARRAY_SIZE);
+	CL::sanityTest(initTestNumber, TST_ARRAY_SIZE);
 
 	AS::initTstArray();
 

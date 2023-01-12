@@ -45,9 +45,9 @@ int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int nu
     fileName = defaultFilePath + fileName;
     fp = fopen(fileName.c_str(), "r");
     if (fp != NULL) {
-        LOG_ERROR("File name already exists, aborting creation...");
+        LOG_WARN("File name already exists, aborting creation (still returns 1)...");
         fclose(fp);
-        return 0;
+        return 1;
     }
 
     fp = fopen(fileName.c_str(), "w");
@@ -447,7 +447,7 @@ bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
                             state.localAgentsBelongingToThis.getField(3));
         if (resultAux <= 0) result = 0;
        
-        resultAux = fprintf(fp, connectedGAbitfield, state.connectedGAs.getField(0));
+        resultAux = fprintf(fp, connectedGAbitfield, state.connectedGAs.getField());
         if (resultAux <= 0) result = 0;
 
         for (int j = 0; j < (pp->numberGAs - 1); j++) {

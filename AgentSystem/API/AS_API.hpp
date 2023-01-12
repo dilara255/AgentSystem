@@ -12,6 +12,7 @@
 #define AS_TST_EXPECTED_ARR1 954263
 static const char* fileNameNoDefaults = "testNetworkNoDefaults.txt";
 static const char* fileNameWithDefaults = "testNetworkWithDefaults.txt";
+static const char* customFilename = "TestFileCustomName.txt";
 //*******************
 
 namespace AS {
@@ -25,9 +26,11 @@ namespace AS {
 	AS_API bool saveNetworkToFile(std::string name = "");
 
 	//****For Testing****
-	AS_API void CLinitTest();
+	AS_API void CLsanityTest();
 	AS_API bool testContainersAndAgentObjectCreation();
 	AS_API void sayHello();
-	AS_API bool testFileCreation();
+	AS_API bool testFileCreation(std::string nameNoDefaults, std::string nameWithDefaults);
+	AS_API bool testDataTransferFromAStoCL(void);
+	AS_API bool testGotNewValuesFromASthroughCL();
 	//*******************
 }
