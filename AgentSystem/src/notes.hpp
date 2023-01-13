@@ -5,10 +5,17 @@
 *
 * Some of the Specs have been changed to better accomodate the decision-making proccess.
 * LA Thresholds have become "score offsets" instead. The spec doc is NOT updated yet.
-* 
-* TO DO: Update it after version 0.6
-* TO DO: Use constexpr instead of defines where possible; 
+* TO DO: Mark areas of the specification needing update version 0.6, and finish with 1.0
 * TO DO: On these notes, correct uses of array when actually we're using vectors;
+*
+* TECHNICAL DEBT:
+* 
+* TO DO: Use constexpr instead of defines where possible.
+* TO DO: Rework the avilability and use of AS data structres by CL and AS
+* (if they need it, it should be part of the API)
+* TO DO: swap scanfs family for scanf_s family
+* TO DO: evaluate wether I need classes with vectors as part of the API and, if so, learn to do that
+* 
 * 
 * Versioning:
 * 
