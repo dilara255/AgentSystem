@@ -8,6 +8,8 @@ This includes:
 (may separete some if this file gets too large)
 */
 
+#include "miscStdHeaders.h"
+
 #include "AS_API.hpp"
 
 #include "CL_internalAPI.hpp"
@@ -29,6 +31,8 @@ namespace AS {
 	//these are the control structures/objects for the AS's main systems;
 	//they're kinda in global scope for this file for now : )
 	
+	bool shouldStopMainLoop;
+
 	networkParameters_t currentNetworkParams;
 
 	ActionSystem actionSystem; 
@@ -39,6 +43,36 @@ namespace AS {
 	const ActionDataController* actionDataController_cptr;
 	const networkParameters_t* currentNetworkParams_cptr;
 	const dataControllerPointers_t* agentDataControllers_cptr;
+}
+
+bool AS::run() {
+	shouldStopMainLoop = false;
+	LOG_INFO("Starting main loop on new (detached) thread");
+	std::thread mainLoopThread(mainLoop);
+	mainLoopThread.detach();
+	return true;
+}
+
+bool AS::stop() {
+	shouldStopMainLoop = true;
+	printf("\nNew comment line is: %s", currentNetworkParams.comment);
+	return true;
+}
+
+bool AS::mainLoop() {
+	int i = 0;
+	std::string originalComment = currentNetworkParams.comment;
+	do {
+		LOG_INFO("\nThis is the mainLoop Thread!\n");
+		std::string newComment = originalComment + " - main loop iterations: " + std::to_string(i);
+		strcpy(currentNetworkParams.comment, newComment.c_str());
+		sendReplacementDataToCL();
+		i++;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	} while (!shouldStopMainLoop);
+
+	LOG_INFO("Main loop stoped!");
+	return true;
 }
 
 bool AS::initializeASandCL() {
@@ -183,6 +217,7 @@ bool AS::loadNetworkFromFile(std::string name) {
 	if(result){
 		agentDataControllerPtrs.haveData = true;
 		currentNetworkParams.isNetworkInitialized = true;
+		result = run();
 	}
 
 	fclose(fp);
@@ -190,11 +225,21 @@ bool AS::loadNetworkFromFile(std::string name) {
 	
 	//TO DO: check capacities and sizes to make sure things are in order
 
+	LOG_INFO("File loaded...");
+
 	return result; //not much information is given, but the app may decide what to do on failure
 }
 
 bool AS::saveNetworkToFile(std::string name) {
-	LOG_INFO("Trying to save network to a file");
+	LOG_INFO("Trying to save network to a file...");
+
+	LOG_TRACE("Will stop main loop (if saving fails, mainLoop is not resumed either)");
+	bool result = stop();
+	if (!result) {
+		LOG_CRITICAL("MAIN LOOP GONE ROGUE - IT HAS BEGUN D:");
+		//actually I'm not even sure I have a way to really test this after detaching, but yeah
+		return false;
+	}
 
 	if (!isInitialized) {
 		LOG_ERROR("Agent System and Communications Layer must be initialized before saving. Aborting.");
@@ -224,18 +269,21 @@ bool AS::saveNetworkToFile(std::string name) {
 
 	LOG_TRACE("File Acquired. Will save network");
 	
-	bool result = createNetworkFileFromData(fp, agentDataControllers_cptr, 
+	result = createNetworkFileFromData(fp, agentDataControllers_cptr, 
 									        currentNetworkParams_cptr,
 		                                    actionDataController_cptr);
 	if (!result) {
 		LOG_ERROR("Saving failed!");
+		return false;
 	}
 	else {
 		LOG_INFO("Network Saved to File!");
 	}
 
 	fclose(fp);
-	LOG_TRACE("File closed");
+	LOG_TRACE("File closed. Will resume mainLoop");
+	
+	//run();
 
 	return result;
 }

@@ -17,4 +17,8 @@ namespace AS {
 	extern const ActionDataController* actionDataController_cptr;
 
 	bool sendReplacementDataToCL();
+	bool run();
+	bool stop();
+	bool mainLoop();
+
 }
