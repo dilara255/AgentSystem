@@ -7,7 +7,7 @@
 namespace AS{
     int createEmptyNetworkFile(std::string fileName, std::string comment, int numberLAs,
                                int numberGAs, int maxNeighbors, int maxActions,
-                               bool setDefaults);
+                               bool setDefaults, std::string filePath = "");
 
     bool createNetworkFileFromData(FILE* fp,
                         const AS::dataControllerPointers_t* agentDataControllers_cptr,
@@ -22,5 +22,6 @@ namespace AS{
     bool fileIsCompatible(FILE* fp);
 
     FILE* acquireFilePointerToLoad(std::string name);
-    FILE* acquireFilePointerToSave(std::string name, bool shouldOverwrite = false);
+    FILE* acquireFilePointerToSave(std::string name, bool shouldOverwrite = false, 
+                                   std::string filePath = "");
 }

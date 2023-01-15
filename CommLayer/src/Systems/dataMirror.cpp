@@ -113,6 +113,8 @@ namespace CL {
 		data.networkParams.maxLAneighbours = params_cptr->maxLAneighbours;
 		data.networkParams.numberGAs = params_cptr->numberGAs;
 		data.networkParams.numberLAs = params_cptr->numberLAs;
+		data.networkParams.mainLoopTicks = params_cptr->mainLoopTicks;
+		data.networkParams.lastMainLoopStartingTick = params_cptr->lastMainLoopStartingTick;
 		
 		size_t nameSize = NAME_LENGHT * sizeof(char);
 

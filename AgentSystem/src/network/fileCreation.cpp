@@ -27,7 +27,7 @@ reevaluated once the actual format and save system needs are known.
 #include "network/fileFormat.hpp"
 
 int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int numberLAs,
-    int numberGAs, int maxNeighbors, int maxActions, bool setDefaults) {
+    int numberGAs, int maxNeighbors, int maxActions, bool setDefaults, std::string filePath) {
     //TO DO: add logic to insert decision data once that's added to the file format
 
     LOG_TRACE("Creating new Network File");
@@ -40,7 +40,7 @@ int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int nu
         return 0;
     }
 
-    FILE* fp = AS::acquireFilePointerToSave(fileName.c_str());
+    FILE* fp = AS::acquireFilePointerToSave(fileName.c_str(), false, filePath);
     
     if (fp == NULL) {
         LOG_ERROR("Couldn't create the file (check if folders exist), aborting creation...");
@@ -353,8 +353,14 @@ int insertActionsWithoutDefaults(int numberLAs, int numberGAs, int maxActions, F
     return result;
 }
 
-FILE* AS::acquireFilePointerToSave(std::string name, bool shouldOverwrite) {
-    name = defaultFilePath + name;
+FILE* AS::acquireFilePointerToSave(std::string name, bool shouldOverwrite, std::string filePath) {
+    
+    if (filePath == "") {
+        name = defaultFilePath + name;
+    }
+    else {
+        name = filePath + name;
+    }
 
     FILE* fp = fopen(name.c_str(), "r");
 

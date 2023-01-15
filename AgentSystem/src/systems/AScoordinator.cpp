@@ -109,6 +109,10 @@ void AS::mainLoop() {
 	} while (shouldMainLoopBeRunning);
 }
 
+bool AS::isMainLoopRunning() {
+	return shouldMainLoopBeRunning;
+}
+
 bool AS::initializeASandCL() {
 //TO DO: possibly extract functions
 
