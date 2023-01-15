@@ -89,7 +89,7 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     if (tokens != 2 ) {
         LOG_ERROR("Error reading identity tokens from GA. Aborting load.");
         #ifdef AS_DEBUG
-            printf("GA: %i, Tokens read = %i, Cold.id = %i, onOff = %i\n\n", 
+            printf("GA: %d , Tokens read = %d , Cold.id = %d , onOff = %d \n\n", 
                     id, tokens, cold.id, onOff);
         #endif // AS_DEBUG 
         return false;
@@ -197,11 +197,11 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
     if (neighboursFound < data_ptr->numberConnectedNeighbors) {
         LOG_ERROR("Found less neighbours than expected when updating LA connection data!");
         #ifdef AS_DEBUG
-            printf("\nFIELDS: %i, %i, %i, %i", data_ptr->connectedNeighbors.getField(0),
+            printf("\nFIELDS: %d , %d , %d , %d ", data_ptr->connectedNeighbors.getField(0),
                                                 data_ptr->connectedNeighbors.getField(1),
                                                 data_ptr->connectedNeighbors.getField(2),
                                                 data_ptr->connectedNeighbors.getField(3));
-            printf("\nID first: %i, ID[0]: %i, ID[1] %i, ID[2] %i, ID[3]: %i, ID[%i]: %i",
+            printf("\nID first: %d , ID[0]: %d , ID[1] %d , ID[2] %d , ID[3]: %d , ID[%d ]: %d ",
                                     data_ptr->firstConnectedNeighborId,
                                     data_ptr->neighbourIDs[0],
                                     data_ptr->neighbourIDs[1],
@@ -232,7 +232,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     if (tokens != 3) {
         LOG_ERROR("Error reading identity tokens from LA. Aborting load.");
         #ifdef AS_DEBUG
-            printf("LA: %i, Tokens read = %i, Cold.id = %i, state.GAid = %i, onOff = %i\n\n",
+            printf("LA: %d , Tokens read = %d , Cold.id = %d , state.GAid = %d , onOff = %d \n\n",
                 id, tokens, cold.id, state.GAid, onOff);
         #endif // AS_DEBUG 
         return false;

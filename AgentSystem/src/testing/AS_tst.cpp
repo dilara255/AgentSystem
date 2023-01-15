@@ -99,13 +99,13 @@ namespace AS {
 			LOG_ERROR("Some of the values modified by the TA werent read back from the CL as expected");
 		
 			#ifdef AS_DEBUG
-				printf("\n%i out of 6 failed. Test action aux: %i - expected %i", failed,
+				printf("\n%d out of 6 failed. Test action aux: %d - expected %d ", failed,
 					newLAaction.details.processingAux, TST_LAST_ACTION_AUX);
-				printf("\nGA connection data: %i - expected %i", newGAstate.connectedGAs.getField(),
+				printf("\nGA connection data: %d - expected %d ", newGAstate.connectedGAs.getField(),
 					TST_GA_CONNECTIONS);
 				printf(" | comment first letter: %c - expected %c", currentNetworkParams_cptr->comment[0],
 																   TST_COMMENT_LETTER_CHANGE);
-				printf("\nGA id: %i - expected %i", newGAcoldData.id, TST_GA_ID);
+				printf("\nGA id: %d - expected %d ", newGAcoldData.id, TST_GA_ID);
 				printf(" | LA reinforcement : %f - expected %f",
 							newLAdstate.parameters.strenght.externalGuard, TST_LA_REINFORCEMENT);
 				printf("\nLA disposition offset: %f - expected %f\n",
@@ -231,7 +231,7 @@ void AS::initTstArray() {
 	AStestArray_ptr[1] = AS_TST_EXPECTED_ARR1;
 
 	#ifdef AS_DEBUG
-		printf("AStstArray[0]: %i\nAStstArray[1]: %i\n",
+		printf("AStstArray[0]: %d \nAStstArray[1]: %d \n",
 			   AStestArray_ptr[0], AStestArray_ptr[1]);
 	#endif
 
@@ -246,7 +246,7 @@ void AS::transferData(int* CLtestArray_ptr) {
 	LOG_TRACE("Will transfer data to CL\n");
 
 	#ifdef AS_DEBUG
-		printf("AStstArray[0]: %i\nAStstArray[1]: %i\n",
+		printf("AStstArray[0]: %d \nAStstArray[1]: %d \n",
 			   AStestArray_ptr[0], AStestArray_ptr[1]);
 	#endif
 
@@ -254,7 +254,7 @@ void AS::transferData(int* CLtestArray_ptr) {
 	CL::setTstArrayHasInitialized(true);
 
 	#ifdef AS_DEBUG
-		printf("Copied Test Array to CL (%p):\nCLtstArray[0]: %i\nCLtstArray[1]: %i\n",
+		printf("Copied Test Array to CL (%p):\nCLtstArray[0]: %d \nCLtstArray[1]: %d \n",
 							 CLtestArray_ptr, CLtestArray_ptr[0], CLtestArray_ptr[1]);
 	#endif
 

@@ -70,8 +70,13 @@ and sizes static.
 #define TST_COMMENT_LETTER_CHANGE ('X')
 #define TST_CHANGED_CATEGORY 7
 #define TST_CHANGED_MODE 2
-#define TST_MAINLOOP_FREQUENCY_MS 1000
-#define TST_TA_QUERY_FREQUENCY_MS 1500
+#ifdef AS_DEBUG
+	#define TST_MAINLOOP_FREQUENCY_MS 1000
+#else
+	#define TST_MAINLOOP_FREQUENCY_MS 10
+#endif// AS_DEBUG
+#define TST_TA_QUERY_FREQUENCY_MS ((unsigned)1.5*TST_MAINLOOP_FREQUENCY_MS)
+#define TST_TIMES_TO_QUERRY_TICK 4
 
 namespace AS {
 	typedef AZ::FlagField128 LAflagField_t;

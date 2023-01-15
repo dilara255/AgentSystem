@@ -19,6 +19,7 @@ namespace AS {
 	
 	AS_API bool initializeASandCL();
 	AS_API bool quit();	
+	AS_API bool isMainLoopRunning();
 	//WARNING: loading clears current network, no confirmation needed!
 	//Logic to save current network first and etc should be handled by the CLIENT
 	//Save Always FAILS if a file of the same name already exists
