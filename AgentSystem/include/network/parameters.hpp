@@ -71,7 +71,7 @@ and sizes static.
 #define TST_CHANGED_CATEGORY 7
 #define TST_CHANGED_MODE 2
 #ifdef AS_DEBUG
-	#define TST_MAINLOOP_FREQUENCY_MS 1000
+	#define TST_MAINLOOP_FREQUENCY_MS 500
 #else
 	#define TST_MAINLOOP_FREQUENCY_MS 10
 #endif// AS_DEBUG

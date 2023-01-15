@@ -35,7 +35,7 @@ int main(void) {
 	LOG_INFO("AS, CL-internal and CL-external should have said hello above : )");
 	LOG_TRACE("This will run a few batteries of tests..."); GETCHAR_PAUSE
 
-	LOG_INFO("Basic App, AS and CL communicaton and data storage tests:\n\n",2); GETCHAR_PAUSE
+	LOG_INFO("Basic App, AS and CL communicaton and data storage tests:\n",1); GETCHAR_PAUSE
 	int resultsBattery1 = (int)testMockData(); GETCHAR_PAUSE
 	
 	LOG_TRACE("Actual initialization tests...");
@@ -54,7 +54,7 @@ int main(void) {
 		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
 	}
 
-	LOG_INFO("Specific functionality tests (DATA manipulation):\n\n",2); GETCHAR_PAUSE
+	LOG_INFO("Specific functionality tests (DATA manipulation):\n",1); GETCHAR_PAUSE
 	
 	int resultsBattery2 = (int)AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
 	GETCHAR_PAUSE
@@ -81,22 +81,22 @@ int main(void) {
 		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
 	}
 
-	LOG_INFO("Specific functionality tests (THREADED LOOPs):\n\n",2); GETCHAR_PAUSE
+	LOG_INFO("Specific functionality tests (THREADED LOOPs):\n",1); GETCHAR_PAUSE
 
 	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
 	GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_start(); GETCHAR_PAUSE;
 	
-	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
-
 	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_end(); GETCHAR_PAUSE;
+
+	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
 
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
-		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery2,
+		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery3,
 			SPECIFIC_THREADED_LOOP_TESTS);
 		GETCHAR_PAUSE
 	}
@@ -142,7 +142,7 @@ void TAreadLoop(int numberTicks) {
 
 bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	
-	LOG_TRACE("Will check if reader thread's results are as expected. May need to wait for execution to finishi");
+	LOG_TRACE("Will check if reader thread's results are as expected. May need to wait for execution to finish");
 	reader.join();
 
 	LOG_TRACE("Execution finished. Checking...");
