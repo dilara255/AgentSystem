@@ -9,12 +9,13 @@ bool testMockData(void);
 bool testFromTAifCLhasInitialized(void);
 bool testReadingCLdataFromTA(void);
 bool testChangingCLdataFromTAandRetrievingFromAS(void);
-bool testReadingTickDataWhileASmainLoopRuns(void);
+bool testReadingTickDataWhileASmainLoopRuns_start(void);
+bool testReadingTickDataWhileASmainLoopRuns_end(void);
 
 #define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 7
-#define SPECIFIC_THREADED_LOOP_TESTS 4
+#define SPECIFIC_THREADED_LOOP_TESTS 5
 #define TOTAL_TESTS (BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 #ifdef AS_DEBUG
@@ -23,6 +24,8 @@ bool testReadingTickDataWhileASmainLoopRuns(void);
 	#define GETCHAR_PAUSE puts("\n");
 #endif // AS_DEBUG
 
+std::thread reader;//to test realtime reading of data trough CL as AS runs
+uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
 
 //TO DO: make all tests return bool and count results, than match with expected
 int main(void) {
@@ -83,10 +86,11 @@ int main(void) {
 	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
 	GETCHAR_PAUSE;
 
-	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns(); GETCHAR_PAUSE;
-	GETCHAR_PAUSE;
+	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_start(); GETCHAR_PAUSE;
 	
 	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
+
+	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_end(); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
 
@@ -126,37 +130,31 @@ int main(void) {
 	return (1 + (totalPassed - TOTAL_TESTS));
 }
 
-void TAreadLoop(uint64_t* ticsRead_ptr, int numberTicks) {
+void TAreadLoop(int numberTicks) {
 	
-	ticsRead_ptr[0] = CL::mirrorData_ptr->networkParams.mainLoopTicks;
+	g_ticksRead[0] = CL::mirrorData_ptr->networkParams.mainLoopTicks;
 	
 	for (int i = 1; i < numberTicks; i++) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(TST_TA_QUERY_FREQUENCY_MS));
-		ticsRead_ptr[i] = CL::mirrorData_ptr->networkParams.mainLoopTicks;
+		g_ticksRead[i] = CL::mirrorData_ptr->networkParams.mainLoopTicks;
 	}
 }
 
-bool testReadingTickDataWhileASmainLoopRuns(void) {
-
-	LOG_TRACE("Will sapwn a new thread which will try to read a few times from CL the number of ticks while AS's main loop runs\nPlease wait...");
-
-	if (!AS::isMainLoopRunning()) {
-		LOG_CRITICAL("Main loop has to be running for this test to work");
-		return false;
-	}
-
-	uint64_t ticksRead[TST_TIMES_TO_QUERRY_TICK];
+bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	
-	TAreadLoop(ticksRead, TST_TIMES_TO_QUERRY_TICK);
+	LOG_TRACE("Will check if reader thread's results are as expected. May need to wait for execution to finishi");
+	reader.join();
 
+	LOG_TRACE("Execution finished. Checking...");
+	
 	bool result = true;
-	uint64_t offsetOnOdds = (uint64_t)(ticksRead[1] == (ticksRead[0] + 2));
+	uint64_t offsetOnOdds = (uint64_t)(g_ticksRead[1] == (g_ticksRead[0] + 2));
 
 	for (int i = 1; i < TST_TIMES_TO_QUERRY_TICK; i++) {
 
-		uint64_t deltaTicks = ticksRead[i] - ticksRead[0];
+		uint64_t deltaTicks = g_ticksRead[i] - g_ticksRead[0];
 
-		uint64_t expectedOffset = ((i+1)%2)*(offsetOnOdds);
+		uint64_t expectedOffset = ((i + 1) % 2) * (offsetOnOdds);
 		uint64_t expected = ((i * TST_TA_QUERY_FREQUENCY_MS) / (TST_MAINLOOP_FREQUENCY_MS)) + expectedOffset;
 
 		result &= deltaTicks == expected;
@@ -169,16 +167,31 @@ bool testReadingTickDataWhileASmainLoopRuns(void) {
 	else
 	{
 		LOG_ERROR("TA didn't read ticks correctly from CL while AS was running");
-		#ifdef AS_DEBUG
-			printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms):\n", 
-				TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, TST_MAINLOOP_FREQUENCY_MS);
-			for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
-				printf("%llu ", ticksRead[i]);
-			}
-		#endif // AS_DEBUG
+#ifdef AS_DEBUG
+		printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms):\n",
+			TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, TST_MAINLOOP_FREQUENCY_MS);
+		for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
+			printf("%llu ", g_ticksRead[i]);
+		}
+#endif // AS_DEBUG
 
 		return false;
 	}
+}
+
+bool testReadingTickDataWhileASmainLoopRuns_start(void) {
+
+	LOG_TRACE("Will sapwn a new thread which will try to read a few times from CL the number of ticks while AS's main loop runs");
+
+	if (!AS::isMainLoopRunning()) {
+		LOG_CRITICAL("Main loop has to be running for this test to work");
+		return false;
+	}
+
+	reader = std::thread(TAreadLoop, TST_TIMES_TO_QUERRY_TICK);
+
+	LOG_INFO("Thread created, another test will check back on the results in a while...");
+	return true;
 }
 
 bool testChangingCLdataFromTAandRetrievingFromAS(void) {
