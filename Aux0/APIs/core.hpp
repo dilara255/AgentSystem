@@ -22,8 +22,12 @@
 	#else
 		#define	AS_API __declspec(dllimport)
 	#endif
+
+	#define AZ_LOG_TRACE_COLOR (FOREGROUND_BLUE | FOREGROUND_GREEN)
+	#define AZ_LOG_INFO_COLOR (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
+
 #else
-	#error falta suporte pra linux ainda : /
+	#error no support for other platforms as of yet : /
 #endif
 
 /* These have all been moved to the build system

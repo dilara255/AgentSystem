@@ -29,9 +29,9 @@ int main(void) {
 	testSayHello();
 
 	LOG_INFO("AS, CL-internal and CL-external should have said hello above : )");
-	LOG_TRACE("This will run a few batteries of tests...\n"); GETCHAR_PAUSE
+	LOG_TRACE("This will run a few batteries of tests..."); GETCHAR_PAUSE
 
-	LOG_INFO("\n\nBasic App, AS and CL communicaton and data storage tests:\n\n"); GETCHAR_PAUSE
+	LOG_INFO("Basic App, AS and CL communicaton and data storage tests:\n\n",2); GETCHAR_PAUSE
 	int resultsBattery1 = (int)testMockData(); GETCHAR_PAUSE
 	
 	LOG_TRACE("Actual initialization tests...");
@@ -50,7 +50,7 @@ int main(void) {
 		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
 	}
 
-	LOG_INFO("\n\nSpecific functionality tests (DATA manipulation):\n\n"); GETCHAR_PAUSE
+	LOG_INFO("Specific functionality tests (DATA manipulation):\n\n",2); GETCHAR_PAUSE
 	
 	int resultsBattery2 = (int)AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
 	GETCHAR_PAUSE
@@ -77,7 +77,7 @@ int main(void) {
 		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
 	}
 
-	LOG_INFO("\n\nSpecific functionality tests (THREADED LOOPs):\n\n"); GETCHAR_PAUSE
+	LOG_INFO("Specific functionality tests (THREADED LOOPs):\n\n",2); GETCHAR_PAUSE
 
 	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
 	GETCHAR_PAUSE;
@@ -96,7 +96,7 @@ int main(void) {
 		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
 	}
 
-	LOG_TRACE("\nTests ended...\n"); GETCHAR_PAUSE
+	LOG_TRACE("Tests ended...\n",1); GETCHAR_PAUSE
 
 	int totalPassed = resultsBattery1 + resultsBattery2 + resultsBattery3;
 	if (totalPassed == TOTAL_TESTS) {
@@ -108,12 +108,12 @@ int main(void) {
 		GETCHAR_PAUSE
 	}
 
-	LOG_WARN("Check that you have (at least): one network file with format specifiers, with default values and one with modified values");
-	printf("-The one with specifiers is %s\n-%s should have the defaults\n-%s received modifications from TA\n",
+	LOG_WARN("Check that you have (at least): one network file with format specifiers,\none with default values and one with modified values:");
+	printf("\t-The one with specifiers is %s\n\t-%s should have the defaults\n\t-%s received modifications from TA\n",
 		                              fileNameNoDefaults, fileNameWithDefaults, customFilename);
-	printf("\nThe modified file has different data:\n-The comment's first letter should be a %c;\n-Ticks should be the number of times mainLoopTrhead looped before last save;\n",TST_COMMENT_LETTER_CHANGE);
-	printf("-Last GA`s id = %i and connected GAs = %i;\n", TST_GA_ID, TST_GA_CONNECTIONS);
-	printf("-Last LA`s reinforcement = % f, offset[%i][%i][1] = % f and last actions aux = % i.\n",
+	printf("\nThe modified file has different data:\n\t-The comment's first letter should be a %c;\n\t-Ticks should be the number of times mainLoopTrhead looped before last save;\n",TST_COMMENT_LETTER_CHANGE);
+	printf("\t-Last GA`s id = %i and connected GAs = %i;\n", TST_GA_ID, TST_GA_CONNECTIONS);
+	printf("\t-Last LA`s reinforcement = % f, offset[%i][%i][1] = % f and last actions aux = % i.\n",
 		TST_LA_REINFORCEMENT, TST_CHANGED_CATEGORY, TST_CHANGED_MODE, TST_LA_OFFSET, TST_LAST_ACTION_AUX);
 	getchar();
 

@@ -16,8 +16,14 @@ TO DO: Generalize the whole macro thingy and all that's associated with it
 #endif
 
 namespace az {
-    void log(const char* message, std::shared_ptr<spdlog::logger> logger
-        , const int degree, const char* file, const int line);
+    void log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file, 
+             const int line, const char* message, unsigned trailingNewlines = 0);
+
+    uint16_t RGB24toRGB565(uint8_t r, uint8_t g, uint8_t b);
+}
+
+namespace az {
+    
 }
 
 #define L_TRACE 0
@@ -42,37 +48,33 @@ namespace az {
 #define GETLOGGER az::Log::GetTALogger()
 #endif
 
-#ifdef AS_DISTRO
-    #define LOG_CRITICAL(...)
-#else
-    #define LOG_CRITICAL(...) az::log(__VA_ARGS__, GETLOGGER, L_CRITICAL,\
-                                      __FILE__, __LINE__)
-#endif
+#define LOG_CRITICAL(...) az::log(GETLOGGER, L_CRITICAL,\
+                                   __FILE__, __LINE__, __VA_ARGS__)
 
 #ifdef AS_DISTRO
     #define LOG_ERROR(...)
 #else
-    #define LOG_ERROR(...) az::log(__VA_ARGS__, GETLOGGER, L_ERROR,\
-                                   __FILE__, __LINE__)
+    #define LOG_ERROR(...) az::log(GETLOGGER, L_ERROR,\
+                                   __FILE__, __LINE__, __VA_ARGS__)
 #endif
 
 #ifdef AS_RELEASE
     #define LOG_WARN(...)
 #else
-    #define LOG_WARN(...) az::log(__VA_ARGS__, GETLOGGER, L_WARN,\
-                                  __FILE__, __LINE__)
+    #define LOG_WARN(...) az::log(GETLOGGER, L_WARN,\
+                                  __FILE__, __LINE__, __VA_ARGS__)
 #endif
 
 #ifdef AS_DISTRO
     #define LOG_INFO(...)
 #else
-    #define LOG_INFO(...) az::log(__VA_ARGS__, GETLOGGER, L_INFO,\
-                                  __FILE__, __LINE__)
+    #define LOG_INFO(...) az::log(GETLOGGER, L_INFO,\
+                                  __FILE__, __LINE__, __VA_ARGS__)
 #endif
 
 #ifdef AS_RELEASE
     #define LOG_TRACE(...)
 #else
-    #define LOG_TRACE(...) az::log(__VA_ARGS__, GETLOGGER, L_TRACE,\
-                                   __FILE__, __LINE__)
+    #define LOG_TRACE(...) az::log(GETLOGGER, L_TRACE,\
+                                   __FILE__, __LINE__, __VA_ARGS__)
 #endif
