@@ -223,7 +223,7 @@ void AS::CLsanityTest() {
 
 void AS::initTstArray() {
 
-	LOG_TRACE("\nWill initialize Test Array");
+	LOG_TRACE("Will initialize Test Array",1);
 
 	AStestArray_ptr = (int*)malloc(TST_ARRAY_SIZE * sizeof(int));
 	

@@ -11,21 +11,49 @@ namespace az {
 	std::shared_ptr<spdlog::logger> Log::s_AgentSystemLogger;
 	std::shared_ptr<spdlog::logger> Log::s_CommLayerLogger;
 	std::shared_ptr<spdlog::logger> Log::s_TestAppLogger;
+	std::shared_ptr<spdlog::logger> Log::s_DebugAuxLogger;
 	int Log::initialized = 0;
+
+	uint16_t RGB24toRGB565(uint8_t r, uint8_t g, uint8_t b) {
+		return ((r / 8) << 11) | ((g / 4) << 5) | (b / 8);
+	}
+
+	void log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file, 
+		const int line, const char* message, unsigned trailingNewlines) {
+		
+		Log::log(logger, degree, file, line, message, trailingNewlines);
+	}
 
 	void Log::init() {
 
 		if (!Log::initialized) {
 
-			spdlog::set_pattern("%^[%T] %n: %v%$");
-			s_AgentSystemLogger = spdlog::stdout_color_mt("AGENT SYSTEM");
-			s_AgentSystemLogger->set_level(spdlog::level::trace);
+			spdlog::set_pattern("%^\t[%T] %n: \t%v%$");
 
-			s_CommLayerLogger = spdlog::stdout_color_mt("COMM LAYER");
+			s_AgentSystemLogger = spdlog::stdout_color_mt("AS");
+			s_AgentSystemLogger->set_level(spdlog::level::trace);		
+			auto color_sink = 
+				static_cast<spdlog::sinks::stdout_color_sink_mt*>(s_AgentSystemLogger->sinks()[0].get());
+			color_sink->set_color(spdlog::level::trace, AZ_LOG_TRACE_COLOR);
+			color_sink->set_color(spdlog::level::info, AZ_LOG_INFO_COLOR);			
+
+			s_CommLayerLogger = spdlog::stdout_color_mt("CL");
 			s_CommLayerLogger->set_level(spdlog::level::trace);
+			color_sink =
+				static_cast<spdlog::sinks::stdout_color_sink_mt*>(s_CommLayerLogger->sinks()[0].get());
+			color_sink->set_color(spdlog::level::trace, AZ_LOG_TRACE_COLOR);
+			color_sink->set_color(spdlog::level::info, AZ_LOG_INFO_COLOR);
 
-			s_TestAppLogger = spdlog::stdout_color_mt("TEST APP");
+			s_TestAppLogger = spdlog::stdout_color_mt("TA");
 			s_TestAppLogger->set_level(spdlog::level::trace);
+			color_sink =
+				static_cast<spdlog::sinks::stdout_color_sink_mt*>(s_TestAppLogger->sinks()[0].get());
+			color_sink->set_color(spdlog::level::trace, AZ_LOG_TRACE_COLOR);
+			color_sink->set_color(spdlog::level::info, AZ_LOG_INFO_COLOR);
+			
+			s_DebugAuxLogger = spdlog::stdout_color_mt("DA");
+			s_DebugAuxLogger->set_level(spdlog::level::trace);			
+			s_DebugAuxLogger->set_pattern("%^%v%$");
 
 			Log::initialized = true;
 		}
@@ -34,12 +62,16 @@ namespace az {
 			std::cerr << "\n\nERROR: LOGGERS COULDN'T BE INITIALIZED\n\n";
 	}
 
-
-	void log(const char* message, std::shared_ptr<spdlog::logger> logger
-		       , const int degree, const char* file, const int line) {
+	void Log::log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file,
+		          const int line, const char* message, unsigned trailingNewlines) {
 		
+		for (unsigned i = 0; i < trailingNewlines; i++) {
+			puts("\n");
+		}
+
 		#ifdef AS_DEBUG
-				std::cout << "\t\t(" << file << " @ line " << line << "->)" << std::endl;
+			std::string lineInfo = std::string(file) + " @ line " + std::to_string(line) + ":";
+			s_DebugAuxLogger->debug(lineInfo.c_str());
 		#endif
 
 		switch (degree) {
