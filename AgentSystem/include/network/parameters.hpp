@@ -70,6 +70,8 @@ and sizes static.
 #define TST_COMMENT_LETTER_CHANGE ('X')
 #define TST_CHANGED_CATEGORY 7
 #define TST_CHANGED_MODE 2
+#define TST_MAINLOOP_FREQUENCY_MS 1000
+#define TST_TA_QUERY_FREQUENCY_MS 1500
 
 namespace AS {
 	typedef AZ::FlagField128 LAflagField_t;
@@ -77,6 +79,8 @@ namespace AS {
 
 	typedef struct {
 		bool isNetworkInitialized;
+		uint64_t mainLoopTicks;
+		uint64_t lastMainLoopStartingTick;
 		int numberLAs;
 		int numberGAs;
 		int maxLAneighbours;

@@ -19,6 +19,5 @@ namespace AS {
 	bool sendReplacementDataToCL();
 	bool run();
 	bool stop();
-	bool mainLoop();
-
+	void mainLoop();
 }

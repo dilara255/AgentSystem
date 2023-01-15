@@ -8,6 +8,8 @@
 	#include "logAPI.hpp"
 #endif
 
+#define BIT(x) (1 << x)
+
 #ifdef AS_PLATFORM_WINDOWS
 	//#define SYSTEM_NAME "Windows" //Moved to the build system
 	#ifdef AS_COMMLAYER
@@ -26,7 +28,7 @@
 
 /* These have all been moved to the build system
 
-#ifdef DEBUG
+#ifdef AS_DEBUG
 	#define CONFIG_NAME "Debug"
 #elif RELEASE 
 	#define CONFIG_NAME "Release"
@@ -40,6 +42,6 @@
 
 */
 
-#define BIT(x) (1 << x)
+
 
 

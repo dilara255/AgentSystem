@@ -31,7 +31,9 @@ namespace AS {
 	//these are the control structures/objects for the AS's main systems;
 	//they're kinda in global scope for this file for now : )
 	
-	bool shouldStopMainLoop;
+	bool shouldMainLoopBeRunning;
+	std::thread::id mainLoopId;
+	std::thread mainLoopThread;
 
 	networkParameters_t currentNetworkParams;
 
@@ -45,34 +47,66 @@ namespace AS {
 	const dataControllerPointers_t* agentDataControllers_cptr;
 }
 
+bool AS::quit() {
+	
+	return AS::stop();
+}
+
 bool AS::run() {
-	shouldStopMainLoop = false;
-	LOG_INFO("Starting main loop on new (detached) thread");
-	std::thread mainLoopThread(mainLoop);
-	mainLoopThread.detach();
+	LOG_TRACE("Starting Main Loop Thread...");
+	
+	if (shouldMainLoopBeRunning) {
+		if (mainLoopThread.joinable()) {
+			LOG_CRITICAL("Main Loop Thread already be running!");
+			return false;
+		}
+		LOG_WARN("Main Loop Thread state control variable was set wrong. Will try to fix and start thread");
+	}
+
+	shouldMainLoopBeRunning = true;
+	mainLoopThread = std::thread(mainLoop);
+	mainLoopId = mainLoopThread.get_id();
+	currentNetworkParams.lastMainLoopStartingTick = currentNetworkParams.mainLoopTicks;
+
+	LOG_INFO("Started main loop on new thread");
+
 	return true;
 }
 
 bool AS::stop() {
-	shouldStopMainLoop = true;
-	printf("\nNew comment line is: %s", currentNetworkParams.comment);
-	return true;
+	LOG_TRACE("Stopping Main Loop Thread...");
+		
+	if (!shouldMainLoopBeRunning) {
+		LOG_ERROR("Main Loop Thread already supposed to be stopped...");
+		return false;
+	}
+
+	shouldMainLoopBeRunning = false;
+		
+	if (mainLoopThread.joinable()) {
+		LOG_TRACE("Waiting for main loop to finish execution...");
+		mainLoopThread.join();
+		LOG_INFO("Done.");
+		#ifdef AS_DEBUG
+			printf("\nRan for %llu ticks\n", currentNetworkParams.mainLoopTicks - 
+				                           currentNetworkParams.lastMainLoopStartingTick);
+		#endif // AS_DEBUG		
+		return true;
+	}
+	else {
+		LOG_ERROR("Main Loop Thread was supposed to be active, but was not!");
+		return false;
+	}	
 }
 
-bool AS::mainLoop() {
-	int i = 0;
-	std::string originalComment = currentNetworkParams.comment;
+void AS::mainLoop() {
+	uint64_t initialTick = currentNetworkParams.mainLoopTicks;
+	
 	do {
-		LOG_INFO("\nThis is the mainLoop Thread!\n");
-		std::string newComment = originalComment + " - main loop iterations: " + std::to_string(i);
-		strcpy(currentNetworkParams.comment, newComment.c_str());
 		sendReplacementDataToCL();
-		i++;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	} while (!shouldStopMainLoop);
-
-	LOG_INFO("Main loop stoped!");
-	return true;
+		currentNetworkParams.mainLoopTicks++;
+		std::this_thread::sleep_for(std::chrono::milliseconds(TST_MAINLOOP_FREQUENCY_MS));
+	} while (shouldMainLoopBeRunning);
 }
 
 bool AS::initializeASandCL() {
@@ -94,15 +128,18 @@ bool AS::initializeASandCL() {
 	currentNetworkParams_ptr = &currentNetworkParams;
 	agentDataControllers_cptr = (const dataControllerPointers_t*)&agentDataControllerPtrs;
 
+	currentNetworkParams.lastMainLoopStartingTick = 0;
+	currentNetworkParams.mainLoopTicks = 0;
+
 	bool result = createAgentDataControllers(&agentDataControllerPtrs);
 	if (!result) { return false; }
 
-#ifdef DEBUG
-	printf("\n\nData Controllers NON-CONST ptr: %p\n", &agentDataControllerPtrs);
-	printf("Data Controllers CONST ptr:     %p\n\n", agentDataControllers_cptr);
-	printf("\n\nLAcoldData_ptr             : %p\n", agentDataControllers_cptr->LAcoldData_ptr);
-	printf("LAcoldData_ptr(from const) : % p\n\n", agentDataControllerPtrs.LAcoldData_ptr);
-#endif // DEBUG
+	#ifdef AS_DEBUG
+		printf("\n\nData Controllers NON-CONST ptr: %p\n", &agentDataControllerPtrs);
+		printf("Data Controllers CONST ptr:     %p\n\n", agentDataControllers_cptr);
+		printf("\n\nLAcoldData_ptr             : %p\n", agentDataControllers_cptr->LAcoldData_ptr);
+		printf("LAcoldData_ptr(from const) : % p\n\n", agentDataControllerPtrs.LAcoldData_ptr);
+	#endif // AS_DEBUG 
 
 	if (agentDataControllers_cptr !=
 		(const dataControllerPointers_t*)&agentDataControllerPtrs) {
@@ -176,8 +213,7 @@ namespace AS {
 	}
 }
 
-
-bool AS::loadNetworkFromFile(std::string name) {
+bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 	LOG_INFO("Trying to load network from a file");
 
 	if (!isInitialized) {
@@ -217,7 +253,6 @@ bool AS::loadNetworkFromFile(std::string name) {
 	if(result){
 		agentDataControllerPtrs.haveData = true;
 		currentNetworkParams.isNetworkInitialized = true;
-		result = run();
 	}
 
 	fclose(fp);
@@ -227,18 +262,27 @@ bool AS::loadNetworkFromFile(std::string name) {
 
 	LOG_INFO("File loaded...");
 
+	if(result && runNetwork) { result = AS::run(); }
+
 	return result; //not much information is given, but the app may decide what to do on failure
 }
 
-bool AS::saveNetworkToFile(std::string name) {
+bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite) {
 	LOG_INFO("Trying to save network to a file...");
 
-	LOG_TRACE("Will stop main loop (if saving fails, mainLoop is not resumed either)");
-	bool result = stop();
-	if (!result) {
-		LOG_CRITICAL("MAIN LOOP GONE ROGUE - IT HAS BEGUN D:");
-		//actually I'm not even sure I have a way to really test this after detaching, but yeah
-		return false;
+	bool result;
+	bool shouldResumeThread = false;
+
+	if (shouldMainLoopBeRunning) {
+		LOG_TRACE("Will stop main loop (if saving fails, mainLoop is not resumed either)");
+		result = stop();
+		if (result) {
+			shouldResumeThread = true;
+			LOG_TRACE("Will resume main loop after saving");
+		}
+		else {
+			LOG_WARN("Something weird is going on with the Main Loop Thread. Saving will proceed but thread won't be resumed...");
+		}
 	}
 
 	if (!isInitialized) {
@@ -254,13 +298,13 @@ bool AS::saveNetworkToFile(std::string name) {
 	if (name == "") {
 		LOG_TRACE("Using name stored on network params");
 		name = currentNetworkParams.name;
-#ifdef DEBUG
-		printf("Name: %s\n", name.c_str());
-#endif // DEBUG
+		#ifdef AS_DEBUG
+			printf("Name: %s\n", name.c_str());
+		#endif // AS_DEBUG
 
 	}
 
-	FILE* fp = acquireFilePointerToSave(name);
+	FILE* fp = acquireFilePointerToSave(name, shouldOverwrite);
 	
 	if (fp == NULL) {
 		LOG_ERROR("Failed to create new file, aborting save.");
@@ -281,9 +325,12 @@ bool AS::saveNetworkToFile(std::string name) {
 	}
 
 	fclose(fp);
-	LOG_TRACE("File closed. Will resume mainLoop");
+	LOG_TRACE("File closed.");
 	
-	//run();
+	if (shouldResumeThread) { 
+		LOG_TRACE("File closed. Will resume mainLoop"); 
+		result &= run(); 
+	}
 
 	return result;
 }

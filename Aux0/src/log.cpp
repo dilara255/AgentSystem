@@ -37,9 +37,11 @@ namespace az {
 
 	void log(const char* message, std::shared_ptr<spdlog::logger> logger
 		       , const int degree, const char* file, const int line) {
-#ifdef AS_DEBUG
-		std::cout << "\t-> " << file << " @ line " << line << ":" << std::endl;
-#endif
+		
+		#ifdef AS_DEBUG
+				std::cout << "\t\t(" << file << " @ line " << line << "->)" << std::endl;
+		#endif
+
 		switch (degree) {
 		case L_TRACE:
 			logger->trace(message);

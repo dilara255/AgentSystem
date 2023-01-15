@@ -13,7 +13,8 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void);
 #define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 7
-#define TOTAL_TESTS (BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS)
+#define SPECIFIC_THREADED_LOOP_TESTS 3
+#define TOTAL_TESTS (BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 #ifdef AS_DEBUG
 	#define GETCHAR_PAUSE getchar();
@@ -30,7 +31,7 @@ int main(void) {
 	LOG_INFO("AS, CL-internal and CL-external should have said hello above : )");
 	LOG_TRACE("This will run a few batteries of tests...\n"); GETCHAR_PAUSE
 
-	LOG_INFO("\n\nBasic App, AS and CL communicaton and data storage tests:\n\n");
+	LOG_INFO("\n\nBasic App, AS and CL communicaton and data storage tests:\n\n"); GETCHAR_PAUSE
 	int resultsBattery1 = (int)testMockData(); GETCHAR_PAUSE
 	
 	LOG_TRACE("Actual initialization tests...");
@@ -49,21 +50,22 @@ int main(void) {
 		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
 	}
 
-	LOG_INFO("\n\nSpecific functionality tests (DATA manipulation):\n\n");
+	LOG_INFO("\n\nSpecific functionality tests (DATA manipulation):\n\n"); GETCHAR_PAUSE
+	
 	int resultsBattery2 = (int)AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
 	GETCHAR_PAUSE
 
-		resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults); GETCHAR_PAUSE
+	resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults); GETCHAR_PAUSE
 
-		resultsBattery2 += (int)AS::saveNetworkToFile(); GETCHAR_PAUSE
+	resultsBattery2 += (int)AS::saveNetworkToFile(); GETCHAR_PAUSE
 
-		resultsBattery2 += (int)AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE
+	resultsBattery2 += (int)AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE
 
-		resultsBattery2 += (int)testReadingCLdataFromTA(); GETCHAR_PAUSE
+	resultsBattery2 += (int)testReadingCLdataFromTA(); GETCHAR_PAUSE
 
-		resultsBattery2 += (int)testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE
+	resultsBattery2 += (int)testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE
 
-		resultsBattery2 += (int)AS::saveNetworkToFile(customFilename); GETCHAR_PAUSE
+	resultsBattery2 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE
 	
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
@@ -74,10 +76,29 @@ int main(void) {
 	else {
 		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
 	}
+
+	LOG_INFO("\n\nSpecific functionality tests (THREADED LOOPs):\n\n"); GETCHAR_PAUSE
+
+	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
+	GETCHAR_PAUSE;
 	
+	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
+
+	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
+
+	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
+		LOG_CRITICAL("Not all of these tests passed:");
+		printf("%i out of %i failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery2,
+			SPECIFIC_THREADED_LOOP_TESTS);
+		GETCHAR_PAUSE
+	}
+	else {
+		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
+	}
+
 	LOG_TRACE("\nTests ended...\n"); GETCHAR_PAUSE
 
-	int totalPassed = resultsBattery1 + resultsBattery2;
+	int totalPassed = resultsBattery1 + resultsBattery2 + resultsBattery3;
 	if (totalPassed == TOTAL_TESTS) {
 		LOG_INFO("All automatically checked tests passed!"); GETCHAR_PAUSE
 	}
@@ -90,9 +111,10 @@ int main(void) {
 	LOG_WARN("Check that you have (at least): one network file with format specifiers, with default values and one with modified values");
 	printf("-The one with specifiers is %s\n-%s should have the defaults\n-%s received modifications from TA\n",
 		                              fileNameNoDefaults, fileNameWithDefaults, customFilename);
-	printf("\nThe modified file has different data - the comment's first letter should be an %c. Besides:\n",TST_COMMENT_LETTER_CHANGE);
-	printf("last GA`s id = %i and connected GAs = %i, last LA`s reinforcement = %f, offset[%i][%i][1] = %f and last actions aux =%i\n",
-		TST_GA_ID, TST_GA_CONNECTIONS, TST_LA_REINFORCEMENT, TST_CHANGED_CATEGORY, TST_CHANGED_MODE, TST_LA_OFFSET, TST_LAST_ACTION_AUX);
+	printf("\nThe modified file has different data:\n-The comment's first letter should be a %c;\n-Ticks should be the number of times mainLoopTrhead looped before last save;\n",TST_COMMENT_LETTER_CHANGE);
+	printf("-Last GA`s id = %i and connected GAs = %i;\n", TST_GA_ID, TST_GA_CONNECTIONS);
+	printf("-Last LA`s reinforcement = % f, offset[%i][%i][1] = % f and last actions aux = % i.\n",
+		TST_LA_REINFORCEMENT, TST_CHANGED_CATEGORY, TST_CHANGED_MODE, TST_LA_OFFSET, TST_LAST_ACTION_AUX);
 	getchar();
 
 	LOG_INFO("Done! Enter to exit"); getchar();
@@ -244,13 +266,15 @@ bool testFromTAifCLhasInitialized(void) {
 
 	if (failed) {
 		LOG_ERROR("Some CL data controller capacities don't match the expected!");
-#ifdef AS_DEBUG
-		printf("Failed on %i out of 8 checks\nsizeLAact; %zi, sizeGAact: %zi\n", failed,
-											sizeLAact, sizeGAact);
-		printf("capLAact: %zi, expected: %zi - capGAact: %zi, expected: %zi\n",
-			capLAact, (MAX_LA_QUANTITY * MAX_ACTIONS_PER_AGENT * sizeLAact), capGAact,
-			(MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT* sizeLAact));
-#endif // AS_DEBUG
+
+		#ifdef AS_DEBUG
+			printf("Failed on %i out of 8 checks\nsizeLAact; %zi, sizeGAact: %zi\n", 
+															failed, sizeLAact, sizeGAact);
+			printf("capLAact: %zi, expected: %zi - capGAact: %zi, expected: %zi\n",
+				capLAact, (MAX_LA_QUANTITY * MAX_ACTIONS_PER_AGENT * sizeLAact), capGAact,
+				(MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT* sizeLAact));
+		#endif // AS_DEBUG
+
 		GETCHAR_PAUSE
 		return false;
 	}
@@ -290,10 +314,10 @@ bool testMockData(void) {
 		result = false;
 	}
 
-#ifdef AS_DEBUG
-	printf("TstArray[0]: %i\nTstArray[1]: %i\n",
-		   tstArray_ptr[0], tstArray_ptr[1]);
-#endif
+	#ifdef AS_DEBUG
+		printf("TstArray[0]: %i\nTstArray[1]: %i\n",
+			   tstArray_ptr[0], tstArray_ptr[1]);
+	#endif
 
 	return result;
 }
