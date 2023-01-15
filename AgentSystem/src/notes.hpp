@@ -85,7 +85,7 @@
 * e. Querry data on TA and check it.
 * f. Add simple functionality to change data DIRECTLY and test load/save/read.
 *
-* Cleanup, documentation (in-code), and fresh pull+compile test
+* Cleanup, some (in-code) documentation, and fresh pull+compile test
 *
 * ***** Minor 3. Runtime data insertion and removal *****
 *
@@ -97,21 +97,19 @@
 *
 * >> 2. Data injection:
 * 
-* a. Duplicate State and Action Data on CL, plus an indexed list of fields with the tick of 
-* their last changes.
-* TO DO: SHOULD DUPLICATE Decision Data too?
+* >> a. TA-managed Cold, State and Action data area on CL, plus an indexed list of fields with 
+* the tick of their last changes and last tick they were checked.
 * b. Make it so TA can tranfer data to it (methods for field or whole State or Action from
-* Agent Object).
-* c. When the data is received by the CL, it updates the list of changed fields.
-* d. Make it so AS can read the fields with changes and absorb them (pointer to const?).
-* e. Before each loop, AS retrieves data from CL which was changed after its last check.
-* f. Test running the AS, issuing changes from the TA and reading the data. 
+* Agent Object). When the data is received by the CL, it updates the list of changed fields.
+* c. Make it so AS can read the fields with changes and absorb them (pointer to const?).
+* d. Before each loop, AS retrieves data from CL which was changed after its last check.
+* e. Test running the AS, issuing changes from the TA and reading the data. 
 
-* Note: changing an action to "innactive" essentially ends it, but there could also be 
-* methods to advance actions to the moment before tehir completion. The TA can then chack 
+* Note: changing an action to "innactive" essentially ends it, but it is also possible 
+* to advance actions to the moment before their completion. The TA can then chsck 
 * again a bit later if this is part of a multi-step process.
 *
-* Cleanup, documentation, and fresh pull+compile test
+* Cleanup
 *
 * ***** Minor 4. AS loop *****
 *
@@ -119,7 +117,7 @@
 * No actual decision making yet, just a couple stub decisions, but updating expected values.
 * Couple of stub actions as well, that simply run their course and have a simple resolution.
 *
-* Cleanup, documentation, and fresh pull+compile test
+* Cleanup, some (in-code) documentation, and fresh pull+compile test
 *
 * ***** Minor 5. Tooling: inspection *****
 *
