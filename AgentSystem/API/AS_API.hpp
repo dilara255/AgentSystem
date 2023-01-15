@@ -22,8 +22,8 @@ namespace AS {
 	//WARNING: loading clears current network, no confirmation needed!
 	//Logic to save current network first and etc should be handled by the CLIENT
 	//Save Always FAILS if a file of the same name already exists
-	AS_API bool loadNetworkFromFile(std::string name);
-	AS_API bool saveNetworkToFile(std::string name = "");
+	AS_API bool loadNetworkFromFile(std::string name, bool runNetwork = false);
+	AS_API bool saveNetworkToFile(std::string name = "", bool shouldOverwrite = false);
 
 	//****For Testing****
 	AS_API void CLsanityTest();

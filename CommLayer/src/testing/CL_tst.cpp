@@ -40,12 +40,12 @@ bool CL::sendDataChangedForTest(char* recipientString, GA::coldData_t* recepient
 	if (mirrorData_ptr->actionMirror.dataLAs.back().details.processingAux 
 		                                                != TST_LAST_ACTION_AUX) {
 		LOG_ERROR("Test last action aux is not as expected");
-#ifdef AS_DEBUG
-		printf("%i instead of %i",
-			mirrorData_ptr->actionMirror.dataLAs.back().details.processingAux, TST_LAST_ACTION_AUX);
-		getchar();
-		return false;
-#endif // AS_DEBUG
+		#ifdef AS_DEBUG
+			printf("%i instead of %i",
+				mirrorData_ptr->actionMirror.dataLAs.back().details.processingAux, TST_LAST_ACTION_AUX);
+			getchar();
+			return false;
+		#endif // AS_DEBUG
 	}
 
 	return true;

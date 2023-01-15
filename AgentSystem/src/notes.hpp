@@ -93,7 +93,7 @@
 * 
 * a. Make AS work on a timed loop, incrementing some of its values in a predictable manner.
 * b. After each loop, make AS update CL's data.
-* c. At a different time interval, TA querries CL and compares data with expected values.
+* >> c. At a different time interval, TA querries CL and compares data with expected values.
 *
 * 2. Data injection:
 * 

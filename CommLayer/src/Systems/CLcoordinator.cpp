@@ -49,7 +49,7 @@ namespace CL {
 					   const std::vector <GA::stateData_t>* stateGAs_cptr,
 					   const std::vector <GA::decisionData_t>* decisionGAs_cptr) {
 
-		LOG_TRACE("Will accept replacement data from the AS");
+		//LOG_TRACE("Will accept replacement data from the AS");
 
 		CL::agentToMirrorVectorPtrs_t agentDataPtrs;
 
@@ -66,7 +66,7 @@ namespace CL {
 		actionPtrs.actionsLAs_cptr = actionsLAs_cptr;
 		actionPtrs.actionsGAs_cptr = actionsGAs_cptr;
 
-		LOG_TRACE("Created Data bundles. Will clear current mirror data and transfer new...");
+		//LOG_TRACE("Created Data bundles. Will clear current mirror data and transfer new...");
 		bool result = mirror.clearAllData();
 		
 		result &= mirror.receiveReplacementParams(params);
@@ -84,7 +84,7 @@ namespace CL {
 			return false;
 		}
 
-		LOG_TRACE("Data received...");
+		//LOG_TRACE("Data received...");
 		return result;
 	}
 }

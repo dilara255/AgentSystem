@@ -40,17 +40,8 @@ int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int nu
         return 0;
     }
 
-    FILE* fp;
-
-    fileName = defaultFilePath + fileName;
-    fp = fopen(fileName.c_str(), "r");
-    if (fp != NULL) {
-        LOG_WARN("File name already exists, aborting creation (still returns 1)...");
-        fclose(fp);
-        return 1;
-    }
-
-    fp = fopen(fileName.c_str(), "w");
+    FILE* fp = AS::acquireFilePointerToSave(fileName.c_str());
+    
     if (fp == NULL) {
         LOG_ERROR("Couldn't create the file (check if folders exist), aborting creation...");
         return 0;
@@ -59,9 +50,9 @@ int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int nu
     int result = 1;
     int resultAux = 0;
 
-    //Header, with version control, network sizes and comment
+    //Header, with version control, network sizes, comment and tick count (0)
     resultAux = fprintf(fp, headerLine,
-        FILE_FORMAT_VERSION, numberGAs, numberLAs, maxNeighbors, maxActions);
+        FILE_FORMAT_VERSION, numberGAs, numberLAs, maxNeighbors, maxActions, 0);
     result *= (resultAux > 0); //fprintf returns negative number on error
     
     resultAux = fprintf(fp, commentLine, comment.c_str());
@@ -362,15 +353,25 @@ int insertActionsWithoutDefaults(int numberLAs, int numberGAs, int maxActions, F
     return result;
 }
 
-FILE* AS::acquireFilePointerToSave(std::string name) {
+FILE* AS::acquireFilePointerToSave(std::string name, bool shouldOverwrite) {
     name = defaultFilePath + name;
 
     FILE* fp = fopen(name.c_str(), "r");
+
     if (fp == NULL) {
         return fopen(name.c_str(), "w");
     }
     else {
-        LOG_WARN("File already exists. Will append a number to the end of the name");
+        if (shouldOverwrite) {
+            LOG_WARN("Will overwrite an existing file...");
+            return fopen(name.c_str(), "w");
+        }
+        else {
+            LOG_WARN("File already exists. Will append a number to the end of the name");
+            #ifdef AS_DEBUG
+                printf("File name: %s\n", name.c_str());
+            #endif // AS_DEBUG
+        }
     }
 
     std::string tempName = "";
@@ -398,9 +399,9 @@ FILE* AS::acquireFilePointerToSave(std::string name) {
         fp = fopen(newName.c_str(), "r");
     }
 
-#ifdef DEBUG
-    printf("\nFinal file name to save: %s\n", newName.c_str());
-#endif // DEBUG
+    #ifdef AS_DEBUG
+        printf("\nFinal file name to save: %s\n", newName.c_str());
+    #endif // AS_DEBUG 
         
     return fopen(newName.c_str(), "w");
 }
@@ -596,7 +597,7 @@ bool AS::createNetworkFileFromData(FILE* fp,
 
     //Header, with version control, network sizes and comment
     resultAux = fprintf(fp, headerLine, FILE_FORMAT_VERSION, pp->numberGAs, 
-                        pp->numberLAs, pp->maxLAneighbours, pp->maxActions);
+                        pp->numberLAs, pp->maxLAneighbours, pp->maxActions, pp->mainLoopTicks);
     result &= (resultAux > 0); //fprintf returns negative number on error
 
     resultAux = fprintf(fp, commentLine, pp->comment);

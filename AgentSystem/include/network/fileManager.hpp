@@ -22,5 +22,5 @@ namespace AS{
     bool fileIsCompatible(FILE* fp);
 
     FILE* acquireFilePointerToLoad(std::string name);
-    FILE* acquireFilePointerToSave(std::string name);
+    FILE* acquireFilePointerToSave(std::string name, bool shouldOverwrite = false);
 }

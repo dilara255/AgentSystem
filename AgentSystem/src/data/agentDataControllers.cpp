@@ -263,13 +263,13 @@ namespace GA {
 
 namespace AS {
 	bool testDataContainerCapacity(const dataControllerPointers_t* agentDataControllers_cptr) {
-#ifdef DEBUG
-		printf("\nData structure sizes (bytes):\n");
-		printf("LA: Cold: %zi, State : %zi Decision : %zi\n",
-			sizeof(LA::coldData_t), sizeof(LA::stateData_t), sizeof(LA::decisionData_t));
-		printf("GA: Cold: %zi, State : %zi Decision : %zi\n",
-			sizeof(GA::coldData_t), sizeof(GA::stateData_t), sizeof(GA::decisionData_t));
-#endif // DEBUG
+		#ifdef AS_DEBUG
+			printf("\nData structure sizes (bytes):\n");
+			printf("LA: Cold: %zi, State : %zi Decision : %zi\n",
+				sizeof(LA::coldData_t), sizeof(LA::stateData_t), sizeof(LA::decisionData_t));
+			printf("GA: Cold: %zi, State : %zi Decision : %zi\n",
+				sizeof(GA::coldData_t), sizeof(GA::stateData_t), sizeof(GA::decisionData_t));
+		#endif // AS_DEBUG 
 
 		size_t LAagentSize = sizeof(LA::coldData_t) + sizeof(LA::stateData_t) + sizeof(LA::decisionData_t);
 		size_t GAagentSize = sizeof(GA::coldData_t) + sizeof(GA::stateData_t) + sizeof(GA::decisionData_t);
@@ -278,13 +278,13 @@ namespace AS {
 		size_t LAtotalSize = LAagentSize * MAX_LA_QUANTITY;
 		size_t GAtotalSize = GAagentSize * MAX_GA_QUANTITY;
 
-#ifdef DEBUG
-		printf("Bytes per LA: %zi, per GA: %zi\n", LAagentSize, GAagentSize);
-		printf("LA total bytes: %zi, GA total: %zi\n", LAtotalSize, GAtotalSize);
-		printf("\n\nData Controllers NON-CONST ptr: %p\n", agentDataControllers_cptr);
-		printf("LAcoldData_ptr: %p\n\n", agentDataControllers_cptr->LAcoldData_ptr);
+		#ifdef AS_DEBUG
+			printf("Bytes per LA: %zi, per GA: %zi\n", LAagentSize, GAagentSize);
+			printf("LA total bytes: %zi, GA total: %zi\n", LAtotalSize, GAtotalSize);
+			printf("\n\nData Controllers NON-CONST ptr: %p\n", agentDataControllers_cptr);
+			printf("LAcoldData_ptr: %p\n\n", agentDataControllers_cptr->LAcoldData_ptr);
 
-#endif // DEBUG
+		#endif // AS_DEBUG 
 		
 		size_t actualLAsize = 
 			agentDataControllers_cptr->LAcoldData_ptr->capacityForDataInBytes() +

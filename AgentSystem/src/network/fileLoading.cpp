@@ -32,8 +32,8 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     int tokensRead;
 
     tokensRead = fscanf(fp, headerLine, &version, &pp->numberGAs, &pp->numberLAs,
-        &pp->maxLAneighbours, &pp->maxActions);
-    result &= (tokensRead == 5); //TO DO: maybe bundle the number of tokens with the format?
+        &pp->maxLAneighbours, &pp->maxActions, &pp->mainLoopTicks);
+    result &= (tokensRead == 6); //TO DO: maybe bundle the number of tokens with the format?
 
     LOG_TRACE("Will load the comment line...");
 
@@ -52,18 +52,18 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
         LOG_ERROR("Failed to read part of the header. Will abort file loading.");
     }
 
-#ifdef DEBUG
-    printf("\nSeparator read:      %s\n", separatorRead);
-#endif // DEBUG   
+    #ifdef AS_DEBUG
+        printf("\nSeparator read:      %s\n", separatorRead);
+    #endif // AS_DEBUG   
 
     //which fails this test*, pointing to the error
     //*unless the comment line goes out of it's way to make this work
     char expectedSeparator[COMMENT_LENGHT];
     sscanf(commentSeparator, commentSeparatorFormat, expectedSeparator);
 
-#ifdef DEBUG
-    printf("Expected separator: %s\n\n", expectedSeparator);
-#endif // DEBUG   
+    #ifdef AS_DEBUG
+        printf("Expected separator: %s\n\n", expectedSeparator);
+    #endif // AS_DEBUG   
 
     if (strcmp(separatorRead, expectedSeparator) != 0) {
         LOG_ERROR("Didn't properly consume the comment line. Aborting load");
@@ -88,10 +88,10 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     tokens = fscanf(fp, GAidentity, &cold.id, &onOff);
     if (tokens != 2 ) {
         LOG_ERROR("Error reading identity tokens from GA. Aborting load.");
-#ifdef DEBUG
-        printf("GA: %i, Tokens read = %i, Cold.id = %i, onOff = %i\n\n", 
-                id, tokens, cold.id, onOff);
-#endif // DEBUG
+        #ifdef AS_DEBUG
+            printf("GA: %i, Tokens read = %i, Cold.id = %i, onOff = %i\n\n", 
+                    id, tokens, cold.id, onOff);
+        #endif // AS_DEBUG 
         return false;
     }
     state.onOff = onOff;
@@ -196,20 +196,20 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
 
     if (neighboursFound < data_ptr->numberConnectedNeighbors) {
         LOG_ERROR("Found less neighbours than expected when updating LA connection data!");
-#ifdef DEBUG
-        printf("\nFIELDS: %i, %i, %i, %i", data_ptr->connectedNeighbors.getField(0),
-                                            data_ptr->connectedNeighbors.getField(1),
-                                            data_ptr->connectedNeighbors.getField(2),
-                                            data_ptr->connectedNeighbors.getField(3));
-        printf("\nID first: %i, ID[0]: %i, ID[1] %i, ID[2] %i, ID[3]: %i, ID[%i]: %i",
-                                data_ptr->firstConnectedNeighborId,
-                                data_ptr->neighbourIDs[0],
-                                data_ptr->neighbourIDs[1],
-                                data_ptr->neighbourIDs[2],
-                                data_ptr->neighbourIDs[3],
-                                data_ptr->numberConnectedNeighbors - 1,
-                                data_ptr->neighbourIDs[data_ptr->numberConnectedNeighbors - 1]);        
-#endif // DEBUG
+        #ifdef AS_DEBUG
+            printf("\nFIELDS: %i, %i, %i, %i", data_ptr->connectedNeighbors.getField(0),
+                                                data_ptr->connectedNeighbors.getField(1),
+                                                data_ptr->connectedNeighbors.getField(2),
+                                                data_ptr->connectedNeighbors.getField(3));
+            printf("\nID first: %i, ID[0]: %i, ID[1] %i, ID[2] %i, ID[3]: %i, ID[%i]: %i",
+                                    data_ptr->firstConnectedNeighborId,
+                                    data_ptr->neighbourIDs[0],
+                                    data_ptr->neighbourIDs[1],
+                                    data_ptr->neighbourIDs[2],
+                                    data_ptr->neighbourIDs[3],
+                                    data_ptr->numberConnectedNeighbors - 1,
+                                    data_ptr->neighbourIDs[data_ptr->numberConnectedNeighbors - 1]);        
+        #endif // AS_DEBUG 
         return false;
     }
     
@@ -231,10 +231,10 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     tokens = fscanf(fp, LAidentity, &cold.id, &state.GAid, &onOff);
     if (tokens != 3) {
         LOG_ERROR("Error reading identity tokens from LA. Aborting load.");
-#ifdef DEBUG
-        printf("LA: %i, Tokens read = %i, Cold.id = %i, state.GAid = %i, onOff = %i\n\n",
-            id, tokens, cold.id, state.GAid, onOff);
-#endif // DEBUG
+        #ifdef AS_DEBUG
+            printf("LA: %i, Tokens read = %i, Cold.id = %i, state.GAid = %i, onOff = %i\n\n",
+                id, tokens, cold.id, state.GAid, onOff);
+        #endif // AS_DEBUG 
         return false;
     }
     state.onOff = onOff;
@@ -399,10 +399,10 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
     //We'll check a "comment separator line" to see if the comment was properly red:
 
     if (strcmp(buffer, GAsectiontittle) != 0) { //try again (don't abort because of trailing newline)
-#ifdef DEBUG
-        printf("\n\nLeu %s em vez de \"%s\"\nVamos tentar mais uma linha...",
-            buffer, GAsectiontittle);
-#endif // DEBUG
+        #ifdef AS_DEBUG
+            printf("\n\nLeu %s em vez de \"%s\"\nVamos tentar mais uma linha...",
+                buffer, GAsectiontittle);
+        #endif // AS_DEBUG 
         fgets(buffer, COMMENT_LENGHT, fp);
         if (strcmp(buffer, GAsectiontittle) != 0) { //two failures -> abort, format should be wrong
             LOG_ERROR("Start of GA data section is not where it`s expected. Aborting...");
@@ -492,7 +492,7 @@ bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
         return false;
     }
     else {
-        LOG_INFO("File Loaded.");
+        LOG_INFO("Data loaded from file to data controllers.");
         return true;
     }   
 }
@@ -508,9 +508,10 @@ bool AS::fileIsCompatible(FILE* fp) {
     LOG_TRACE("Will check wether the file is compatible...");
 
     int version, GAs, LAs, maxNeighbours, maxActions;
+    uint64_t ticks;
 
-    int tokens = fscanf(fp, headerLine, &version, &GAs, &LAs, &maxNeighbours, &maxActions);
-    if (tokens != 5) {
+    int tokens = fscanf(fp, headerLine, &version, &GAs, &LAs, &maxNeighbours, &maxActions, &ticks);
+    if (tokens != 6) {
         LOG_ERROR("Couldn't read all tokens from header to validade file format. Aborting load.");
         return false;
     }

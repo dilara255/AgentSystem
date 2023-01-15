@@ -84,11 +84,11 @@ namespace AS {
 
 			else{
 				LOG_ERROR("Tried to get out of range Local Action. Aborting");
-#ifdef DEBUG
-				printf("\nLocal/Global: %i, ID: %i, size: %i", localOrGlobal, actionID,
-																	(int)dataLAs.size());
+				#ifdef AS_DEBUG
+					printf("\nLocal/Global: %i, ID: %i, size: %i", localOrGlobal, actionID,
+																		(int)dataLAs.size());
 				getchar();
-#endif // DEBUG
+				#endif // AS_DEBUG 
 				return false;
 			}
 		}
@@ -101,11 +101,11 @@ namespace AS {
 
 			else{
 				LOG_ERROR("Tried to get out of range Global Action. Aborting");
-#ifdef DEBUG
-				printf("\nLocal/Global: %i, ID: %i, size: %i", localOrGlobal, actionID,
-																	(int)dataGAs.size());
-				getchar();
-#endif // DEBUG
+				#ifdef AS_DEBUG
+					printf("\nLocal/Global: %i, ID: %i, size: %i", localOrGlobal, actionID,
+																		(int)dataGAs.size());
+					getchar();
+				#endif // AS_DEBUG 
 				return false;
 			}
 		}
