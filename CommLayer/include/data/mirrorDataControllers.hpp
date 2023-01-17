@@ -3,7 +3,7 @@
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\
    //      WARNING: *AWFUL* REPETITION GOING ON HERE        \\
   //  TO DO: FIX IT BY PROPERLY EXPORTING THE WANTED CLASSES \\
- //                       (how, tho?)                         \\
+ //              (or creating base, or something)             \\
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\
 
 #include "miscStdHeaders.h"
@@ -28,7 +28,7 @@ namespace CL {
 
 		bool getAction(int localOrGlobal, uint32_t actionID, actionData_t* recepient) const;
 		bool getAgentData(int localOrGlobal, uint32_t agentID, int actionNumber,
-			actionData_t* recepient) const;
+			              actionData_t* recepient) const;
 
 		size_t sizeOfDataInBytesLAs() const {return dataLAs.size() * sizeof(dataLAs[0]);}
 		size_t sizeOfDataInBytesGAs() const {return dataLAs.size() * sizeof(dataLAs[0]);}

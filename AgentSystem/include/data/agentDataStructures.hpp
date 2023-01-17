@@ -1,13 +1,15 @@
 #pragma once
 
 /*
-* WARNING: THIS FILE MIGHT BE EXPOSED TO THE APPLICATION!
-* - TO DO: MOVE TO API FOLDER
-* - TO DO: UPDATE DESCRIPTION *WHEN DONE*
+* WARNING: THIS FILE WILL BE EXPOSED TO THE APPLICATION!
+* - TO DO: MOVE TO API/AS_dataTypes
+* 
+* This file declares the basic data structres of agents.
+* These structures build up from primitives to "cold", state" and "decision" data types,
+* each with a variation for LA's and another for GA's.
 * 
 * NOTE: we assume all LAs have maxNeighbours, which makes all agent's Data of a same,
-* definite size after the network is initialized. We also assume maxLAs and maxGAs.
-* See fixedParameters.hpp.
+* definite size after the network is initialized. We also assume at most maxLAs and maxGAs.
 */
 
 #include "../include/network/parameters.hpp"
@@ -16,6 +18,8 @@
 #include "core.hpp"
 
 #include "flagFields.hpp"
+
+#define AS_MAX_SUB_FIELD_DEPTH 4
 
 namespace AS {
 	//General:
