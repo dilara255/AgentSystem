@@ -12,6 +12,7 @@ namespace CL {
 			
 		LOG_TRACE("Initializing Data Mirror System...");
 
+		//this is just to make sure AS is seen here
 		if (!AS::GLOBAL == 1) {
 			LOG_CRITICAL("Couldn't read critical enum - Initialization failed...");
 			return false;
@@ -34,6 +35,7 @@ namespace CL {
 		}
 
 		(*mirror_ptr_ptr) = &data;
+		data_cptr = (const mirror_t*)&data;
 
 		LOG_INFO("Data Mirror System Initialized!");
 

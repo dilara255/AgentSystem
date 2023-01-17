@@ -2,24 +2,32 @@
 
 /*
 This file holds:
-- Parameters from the current, active network (if any);
-- Fixed parameters which ALL networks will have to follow.
+- Data structure to hold parameters of a network (networkParameters_t);
+- Some enums and typedefs of agent data;
 
-Parameters from the current network include: (TO DO)
+- Fixed parameters which ALL networks will have to follow;
+- Defaults for agent and action data, used when creating new files and tests;
+- Test-related defines.
+
+//TO DO: this should be split in a couple to a few different files
+
+networkParameters_t includes:
 - number of local and global agents;
 - a "network name", which can be used with the load/save system;
 - an optional "comment" (which can also be used with the load/save system);
 - the actual maximum neighbours per LA;
-- the actual maximum actions per agent.
+- the actual maximum actions per agent;
+- how many ticks the network has ran.
 
-The fixed parameters represent a "kind" of network. These are essentially 
+The fixed parameters represent a "class" of network. These are essentially 
 constraints for any network to be loaded. They help make things predictable 
-and sizes static.
+and data sizes static.
 */
 
 #include "core.hpp"
 #include "flagFields.hpp"
 
+//FIXED parameters:
 #define NAME_LENGHT 30
 #define COMMENT_LENGHT 250
 #define NUMBER_LA_ACTIONS 18 //deprecated
@@ -31,7 +39,7 @@ and sizes static.
 #define MAX_ACTIONS_PER_AGENT 10
 #define GA_PERSONALITY_TRAITS 4
 
-//Default values for new network creation:
+//DEFAULT values for new network creation:
 #define DEFAULT_ONOFF (true)
 #define DEFAULT_GA_RESOURCES 0
 #define DEFAULT_GA_STANCE 2
@@ -60,6 +68,7 @@ and sizes static.
 #define DEFAULT_INTENSITY -3
 #define DEFAULT_ACTION_AUX 99
 
+//TEST-related defines:
 #define TST_NUMBER_LAS 15
 #define TST_NUMBER_GAS 5
 #define TST_GA_ID 2
@@ -93,8 +102,10 @@ namespace AS {
 		char name[NAME_LENGHT];
 		char comment[COMMENT_LENGHT];
 	} AS_API networkParameters_t;
+
+	enum gaPersonalityTraits {
+		GA_PERS_0, GA_PERS_1, GA_PERS_2, GA_PERS_3,
+		GA_PERS_4, GA_PERS_5, GA_PERS_6, GA_PERS_7,
+		TOTAL_GA_PERS};
 }
 
-enum gaPersonalityTraits {GA_PERS_0, GA_PERS_1, GA_PERS_2, GA_PERS_3,
-						  GA_PERS_4, GA_PERS_5, GA_PERS_6, GA_PERS_7,
-					      TOTAL_GA_PERS};

@@ -4,12 +4,12 @@ Handles creation of:
 some default values, or leave blank with format specifiers;
 - "Saved" network, in a new file, taking in a reference to a data structure from which
 to get the network data.
+- Can save to a default or specified path. By default, doesn't overwrite, but creats new
+file with a number appended to the end, but can be set to overwrite.
 
-NOTE: network specificed MUST be within confines of the fixed parameters (see includes)
+NOTE: for "empty" file, the network specificed MUST be within bounds of the fixed parameters
 
-WARNING: WON'T overwrite existing files. Dealing with that is left to the app.
-
-TO DO: this has a lot of repetition. Text files may be palceholder, so this should be
+TO DO: this has quite a bit of repetition. Text files may be palceholder, so this should be
 reevaluated once the actual format and save system needs are known.
 */
 

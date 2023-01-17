@@ -1,11 +1,12 @@
 #pragma once
 
 /*
+* WARNING: THIS FILE WILL BE EXPOSED TO THE APPLICATION!
+* - TO DO: MOVE TO API/AS_dataTypes
+
 This file:
 - Describes the data structure of actions;
 - Has enums for action categories, modes, scopes and availability;
-- WARNING: MIGHT BE EXPOSED TO THE APPLICATION!
-- TO DO: MOVE TO API FOLDER
 */
 
 #include "core.hpp"
