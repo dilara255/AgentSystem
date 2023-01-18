@@ -3,9 +3,16 @@
 #include "core.hpp"
 
 #include "../include/data/mirrorDataControllers.hpp"
+#include "../include/data/agentDataControllers.hpp"
 
 namespace CL {
 	CL_API bool init();
+	CL_API bool createClientDataHandler(AS::networkParameters_t params);
+
+	CL_API bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,
+								 AS::dataControllerPointers_t* agentDataRecepient_ptr,
+		                         AS::ActionDataController* actionsRecepient_ptr);
+
 	CL_API bool acceptReplacementData(const AS::networkParameters_t* params,
 							  const std::vector <AS::actionData_t>* actionsLAs_cptr,
 							  const std::vector <AS::actionData_t>* actionsGAs_cptr,

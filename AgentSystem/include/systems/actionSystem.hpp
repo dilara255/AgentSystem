@@ -39,9 +39,7 @@ namespace AS {
 		size_t sizeOfDataInBytesGAs() const;
 		size_t capacityForDataInBytesLAs() const;
 		size_t capacityForDataInBytesGAs() const;
-		void clearData();
-		bool isInitialized() const { return m_isInitialized; }
-		bool hasData() const { return m_hasData; }
+		
 		int getMaxActionsPerAgent() const { return m_maxActionsPerAgent; }
 		bool setMaxActionsPerAgent(int newMax) {
 			if ( (newMax > 0) && (newMax <= MAX_ACTIONS_PER_AGENT) ) {
@@ -54,6 +52,13 @@ namespace AS {
 				return false;
 			}
 		}
+
+		void clearData();
+		bool isInitialized() const { return m_isInitialized; }
+		bool hasData() const { return m_hasData; }
+
+		std::vector <actionData_t>* getDirectLAdataPtr() { return &dataLAs; }
+		std::vector <actionData_t>* getDirectGAdataPtr() { return &dataGAs; }
 				
 	private:
 		std::vector <actionData_t> dataLAs;
