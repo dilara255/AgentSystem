@@ -3,6 +3,20 @@
 #include "systems/dataMirror.hpp"
 
 /*
+//PLANNING:
+//TO DO:
+//- Compile and fix anything I may have broken;
+//- Implement and test a "vertical slice": currentResources transfer for a given agente;
+//- Base Class and stub for the rest;
+//- A method for data on each "leaf": implement and test one at a time;
+//- Fill out per-field methods;
+//- Methods for "entire structure";
+//- TO DO LATER:
+//-- Relative methods were they'd make sense (addition and multiplication);
+//-- Methods for "all agents" (including for  "entire structure");
+*/
+
+/*
 Here we declare the class ClientDataHandler, its component classes and a helper type.
 API: External: the Client will have direct acces to an instance of this class. 
 API: Internal: The AS will only have acces to a "CL::getNewClientData()" function.
@@ -51,6 +65,9 @@ At each step, the AS CALLS CL::retrieveAndEraseClientChanges(&recepient), from C
 		-- The recipient pointer is passed, and the method transfers the relevant Data;
 	- After the loop is done, clears the changes vector;
 	- Finally, releases the mutex;
+
+* TO DO:
+* - CL::ClientData::BaseFieldHandler;
 */
 
 namespace CL::ClientData {
@@ -387,15 +404,6 @@ namespace CL::ClientData {
 		//initialization data
 	};
 }
-/*
-//PLANO:
-//IMPLEMENTAR E TESTAR SLICE VERTICAL
-//DEPOIS STUBS DE TUDO
-//DEPOIS PREENCHER O QUE FOR NECESSARIO AGORA
-//E MARCAR O QUE FICAR PRA DEPOIS
-
-CL::ClientData::Handler.LAstate[id].resources.changeCurrentTo(*newValue*):
-*/	
 
 
 

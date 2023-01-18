@@ -99,7 +99,7 @@ namespace AS {
 			LOG_ERROR("Some of the values modified by the TA werent read back from the CL as expected");
 		
 			#ifdef AS_DEBUG
-				printf("\n%d out of 6 failed. Test action aux: %d - expected %d ", failed,
+				printf("\n%d out of 6 failed. Test action aux: %f - expected %f ", failed,
 					newLAaction.details.processingAux, TST_LAST_ACTION_AUX);
 				printf("\nGA connection data: %d - expected %d ", newGAstate.connectedGAs.getField(),
 					TST_GA_CONNECTIONS);

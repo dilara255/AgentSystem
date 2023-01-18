@@ -121,7 +121,7 @@ int main(void) {
 		                              fileNameNoDefaults, fileNameWithDefaults, customFilename);
 	printf("\nThe modified file has different data:\n\t-The comment's first letter should be a %c;\n\t-Ticks should be the number of times mainLoopTrhead looped before last save;\n",TST_COMMENT_LETTER_CHANGE);
 	printf("\t-Last GA`s id = %d and connected GAs = %d ;\n", TST_GA_ID, TST_GA_CONNECTIONS);
-	printf("\t-Last LA`s reinforcement = % f, offset[%d ][%d ][1] = % f and last actions aux = % i.\n",
+	printf("\t-Last LA`s reinforcement = %f, offset[%d][%d][1] = %f and last actions aux = %f.\n",
 		TST_LA_REINFORCEMENT, TST_CHANGED_CATEGORY, TST_CHANGED_MODE, TST_LA_OFFSET, TST_LAST_ACTION_AUX);
 	getchar();
 

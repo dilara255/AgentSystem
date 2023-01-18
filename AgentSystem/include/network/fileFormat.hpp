@@ -52,5 +52,5 @@ static const char* LAresources = "Current Resources: %f, income: %f, upkeep: %f\
 static const char* LArelationsInfo = "Relation with Neighbor %d: stance: %d, disposition: %f, infiltration: %f\n";
 static const char* LAcategoryOffsets = "Category %d: immediate: {%f | %f}, request:  {%f | %f}, self: {%f | %f}\n";
 
-static const char* LAaction = "#LA Action %d (LA %d): IDs: %d, Ticks: %lu, %lu, Intensity: %d, Aux: %d\n";
-static const char* GAaction = "#GA Action %d (GA %d): IDs: %d, Ticks: %lu, %lu, Intensity: %d, Aux: %d\n";
+static const char* LAaction = "#LA Action %d (LA %d): IDs: %d, Ticks: %lu, %lu, Intensity: %f, Aux: %f\n";
+static const char* GAaction = "#GA Action %d (GA %d): IDs: %d, Ticks: %lu, %lu, Intensity: %f, Aux: %f\n";
