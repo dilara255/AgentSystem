@@ -41,61 +41,53 @@ namespace AS {
 	typedef struct {
 		float current;
 		float updateRate;
+
+		enum class fields { CURRENT, INCOME,
+							TOTAL_RESOURCE_FIELDS };
 	} AS_API resources_t;
-
-	enum class ResourcesField { CURRENT, INCOME, 
-		                        TOTAL_RESOURCE_FIELDS };
-
 
 	typedef struct {
 		float current;
 		float externalGuard;
 		float thresholdToCostUpkeep;
 		float currentUpkeep;
+
+		enum class fields { CURRENT, GUARDING, THRESHOLD, UPKEEP,
+			                TOTAL_STRENGHT_FIELDS };
 	} AS_API strenght_t;
-
-	enum class StrenghtField { CURRENT, GUARDING, THRESHOLD, UPKEEP, 
-		                       TOTAL_STRENGHT_FIELDS };
-
 
 	typedef struct {
 		float x;
 		float y;
+
+		enum class fields { X, Y,
+			                TOTAL_POSITION_FIELDS };
 	} AS_API pos_t;
 
-	enum class PositionField { X, Y,
-		                       TOTAL_POSITION_FIELDS };
-
-
 	typedef float AS_API LAdecisionOffsets_t[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES];
-
 
 	typedef struct {
 		int diplomaticStanceToNeighbors[MAX_LA_NEIGHBOURS];
 		float dispositionToNeighbors[MAX_LA_NEIGHBOURS];
 		float dispositionToNeighborsLastStep[MAX_LA_NEIGHBOURS];
+
+		enum class fields { STANCE, DISPOSITION, DISPOSITION_LAST_STEP,
+						    TOTAL_GA_RELATION_PARAMETERS };
 	} AS_API LAneighborRelations_t;
-
-	enum class LArelations { STANCE, DISPOSITION, DISPOSITION_LAST_STEP,
-		                     TOTAL_GA_RELATION_PARAMETERS };
-
 
 	typedef struct {
 		int diplomaticStanceToNeighbors[MAX_GA_QUANTITY];
 		float dispositionToNeighbors[MAX_GA_QUANTITY];
 		float dispositionToNeighborsLastStep[MAX_GA_QUANTITY];
+
+		enum class fields { STANCE, DISPOSITION, DISPOSITION_LAST_STEP,
+							TOTAL_GA_RELATION_PARAMETERS };
 	} AS_API GAneighborRelations_t;
-
-	enum class GArelationsField { STANCE, DISPOSITION, DISPOSITION_LAST_STEP,
-		                          TOTAL_GA_RELATION_PARAMETERS };
-
 
 	typedef	float AS_API LAinfiltrationOnNeighbors_t[MAX_LA_NEIGHBOURS];
 	typedef	float AS_API GAinfiltrationOnNeighbors_t[MAX_GA_QUANTITY];
 
-
 	typedef int AS_API GApersonality[GA_PERSONALITY_TRAITS];
-
 
 	typedef AZ::FlagField128 LAflagField_t;
 	typedef AZ::FlagField32 GAflagField_t;
@@ -105,11 +97,10 @@ namespace AS {
 	typedef struct {
 		resources_t resources;
 		strenght_t strenght;
-	} AS_API LAparameters_t;
 
-	enum class LAparametersField { RESOURCES, STRENGHT, BETERRABA,
-		                           TOTAL_PARAMETERS_FIELDS };
-	
+		enum class fields { RESOURCES, STRENGHT, BETERRABA,
+							TOTAL_PARAMETERS_FIELDS };
+	} AS_API LAparameters_t;
 
 	typedef struct {
 		pos_t position;
@@ -117,30 +108,28 @@ namespace AS {
 		int numberConnectedNeighbors;
 		LAflagField_t connectedNeighbors;
 		int neighbourIDs[MAX_LA_NEIGHBOURS];
+
+		enum class fields { POSITION, ID_FIRST_CONNECTED, NUMBER_CONNECTIONS,
+						    NEIGHBOURS, NEIGHBOUR_IDS,
+							TOTAL_LOCATION_FIELDS };
 	} AS_API LAlocationAndConnectionData_t;
-
-	enum class LAlocationField { POSITION, ID_FIRST_CONNECTED, NUMBER_CONNECTIONS,
-				     			 NEIGHBOURS, NEIGHBOUR_IDS, 
-		                         TOTAL_LOCATION_FIELDS };
-
 
 	typedef struct {
 		LAdecisionOffsets_t incentivesAndConstraintsFromGA;
 		LAdecisionOffsets_t personality;
+
+		enum class fields { LA_PERSONALITY, LA_OFFSETS_FROM_GA,
+			                TOTAL_LA_OFFSET_FIELDS };
 	} AS_API LApersonalityAndGAinfluence_t;
-
-	enum class LAdpersonalityField { LA_PERSONALITY, LA_OFFSETS_FROM_GA, 
-		                              TOTAL_LA_OFFSET_FIELDS };
-
 
 	typedef struct {
 		resources_t LAesourceTotals;
 		float LAstrenghtTotal;
 		float GAresources;
-	} AS_API GAparameterTotals_t;
 
-	enum class GAparamentersField { RESOURCES_LAS, STRENGHT_LAS, GA_RESOURCES, 
-		                            TOTAL_GA_PARAMETER_FIELDS };
+		enum class fields { RESOURCES_LAS, STRENGHT_LAS, GA_RESOURCES,
+			                TOTAL_GA_PARAMETER_FIELDS };
+	} AS_API GAparameterTotals_t;
 }
 
 //And finally:
@@ -150,11 +139,10 @@ namespace LA {
 	typedef struct {
 		AS::agentName_t name;
 		unsigned id;
+
+		enum class fields { NAME, ID,
+			                TOTAL_LA_COLD_FIELDS };
 	} AS_API coldData_t;
-
-	enum class ColdDataField { NAME, ID, 
-		                   TOTAL_LA_COLD_FIELDS };
-
 
 	typedef struct {
 		bool onOff;
@@ -162,11 +150,10 @@ namespace LA {
 		AS::LAlocationAndConnectionData_t locationAndConnections;
 		AS::LAparameters_t parameters;
 		unsigned GAid;
+
+		enum class fields { ACTIVE, RELATIONS, LOCATION, PARAMETERS, GA_ID,
+			                TOTAL_LA_STATE_FIELDS };
 	} AS_API stateData_t;
-
-	enum class StateField { ACTIVE, RELATIONS, LOCATION, PARAMETERS, GA_ID, 
-		                    TOTAL_LA_STATE_FIELDS };
-
 
 	typedef struct {
 		AS::LAinfiltrationOnNeighbors_t infiltration;
@@ -176,10 +163,10 @@ namespace LA {
 		//resources, income, strenght, diplomacyand relations to this LA.
 			
 		//TO DO : -Desires, Impediments and Potential Actions Data;
-	} AS_API decisionData_t;
 
-	enum class DecisionField { INFILTRATION, OFFSETS, 
-		                       TOTAL_GA_DECISION_FIELDS };
+		enum class fields { INFILTRATION, OFFSETS,
+			                TOTAL_GA_DECISION_FIELDS };
+	} AS_API decisionData_t;
 }
 
 namespace GA {
@@ -187,11 +174,10 @@ namespace GA {
 	typedef struct {
 		AS::agentName_t name;
 		unsigned id;
+
+		enum class fields { NAME, ID,
+			                TOTAL_GA_COLD_FIELDS };
 	} AS_API coldData_t;
-
-	enum class ColdField { NAME, ID, 
-		                   TOTAL_GA_COLD_FIELDS };
-
 
 	typedef struct {
 		bool onOff;
@@ -199,11 +185,10 @@ namespace GA {
 		AS::LAflagField_t localAgentsBelongingToThis;
 		AS::GAparameterTotals_t parameters;
 		AS::GAflagField_t connectedGAs;
+
+		enum class fields { ONOFF, RELATIONS, LOCAL_AGENTS, PARAMETERS, CONNECTED_GAS,
+			                TOTAL_GA_STATE_FIELDS };
 	} AS_API stateData_t;
-
-	enum class StateField { ONOFF, RELATIONS, LOCAL_AGENTS, PARAMETERS, CONNECTED_GAS,
-						    TOTAL_GA_STATE_FIELDS };
-
 
 	typedef struct {
 		AS::GAinfiltrationOnNeighbors_t infiltration;
@@ -213,8 +198,8 @@ namespace GA {
 		//GA resources, totals, diplomacy and relations.
 
 		//TO DO : -Desires, Impediments and Potential Actions Data;
-	} AS_API decisionData_t;
 
-	enum class DecisionField { INFILTRATION, PERSONALITY, 
-		                       TOTAL_LA_DECISION_FIELDS };
+		enum class fields { INFILTRATION, PERSONALITY,
+			                TOTAL_LA_DECISION_FIELDS };
+	} AS_API decisionData_t;	
 }
