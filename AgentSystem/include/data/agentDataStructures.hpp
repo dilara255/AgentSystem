@@ -98,7 +98,7 @@ namespace AS {
 		resources_t resources;
 		strenght_t strenght;
 
-		enum class fields { RESOURCES, STRENGHT, BETERRABA,
+		enum class fields { RESOURCES, STRENGHT,
 							TOTAL_PARAMETERS_FIELDS };
 	} AS_API LAparameters_t;
 

@@ -8,7 +8,7 @@
 
 namespace CL {
 
-	bool DataMirrorSystem::initialize(mirror_t** mirror_ptr_ptr) {
+	bool DataMirrorSystem::initialize(mirror_t** mirrorData_ptr_ptr) {
 			
 		LOG_TRACE("Initializing Data Mirror System...");
 
@@ -34,7 +34,7 @@ namespace CL {
 			return false;
 		}
 
-		(*mirror_ptr_ptr) = &data;
+		(*mirrorData_ptr_ptr) = &data;
 		data_cptr = (const mirror_t*)&data;
 
 		LOG_INFO("Data Mirror System Initialized!");
