@@ -9,7 +9,7 @@ namespace CL {
 	class CL_API DataMirrorSystem {
 	
 	public:
-		bool initialize(mirror_t** mirror_ptr_ptr);
+		bool initialize(mirror_t** mirrorData_ptr_ptr);
 		
 		bool receiveReplacementParams(const AS::networkParameters_t* params_cptr);
 		bool receiveReplacementAgentData(CL::agentToMirrorVectorPtrs_t dataPtrs);

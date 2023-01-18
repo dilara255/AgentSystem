@@ -1,11 +1,8 @@
 #pragma once
 
-#include "systems/dataMirror.hpp"
-
 /*
 //PLANNING:
 //TO DO:
-//- Compile and fix anything I may have broken;
 //- Implement and test a "vertical slice": currentResources transfer for a given agente;
 //- Base Class and stub for the rest;
 //- A method for data on each "leaf": implement and test one at a time;
@@ -18,7 +15,7 @@
 
 /*
 Here we declare the class ClientDataHandler, its component classes and a helper type.
-API: External: the Client will have direct acces to an instance of this class. 
+API: External: the Client will have direct acces to an instance of this class.
 API: Internal: The AS will only have acces to a "CL::getNewClientData()" function.
 
 ClientDataHandler:
@@ -70,6 +67,8 @@ At each step, the AS CALLS CL::retrieveAndEraseClientChanges(&recepient), from C
 * - CL::ClientData::BaseFieldHandler;
 */
 
+#include "dataMirror.hpp"
+
 namespace CL::ClientData {
 	
 	typedef struct {
@@ -77,13 +76,15 @@ namespace CL::ClientData {
 		int agent;
 		int baseField;
 		int subField[AS_MAX_SUB_FIELD_DEPTH];
+		int lastSubfield;
 		bool hasChanges;
 	} changedDataInfo;
 
 
 	class NetworkParameterDataHandler {
 	public:
-		//initialization
+		bool initialize(std::mutex* mutex_ptr, networkParameters_t* data_ptr,
+			            std::vector <changedDataInfo>* changesVector_ptr) { return true; }
 
 		//full insertion
 
@@ -97,7 +98,8 @@ namespace CL::ClientData {
 
 	class LAcoldDataHandler {
 	public:
-		//initialization
+		bool initialize(std::mutex* mutex_ptr, ColdDataControllerLA* data_ptr,
+			            std::vector <changedDataInfo>* changesVector_ptr) { return true; }
 
 		//full insertion
 
@@ -154,15 +156,19 @@ namespace CL::ClientData {
 		
 			class LAresourcesHandler {
 			public:
-				//initialization
+				bool initialize(std::mutex* mutex_ptr, StateControllerLA* data_ptr,
+								std::vector <changedDataInfo>* changesVector_ptr);
 
-			    //full insertion
+				bool changeResources(uint32_t agentID, resources_t newResources) { return false; }
+				
+				bool changeCurrentTo(uint32_t agentID, float newValue);
 
-			    //per-simple-field insertion methods
+				bool changeIncomeTo(uint32_t agentID, float newValue) { return false; }
 
 			private:
-				//data_ptr
-				//changes_ptr
+				std::mutex* m_mutex_ptr;
+				StateControllerLA* m_data_ptr;
+				std::vector <changedDataInfo>* m_changesVector_ptr;				
 			};
 
 			class LAstrenghtHandler {
@@ -180,7 +186,8 @@ namespace CL::ClientData {
 
 		class LAparametersHandler {
 		public:
-			//initialization
+			bool initialize(std::mutex* mutex_ptr, StateControllerLA* data_ptr,
+				            std::vector <changedDataInfo>* changesVector_ptr);
 
 			//full insertion
 
@@ -190,13 +197,15 @@ namespace CL::ClientData {
 			LAstrenghtHandler strenght;
 
 		private:
-			//data_ptr
-			//changes_ptr
+			std::mutex* m_mutex_ptr;
+			StateControllerLA* m_data_ptr;
+			std::vector <changedDataInfo>* m_changesVector_ptr;
 		};
 
 	class LAstateHandler {
 	public:
-		//initialization
+		bool initialize(std::mutex* mutex_ptr, StateControllerLA* data_ptr,
+			            std::vector <changedDataInfo>* changesVector_ptr);
 
 		//full insertion
 
@@ -207,8 +216,9 @@ namespace CL::ClientData {
 		LAparametersHandler parameters;
 
 	private:
-		//data_ptr
-		//changes_ptr
+		std::mutex* m_mutex_ptr;
+		StateControllerLA* m_data_ptr;
+		std::vector <changedDataInfo>* m_changesVector_ptr;
 	};
 
 
@@ -229,7 +239,8 @@ namespace CL::ClientData {
 
 	class LAdecisionDataHandler {
 	public:
-		//initialization
+		bool initialize(std::mutex* mutex_ptr, DecisionSystemLA* data_ptr,
+			            std::vector <changedDataInfo>* changesVector_ptr) { return true; }
 
 		//full insertion
 
@@ -245,7 +256,8 @@ namespace CL::ClientData {
 
 	class GAcoldDataHandler {
 	public:
-		//initialization
+		bool initialize(std::mutex* mutex_ptr, ColdDataControllerGA* data_ptr,
+			            std::vector <changedDataInfo>* changesVector_ptr) { return true; }
 
 		//full insertion
 
@@ -289,7 +301,8 @@ namespace CL::ClientData {
 
 	class GAstateHandler {
 	public:
-		//initialization
+		bool initialize(std::mutex* mutex_ptr, StateControllerGA* data_ptr,
+			            std::vector <changedDataInfo>* changesVector_ptr) { return true; }
 
 		//full insertion
 
@@ -306,7 +319,8 @@ namespace CL::ClientData {
 		
 	class GAdecisionDataHandler {
 	public:
-		//initialization
+		bool initialize(std::mutex* mutex_ptr, DecisionSystemGA* data_ptr,
+			            std::vector <changedDataInfo>* changesVector_ptr) { return true; }
 
 		//full insertion
 
@@ -361,7 +375,8 @@ namespace CL::ClientData {
 
 	class ActionsHandler {
 	public:
-		//initialization
+		bool initialize(std::mutex* mutex_ptr, std::vector <actionData_t>* data_ptr,
+			            std::vector <changedDataInfo>* changesVector_ptr) { return true; }
 
 		//full insertion
 
@@ -380,9 +395,7 @@ namespace CL::ClientData {
 	//Handles insertion and loading of changes for the Client Data
 	class Handler {
 	public:
-		//initialization
-		
-		//full network insertion
+		Handler::Handler(AS::networkParameters_t params);
 
 		NetworkParameterDataHandler networkParameters;
 
@@ -398,10 +411,11 @@ namespace CL::ClientData {
 		ActionsHandler GAaction;
 
 	private:
-		mirror_t data;
-		changedDataInfo changes;
-		//mutex
-		//initialization data
+		std::mutex m_mutex;
+		DataMirrorSystem m_mirrorSystem;
+		mirror_t* m_data_ptr;
+		std::vector <changedDataInfo> m_changes;
+		bool m_initialized;
 	};
 }
 
