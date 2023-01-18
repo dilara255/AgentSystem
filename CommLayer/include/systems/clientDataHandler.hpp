@@ -25,9 +25,35 @@ The type changedDataInfo_t holds information about a single change by the Client
 -A vector of these will guide the handler in deciding which data to retrieve for the AS;
 -This vector will be cleared after that;
 -Both the vector and the Client data on the CL will be locked during this process.
+
+Usage:
+
+By the CLIENT:
+
+Example: given a CL::ClientData::Handler clientDataHandler, the Client CALLS:
+	clientDataHandler.LAstate.parameters.resources.changeCurrentTo(agentID, newValue);
+
+	What happens is:
+		- clientDataHandler acquires mutex;
+		- changeCurrentTo creates relevant element at the back of the changes vector:
+			{LA_STATE, agentId, PARAMETERS, RESOURCES, CURRENT, true};
+		- changeCurrentTo updates the data:
+			data_ptr->data[agentID].parameters.resources.current = newValue;
+		- clientDataHandler releases the mutex;
+
+By the AS:
+
+At each step, the AS CALLS CL::retrieveAndEraseClientChanges(&recepient), from CL_Internal API;
+- This calls a method of the same name from the ClientData::Handler, which:
+	- Acquires the mutex;
+	- Loops through the changes vector;
+	- On hasChanges == true, dispatches the relevant method from the relevant handler member;
+		-- The recipient pointer is passed, and the method transfers the relevant Data;
+	- After the loop is done, clears the changes vector;
+	- Finally, releases the mutex;
 */
 
-namespace CL {
+namespace CL::ClientData {
 	
 	typedef struct {
 		int dataCategory;
@@ -38,6 +64,328 @@ namespace CL {
 	} changedDataInfo;
 
 
+	class NetworkParameterDataHandler {
+	public:
+		//initialization
+
+		//full insertion
+
+		//per-simple-field insertion methods
+
+	private:
+		//data_ptr
+		//changes_ptr
+	};
+
+
+	class LAcoldDataHandler {
+	public:
+		//initialization
+
+		//full insertion
+
+		//per-simple-field insertion methods
+
+	private:
+		//data_ptr
+		//changes_ptr
+	};
+
+
+	//LAstate component Handlers:
+
+		class LArelationsHandler {
+		public:
+			//initialization
+
+			//full insertion
+
+			//per-simple-field insertion methods
+
+		private:
+			//data_ptr
+			//changes_ptr
+		};
+
+			class PositionHandler {
+			public:
+				//initialization
+
+				//full insertion
+
+				//per-simple-field insertion methods
+
+			private:
+				//data_ptr
+				//changes_ptr
+			};
+
+		class LocationAndConnectionsHandler {
+		public:
+			//initialization
+
+			//full insertion
+
+			//per-simple-field insertion methods
+
+			PositionHandler position;
+
+		private:
+			//data_ptr
+			//changes_ptr
+		};
+		
+			class LAresourcesHandler {
+			public:
+				//initialization
+
+			    //full insertion
+
+			    //per-simple-field insertion methods
+
+			private:
+				//data_ptr
+				//changes_ptr
+			};
+
+			class LAstrenghtHandler {
+			public:
+				//initialization
+
+				//full insertion
+
+				//per-simple-field insertion methods
+
+			private:
+				//data_ptr
+				//changes_ptr
+			};
+
+		class LAparametersHandler {
+		public:
+			//initialization
+
+			//full insertion
+
+			//per-simple-field insertion methods
+
+			LAresourcesHandler resources;
+			LAstrenghtHandler strenght;
+
+		private:
+			//data_ptr
+			//changes_ptr
+		};
+
+	class LAstateHandler {
+	public:
+		//initialization
+
+		//full insertion
+
+		//per-simple-field insertion methods
+
+		LArelationsHandler relations;
+		LocationAndConnectionsHandler location;
+		LAparametersHandler parameters;
+
+	private:
+		//data_ptr
+		//changes_ptr
+	};
+
+
+	//LAdecision component Handlers:
+	
+		class LApersonalityHandler {
+		public:
+			//initialization
+
+			//full insertion
+
+			//per-simple-field insertion methods
+
+		private:
+			//data_ptr
+			//changes_ptr
+		};
+
+	class LAdecisionDataHandler {
+	public:
+		//initialization
+
+		//full insertion
+
+		//per-simple-field insertion methods
+
+		LApersonalityHandler offsets;
+
+	private:
+		//data_ptr
+		//changes_ptr
+	};
+
+
+	class GAcoldDataHandler {
+	public:
+		//initialization
+
+		//full insertion
+
+		//per-simple-field insertion methods
+
+	private:
+		//data_ptr
+		//changes_ptr
+	};
+
+
+	//GAstate component Handlers:
+	
+		class GArelationsHandler {
+		public:
+			//initialization
+
+			//full insertion
+
+			//per-simple-field insertion methods
+
+		private:
+			//data_ptr
+			//changes_ptr
+		};
+
+		class GAparametersHandler {
+		public:
+			//initialization
+
+			//full insertion
+
+			//per-simple-field insertion methods
+
+			LAresourcesHandler LAresources;
+
+		private:
+			//data_ptr
+			//changes_ptr
+	};
+
+	class GAstateHandler {
+	public:
+		//initialization
+
+		//full insertion
+
+		//per-simple-field insertion methods
+
+		GArelationsHandler relations;
+		GAparametersHandler parameters;
+
+	private:
+		//data_ptr
+		//changes_ptr
+	};
+
+		
+	class GAdecisionDataHandler {
+	public:
+		//initialization
+
+		//full insertion
+
+		//per-simple-field insertion methods
+
+	private:
+		//data_ptr
+		//changes_ptr
+	};
+
+
+	//Action component Handlers:
+	
+		class ActionIDsHandler {
+		public:
+			//initialization
+
+			//full insertion
+
+			//per-simple-field insertion methods
+
+		private:
+			//data_ptr
+			//changes_ptr
+		};
+
+		class ActionTickInfoHandler {
+		public:
+			//initialization
+
+			//full insertion
+
+			//per-simple-field insertion methods
+
+		private:
+			//data_ptr
+			//changes_ptr
+		};
+
+		class ActionDetailsHandler {
+		public:
+			//initialization
+
+			//full insertion
+
+			//per-simple-field insertion methods
+
+		private:
+			//data_ptr
+			//changes_ptr
+		};
+
+	class ActionsHandler {
+	public:
+		//initialization
+
+		//full insertion
+
+		//per-simple-field insertion methods
+
+		ActionIDsHandler IDs;
+		ActionTickInfoHandler tickInfo;
+		ActionDetailsHandler details;
+
+	private:
+		//data_ptr
+		//changes_ptr
+	};
+
+
+	//Handles insertion and loading of changes for the Client Data
+	class Handler {
+	public:
+		//initialization
+		
+		//full network insertion
+
+		NetworkParameterDataHandler networkParameters;
+
+		LAcoldDataHandler LAcold;
+		LAstateHandler LAstate;
+		LAdecisionDataHandler LAdecision;
+
+		GAcoldDataHandler GAcold;
+		GAstateHandler GAstate;
+		GAdecisionDataHandler GAdecision;
+
+		ActionsHandler LAaction;
+		ActionsHandler GAaction;
+
+	private:
+		mirror_t data;
+		changedDataInfo changes;
+		//mutex
+		//initialization data
+	};
 }
 /*
 //PLANO:
@@ -46,57 +394,8 @@ namespace CL {
 //DEPOIS PREENCHER O QUE FOR NECESSARIO AGORA
 //E MARCAR O QUE FICAR PRA DEPOIS
 
-class ClientDataHandler{
-public:
-	void transferFullNetwork()
-	void transferLAstateDataForAllAgents()
-	...
-
-	LAstateInsertion[agents] LAstate
-	GAstateInsertion[agents] GAstate
-	...
-	actionInsertion[actions] actions
-}
-
-class LAstateInsertion{
-	void transferEntireLAstate()
-
-	resourceInsertion resources
-	...
-
-	private:
-	agentID;
-}
-
-class ResourceInsertion{
-
-	void transferEntireResourceDAta()
-
-	void changeCurrentTo(newValue)
-	...
-
-	private:
-	agentID;
-}
-//have to be to initialized with all ids
-
-aí a pessoa usa ClientDataHandler.LAstate[id].resources.changeCurrentTo(*newValue*):
-
--adiquire mutex;
--cria elemento no vetor de modificações {STATE_LA, agentId, PARAMS, RESOURCES, CURRENT, true};
--clientBuffer.data.agentMirrorPtrs.StateControllerLA.data.parameters.resources.current = newValue;
--devolve mutex;
-
-Já o AS:
-
--chama func do CL passando ponteiros pros dados no AS;
--func do CL:
-	-loopa o vetor de controle até encontrar hasChanges == false;
-	-pra cada elemento, dispacha a ação certa, atualizando os dados;
-	-depois do loop, dá clear no vetor;
-	-devolve mutex;
-
-Pra pegar elemento:
-ClientDataHandler.LAstate[id].resources.getCurrent():
-
+CL::ClientData::Handler.LAstate[id].resources.changeCurrentTo(*newValue*):
 */	
+
+
+

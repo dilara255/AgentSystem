@@ -88,8 +88,6 @@ and data sizes static.
 #define TST_TIMES_TO_QUERRY_TICK 4
 
 namespace AS {
-	typedef AZ::FlagField128 LAflagField_t;
-	typedef AZ::FlagField32 GAflagField_t;
 
 	typedef struct {
 		bool isNetworkInitialized;
