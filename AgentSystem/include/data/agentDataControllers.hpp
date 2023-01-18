@@ -19,6 +19,8 @@ namespace LA {
 		size_t sizeOfDataInBytes() const;
 		size_t capacityForDataInBytes() const;
 
+		std::vector <coldData_t>* getDirectDataPtr() { return &data; }
+
 		void clearData();
 	private:
 		std::vector <coldData_t> data;
@@ -38,6 +40,8 @@ namespace LA {
 		size_t sizeOfDataInBytes() const;
 		size_t capacityForDataInBytes() const;
 
+		std::vector <stateData_t>* getDirectDataPtr() { return &data; }
+
 		void clearData();
 	private:
 		std::vector <stateData_t> data;
@@ -56,6 +60,8 @@ namespace LA {
 
 		size_t sizeOfDataInBytes() const;
 		size_t capacityForDataInBytes() const;
+
+		std::vector <decisionData_t>* getDirectDataPtr() { return &data; }
 
 		void clearData();
 	private:
@@ -78,6 +84,8 @@ namespace GA {
 		size_t sizeOfDataInBytes() const;
 		size_t capacityForDataInBytes() const;
 
+		std::vector <coldData_t>* getDirectDataPtr() { return &data; }
+
 		void clearData();
 	private:
 		std::vector <coldData_t> data;
@@ -97,6 +105,8 @@ namespace GA {
 		size_t sizeOfDataInBytes() const;
 		size_t capacityForDataInBytes() const;
 
+		std::vector <stateData_t>* getDirectDataPtr() { return &data; }
+
 		void clearData();
 	private:
 		std::vector <stateData_t> data;
@@ -115,6 +125,8 @@ namespace GA {
 
 		size_t sizeOfDataInBytes() const;
 		size_t capacityForDataInBytes() const;
+
+		std::vector <decisionData_t>* getDirectDataPtr() { return &data; }
 
 		void clearData();
 	private:

@@ -38,6 +38,8 @@ and data sizes static.
 #define MAX_LA_QUANTITY 128
 #define MAX_ACTIONS_PER_AGENT 10
 #define GA_PERSONALITY_TRAITS 4
+#define SLEEP_TIME_WAITING_MUTEX_MICROS 50
+#define MAX_MUTEX_TRY_LOCKS 200
 
 //DEFAULT values for new network creation:
 #define DEFAULT_ONOFF (true)

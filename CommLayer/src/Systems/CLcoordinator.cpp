@@ -7,10 +7,12 @@
 #include "CL_internalAPI.hpp"
 
 #include "systems/dataMirror.hpp"
+#include "systems/clientDataHandler.hpp"
 
 namespace CL {
 
 	DataMirrorSystem mirror;
+	CL::ClientData::Handler* clientData_ptr;
 
 	mirror_t* mirrorData_ptr; //WARNING: bypasses mirror instance
 	//TO DO: fix, this is just for initial testing
@@ -37,6 +39,35 @@ namespace CL {
 
 		LOG_INFO("CL INITIALIZED!");
 		return true;
+	}
+
+	bool createClientDataHandler(AS::networkParameters_t params) {
+
+		clientData_ptr = new CL::ClientData::Handler(params);
+
+		bool result = clientData_ptr->hasInitialized();
+
+		if (!result) {
+			LOG_CRITICAL("Failed to create or initialize Client Data Handler instance!");
+			return false;
+		}
+		else {
+			LOG_INFO("Client Data Handler instantiated and initialized");
+			return true;
+		}
+	}
+
+	bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,
+						  AS::dataControllerPointers_t* agentDataRecepient_ptr,
+		 				  AS::ActionDataController* actionsRecepient_ptr) {
+		
+		CL::ClientData::ASdataControlPtrs_t recepientPtrs;
+
+		recepientPtrs.params_ptr = paramsRecepient_ptr;
+		recepientPtrs.agentData_ptr = agentDataRecepient_ptr;
+		recepientPtrs.actions_ptr = actionsRecepient_ptr;
+				
+		return clientData_ptr->sendNewClientData(recepientPtrs);
 	}
 
 	bool acceptReplacementData(const AS::networkParameters_t* params,
