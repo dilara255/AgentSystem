@@ -12,6 +12,37 @@
 * MAX_LA_NEIGHBOURS, MAX_LA_QUANTITY and MAX_GA_QUANTITY.
 */
 
+/*DATA OUTLINE:
+* 
+* LA::
+* - coldData_t
+*	- AS::agentName_t name
+*	- unsigned id
+* - stateData_t
+*	- bool onOff
+*	- AS::LAneighborRelations_t relations
+*	- AS::LAlocationAndConnectionData_t locationAndConnections
+*	- AS::LAparameters_t parameters
+*	- unsigned GAid
+* - decisionData_t;
+*	- AS::LAinfiltrationOnNeighbors_t infiltration
+*	- AS::LApersonalityAndGAinfluence_t offsets
+* 
+* GA::
+* * - coldData_t
+*	- AS::agentName_t name
+*	- unsigned id
+* - stateData_t
+*	- bool onOff
+*	- AS::GAneighborRelations_t relations
+*	- AS::LAflagField_t localAgentsBelongingToThis
+*	- AS::GAparameterTotals_t parameters
+*	- AS::GAflagField_t connectedGAs
+* - decisionData_t;
+*	- AS::GAinfiltrationOnNeighbors_t infiltration
+*	- AS::GApersonality personality
+*/
+
 #include "../include/network/parameters.hpp"
 #include "../include/systems/actionSystem.hpp"
 
