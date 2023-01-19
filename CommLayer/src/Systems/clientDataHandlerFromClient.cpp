@@ -13,7 +13,36 @@ namespace CL{
 
 	bool CL_API ClientData::NetworkParameterDataHandler::changeCommentTo(uint32_t agentID, std::string newValue)
 	{
-		return false;
+
+		if (newValue.size() >= COMMENT_LENGHT) {
+			LOG_ERROR("Client is trying to pass new network comment line which is too large!");
+			return false;
+		}
+
+		//Get the callback ready (so we hold the mutex for as little as possible):
+		changedDataInfo_t change;
+		change.agentID = agentID;
+
+		auto callback = std::bind(&CL::ClientData::NetworkParameterDataHandler::transferComment,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		change.getNewData_fptr = callback;
+
+		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
+		if (mutex_ptr == NULL) {
+			LOG_ERROR("Aborting Client Data Change");
+			return false;
+		}
+
+		//Actually changes the value:
+		strcpy(m_data_ptr->comment, newValue.c_str());
+
+		//Store the callback function to transfer the change:
+		m_changesVector_ptr->push_back(change);
+
+		mutex_ptr->unlock();
+
+		return true;
 	}
 
 	bool CL_API ClientData::NetworkParameterDataHandler::changeIsNetworkInitializedTo(uint32_t agentID, bool newValue)
@@ -60,7 +89,7 @@ namespace CL{
 
 //ACTIONS
 
-	bool CL_API CL::ClientData::ActionsHandler::changeAll(uint32_t agentID, actionData_t newValue)
+	bool CL_API CL::ClientData::ActionsHandler::changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, actionData_t newValue)
 	{
 	return false;
 	}
@@ -69,39 +98,39 @@ namespace CL{
 
 //ACTION_IDS
 
-	bool CL_API ClientData::ActionIDsHandler::changeAll(uint32_t agentID, AS::ids_t newValue)
+	bool CL_API ClientData::ActionIDsHandler::changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::ids_t newValue)
 	{
 		return false;
 	}
 
 
 
-	bool CL_API ClientData::ActionIDsHandler::changeActiveTo(uint32_t agentID, uint32_t newValue)
+	bool CL_API ClientData::ActionIDsHandler::changeActiveTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::ActionIDsHandler::changeCategoryTo(uint32_t agentID, uint32_t newValue)
+	bool CL_API ClientData::ActionIDsHandler::changeCategoryTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::ActionIDsHandler::changeModeTo(uint32_t agentID, uint32_t newValue)
+	bool CL_API ClientData::ActionIDsHandler::changeModeTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::ActionIDsHandler::changeOriginTo(uint32_t agentID, uint32_t newValue)
+	bool CL_API ClientData::ActionIDsHandler::changeOriginTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::ActionIDsHandler::changeScopeTo(uint32_t agentID, uint32_t newValue)
+	bool CL_API ClientData::ActionIDsHandler::changeScopeTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::ActionIDsHandler::changeTargetTo(uint32_t agentID, uint32_t newValue)
+	bool CL_API ClientData::ActionIDsHandler::changeTargetTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue)
 	{
 		return false;
 	}
@@ -110,17 +139,17 @@ namespace CL{
 
 //ACTION_TICK_INFO
 
-	bool CL_API ClientData::ActionTickInfoHandler::changeAll(uint32_t agentID, AS::tickInfo_t newValue)
+	bool CL_API ClientData::ActionTickInfoHandler::changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::tickInfo_t newValue)
 		{
 			return false;
 		}
 
-	bool CL_API ClientData::ActionTickInfoHandler::changeInitialTo(uint32_t agentID, uint32_t newValue)
+	bool CL_API ClientData::ActionTickInfoHandler::changeInitialTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::ActionTickInfoHandler::changeLastProcessedTo(uint32_t agentID, uint32_t newValue)
+	bool CL_API ClientData::ActionTickInfoHandler::changeLastProcessedTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue)
 	{
 		return false;
 	}
@@ -129,19 +158,67 @@ namespace CL{
 
 //ACTION_DETAILS
 
-	bool CL_API ClientData::ActionDetailsHandler::changeAll(uint32_t agentID, AS::details_t newValue)
+	bool CL_API ClientData::ActionDetailsHandler::changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::details_t newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::ActionDetailsHandler::changeIntensityTo(uint32_t agentID, float newValue)
+	bool CL_API ClientData::ActionDetailsHandler::changeIntensityTo(bool isGlobal, uint32_t agentID, uint32_t actionID, float newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::ActionDetailsHandler::changeAuxTo(uint32_t agentID, float newValue)
+	bool CL_API ClientData::ActionDetailsHandler::changeAuxTo(bool isGlobal, uint32_t agentID, uint32_t actionID, float newValue)
 	{
-		return false;
+		//TO DO: extract
+		if (agentID >= m_data_ptr->size()) {
+			LOG_ERROR("Tried to change data for agentID out of range");
+			
+			#ifdef AS_DEBUG
+				printf("Data has capacity %zu, aid was %u\n", 
+												m_data_ptr->size(), agentID);
+			#endif // AS_DEBUG
+
+			return false;
+		}
+
+		//TO DO: HACK: a little hackish, must remember origin -> agent, target -> action
+		//MAY NOT BE PORTABLE?
+		AS::IDsToUnsigned_u effectiveID;
+		
+		effectiveID.IDs.active = 0;
+		effectiveID.IDs.category = 0;
+		effectiveID.IDs.mode = 0;
+		
+		effectiveID.IDs.scope = (int)isGlobal;
+		effectiveID.IDs.origin = agentID;
+		effectiveID.IDs.target = actionID;
+
+		changedDataInfo_t change;
+
+		change.agentID = effectiveID.IDsAsUnsigned;
+
+		//Get the callback ready (so we hold the mutex for as little as possible):
+		auto callback = std::bind(&CL::ClientData::ActionDetailsHandler::transferAux,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		change.getNewData_fptr = callback;
+
+		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
+		if (mutex_ptr == NULL) {
+			LOG_ERROR("Aborting Client Data Change");
+			return false;
+		}
+
+		//Actually changes the value:
+		m_data_ptr->at(agentID).details.processingAux = newValue;
+
+		//Store the callback function to transfer the change:
+		m_changesVector_ptr->push_back(change);
+
+		mutex_ptr->unlock();
+
+		return true;
 	}
 
 
@@ -271,8 +348,17 @@ namespace CL{
 			return false;
 		}
 
-		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
+		//
+		changedDataInfo_t change;
+		change.agentID = agentID;
 
+		//Get the callback ready (so we hold the mutex for as little as possible):
+		auto callback = std::bind(&CL::ClientData::LAresourcesHandler::transferCurrent,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		change.getNewData_fptr = callback;
+
+		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
 		if (mutex_ptr == NULL) {
 			LOG_ERROR("Aborting Client Data Change");
 			return false;
@@ -282,14 +368,6 @@ namespace CL{
 		m_data_ptr->data[agentID].parameters.resources.current = newValue;
 
 		//Store the callback function to transfer the change:
-		changedDataInfo_t change;
-		change.agentID = agentID;
-
-		auto callback = std::bind(&CL::ClientData::LAresourcesHandler::transferCurrent,
-			this, std::placeholders::_1, std::placeholders::_2);
-
-		change.getNewData_fptr = callback;
-
 		m_changesVector_ptr->push_back(change);
 
 		mutex_ptr->unlock();
@@ -325,7 +403,43 @@ namespace CL{
 
 	bool CL_API ClientData::LAstrenghtHandler::changeGuard(uint32_t agentID, float newValue)
 	{
-		return false;
+		//TO DO: extract
+		if (agentID >= m_data_ptr->data.size()) {
+			LOG_ERROR("Tried to change data for agentID out of range");
+			
+			#ifdef AS_DEBUG
+				printf("Data has capacity %zu, aid was %u\n", 
+												m_data_ptr->data.size(), agentID);
+			#endif // AS_DEBUG
+
+			return false;
+		}
+
+		//
+		changedDataInfo_t change;
+		change.agentID = agentID;
+
+		//Get the callback ready (so we hold the mutex for as little as possible):
+		auto callback = std::bind(&CL::ClientData::LAstrenghtHandler::transferGuard,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		change.getNewData_fptr = callback;
+
+		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
+		if (mutex_ptr == NULL) {
+			LOG_ERROR("Aborting Client Data Change");
+			return false;
+		}
+
+		//Actually changes the value:
+		m_data_ptr->data[agentID].parameters.strenght.externalGuard = newValue;
+
+		//Store the callback function to transfer the change:
+		m_changesVector_ptr->push_back(change);
+
+		mutex_ptr->unlock();
+
+		return true;
 	}
 
 	bool CL_API ClientData::LAstrenghtHandler::changeThresholdForUpkeed(uint32_t agentID, float newValue)
@@ -354,7 +468,50 @@ namespace CL{
 
 	bool CL_API CL::ClientData::LApersonalityHandler::changeGAoffsets(uint32_t agentID, AS::LAdecisionOffsets_t * newValue_ptr)
 	{
-		return false;
+		//TO DO: extract
+		if (agentID >= m_data_ptr->data.size()) {
+			LOG_ERROR("Tried to change data for agentID out of range");
+			
+			#ifdef AS_DEBUG
+				printf("Data has capacity %zu, aid was %u\n", 
+												m_data_ptr->data.size(), agentID);
+			#endif // AS_DEBUG
+
+			return false;
+		}
+
+		//
+		changedDataInfo_t change;
+		change.agentID = agentID;
+
+		//Get the callback ready (so we hold the mutex for as little as possible):
+		auto callback = std::bind(&CL::ClientData::LApersonalityHandler::transferGAoffsets,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		change.getNewData_fptr = callback;
+
+		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
+		if (mutex_ptr == NULL) {
+			LOG_ERROR("Aborting Client Data Change");
+			return false;
+		}
+
+		//Actually changes the value:
+		AS::LAdecisionOffsets_t* NewOffsets_ptr =
+	        &m_data_ptr->data[agentID].offsets.incentivesAndConstraintsFromGA;	
+
+		for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+			for (int j = 0; j < AS::TOTAL_MODES; j++) {
+				(*NewOffsets_ptr)[i][j] = (*newValue_ptr)[i][j];
+			}
+		}		
+
+		//Store the callback function to transfer the change:
+		m_changesVector_ptr->push_back(change);
+
+		mutex_ptr->unlock();
+
+		return true;
 	}
 
 	bool CL_API CL::ClientData::LApersonalityHandler::changePersonality(uint32_t agentID, AS::LAdecisionOffsets_t * newValue_ptr)
@@ -374,7 +531,43 @@ namespace CL{
 
 	bool CL_API ClientData::GAcoldDataHandler::changeID(uint32_t agentID, uint32_t newValue)
 	{
-		return false;
+		//TO DO: extract
+		if (agentID >= m_data_ptr->data.size()) {
+			LOG_ERROR("Tried to change data for agentID out of range");
+			
+			#ifdef AS_DEBUG
+				printf("Data has capacity %zu, aid was %u\n", 
+												m_data_ptr->data.size(), agentID);
+			#endif // AS_DEBUG
+
+			return false;
+		}
+
+		//
+		changedDataInfo_t change;
+		change.agentID = agentID;
+
+		//Get the callback ready (so we hold the mutex for as little as possible):
+		auto callback = std::bind(&CL::ClientData::GAcoldDataHandler::transferID,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		change.getNewData_fptr = callback;
+
+		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
+		if (mutex_ptr == NULL) {
+			LOG_ERROR("Aborting Client Data Change");
+			return false;
+		}
+
+		//Actually changes the value:
+		m_data_ptr->data[agentID].id = newValue;
+
+		//Store the callback function to transfer the change:
+		m_changesVector_ptr->push_back(change);
+
+		mutex_ptr->unlock();
+
+		return true;
 	}
 
 	bool CL_API ClientData::GAcoldDataHandler::changeName(uint32_t agentID, std::string newValue)
@@ -395,7 +588,43 @@ namespace CL{
 
 	bool CL_API ClientData::GAstateHandler::changeConnectedGAs(uint32_t agentID, AS::GAflagField_t* newValue_ptr)
 	{
-		return false;
+		//TO DO: extract
+		if (agentID >= m_data_ptr->data.size()) {
+			LOG_ERROR("Tried to change data for agentID out of range");
+			
+			#ifdef AS_DEBUG
+				printf("Data has capacity %zu, aid was %u\n", 
+												m_data_ptr->data.size(), agentID);
+			#endif // AS_DEBUG
+
+			return false;
+		}
+
+		//
+		changedDataInfo_t change;
+		change.agentID = agentID;
+
+		//Get the callback ready (so we hold the mutex for as little as possible):
+		auto callback = std::bind(&CL::ClientData::GAstateHandler::transferConnectedGAs,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		change.getNewData_fptr = callback;
+
+		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
+		if (mutex_ptr == NULL) {
+			LOG_ERROR("Aborting Client Data Change");
+			return false;
+		}
+
+		//Actually changes the value:
+		m_data_ptr->data[agentID].connectedGAs.loadField(newValue_ptr->getField());
+
+		//Store the callback function to transfer the change:
+		m_changesVector_ptr->push_back(change);
+
+		mutex_ptr->unlock();
+
+		return true;
 	}
 
 	bool CL_API ClientData::GAstateHandler::changeLocalAgentsBelongingToThis(uint32_t agentID, AS::LAflagField_t* newValue_ptr)

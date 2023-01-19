@@ -3,9 +3,10 @@
 /*
 //PLANNING:
 //TO DO:
-//- A method for data on each "leaf": implement and test one at a time;
+//- Methods for all the data being changed byt the test APP directly;
 //- Substitute old data transfer test and deal with the unecessary pointer (becomes const);
-//- TODO-CRITICAL: All Methods already stubbed;
+//- TODO-CRITICAL: Test pointer-math transfer idea;
+//- TODO-CRITICAL: All Methods already stubbed or equivalent (depending on test above);
 //- TO DO LATER:
 //-- Relative methods were they'd make sense (addition and multiplication);
 //-- Methods for "all agents" (including for  "entire structure");
@@ -64,6 +65,8 @@ At each step, the AS CALLS CL::retrieveAndEraseClientChanges(&recepient), from C
 * TO DO:
 * - CL::ClientData::BaseFieldHandler;
 */
+
+#include "miscDefines.hpp"
 
 #include "dataMirror.hpp"
 #include "../include/data/agentDataControllers.hpp"
@@ -144,15 +147,21 @@ namespace CL::ClientData {
 
 		class ActionIDsHandler: public BaseSubHandler {
 		public:
-		
-			bool CL_API changeAll(uint32_t agentID, AS::ids_t newValue);
-		
-			bool CL_API changeActiveTo(uint32_t agentID, uint32_t newValue);
-			bool CL_API changeCategoryTo(uint32_t agentID, uint32_t newValue);
-			bool CL_API changeModeTo(uint32_t agentID, uint32_t newValue);
-			bool CL_API changeOriginTo(uint32_t agentID, uint32_t newValue);
-			bool CL_API changeScopeTo(uint32_t agentID, uint32_t newValue);
-			bool CL_API changeTargetTo(uint32_t agentID, uint32_t newValue);
+			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			bool CL_API changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::ids_t newValue);
+			
+			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			bool CL_API changeActiveTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
+			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			bool CL_API changeCategoryTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
+			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			bool CL_API changeModeTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
+			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			bool CL_API changeOriginTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
+			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			bool CL_API changeScopeTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
+			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			bool CL_API changeTargetTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
 
 		protected:
 			friend class ActionsHandler;
@@ -160,14 +169,20 @@ namespace CL::ClientData {
 			bool initialize(ClientData::Handler* parentHandlerPtr, 
 							std::vector <actionData_t>* data_ptr,
 							std::vector <changedDataInfo_t>* changesVector_ptr);
-
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 			
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferActive(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferCategory(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferMode(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferOrigin(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferScope(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferTarget(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 			
 			std::vector <actionData_t>* m_data_ptr;
@@ -175,11 +190,13 @@ namespace CL::ClientData {
 
 		class ActionTickInfoHandler: public BaseSubHandler {
 		public:
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
+			bool CL_API changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::tickInfo_t newValue);
 		
-			bool CL_API changeAll(uint32_t agentID, AS::tickInfo_t newValue);
-		
-			bool CL_API changeInitialTo(uint32_t agentID, uint32_t newValue);
-			bool CL_API changeLastProcessedTo(uint32_t agentID, uint32_t newValue);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
+			bool CL_API changeInitialTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
+			bool CL_API changeLastProcessedTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
 
 		protected:
 			friend class ActionsHandler;
@@ -187,10 +204,12 @@ namespace CL::ClientData {
 			bool initialize(ClientData::Handler* parentHandlerPtr, 
 							std::vector <actionData_t>* data_ptr,
 							std::vector <changedDataInfo_t>* changesVector_ptr);
-
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 			
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferInitial(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferLastProcessed(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 			
 			std::vector <actionData_t>* m_data_ptr;
@@ -198,11 +217,13 @@ namespace CL::ClientData {
 
 		class ActionDetailsHandler: public BaseSubHandler {
 		public:
-		
-			bool CL_API changeAll(uint32_t agentID, AS::details_t newValue);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
+			bool CL_API changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::details_t newValue);
 
-			bool CL_API changeIntensityTo(uint32_t agentID, float newValue);
-			bool CL_API changeAuxTo(uint32_t agentID, float newValue);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
+			bool CL_API changeIntensityTo(bool isGlobal, uint32_t agentID, uint32_t actionID, float newValue);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
+			bool CL_API changeAuxTo(bool isGlobal, uint32_t agentID, uint32_t actionID, float newValue);
 
 		protected:
 			friend class ActionsHandler;
@@ -210,10 +231,12 @@ namespace CL::ClientData {
 			bool initialize(ClientData::Handler* parentHandlerPtr, 
 							std::vector <actionData_t>* data_ptr,
 							std::vector <changedDataInfo_t>* changesVector_ptr);
-
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 			
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferIntensity(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool transferAux(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 			
 			std::vector <actionData_t>* m_data_ptr;
@@ -221,8 +244,8 @@ namespace CL::ClientData {
 
 	class ActionsHandler: public BaseSubHandler {
 	public:
-		
-		bool CL_API changeAll(uint32_t agentID, actionData_t newValue);
+		//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+		bool CL_API changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, actionData_t newValue);
 
 		ActionIDsHandler IDs;
 		ActionTickInfoHandler tickInfo;
@@ -235,6 +258,7 @@ namespace CL::ClientData {
 						std::vector <actionData_t>* data_ptr,
 						std::vector <changedDataInfo_t>* changesVector_ptr);
 
+		//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 		std::vector <actionData_t>* m_data_ptr;
@@ -273,7 +297,7 @@ namespace CL::ClientData {
 		
 			bool CL_API changeAll(uint32_t agentID, AS::LAneighborRelations_t* newValue_ptr);
 
-			//RO DO: Put IDs on low and high 16 bits of changes.agentId
+			//TO DO: Put IDs on low and high 16 bits of changes.agentId
 			bool CL_API changeStance(uint32_t ofAgentID, uint32_t towardsAgentID, int newValue);
 			bool CL_API changeDisposition(uint32_t ofAgentID, uint32_t towardsAgentID, 
 				                                                       float newValue);
@@ -632,8 +656,8 @@ namespace CL::ClientData {
 
 		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		
-		bool transferGAresources(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-		bool transferLAstrenghtTotal(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferConnectedGAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferLocalAgentsBelongingToThis(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		
 		StateControllerGA* m_data_ptr;
 	};

@@ -153,7 +153,7 @@ bool testSendingClientDataAndSaving(void) {
 	
 	bool result = cdHandler_ptr->LAstate.parameters.resources.changeCurrentTo(id, 
 															       (float)TST_RES_CHANGE);
-																   
+
 	if (!result) {
 		LOG_ERROR("Test failed issuing change!");
 		return false;
@@ -259,6 +259,14 @@ bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 
 bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 
+	//networkParams.comment = comentário com X na primeira letra
+	//ID ultima GA = TST_GA_ID
+	//connectedGAs ultima GA = loadField(TST_GA_CONNECTIONS)
+	//exernalGuard ultima LA = TST_LA_REINFORCEMENT
+	//incentivesAndConstraintsFromGA[TST_CHANGED_CATEGORY][TST_CHANGED_MODE] = (float)TST_LA_OFFSET
+	//^na ultima LA
+	//processingAux ultima ação LA = TST_LAST_ACTION_AUX
+
 	LOG_WARN("TA will try to change some data in CL so AS can check it...");
 
 	CL::mirrorData_ptr->networkParams.comment[0] = TST_COMMENT_LETTER_CHANGE;
@@ -277,7 +285,6 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 	CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data.pop_back();
 	newLAdstate.parameters.strenght.externalGuard = TST_LA_REINFORCEMENT;
 	CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data.push_back(newLAdstate);
-
 
 	LA::decisionData_t newLAdecision = CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data.back();
 	CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data.pop_back();

@@ -32,6 +32,7 @@ namespace AS {
 	//WARNING: any updates to this should be reflected on the initialization of
 	//Actions::availableVariations
 
+	//TO DO: WARNING: MAY NOT BE PORTABLE?
 	typedef struct {
 		uint32_t active : 1;
 		uint32_t origin : 13;
@@ -43,6 +44,12 @@ namespace AS {
 		enum class fields { ACTIVE, ORIGIN, TARGET, CATEGORY, SCOPE, MODE,
 			                TOTAL_ACTION_FIELDS };
 	} AS_API ids_t;
+
+	//TO DO: WARNING: MAY NOT BE PORTABLE?
+	typedef union {
+		ids_t IDs;
+		uint32_t IDsAsUnsigned;
+	} AS_API IDsToUnsigned_u;
 
 	typedef struct {
 		uint32_t initial;
