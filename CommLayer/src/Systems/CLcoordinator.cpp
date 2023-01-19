@@ -12,7 +12,7 @@
 namespace CL {
 
 	DataMirrorSystem mirror;
-	CL::ClientData::Handler* clientData_ptr;
+	CL::ClientData::Handler* clientData_ptr = NULL;
 
 	mirror_t* mirrorData_ptr; //WARNING: bypasses mirror instance
 	//TO DO: fix, this is just for initial testing
@@ -43,18 +43,52 @@ namespace CL {
 
 	bool createClientDataHandler(AS::networkParameters_t params) {
 
-		clientData_ptr = new CL::ClientData::Handler(params);
+		LOG_TRACE("Will try to create Client Data Handler...");
+
+		CL::ClientData::Handler* tempHandler_ptr = new CL::ClientData::Handler(params);
+
+		if (tempHandler_ptr == NULL) {
+			LOG_CRITICAL("New Client Data Handler Pointer is Null. Will abort creation");
+			return false;
+		}
+
+		if (!tempHandler_ptr->hasInitialized()) {
+			LOG_ERROR("New Client Data Handler failed to initialize. Will delete and abort creation");
+			delete tempHandler_ptr;
+			tempHandler_ptr = NULL;
+			return false;
+		}
+
+		if (clientData_ptr != NULL) {
+			LOG_TRACE("Handler already exists, will delete old and substitute");
+			delete clientData_ptr;
+		}
+	
+		clientData_ptr = tempHandler_ptr;
+
+		tempHandler_ptr = NULL;
+
+		LOG_TRACE("New handler created");
 
 		bool result = clientData_ptr->hasInitialized();
 
 		if (!result) {
-			LOG_CRITICAL("Failed to create or initialize Client Data Handler instance!");
+			LOG_CRITICAL("Failed to initialize Client Data Handler instance!");
 			return false;
 		}
 		else {
-			LOG_INFO("Client Data Handler instantiated and initialized");
+			LOG_INFO("Client Data Handler initialized");
 			return true;
 		}
+	}
+
+	ClientData::Handler* getDataHandlerPtr() {
+		if ((clientData_ptr == NULL) || (!clientData_ptr->hasInitialized())) {
+			LOG_ERROR("Trying to get unititalized or inexistent Client Data Handler");
+			return NULL;
+		}
+
+		return clientData_ptr;
 	}
 
 	bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,

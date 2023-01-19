@@ -7,6 +7,9 @@
 
 namespace CL {
 	CL_API bool init();
+
+	//if the handler already exists, will delete and re-instantiate and initialize it
+	//is called whenever a network is loaded
 	CL_API bool createClientDataHandler(AS::networkParameters_t params);
 
 	CL_API bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,

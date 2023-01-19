@@ -80,12 +80,8 @@ namespace CL::ClientData {
 	} ASdataControlPtrs_t;
 
 	typedef struct {
-		int dataCategory;
-		int agent;
-		int baseField;
-		int subField[AS_MAX_SUB_FIELD_DEPTH];
-		int lastSubfield;
-		bool hasChanges;
+		uint32_t agentID;
+		bool (*getNewData_fptr)(uint32_t id, ASdataControlPtrs_t recepientPtrs);
 	} changedDataInfo_t;
 
 
@@ -167,7 +163,7 @@ namespace CL::ClientData {
 				bool initialize(std::mutex* mutex_ptr, StateControllerLA* data_ptr,
 								std::vector <changedDataInfo_t>* changesVector_ptr);
 
-				bool transferCurrent(uint32_t agentID, AS::resources_t* recepient);
+				bool transferCurrent(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 				bool changeResources(uint32_t agentID, resources_t newResources) { return false; }
 				

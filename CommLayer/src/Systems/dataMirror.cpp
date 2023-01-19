@@ -20,7 +20,7 @@ namespace CL {
 
 		bool result = data.actionMirror.initialize();
 		if (!result) {
-			LOG_CRITICAL("Couldn't initialize Data Mirror System!");
+			LOG_CRITICAL("Couldn't initialize Action Mirror System!");
 			return false;
 		}
 
@@ -28,7 +28,7 @@ namespace CL {
 
 		result = createAgentDataControllers();
 		if (!result) {
-			LOG_CRITICAL("Aborting...");
+			LOG_CRITICAL("Couldn't create AgentDataControllers. Aborting...");
 			m_isInitialized = false;
 			m_hasData = false;
 			return false;
@@ -68,7 +68,7 @@ namespace CL {
 	}
 
 	bool DataMirrorSystem::createAgentDataControllers() {
-		LOG_TRACE("Trying to create Agent Data Controllers\n");
+		LOG_TRACE("Trying to create Agent Data Controllers");
 
 		if (!m_isInitialized) {
 			LOG_ERROR("Can't create controllers before initializing the Data Mirror System");
@@ -76,7 +76,7 @@ namespace CL {
 		}
 
 		if (data.agentMirrorPtrs.haveBeenCreated) {
-			LOG_WARN("Data Controllers already exist: aborting re-creation (returns true)\n");
+			LOG_WARN("Data Controllers already exist: aborting re-creation (returns true)");
 			return true;
 		}
 		

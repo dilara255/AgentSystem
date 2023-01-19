@@ -11,6 +11,18 @@
 
 namespace CL {
 
+    bool ActionMirrorController::initialize() {
+        LOG_TRACE("Initializing ActionMirrorController");
+
+        m_maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
+        dataLAs.reserve((int64_t)m_maxActionsPerAgent * MAX_LA_QUANTITY);
+        dataGAs.reserve((int64_t)m_maxActionsPerAgent * MAX_GA_QUANTITY);
+        m_isInitialized = true;
+
+        LOG_INFO("ActionMirrorController initialized");
+        return m_isInitialized;
+    }
+
     bool ActionMirrorController::getAction(int localOrGlobal, uint32_t actionID,
                                                         actionData_t* recepient) const {
         

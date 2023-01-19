@@ -5,12 +5,14 @@ namespace CL {
 	//Initializations:
 
 	ClientData::Handler::Handler(AS::networkParameters_t params) {
-		LOG_TRACE("Will construct and initialize Client Data Handler on the CL");
+		LOG_TRACE("Will construct and initialize Client Data Handler on the CL...");
 
 		bool result = m_mirrorSystem.initialize(&m_data_ptr);
 
 		int referenceNetworkSize = (params.numberGAs + params.numberLAs) * params.maxActions;
 		m_changes.reserve(referenceNetworkSize);
+
+		LOG_TRACE("Changes vector size set. Will initialize Handlers for each Data Category...");
 
 		result &= networkParameters.initialize(&m_mutex, &m_data_ptr->networkParams, 
 			                                   &m_changes);
@@ -34,13 +36,16 @@ namespace CL {
 			LOG_CRITICAL("Something went wrong initializing Client Data Handler on the CL. May catch fire.");
 		}
 		else {
-			LOG_INFO("Client Data Handler constructed initialized on the CL");
+			LOG_INFO("Client Data Handler constructed and initialized on the CL");
 		}
 	}
 
 	bool ClientData::LAstateHandler::initialize(std::mutex* mutex_ptr,
-		StateControllerLA* data_ptr,
-		std::vector <changedDataInfo_t>* changesVector_ptr) {
+										StateControllerLA* data_ptr,
+										std::vector <changedDataInfo_t>* changesVector_ptr) {
+		
+		LOG_TRACE("Initializing LAstate Handler");
+
 		if ((mutex_ptr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
 			LOG_ERROR("LA State Client Data Handler failed to initialize - received null vectors");
 			return false;
@@ -50,6 +55,7 @@ namespace CL {
 		m_data_ptr = data_ptr;
 		m_changesVector_ptr = changesVector_ptr;
 
+		LOG_TRACE("Initializing Handlers for the fields of LAstate");
 		bool result = parameters.initialize(mutex_ptr, data_ptr, changesVector_ptr);
 		//TO DO: the rest of the initialization
 
@@ -66,8 +72,11 @@ namespace CL {
 	bool ClientData::LAparametersHandler::initialize(std::mutex* mutex_ptr,
 										  StateControllerLA* data_ptr,
 										  std::vector <changedDataInfo_t>* changesVector_ptr) {
+		
+		LOG_TRACE("- Initializing LA Parameters Handler");
+
 		if ((mutex_ptr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
-			LOG_ERROR("LA Parameters Client Data Handler failed to initialize - received null vectors");
+			LOG_ERROR("- LA Parameters Client Data Handler failed to initialize - received null vectors");
 			return false;
 		}
 
@@ -75,15 +84,16 @@ namespace CL {
 		m_data_ptr = data_ptr;
 		m_changesVector_ptr = changesVector_ptr;
 
+		LOG_TRACE("- Initializing Handlers for the fields of LA Parameters");
 		bool result = resources.initialize(mutex_ptr, data_ptr, changesVector_ptr);
 		//TO DO: the rest of the initialization
 		
 		if (!result) {
-			LOG_ERROR("LA Parameters Client Data Handler failed to initialize some of its components");
+			LOG_ERROR("- LA Parameters Client Data Handler failed to initialize some of its components");
 			return false;
 		}
 		else {
-			LOG_INFO("LA Parameters Client Data Handler initialized");
+			LOG_INFO("- LA Parameters Client Data Handler initialized");
 			return true;
 		}	
 	}
@@ -91,8 +101,11 @@ namespace CL {
 	bool ClientData::LAresourcesHandler::initialize(std::mutex* mutex_ptr, 
 		                                 StateControllerLA* data_ptr,
 		                                 std::vector <changedDataInfo_t>* changesVector_ptr){
+		
+		LOG_TRACE("-- Initializing LA Resources Handler");
+		
 		if ((mutex_ptr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
-			LOG_ERROR("LA Resources Client Data Handler failed to initialize - received null vectors");
+			LOG_ERROR("-- LA Resources Client Data Handler failed to initialize - received null vectors");
 			return false;
 		}
 		
@@ -100,7 +113,7 @@ namespace CL {
 		m_data_ptr = data_ptr;
 		m_changesVector_ptr = changesVector_ptr;
 
-		LOG_INFO("LA Resources Client Data Handler initialized");
+		LOG_INFO("-- LA Resources Client Data Handler initialized");
 		return true;
 	}
 
@@ -108,46 +121,12 @@ namespace CL {
 	bool ClientData::Handler::processChange(ClientData::changedDataInfo_t change, 
 		                                    ASdataControlPtrs_t recepientPtrs) {
 		
-		if (!change.hasChanges) {
-			LOG_WARN("Reached a Client Data Change marker which is innactive. Won't transfer");
+		if (change.getNewData_fptr == NULL) {
+			LOG_ERROR("Change has invalid processing function pointer, can't transfer data");
 			return false;
 		}
 
-		bool isLAstate = change.dataCategory == (int)AS::DataCategory::LA_STATE;
-		if (isLAstate) {
-			
-			int id = change.agent;
-			if (id > recepientPtrs.params_ptr->numberLAs) {
-				LOG_ERROR("Agent Changed by the Client doesn't exist anymore in the AS. Won't transfer changes");
-				return false;
-			}
-
-			auto dataPtr = recepientPtrs.agentData_ptr->LAstate_ptr->getDirectDataPtr();
-			LA::stateData_t* state_ptr = &(*dataPtr)[id];
-
-			switch (change.baseField) {
-
-			case (int)LA::stateData_t::fields::PARAMETERS:
-
-				AS::LAparameters_t* params_ptr = &(state_ptr->parameters);
-
-				switch (change.subField[0]) {
-
-				case (int)AS::LAparameters_t::fields::RESOURCES:
-
-					AS::resources_t* resources_ptr = &(params_ptr->resources);
-
-					switch (change.subField[1]) {
-
-					case (int)AS::resources_t::fields::CURRENT:
-						return LAstate.parameters.resources.transferCurrent(id, resources_ptr);
-					}
-				}
-			}
-		}
-
-		LOG_ERROR("Couldn't parse which field has changes, won't transfer");
-		return false;
+		return change.getNewData_fptr(change.agentID, recepientPtrs);
 	}
 
 	bool ClientData::Handler::sendNewClientData(ASdataControlPtrs_t recepientPtrs) {
@@ -163,9 +142,25 @@ namespace CL {
 	}
 
 	bool ClientData::LAresourcesHandler::transferCurrent(uint32_t agentID, 
-		                                                 AS::resources_t* recepient){
+													ASdataControlPtrs_t recepientPtrs){
 		
-		recepient->current = m_data_ptr->data[agentID].parameters.resources.current;
+		//TO DO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->LAstate_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		LA::StateController* LAdata_ptr = recepientPtrs.agentData_ptr->LAstate_ptr;
+		std::vector <LA::stateData_t>* dataVector_ptr = LAdata_ptr->getDirectDataPtr();
+		LA::stateData_t* agentData_ptr = &(dataVector_ptr->at(agentID));
+		
+		agentData_ptr->parameters.resources.current =
+			m_data_ptr->data.at(agentID).parameters.resources.current;
+		
 		return true;
 	}
 
@@ -175,7 +170,7 @@ namespace CL {
 			return false;
 		}
 
-		//Extract this as a method! Maybe make mutex warper class
+		//TO DO: Extract this as a method! Maybe make mutex warper class
 		int tries = 0;
 		bool acquired = false;
 		while (!acquired && (tries < MAX_MUTEX_TRY_LOCKS) ) {
@@ -191,15 +186,10 @@ namespace CL {
 
 		m_data_ptr->data[agentID].parameters.resources.current = newValue;
 
-		//Extract this too
+		//TO DO: Extract this too
 		changedDataInfo_t change;
-		change.agent = agentID;
-		change.dataCategory = (int)AS::DataCategory::LA_STATE;
-		change.baseField = (int)LA::stateData_t::fields::PARAMETERS;
-		change.subField[0] = (int)AS::LAparameters_t::fields::RESOURCES;
-		change.subField[1] = (int)AS::resources_t::fields::CURRENT;
-		change.lastSubfield = 1;
-		change.hasChanges = true;
+		change.agentID = agentID;
+		
 
 		m_changesVector_ptr->push_back(change);
 
