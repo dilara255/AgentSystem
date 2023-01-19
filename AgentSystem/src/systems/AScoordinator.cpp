@@ -6,6 +6,8 @@ This includes:
 - Access/references to the different systems;
 - Bulk data transfer to/from CL;
 (may separete some if this file gets too large)
+
+TODO-CRITICAL: Break up this file. Main loop should probably stay, move most of the rest
 */
 
 #include "miscStdHeaders.h"
@@ -80,6 +82,35 @@ bool AS::run() {
 	return true;
 }
 
+//Main loop STARTS sleeping, does its thing*, consumes Client Changes and sends data to the CL.
+//After this it just updates timmings. Ticks are updated right before AS sends its data.
+//*includes progressing all actions and updating the states and the decisions of each agent;
+//TO DO: implement what is described : )
+void AS::mainLoop() {
+	uint64_t initialTick = currentNetworkParams.mainLoopTicks;
+
+	//std::chrono::microseconds stepStartTime;
+	std::chrono::microseconds stepTimeMicro = std::chrono::microseconds(0);
+	std::chrono::microseconds timeToSleepMicro;
+
+	do {
+		std::this_thread::sleep_for(timeToSleepMicro);
+		//stepStartTime = blah (get the current time in micro)
+		
+		//do stuff
+
+		CL::getNewClientData(currentNetworkParams_ptr, &agentDataControllerPtrs,
+			                                           &(actionSystem.data));
+		
+		currentNetworkParams.mainLoopTicks++;
+		sendReplacementDataToCL();	
+
+		//stepTimeMicro = "current time in micro" - stepStartTime
+		timeToSleepMicro = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
+		timeToSleepMicro -= stepTimeMicro;
+	} while (shouldMainLoopBeRunning);
+}
+
 //Stops AS execution thread, marks it as stopped and clears the stored thread::id;
 bool AS::stop() {
 	LOG_TRACE("Stopping Main Loop Thread...");
@@ -106,16 +137,6 @@ bool AS::stop() {
 		LOG_ERROR("Main Loop Thread was supposed to be active, but was not!");
 		return false;
 	}	
-}
-
-void AS::mainLoop() {
-	uint64_t initialTick = currentNetworkParams.mainLoopTicks;
-	
-	do {
-		sendReplacementDataToCL();
-		currentNetworkParams.mainLoopTicks++;
-		std::this_thread::sleep_for(std::chrono::milliseconds(TST_MAINLOOP_FREQUENCY_MS));
-	} while (shouldMainLoopBeRunning);
 }
 
 bool AS::isMainLoopRunning() {
@@ -285,19 +306,9 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite) {
 	LOG_INFO("Trying to save network to a file...");
 
-	bool result;
-	bool shouldResumeThread = false;
-
-	if (shouldMainLoopBeRunning) {
-		LOG_TRACE("Will stop main loop (if saving fails, mainLoop is not resumed either)");
-		result = stop();
-		if (result) {
-			shouldResumeThread = true;
-			LOG_TRACE("Will resume main loop after saving");
-		}
-		else {
-			LOG_WARN("Something weird is going on with the Main Loop Thread. Saving will proceed but thread won't be resumed...");
-		}
+	if (!CL::blockClientDataForAmoment()) {
+		LOG_ERROR("Couldn't acquire mutex to synchronize with Client Changes. Will abort saving.");
+		return false;
 	}
 
 	if (!isInitialized) {
@@ -308,6 +319,19 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite) {
 	if (!(agentDataControllerPtrs.haveData && currentNetworkParams.isNetworkInitialized)) {
 		LOG_ERROR("Network not properly initialized. Can't save. Aborting.");
 		return false;
+	}
+
+	bool shouldResumeThread = false;
+
+	if (shouldMainLoopBeRunning) {
+		LOG_TRACE("Will stop main loop (if saving fails, mainLoop is not resumed either)");
+		if(stop()){
+			shouldResumeThread = true;
+			LOG_TRACE("Will resume main loop after saving");
+		}
+		else {
+			LOG_WARN("Something weird is going on with the Main Loop Thread. Saving will proceed but thread won't be resumed...");
+		}
 	}
 
 	if (name == "") {
@@ -328,8 +352,8 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite) {
 
 	LOG_TRACE("File Acquired. Will save network");
 	
-	result = createNetworkFileFromData(fp, agentDataControllers_cptr, 
-									        currentNetworkParams_cptr,
+	bool result = createNetworkFileFromData(fp, agentDataControllers_cptr, 
+		 							        currentNetworkParams_cptr,
 		                                    actionDataController_cptr);
 	if (!result) {
 		LOG_ERROR("Saving failed!");

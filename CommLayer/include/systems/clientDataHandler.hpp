@@ -3,7 +3,7 @@
 /*
 //PLANNING:
 //TO DO:
-//- Implement and test a "vertical slice": currentResources transfer for a given agente;
+//- Implement and test a "vertical slice": currentResources transfer for a given agent;
 //-- Simple test of what's already in place;
 //- Base Class, inheritances and "complete stub" for the rest;
 //- A method for data on each "leaf": implement and test one at a time;
@@ -84,10 +84,11 @@ namespace CL::ClientData {
 		bool (*getNewData_fptr)(uint32_t id, ASdataControlPtrs_t recepientPtrs);
 	} changedDataInfo_t;
 
+	class Handler; //forwar declaration. Actual declaration way down bellow
 
 	class NetworkParameterDataHandler {
 	public:
-		bool initialize(std::mutex* mutex_ptr, networkParameters_t* data_ptr,
+		bool initialize(ClientData::Handler* parentHandlerPtr, networkParameters_t* data_ptr,
 			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
 
 		//full insertion
@@ -95,6 +96,7 @@ namespace CL::ClientData {
 		//per-simple-field insertion methods
 
 	private:
+		//handler_ptr
 		//data_ptr
 		//changes_ptr
 	};
@@ -102,7 +104,7 @@ namespace CL::ClientData {
 
 	class LAcoldDataHandler {
 	public:
-		bool initialize(std::mutex* mutex_ptr, ColdDataControllerLA* data_ptr,
+		bool initialize(ClientData::Handler* parentHandlerPtr, ColdDataControllerLA* data_ptr,
 			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
 
 		//full insertion
@@ -110,6 +112,7 @@ namespace CL::ClientData {
 		//per-simple-field insertion methods
 
 	private:
+		//handler_ptr
 		//data_ptr
 		//changes_ptr
 	};
@@ -126,6 +129,7 @@ namespace CL::ClientData {
 			//per-simple-field insertion methods
 
 		private:
+			//handler_ptr
 			//data_ptr
 			//changes_ptr
 		};
@@ -139,6 +143,7 @@ namespace CL::ClientData {
 				//per-simple-field insertion methods
 
 			private:
+				//handler_ptr
 				//data_ptr
 				//changes_ptr
 			};
@@ -154,25 +159,31 @@ namespace CL::ClientData {
 			PositionHandler position;
 
 		private:
+			//handler_ptr
 			//data_ptr
 			//changes_ptr
 		};
 		
 			class LAresourcesHandler {
 			public:
-				bool initialize(std::mutex* mutex_ptr, StateControllerLA* data_ptr,
+				bool initialize(ClientData::Handler* parentHandlerPtr, 
+					            StateControllerLA* data_ptr,
 								std::vector <changedDataInfo_t>* changesVector_ptr);
 
-				bool transferCurrent(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-
+				//Blocks Client Data.
 				bool changeResources(uint32_t agentID, resources_t newResources) { return false; }
 				
+				//Blocks Client Data.
 				bool changeCurrentTo(uint32_t agentID, float newValue);
 
+				//Blocks Client Data.
 				bool changeIncomeTo(uint32_t agentID, float newValue) { return false; }
 
 			private:
-				std::mutex* m_mutex_ptr;
+				//Client Data should be blocked upstream from this
+				bool transferCurrent(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+
+				ClientData::Handler* m_parentHandlerPtr;
 				StateControllerLA* m_data_ptr;
 				std::vector <changedDataInfo_t>* m_changesVector_ptr;
 			};
@@ -186,13 +197,14 @@ namespace CL::ClientData {
 				//per-simple-field insertion methods
 
 			private:
+				//handler_ptr
 				//data_ptr
 				//changes_ptr
 			};
 
 		class LAparametersHandler {
 		public:
-			bool initialize(std::mutex* mutex_ptr, StateControllerLA* data_ptr,
+			bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
 				            std::vector <changedDataInfo_t>* changesVector_ptr);
 
 			//full insertion
@@ -203,14 +215,14 @@ namespace CL::ClientData {
 			LAstrenghtHandler strenght;
 
 		private:
-			std::mutex* m_mutex_ptr;
+			ClientData::Handler* m_parentHandlerPtr;
 			StateControllerLA* m_data_ptr;
 			std::vector <changedDataInfo_t>* m_changesVector_ptr;
 		};
 
 	class LAstateHandler {
 	public:
-		bool initialize(std::mutex* mutex_ptr, StateControllerLA* data_ptr,
+		bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
 			            std::vector <changedDataInfo_t>* changesVector_ptr);
 
 		//full insertion
@@ -222,7 +234,7 @@ namespace CL::ClientData {
 		LAparametersHandler parameters;
 
 	private:
-		std::mutex* m_mutex_ptr;
+		ClientData::Handler* m_parentHandlerPtr;
 		StateControllerLA* m_data_ptr;
 		std::vector <changedDataInfo_t>* m_changesVector_ptr;
 	};
@@ -239,13 +251,14 @@ namespace CL::ClientData {
 			//per-simple-field insertion methods
 
 		private:
+			//handler_ptr
 			//data_ptr
 			//changes_ptr
 		};
 
 	class LAdecisionDataHandler {
 	public:
-		bool initialize(std::mutex* mutex_ptr, DecisionSystemLA* data_ptr,
+		bool initialize(ClientData::Handler* parentHandlerPtr, DecisionSystemLA* data_ptr,
 			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
 
 		//full insertion
@@ -255,6 +268,7 @@ namespace CL::ClientData {
 		LApersonalityHandler offsets;
 
 	private:
+		//handler_ptr
 		//data_ptr
 		//changes_ptr
 	};
@@ -262,7 +276,7 @@ namespace CL::ClientData {
 
 	class GAcoldDataHandler {
 	public:
-		bool initialize(std::mutex* mutex_ptr, ColdDataControllerGA* data_ptr,
+		bool initialize(ClientData::Handler* parentHandlerPtr, ColdDataControllerGA* data_ptr,
 			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
 
 		//full insertion
@@ -270,6 +284,7 @@ namespace CL::ClientData {
 		//per-simple-field insertion methods
 
 	private:
+		//handler_ptr
 		//data_ptr
 		//changes_ptr
 	};
@@ -286,6 +301,7 @@ namespace CL::ClientData {
 			//per-simple-field insertion methods
 
 		private:
+			//handler_ptr
 			//data_ptr
 			//changes_ptr
 		};
@@ -301,13 +317,14 @@ namespace CL::ClientData {
 			LAresourcesHandler LAresources;
 
 		private:
+			//handler_ptr
 			//data_ptr
 			//changes_ptr
 	};
 
 	class GAstateHandler {
 	public:
-		bool initialize(std::mutex* mutex_ptr, StateControllerGA* data_ptr,
+		bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerGA* data_ptr,
 			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
 
 		//full insertion
@@ -318,6 +335,7 @@ namespace CL::ClientData {
 		GAparametersHandler parameters;
 
 	private:
+		//handler_ptr
 		//data_ptr
 		//changes_ptr
 	};
@@ -325,7 +343,7 @@ namespace CL::ClientData {
 		
 	class GAdecisionDataHandler {
 	public:
-		bool initialize(std::mutex* mutex_ptr, DecisionSystemGA* data_ptr,
+		bool initialize(ClientData::Handler* parentHandlerPtr, DecisionSystemGA* data_ptr,
 			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
 
 		//full insertion
@@ -333,6 +351,7 @@ namespace CL::ClientData {
 		//per-simple-field insertion methods
 
 	private:
+		//handler_ptr
 		//data_ptr
 		//changes_ptr
 	};
@@ -349,6 +368,7 @@ namespace CL::ClientData {
 			//per-simple-field insertion methods
 
 		private:
+			//handler_ptr
 			//data_ptr
 			//changes_ptr
 		};
@@ -362,6 +382,7 @@ namespace CL::ClientData {
 			//per-simple-field insertion methods
 
 		private:
+			//handler_ptr
 			//data_ptr
 			//changes_ptr
 		};
@@ -375,13 +396,14 @@ namespace CL::ClientData {
 			//per-simple-field insertion methods
 
 		private:
+			//handler_ptr
 			//data_ptr
 			//changes_ptr
 		};
 
 	class ActionsHandler {
 	public:
-		bool initialize(std::mutex* mutex_ptr, std::vector <actionData_t>* data_ptr,
+		bool initialize(ClientData::Handler* parentHandlerPtr, std::vector <actionData_t>* data_ptr,
 			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
 
 		//full insertion
@@ -393,6 +415,7 @@ namespace CL::ClientData {
 		ActionDetailsHandler details;
 
 	private:
+		//handler_ptr
 		//data_ptr
 		//changes_ptr
 	};
@@ -405,8 +428,10 @@ namespace CL::ClientData {
 
 		bool sendNewClientData(ASdataControlPtrs_t recepientPtrs);
 
-		bool processChange(ClientData::changedDataInfo_t change, 
-			               ASdataControlPtrs_t recepientPtrs);
+		//Returns NULL on time-out or a pointer to the acquired mutex otherwise
+		std::mutex* acquireMutex();
+
+		bool hasInitialized() const { return m_initialized; }
 
 		NetworkParameterDataHandler networkParameters;
 
@@ -421,9 +446,10 @@ namespace CL::ClientData {
 		ActionsHandler LAaction;
 		ActionsHandler GAaction;
 
-		bool hasInitialized() const { return m_initialized; }
-
 	private:
+		bool processChange(ClientData::changedDataInfo_t change,
+			ASdataControlPtrs_t recepientPtrs);
+
 		std::mutex m_mutex;
 		DataMirrorSystem m_mirrorSystem;
 		mirror_t* m_data_ptr;

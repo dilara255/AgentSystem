@@ -11,11 +11,11 @@
 
 namespace CL {
 
-	DataMirrorSystem mirror;
-	CL::ClientData::Handler* clientData_ptr = NULL;
-
+	DataMirrorSystem mirror; //TO DO: change to ASmirror
 	mirror_t* mirrorData_ptr; //WARNING: bypasses mirror instance
 	//TO DO: fix, this is just for initial testing
+
+	CL::ClientData::Handler* clientData_ptr = NULL;
 
 	bool init() {
 		LOG_INFO("initializing CL...");
@@ -89,6 +89,23 @@ namespace CL {
 		}
 
 		return clientData_ptr;
+	}
+
+	bool blockClientDataForAmoment() {
+		if (clientData_ptr == NULL) {
+			LOG_WARN("Client Data not initialized. Will proceed without blocking, but something may be wrong");
+			return true;
+		}
+
+		std::mutex* mutex_ptr = clientData_ptr->acquireMutex();
+		
+		if (mutex_ptr == NULL) {
+			LOG_ERROR("Client Data blocking failed!");
+			return false;
+		}
+
+		mutex_ptr->unlock();
+		return true;
 	}
 
 	bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,
