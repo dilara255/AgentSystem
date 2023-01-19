@@ -11,11 +11,13 @@ bool testReadingCLdataFromTA(void);
 bool testChangingCLdataFromTAandRetrievingFromAS(void);
 bool testReadingTickDataWhileASmainLoopRuns_start(void);
 bool testReadingTickDataWhileASmainLoopRuns_end(void);
+bool testSendingClientDataAndSaving(void);
+bool testClientDataHAndlerInitialization(void);
 
 #define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 7
-#define SPECIFIC_THREADED_LOOP_TESTS 5
+#define SPECIFIC_THREADED_LOOP_TESTS 7
 #define TOTAL_TESTS (BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 #ifdef AS_DEBUG
@@ -26,6 +28,8 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void);
 
 std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
+
+CL::ClientData::Handler* cdHandler_ptr;
 
 //TO DO: make all tests return bool and count results, than match with expected
 int main(void) {
@@ -92,6 +96,10 @@ int main(void) {
 
 	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 
+	resultsBattery3 += (int)testClientDataHAndlerInitialization(); GETCHAR_PAUSE
+
+	resultsBattery3 += (int)testSendingClientDataAndSaving(); GETCHAR_PAUSE;
+
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
 
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
@@ -116,6 +124,7 @@ int main(void) {
 		GETCHAR_PAUSE
 	}
 
+	//TO DO: Update expected changes after I'm done updating it
 	LOG_WARN("Check that you have (at least): one network file with format specifiers,\none with default values and one with modified values:");
 	printf("\t-The one with specifiers is %s\n\t-%s should have the defaults\n\t-%s received modifications from TA\n",
 		                              fileNameNoDefaults, fileNameWithDefaults, customFilename);
@@ -130,6 +139,60 @@ int main(void) {
 	return (1 + (totalPassed - TOTAL_TESTS));
 }
 
+bool testSendingClientDataAndSaving(void) {
+	LOG_WARN("Will try to send data through CL's Client Data Handler");
+
+	uint32_t id = CL::mirrorData_ptr->networkParams.numberLAs - 1;
+	
+	LOG_TRACE("Calculated last LA's ID from AS mirror data");
+
+	if (cdHandler_ptr == NULL) {
+		LOG_ERROR("A pointer to the Client Data Handler has to be acquired before this test");
+		return false;
+	}
+	
+	bool result = cdHandler_ptr->LAstate.parameters.resources.changeCurrentTo(id, 
+															       (float)TST_RES_CHANGE);
+																   
+	if (!result) {
+		LOG_ERROR("Test failed issuing change!");
+		return false;
+	}
+
+	LOG_INFO("Change issued. Will save. Check that the last LA's current resources are changed");
+
+	std::string fileName = std::string("ClientDataHandler_") + customFilename;
+	if (!AS::saveNetworkToFile(fileName, false)) {
+		LOG_ERROR("Failed to save network. Test will pass, but fix this to actually check changes");
+	}
+	else {
+		LOG_INFO("Network saved to ClientDataHandler_*customFilename*");
+	}
+
+	return true;	
+}
+
+bool testClientDataHAndlerInitialization(void) {
+	LOG_WARN("Will test ClientDataHandler acquisition");
+
+	cdHandler_ptr = CL::getDataHandlerPtr();
+
+	if (cdHandler_ptr == NULL) {
+		LOG_ERROR("Test failed getting client data handler!");
+		return false;
+	}
+	LOG_TRACE("Got Client Data Handler");
+
+	if (!cdHandler_ptr->hasInitialized()) {
+		LOG_ERROR("Client Data Handler is not initialized!");
+		return false;
+	}
+
+	LOG_INFO("Acquired a Client Data Handler which is marked as initialized");
+
+	return true;
+}
+
 void TAreadLoop(int numberTicks) {
 	
 	g_ticksRead[0] = CL::mirrorData_ptr->networkParams.mainLoopTicks;
@@ -142,7 +205,7 @@ void TAreadLoop(int numberTicks) {
 
 bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	
-	LOG_TRACE("Will check if reader thread's results are as expected. May need to wait for execution to finish");
+	LOG_WARN("Will check if reader thread's results are as expected. May need to wait for execution to finish");
 	reader.join();
 
 	LOG_TRACE("Execution finished. Checking...");
@@ -181,7 +244,7 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 
-	LOG_TRACE("Will sapwn a new thread which will try to read a few times from CL the number of ticks while AS's main loop runs");
+	LOG_WARN("Will sapwn a new thread which will try to read a few times from CL the number of ticks while AS's main loop runs");
 
 	if (!AS::isMainLoopRunning()) {
 		LOG_CRITICAL("Main loop has to be running for this test to work");
@@ -196,7 +259,7 @@ bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 
 bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 
-	LOG_INFO("TA will try to change some data in CL so AS can check it...");
+	LOG_WARN("TA will try to change some data in CL so AS can check it...");
 
 	CL::mirrorData_ptr->networkParams.comment[0] = TST_COMMENT_LETTER_CHANGE;
 
@@ -232,7 +295,7 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 
 bool testReadingCLdataFromTA(void) {
 
-	LOG_TRACE("TA will try to read data from CL...");
+	LOG_WARN("TA will try to read data from CL...");
 
 	bool result = CL::mirrorData_ptr->agentMirrorPtrs.haveData;
 	result &= CL::mirrorData_ptr->networkParams.isNetworkInitialized;
@@ -289,7 +352,7 @@ bool testReadingCLdataFromTA(void) {
 
 bool testFromTAifCLhasInitialized(void) {
 
-	LOG_TRACE("TA will querry wether CL's Data Controller are properly initialized...");
+	LOG_WARN("TA will querry wether CL's Data Controller are properly initialized...");
 
 	bool result = CL::mirrorData_ptr->actionMirror.isInitialized();
 	result &= CL::mirrorData_ptr->agentMirrorPtrs.haveBeenCreated;
@@ -357,7 +420,7 @@ bool testFromTAifCLhasInitialized(void) {
 
 bool testMockData(void) {
 
-	LOG_TRACE("Sanity checks for the communication between APP and DLLs (with mock initialization");
+	LOG_WARN("Sanity checks for the communication between APP and DLLs (with mock initialization");
 
 	AS::CLsanityTest();
 

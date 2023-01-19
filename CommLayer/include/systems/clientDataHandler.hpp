@@ -79,12 +79,14 @@ namespace CL::ClientData {
 		AS::ActionDataController* actions_ptr;
 	} ASdataControlPtrs_t;
 
+	typedef std::function <bool(uint32_t id, ASdataControlPtrs_t recepientPtrs)> transferFunc_t;
+
 	typedef struct {
 		uint32_t agentID;
-		bool (*getNewData_fptr)(uint32_t id, ASdataControlPtrs_t recepientPtrs);
+		transferFunc_t getNewData_fptr;
 	} changedDataInfo_t;
 
-	class Handler; //forwar declaration. Actual declaration way down bellow
+	class Handler; //forward declaration. Actual declaration way down bellow
 
 	class NetworkParameterDataHandler {
 	public:
@@ -164,25 +166,28 @@ namespace CL::ClientData {
 			//changes_ptr
 		};
 		
+			class LAparametersHandler;
 			class LAresourcesHandler {
 			public:
-				bool initialize(ClientData::Handler* parentHandlerPtr, 
-					            StateControllerLA* data_ptr,
-								std::vector <changedDataInfo_t>* changesVector_ptr);
-
 				//Blocks Client Data.
-				bool changeResources(uint32_t agentID, resources_t newResources) { return false; }
+				bool CL_API changeResources(uint32_t agentID, resources_t newResources) { return false; }
 				
 				//Blocks Client Data.
-				bool changeCurrentTo(uint32_t agentID, float newValue);
+				bool CL_API changeCurrentTo(uint32_t agentID, float newValue);
 
 				//Blocks Client Data.
-				bool changeIncomeTo(uint32_t agentID, float newValue) { return false; }
+				bool CL_API changeIncomeTo(uint32_t agentID, float newValue) { return false; }
 
 			private:
+				friend class LAparametersHandler;
+
+				bool initialize(ClientData::Handler* parentHandlerPtr,
+								StateControllerLA* data_ptr,
+								std::vector <changedDataInfo_t>* changesVector_ptr);
+
 				//Client Data should be blocked upstream from this
 				bool transferCurrent(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-
+				
 				ClientData::Handler* m_parentHandlerPtr;
 				StateControllerLA* m_data_ptr;
 				std::vector <changedDataInfo_t>* m_changesVector_ptr;
@@ -202,11 +207,9 @@ namespace CL::ClientData {
 				//changes_ptr
 			};
 
+		class LAstateHandler;
 		class LAparametersHandler {
 		public:
-			bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
-				            std::vector <changedDataInfo_t>* changesVector_ptr);
-
 			//full insertion
 
 			//per-simple-field insertion methods
@@ -215,6 +218,11 @@ namespace CL::ClientData {
 			LAstrenghtHandler strenght;
 
 		private:
+			friend class LAstateHandler;
+
+			bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
+				            std::vector <changedDataInfo_t>* changesVector_ptr);
+
 			ClientData::Handler* m_parentHandlerPtr;
 			StateControllerLA* m_data_ptr;
 			std::vector <changedDataInfo_t>* m_changesVector_ptr;
@@ -222,9 +230,6 @@ namespace CL::ClientData {
 
 	class LAstateHandler {
 	public:
-		bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
-			            std::vector <changedDataInfo_t>* changesVector_ptr);
-
 		//full insertion
 
 		//per-simple-field insertion methods
@@ -234,6 +239,11 @@ namespace CL::ClientData {
 		LAparametersHandler parameters;
 
 	private:
+		friend class Handler;
+
+		bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
+			std::vector <changedDataInfo_t>* changesVector_ptr);
+
 		ClientData::Handler* m_parentHandlerPtr;
 		StateControllerLA* m_data_ptr;
 		std::vector <changedDataInfo_t>* m_changesVector_ptr;
@@ -426,7 +436,7 @@ namespace CL::ClientData {
 	public:
 		Handler::Handler(AS::networkParameters_t params);
 
-		bool sendNewClientData(ASdataControlPtrs_t recepientPtrs);
+		bool sendNewClientData(ASdataControlPtrs_t recepientPtrs, bool shouldMainLoopBeRunning);
 
 		//Returns NULL on time-out or a pointer to the acquired mutex otherwise
 		std::mutex* acquireMutex();
@@ -448,7 +458,7 @@ namespace CL::ClientData {
 
 	private:
 		bool processChange(ClientData::changedDataInfo_t change,
-			ASdataControlPtrs_t recepientPtrs);
+			               ASdataControlPtrs_t recepientPtrs);
 
 		std::mutex m_mutex;
 		DataMirrorSystem m_mirrorSystem;

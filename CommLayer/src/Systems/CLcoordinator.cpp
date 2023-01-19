@@ -41,6 +41,8 @@ namespace CL {
 		return true;
 	}
 
+	//Also creates and initializes its components. Does quite a bit of heap allocation.
+	//TO DO: An "update" method could avoid it's use on AS's loading.
 	bool createClientDataHandler(AS::networkParameters_t params) {
 
 		LOG_TRACE("Will try to create Client Data Handler...");
@@ -61,12 +63,17 @@ namespace CL {
 
 		if (clientData_ptr != NULL) {
 			LOG_TRACE("Handler already exists, will delete old and substitute");
-			delete clientData_ptr;
+			CL::ClientData::Handler* tempHandler2_ptr = clientData_ptr;
+			clientData_ptr = tempHandler_ptr;
+			delete tempHandler2_ptr;
+			tempHandler2_ptr = NULL;
+			tempHandler_ptr = NULL;
+			//^This little dance is just in case Client tries to acces while we're deleting
 		}
-	
-		clientData_ptr = tempHandler_ptr;
-
-		tempHandler_ptr = NULL;
+		else {
+			clientData_ptr = tempHandler_ptr;
+			tempHandler_ptr = NULL;
+		}	
 
 		LOG_TRACE("New handler created");
 
@@ -110,15 +117,16 @@ namespace CL {
 
 	bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,
 						  AS::dataControllerPointers_t* agentDataRecepient_ptr,
-		 				  AS::ActionDataController* actionsRecepient_ptr) {
+		 				  AS::ActionDataController* actionsRecepient_ptr,
+						  bool shouldMainLoopBeRunning) {
 		
 		CL::ClientData::ASdataControlPtrs_t recepientPtrs;
 
 		recepientPtrs.params_ptr = paramsRecepient_ptr;
 		recepientPtrs.agentData_ptr = agentDataRecepient_ptr;
 		recepientPtrs.actions_ptr = actionsRecepient_ptr;
-				
-		return clientData_ptr->sendNewClientData(recepientPtrs);
+
+		return clientData_ptr->sendNewClientData(recepientPtrs, shouldMainLoopBeRunning);
 	}
 
 	bool acceptReplacementData(const AS::networkParameters_t* params,

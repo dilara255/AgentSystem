@@ -89,7 +89,7 @@
 *
 * ***** Minor 3. Runtime data insertion and removal *****
 *
-* >> 1. AS timed loop:
+* 1. AS timed loop:
 * 
 * a. Make AS work on a timed loop, incrementing some of its values in a predictable manner.
 * b. After each loop, make AS update CL's data.
@@ -97,16 +97,15 @@
 *
 * >> 2. Data injection:
 * 
-* >> a. TA-managed Cold, State and Action data area on CL, plus an indexed list of fields with 
-* the tick of their last changes and last tick they were checked.
-* b. Make it so TA can tranfer data to it (methods for field or whole State or Action from
+* a. TA-managed Cold, State and Action data area on CL, plus list of fields with changes.
+* b. On each loop, AS retrieves data from CL which was changed after its last check.
+* >> c. Make it so TA can tranfer data to it (methods for field or whole State or Action from
 * Agent Object). When the data is received by the CL, it updates the list of changed fields.
-* c. Make it so AS can read the fields with changes and absorb them (pointer to const?).
-* d. Before each loop, AS retrieves data from CL which was changed after its last check.
-* e. Test running the AS, issuing changes from the TA and reading the data. 
+* >> d. Make it so AS can read the fields with changes and absorb them (pointer to const?).
+* >> e. Test running the AS, issuing changes from the TA and reading the data. 
 
 * Note: changing an action to "innactive" essentially ends it, but it is also possible 
-* to advance actions to the moment before their completion. The TA can then chsck 
+* to advance actions to the moment before their completion. The TA can then check 
 * again a bit later if this is part of a multi-step process.
 *
 * Cleanup
@@ -114,7 +113,8 @@
 * ***** Minor 4. AS loop *****
 *
 * The goal here is to get the AS loop to work as expected.
-* No actual decision making yet, just a couple stub decisions, but updating expected values.
+* No actual decision making yet, just a couple stub decisions.
+* Expected values updating working. WILL HAVE TO SOLVE HOW TO SAVE THIS
 * Couple of stub actions as well, that simply run their course and have a simple resolution.
 *
 * Cleanup, some (in-code) documentation, and fresh pull+compile test

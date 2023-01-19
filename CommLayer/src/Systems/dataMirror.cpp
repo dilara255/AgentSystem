@@ -80,16 +80,61 @@ namespace CL {
 			return true;
 		}
 		
-		data.agentMirrorPtrs.LAcoldData_ptr = new ColdDataControllerLA();
-		data.agentMirrorPtrs.LAstate_ptr = new StateControllerLA();
-		data.agentMirrorPtrs.LAdecision_ptr = new DecisionSystemLA();
-		data.agentMirrorPtrs.GAcoldData_ptr = new ColdDataControllerGA();
-		data.agentMirrorPtrs.GAstate_ptr = new StateControllerGA();
-		data.agentMirrorPtrs.GAdecision_ptr = new DecisionSystemGA();
+		CL::agentMirrorControllerPtrs_t* amp = &data.agentMirrorPtrs;
 
-		data.agentMirrorPtrs.haveBeenCreated = true;
+		amp->LAcoldData_ptr = new ColdDataControllerLA();
+		amp->LAstate_ptr = new StateControllerLA();
+		amp->LAdecision_ptr = new DecisionSystemLA();
+		amp->GAcoldData_ptr = new ColdDataControllerGA();
+		amp->GAstate_ptr = new StateControllerGA();
+		amp->GAdecision_ptr = new DecisionSystemGA();
 
-		LOG_INFO("Data Controllers created\n");
+		amp->haveBeenCreated = true;
+
+		LOG_TRACE("Agent Data Controllers created. Will initialize their capacities");
+
+		amp->LAcoldData_ptr->data.reserve(MAX_LA_QUANTITY);
+		amp->LAstate_ptr->data.reserve(MAX_LA_QUANTITY);
+		amp->LAdecision_ptr->data.reserve(MAX_LA_QUANTITY);
+
+		LA::coldData_t coldStubLA;
+		LA::stateData_t stateStubLA;
+		LA::decisionData_t decisionStubLA;
+
+		for (int i = 0; i < MAX_LA_QUANTITY; i++) {
+			amp->LAcoldData_ptr->data.push_back(coldStubLA);
+			amp->LAstate_ptr->data.push_back(stateStubLA);
+			amp->LAdecision_ptr->data.push_back(decisionStubLA);
+		}
+		
+		bool hasPushed = amp->LAcoldData_ptr->data.size() == MAX_LA_QUANTITY;
+		hasPushed &= amp->LAstate_ptr->data.size() == MAX_LA_QUANTITY;
+		hasPushed &= amp->LAdecision_ptr->data.size() == MAX_LA_QUANTITY;
+
+		amp->GAcoldData_ptr->data.reserve(MAX_GA_QUANTITY);
+		amp->GAstate_ptr->data.reserve(MAX_GA_QUANTITY);
+		amp->GAdecision_ptr->data.reserve(MAX_GA_QUANTITY);
+
+		GA::coldData_t coldStubGA;
+		GA::stateData_t stateStubGA;
+		GA::decisionData_t decisionStubGA;
+
+		for (int i = 0; i < MAX_GA_QUANTITY; i++) {
+			amp->GAcoldData_ptr->data.push_back(coldStubGA);
+			amp->GAstate_ptr->data.push_back(stateStubGA);
+			amp->GAdecision_ptr->data.push_back(decisionStubGA);
+		}
+
+		hasPushed &= amp->GAcoldData_ptr->data.size() == MAX_GA_QUANTITY;
+		hasPushed &= amp->GAstate_ptr->data.size() == MAX_GA_QUANTITY;
+		hasPushed &= amp->GAdecision_ptr->data.size() == MAX_GA_QUANTITY;
+
+		if (!hasPushed) {
+			LOG_ERROR("Didn't create the right amount of agentData stubs on containers");
+			return false;
+		}
+
+		LOG_INFO("Data Controllers created and capacity reserved\n");
 		return true;
 	}
 
@@ -99,8 +144,10 @@ namespace CL {
 		m_hasData &= isNetworkInitialized();
 		m_hasData &= hasAgentData();
 		m_hasData &= hasActionData();
+
+		m_hasData &= data.actionMirror.hasData();
 			
-		return (m_hasData &= data.actionMirror.hasData());
+		return m_hasData;
 	}
 
 	bool DataMirrorSystem::receiveReplacementParams(const AS::networkParameters_t* params_cptr) {

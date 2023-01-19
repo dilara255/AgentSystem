@@ -9,9 +9,10 @@ namespace CL {
 	
 	public:
 		DataMirrorSystem() {
-			data.agentMirrorPtrs.haveBeenCreated = false;
-			data.agentMirrorPtrs.haveData = false;
-		}
+							data.agentMirrorPtrs.haveBeenCreated = false;
+							data.agentMirrorPtrs.haveData = false;
+							data_cptr = NULL;
+						}
 
 		bool initialize(mirror_t** mirrorData_ptr_ptr);
 		

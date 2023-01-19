@@ -51,7 +51,7 @@ namespace AS {
 	bool ActionDataController::addActionData(actionData_t actionData) {
 
 		if (actionData.ids.scope == LOCAL) {
-			if (dataLAs.size() > ( (MAX_LA_QUANTITY*MAX_ACTIONS_PER_AGENT) - 1)) {
+			if (dataLAs.size() >= (MAX_LA_QUANTITY*MAX_ACTIONS_PER_AGENT) ) {
 				LOG_ERROR("Couldn't add LA action: maximum reached");
 				return false;
 			}
@@ -60,7 +60,7 @@ namespace AS {
 			return true;
 		}
 		else if (actionData.ids.scope == GLOBAL) {
-			if (dataGAs.size() > ((MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT) - 1)) {
+			if (dataGAs.size() >= (MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT)) {
 				LOG_ERROR("Couldn't add GA action: maximum reached");
 				return false;
 			}
@@ -124,7 +124,7 @@ namespace AS {
 		}
 
 		if (localOrGlobal == LOCAL) {
-			if (agentID > ( (dataLAs.size()/m_maxActionsPerAgent) - 1) ) {
+			if (agentID >= (dataLAs.size()/m_maxActionsPerAgent) ) {
 				LOG_ERROR("Couldn't get LA action: id too large");
 				return false;
 			}
@@ -133,7 +133,7 @@ namespace AS {
 			return true;
 		}
 		else if (localOrGlobal == GLOBAL) {
-			if (agentID > ((dataGAs.size() / m_maxActionsPerAgent) - 1) ) {
+			if (agentID >= (dataGAs.size() / m_maxActionsPerAgent) ) {
 			LOG_ERROR("Couldn't get GA action: id too large");
 			return false;
 			}
