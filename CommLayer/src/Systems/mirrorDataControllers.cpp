@@ -17,6 +17,22 @@ namespace CL {
         m_maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
         dataLAs.reserve((int64_t)m_maxActionsPerAgent * MAX_LA_QUANTITY);
         dataGAs.reserve((int64_t)m_maxActionsPerAgent * MAX_GA_QUANTITY);
+
+        AS::actionData_t stubAction;
+
+        for (int i = 0; i < MAX_LA_QUANTITY; i++) {
+            dataLAs.push_back(stubAction);
+        }
+
+        for (int i = 0; i < MAX_GA_QUANTITY; i++) {
+            dataGAs.push_back(stubAction);
+        }
+
+        if ((dataLAs.size() != MAX_LA_QUANTITY) || (dataGAs.size() != MAX_GA_QUANTITY)) {
+            LOG_ERROR("Didn't populate mirror action data vectors with the right amount of stubs");
+            return false;
+        }
+
         m_isInitialized = true;
 
         LOG_INFO("ActionMirrorController initialized");

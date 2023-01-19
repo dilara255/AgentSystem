@@ -16,7 +16,8 @@ namespace CL {
 	//Will block Client Data during this process.
 	CL_API bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,
 								 AS::dataControllerPointers_t* agentDataRecepient_ptr,
-		                         AS::ActionDataController* actionsRecepient_ptr);
+		                         AS::ActionDataController* actionsRecepient_ptr,
+								 bool shouldMainLoopBeRunning);
 
 	//TO DO: rename, name should be from the perspective of the caller.
 	CL_API bool acceptReplacementData(const AS::networkParameters_t* params,

@@ -131,7 +131,8 @@ namespace CL {
 		return change.getNewData_fptr(change.agentID, recepientPtrs);
 	}
 
-	bool ClientData::Handler::sendNewClientData(ASdataControlPtrs_t recepientPtrs) {
+	bool ClientData::Handler::sendNewClientData(ASdataControlPtrs_t recepientPtrs, 
+		                                        bool shouldMainLoopBeRunning) {
 
 		int size = (int)m_changes.size();
 
@@ -141,9 +142,19 @@ namespace CL {
 			return false;
 		}
 
+		#ifdef AS_DEBUG
+			if (!shouldMainLoopBeRunning) {
+				printf("Client Changes to process: %d\n", size);
+			}
+		#endif // AS_DEBUG
+
 		bool result = true;
 		for (int i = 0; i < size; i++) {
-			result = processChange(m_changes[i], recepientPtrs);
+			result &= processChange(m_changes[i], recepientPtrs);
+		}
+
+		if (!result) {
+			LOG_ERROR("Failed to process some changes issue by the Client");
 		}
 
 		mutex_ptr->unlock();
@@ -175,8 +186,16 @@ namespace CL {
 	}
 
 	bool ClientData::LAresourcesHandler::changeCurrentTo(uint32_t agentID, float newValue) {
-		if (agentID > m_data_ptr->data.size()) {
+		
+		//TO DO: extract
+		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
+			
+			#ifdef AS_DEBUG
+				printf("Data has capacity %zu, aid was %u\n", 
+					                            m_data_ptr->data.size(), agentID);
+			#endif // AS_DEBUG
+
 			return false;
 		}
 
@@ -187,12 +206,17 @@ namespace CL {
 			return false;
 		}
 
+		//Actually changes the value:
 		m_data_ptr->data[agentID].parameters.resources.current = newValue;
 
-		//TO DO: Extract this too
+		//Store the callback function to transfer the change:
 		changedDataInfo_t change;
 		change.agentID = agentID;
-		
+
+		auto callback = std::bind(&CL::ClientData::LAresourcesHandler::transferCurrent,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		change.getNewData_fptr = callback;
 
 		m_changesVector_ptr->push_back(change);
 

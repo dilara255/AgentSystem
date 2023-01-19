@@ -88,6 +88,7 @@ and data sizes static.
 #endif// AS_DEBUG
 #define TST_TA_QUERY_FREQUENCY_MS ((unsigned)1.5*TST_MAINLOOP_FREQUENCY_MS)
 #define TST_TIMES_TO_QUERRY_TICK 4
+#define TST_RES_CHANGE (89134.4831)
 
 namespace AS {
 

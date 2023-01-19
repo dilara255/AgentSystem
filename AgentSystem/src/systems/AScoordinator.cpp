@@ -33,7 +33,7 @@ namespace AS {
 	//these are the control structures/objects for the AS's main systems;
 	//they're kinda in global scope for this file for now : )
 	
-	bool shouldMainLoopBeRunning;
+	bool shouldMainLoopBeRunning = false;
 	std::thread::id mainLoopId;
 	std::thread mainLoopThread;
 
@@ -73,9 +73,9 @@ bool AS::run() {
 	}
 
 	shouldMainLoopBeRunning = true;
+	currentNetworkParams.lastMainLoopStartingTick = currentNetworkParams.mainLoopTicks;
 	mainLoopThread = std::thread(mainLoop);
 	mainLoopId = mainLoopThread.get_id();
-	currentNetworkParams.lastMainLoopStartingTick = currentNetworkParams.mainLoopTicks;
 
 	LOG_INFO("Started main loop on new thread");
 
@@ -92,22 +92,33 @@ void AS::mainLoop() {
 	//std::chrono::microseconds stepStartTime;
 	std::chrono::microseconds stepTimeMicro = std::chrono::microseconds(0);
 	std::chrono::microseconds timeToSleepMicro;
+	bool result = false;
 
 	do {
+		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will sleep first"); }
 		std::this_thread::sleep_for(timeToSleepMicro);
 		//stepStartTime = blah (get the current time in micro)
 		
 		//do stuff
 
-		CL::getNewClientData(currentNetworkParams_ptr, &agentDataControllerPtrs,
-			                                           &(actionSystem.data));
+		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will get Client Data"); }
+		result = CL::getNewClientData(currentNetworkParams_ptr, &agentDataControllerPtrs,
+			                          &(actionSystem.data), shouldMainLoopBeRunning);
+		if (!result) { LOG_ERROR("Failed to get Client Data!"); }
 		
+		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will update ticks"); }
 		currentNetworkParams.mainLoopTicks++;
-		sendReplacementDataToCL();	
 
+		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will send AS Data to CL"); }
+		result = sendReplacementDataToCL();
+		if (!result) { LOG_ERROR("Failed to send AS Data to the CL!"); }
+
+		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will calculate time to sleep"); }
 		//stepTimeMicro = "current time in micro" - stepStartTime
 		timeToSleepMicro = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
 		timeToSleepMicro -= stepTimeMicro;
+
+		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop should stop now!"); }
 	} while (shouldMainLoopBeRunning);
 }
 
@@ -293,6 +304,7 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 		currentNetworkParams.isNetworkInitialized = true;
 		LOG_INFO("File loaded...");
 
+		//TO DO: This could be just an update(), which clears + shrinks + reserves stuff.
 		result = CL::createClientDataHandler(*currentNetworkParams_ptr);
 	}
 	
