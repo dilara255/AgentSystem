@@ -27,6 +27,7 @@
 * - decisionData_t;
 *	- AS::LAinfiltrationOnNeighbors_t infiltration
 *	- AS::LApersonalityAndGAinfluence_t offsets
+*	- TO DO: the rest of the decision data for LAs
 * 
 * GA::
 * * - coldData_t
@@ -41,6 +42,7 @@
 * - decisionData_t;
 *	- AS::GAinfiltrationOnNeighbors_t infiltration
 *	- AS::GApersonality personality
+*   - TO DO: the rest of the decision data for GAs
 */
 
 #include "../include/network/parameters.hpp"

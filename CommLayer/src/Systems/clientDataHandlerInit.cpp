@@ -488,7 +488,7 @@ namespace CL {
 	}
 	
 	
-	
+
 	//STATE
 	bool ClientData::GAstateHandler::initialize(ClientData::Handler* parentHandlerPtr,
 										StateControllerGA* data_ptr,
