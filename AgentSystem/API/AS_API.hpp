@@ -29,10 +29,10 @@ namespace AS {
 	//If the Client calls AS and CL in multiple trheads, this should be handled by the CLIENT.
 	AS_API bool loadNetworkFromFile(std::string name, bool runNetwork = false);
 
-	//Saves active network. Will consume pending Client changes first.
+	//Saves active network. Client changes made BEFORE call will be consumed.
 	//AS's main loop stops and then resumes after save. Default fileName uses network name.
 	//v
-	//- WARNING: Has no locks: correctness of multithreaded acces to the AS is on the CLIENT.
+	//- WARNING: just gets and releases a lock to Client Data. All other sync is on the CLIENT.
 	AS_API bool saveNetworkToFile(std::string fileName = "", bool shouldOverwrite = false);
 
 	//****For Testing****

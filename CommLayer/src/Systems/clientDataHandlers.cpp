@@ -14,21 +14,21 @@ namespace CL {
 
 		LOG_TRACE("Changes vector size set. Will initialize Handlers for each Data Category...");
 
-		result &= networkParameters.initialize(&m_mutex, &m_data_ptr->networkParams, 
+		result &= networkParameters.initialize(this, &m_data_ptr->networkParams, 
 			                                   &m_changes);
 
 		agentMirrorControllerPtrs_t ap = m_data_ptr->agentMirrorPtrs;
 		
-		result &= LAcold.initialize(&m_mutex, ap.LAcoldData_ptr, &m_changes);
-		result &= LAstate.initialize(&m_mutex, ap.LAstate_ptr, &m_changes);
-		result &= LAdecision.initialize(&m_mutex, ap.LAdecision_ptr, &m_changes);
+		result &= LAcold.initialize(this, ap.LAcoldData_ptr, &m_changes);
+		result &= LAstate.initialize(this, ap.LAstate_ptr, &m_changes);
+		result &= LAdecision.initialize(this, ap.LAdecision_ptr, &m_changes);
 
-		result &= GAcold.initialize(&m_mutex, ap.GAcoldData_ptr, &m_changes);
-		result &= GAstate.initialize(&m_mutex, ap.GAstate_ptr, &m_changes);
-		result &= GAdecision.initialize(&m_mutex, ap.GAdecision_ptr, &m_changes);
+		result &= GAcold.initialize(this, ap.GAcoldData_ptr, &m_changes);
+		result &= GAstate.initialize(this, ap.GAstate_ptr, &m_changes);
+		result &= GAdecision.initialize(this, ap.GAdecision_ptr, &m_changes);
 		
-		result &= LAaction.initialize(&m_mutex, &m_data_ptr->actionMirror.dataLAs, &m_changes);
-		result &= GAaction.initialize(&m_mutex, &m_data_ptr->actionMirror.dataGAs, &m_changes);
+		result &= LAaction.initialize(this, &m_data_ptr->actionMirror.dataLAs, &m_changes);
+		result &= GAaction.initialize(this, &m_data_ptr->actionMirror.dataGAs, &m_changes);
 
 		m_initialized = result;
 
@@ -40,23 +40,23 @@ namespace CL {
 		}
 	}
 
-	bool ClientData::LAstateHandler::initialize(std::mutex* mutex_ptr,
+	bool ClientData::LAstateHandler::initialize(ClientData::Handler* parentHandlerPtr,
 										StateControllerLA* data_ptr,
 										std::vector <changedDataInfo_t>* changesVector_ptr) {
 		
 		LOG_TRACE("Initializing LAstate Handler");
 
-		if ((mutex_ptr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
+		if ((parentHandlerPtr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
 			LOG_ERROR("LA State Client Data Handler failed to initialize - received null vectors");
 			return false;
 		}
 
-		m_mutex_ptr = mutex_ptr;
+		m_parentHandlerPtr = parentHandlerPtr;
 		m_data_ptr = data_ptr;
 		m_changesVector_ptr = changesVector_ptr;
 
 		LOG_TRACE("Initializing Handlers for the fields of LAstate");
-		bool result = parameters.initialize(mutex_ptr, data_ptr, changesVector_ptr);
+		bool result = parameters.initialize(parentHandlerPtr, data_ptr, changesVector_ptr);
 		//TO DO: the rest of the initialization
 
 		if (!result) {
@@ -69,23 +69,23 @@ namespace CL {
 		}
 	}
 
-	bool ClientData::LAparametersHandler::initialize(std::mutex* mutex_ptr,
+	bool ClientData::LAparametersHandler::initialize(ClientData::Handler* parentHandlerPtr,
 										  StateControllerLA* data_ptr,
 										  std::vector <changedDataInfo_t>* changesVector_ptr) {
 		
 		LOG_TRACE("- Initializing LA Parameters Handler");
 
-		if ((mutex_ptr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
+		if ((parentHandlerPtr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
 			LOG_ERROR("- LA Parameters Client Data Handler failed to initialize - received null vectors");
 			return false;
 		}
 
-		m_mutex_ptr = mutex_ptr;
+		m_parentHandlerPtr = parentHandlerPtr;
 		m_data_ptr = data_ptr;
 		m_changesVector_ptr = changesVector_ptr;
 
 		LOG_TRACE("- Initializing Handlers for the fields of LA Parameters");
-		bool result = resources.initialize(mutex_ptr, data_ptr, changesVector_ptr);
+		bool result = resources.initialize(parentHandlerPtr, data_ptr, changesVector_ptr);
 		//TO DO: the rest of the initialization
 		
 		if (!result) {
@@ -98,18 +98,18 @@ namespace CL {
 		}	
 	}
 
-	bool ClientData::LAresourcesHandler::initialize(std::mutex* mutex_ptr, 
+	bool ClientData::LAresourcesHandler::initialize(ClientData::Handler* parentHandlerPtr,
 		                                 StateControllerLA* data_ptr,
 		                                 std::vector <changedDataInfo_t>* changesVector_ptr){
 		
 		LOG_TRACE("-- Initializing LA Resources Handler");
 		
-		if ((mutex_ptr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
+		if ((parentHandlerPtr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
 			LOG_ERROR("-- LA Resources Client Data Handler failed to initialize - received null vectors");
 			return false;
 		}
 		
-		m_mutex_ptr = mutex_ptr;
+		m_parentHandlerPtr = parentHandlerPtr;
 		m_data_ptr = data_ptr;
 		m_changesVector_ptr = changesVector_ptr;
 
@@ -118,6 +118,7 @@ namespace CL {
 	}
 
 	//Actual Data handling:
+
 	bool ClientData::Handler::processChange(ClientData::changedDataInfo_t change, 
 		                                    ASdataControlPtrs_t recepientPtrs) {
 		
@@ -126,6 +127,7 @@ namespace CL {
 			return false;
 		}
 
+		//TODO-CITICAL: Check that this works, consideting the fptr is to a private method
 		return change.getNewData_fptr(change.agentID, recepientPtrs);
 	}
 
@@ -133,10 +135,18 @@ namespace CL {
 
 		int size = (int)m_changes.size();
 
+		std::mutex* mutex_ptr = acquireMutex();
+		if (mutex_ptr == NULL) {
+			LOG_ERROR("Aborting Client Data transfer, couldn't acquire mutex");
+			return false;
+		}
+
 		bool result = true;
 		for (int i = 0; i < size; i++) {
 			result = processChange(m_changes[i], recepientPtrs);
 		}
+
+		mutex_ptr->unlock();
 
 		return result;
 	}
@@ -170,17 +180,10 @@ namespace CL {
 			return false;
 		}
 
-		//TO DO: Extract this as a method! Maybe make mutex warper class
-		int tries = 0;
-		bool acquired = false;
-		while (!acquired && (tries < MAX_MUTEX_TRY_LOCKS) ) {
-			acquired = m_mutex_ptr->try_lock();
-			tries++;
-			std::this_thread::sleep_for(
-				              std::chrono::microseconds(SLEEP_TIME_WAITING_MUTEX_MICROS));
-		}
-		if (!acquired) {
-			LOG_ERROR("Client Data transfer failed - lock acquisition timed out!");
+		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
+
+		if (mutex_ptr == NULL) {
+			LOG_ERROR("Aborting Client Data Change");
 			return false;
 		}
 
@@ -193,9 +196,26 @@ namespace CL {
 
 		m_changesVector_ptr->push_back(change);
 
-		m_mutex_ptr->unlock();
+		mutex_ptr->unlock();
 
 		return true;
+	}
+
+	std::mutex* ClientData::Handler::acquireMutex() {
+		int tries = 0;
+		bool acquired = false;
+		while (!acquired && (tries < MAX_MUTEX_TRY_LOCKS)) {
+			acquired = m_mutex.try_lock();
+			tries++;
+			std::this_thread::sleep_for(
+				std::chrono::microseconds(SLEEP_TIME_WAITING_MUTEX_MICROS));
+		}
+		if (!acquired) {
+			LOG_ERROR("lock acquisition timed out!");
+			return NULL;
+		}
+		
+		return &m_mutex;
 	}
 
 }
