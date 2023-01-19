@@ -1,14 +1,18 @@
 #pragma once
 
-#include "data/mirrorDataControllers.hpp"
+#include "../include/data/mirrorDataControllers.hpp"
 
 namespace CL {
 	//Stores, manages, receives and gives access to and info about action and agent data.
 	//Used for: mirroring the AS in the CL and keeping data sent from the Client to the CL.
-	//TO DO: rename: ASdataMirror (rename file too, this and the .cpp)
 	class CL_API DataMirrorSystem {
 	
 	public:
+		DataMirrorSystem() {
+			data.agentMirrorPtrs.haveBeenCreated = false;
+			data.agentMirrorPtrs.haveData = false;
+		}
+
 		bool initialize(mirror_t** mirrorData_ptr_ptr);
 		
 		bool receiveReplacementParams(const AS::networkParameters_t* params_cptr);

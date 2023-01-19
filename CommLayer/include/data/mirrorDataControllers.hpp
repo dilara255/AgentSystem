@@ -16,12 +16,7 @@ namespace CL {
 	class ActionMirrorController {
 	public:
 
-		bool initialize() {	m_maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
-							dataLAs.reserve(m_maxActionsPerAgent * MAX_LA_QUANTITY);
-							dataGAs.reserve(m_maxActionsPerAgent * MAX_GA_QUANTITY);
-							m_isInitialized = true;
-							return m_isInitialized;
-	    }
+		bool initialize();
 
 		bool replaceDataLAs(const std::vector <actionData_t>& newData) { dataLAs = newData; }
 		bool replaceDataGAs(const std::vector <actionData_t>& newData) { dataGAs = newData; }

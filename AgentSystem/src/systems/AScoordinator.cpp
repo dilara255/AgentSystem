@@ -49,9 +49,16 @@ namespace AS {
 
 bool AS::quit() {
 	
-	return AS::stop();
+	bool result = AS::stop();
+	
+	//TO DO: Kill all the stuff in the pointers here
+	//TO DO: implement and call CL::quit, doing the same for the CL;
+	//isInitialized = false;
+	
+	return result;
 }
 
+//Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id;
 bool AS::run() {
 	LOG_TRACE("Starting Main Loop Thread...");
 	
@@ -73,6 +80,7 @@ bool AS::run() {
 	return true;
 }
 
+//Stops AS execution thread, marks it as stopped and clears the stored thread::id;
 bool AS::stop() {
 	LOG_TRACE("Stopping Main Loop Thread...");
 		
@@ -86,6 +94,7 @@ bool AS::stop() {
 	if (mainLoopThread.joinable()) {
 		LOG_TRACE("Waiting for main loop to finish execution...");
 		mainLoopThread.join();
+		mainLoopId = std::thread::id(); //default-constructs to "no thread" value
 		LOG_INFO("Done.");
 		#ifdef AS_DEBUG
 			printf("\nRan for %llu ticks\n", currentNetworkParams.mainLoopTicks - 
@@ -247,25 +256,27 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 	result = loadNetworkFromFileToDataControllers(fp, agentDataControllerPtrs, 
 		                                              currentNetworkParams_ptr,
 		                                                     &actionSystem.data);
+	
+	fclose(fp);
+	LOG_TRACE("File closed");
+
 	if (!result) {
 		LOG_ERROR("Load failed. Will clear the network.");
 		clearNetwork(); //we don't leave an incomplete state behind. Marks data as not initialized.
 	}
 	
-	//TO DO: do whatever else, clear on error
+	//TO DO: check capacities and sizes to make sure things are in order?
 
 	if(result){
 		agentDataControllerPtrs.haveData = true;
 		currentNetworkParams.isNetworkInitialized = true;
+		LOG_INFO("File loaded...");
+
+		result = CL::createClientDataHandler(*currentNetworkParams_ptr);
 	}
-
-	fclose(fp);
-	LOG_TRACE("File closed");
 	
-	//TO DO: check capacities and sizes to make sure things are in order
-
-	LOG_INFO("File loaded...");
-
+	//TO DO: do whatever else should be done after load, clear on error
+	
 	if(result && runNetwork) { result = AS::run(); }
 
 	return result; //not much information is given, but the app may decide what to do on failure
