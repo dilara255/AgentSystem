@@ -99,6 +99,8 @@
 * 
 * a. TA-managed Cold, State and Action data area on CL, plus list of fields with changes.
 * b. On each loop, AS retrieves data from CL which was changed after its last check.
+* 
+* Complete for some fields, and stub for the rest:
 * >> c. Make it so TA can tranfer data to it (methods for field or whole State or Action from
 * Agent Object). When the data is received by the CL, it updates the list of changed fields.
 * >> d. Make it so AS can read the fields with changes and absorb them (pointer to const?).
@@ -117,6 +119,8 @@
 * Expected values updating working. WILL HAVE TO SOLVE HOW TO SAVE THIS
 * Couple of stub actions as well, that simply run their course and have a simple resolution.
 *
+* Complete 3c-e.
+* 
 * Cleanup, some (in-code) documentation, and fresh pull+compile test
 *
 * ***** Minor 5. Tooling: inspection *****

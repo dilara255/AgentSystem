@@ -3,10 +3,9 @@
 /*
 //PLANNING:
 //TO DO:
-//- "complete stub" and initialization for all handlers : );
 //- A method for data on each "leaf": implement and test one at a time;
-//- Fill out per-field methods;
-//- Methods for "entire structure";
+//- Substitute old data transfer test and deal with the unecessary pointer (becomes const);
+//- TODO-CRITICAL: All Methods already stubbed;
 //- TO DO LATER:
 //-- Relative methods were they'd make sense (addition and multiplication);
 //-- Methods for "all agents" (including for  "entire structure");
@@ -106,18 +105,35 @@ namespace CL::ClientData {
 	class NetworkParameterDataHandler: public BaseSubHandler {
 	public:
 		
-		//full insertion
-
-		//per-simple-field insertion methods
+		bool CL_API changeAll(uint32_t agentID, networkParameters_t* newValue_ptr);
+		
+		bool CL_API changeCommentTo(uint32_t agentID, std::string newValue);
+		bool CL_API changeIsNetworkInitializedTo(uint32_t agentID, bool newValue);
+		bool CL_API changeLastMainLoopStartingTickTo(uint32_t agentID, uint64_t newValue);
+		bool CL_API changeMainLoopTicksTo(uint32_t agentID, uint64_t newValue);
+		bool CL_API changeMaxActionsTo(uint32_t agentID, int newValue);
+		bool CL_API changeMaxLAneighboursTo(uint32_t agentID, int newValue);
+		bool CL_API changeNameTo(uint32_t agentID, std::string newValue);
+		bool CL_API changeNumberGAsTo(uint32_t agentID, int newValue);
+		bool CL_API changeNumberLAsTo(uint32_t agentID, int newValue);
 
 	protected:
 		friend class Handler;
 
 		bool initialize(ClientData::Handler* parentHandlerPtr, networkParameters_t* data_ptr,
 						std::vector <changedDataInfo_t>* changesVector_ptr);
+		
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
-		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) 
-																			{ return false; }
+		bool transferComment(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferIsNetworkInitialized(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferLastMainLoopStartingTick(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferMainLoopTicks(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferMaxActions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferMaxLAneighbours(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferName(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferNumberGAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferNumberLAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 		networkParameters_t* m_data_ptr;
 	};
@@ -129,9 +145,14 @@ namespace CL::ClientData {
 		class ActionIDsHandler: public BaseSubHandler {
 		public:
 		
-			//full insertion
-
-			//per-simple-field insertion methods
+			bool CL_API changeAll(uint32_t agentID, AS::ids_t newValue);
+		
+			bool CL_API changeActiveTo(uint32_t agentID, uint32_t newValue);
+			bool CL_API changeCategoryTo(uint32_t agentID, uint32_t newValue);
+			bool CL_API changeModeTo(uint32_t agentID, uint32_t newValue);
+			bool CL_API changeOriginTo(uint32_t agentID, uint32_t newValue);
+			bool CL_API changeScopeTo(uint32_t agentID, uint32_t newValue);
+			bool CL_API changeTargetTo(uint32_t agentID, uint32_t newValue);
 
 		protected:
 			friend class ActionsHandler;
@@ -140,18 +161,25 @@ namespace CL::ClientData {
 							std::vector <actionData_t>* data_ptr,
 							std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																		return false; }
-
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
+			bool transferActive(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferCategory(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferMode(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferOrigin(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferScope(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferTarget(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
 			std::vector <actionData_t>* m_data_ptr;
 		};
 
 		class ActionTickInfoHandler: public BaseSubHandler {
 		public:
 		
-			//full insertion
-
-			//per-simple-field insertion methods
+			bool CL_API changeAll(uint32_t agentID, AS::tickInfo_t newValue);
+		
+			bool CL_API changeInitialTo(uint32_t agentID, uint32_t newValue);
+			bool CL_API changeLastProcessedTo(uint32_t agentID, uint32_t newValue);
 
 		protected:
 			friend class ActionsHandler;
@@ -160,18 +188,21 @@ namespace CL::ClientData {
 							std::vector <actionData_t>* data_ptr,
 							std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																		return false; }
-
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
+			bool transferInitial(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferLastProcessed(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
 			std::vector <actionData_t>* m_data_ptr;
 		};
 
 		class ActionDetailsHandler: public BaseSubHandler {
 		public:
 		
-			//full insertion
+			bool CL_API changeAll(uint32_t agentID, AS::details_t newValue);
 
-			//per-simple-field insertion methods
+			bool CL_API changeIntensityTo(uint32_t agentID, float newValue);
+			bool CL_API changeAuxTo(uint32_t agentID, float newValue);
 
 		protected:
 			friend class ActionsHandler;
@@ -180,18 +211,18 @@ namespace CL::ClientData {
 							std::vector <actionData_t>* data_ptr,
 							std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																		return false; }
-
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
+			bool transferIntensity(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferAux(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
 			std::vector <actionData_t>* m_data_ptr;
 		};
 
 	class ActionsHandler: public BaseSubHandler {
 	public:
 		
-		//full insertion
-
-		//per-simple-field insertion methods
+		bool CL_API changeAll(uint32_t agentID, actionData_t newValue);
 
 		ActionIDsHandler IDs;
 		ActionTickInfoHandler tickInfo;
@@ -204,8 +235,7 @@ namespace CL::ClientData {
 						std::vector <actionData_t>* data_ptr,
 						std::vector <changedDataInfo_t>* changesVector_ptr);
 
-		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																	return false; }
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 		std::vector <actionData_t>* m_data_ptr;
 	};
@@ -215,9 +245,10 @@ namespace CL::ClientData {
 	class LAcoldDataHandler: public BaseSubHandler {
 	public:
 		
-		//full insertion
+		bool CL_API changeAll(uint32_t agentID, LA::coldData_t* newValue_ptr);
 
-		//per-simple-field insertion methods
+		bool CL_API changeID(uint32_t agentID, uint32_t newValue);
+		bool CL_API changeName(uint32_t agentID, std::string newValue);
 
 	protected:
 		friend class Handler;
@@ -225,9 +256,11 @@ namespace CL::ClientData {
 		bool initialize(ClientData::Handler* parentHandlerPtr, ColdDataControllerLA* data_ptr,
 						std::vector <changedDataInfo_t>* changesVector_ptr);
 
-		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) 
-																			{ return false; }
-
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
+			bool transferID(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferName(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
 		ColdDataControllerLA* m_data_ptr;
 	};
 
@@ -238,9 +271,14 @@ namespace CL::ClientData {
 		class LArelationsHandler: public BaseSubHandler {
 		public:
 		
-			//full insertion
+			bool CL_API changeAll(uint32_t agentID, AS::LAneighborRelations_t* newValue_ptr);
 
-			//per-simple-field insertion methods
+			//RO DO: Put IDs on low and high 16 bits of changes.agentId
+			bool CL_API changeStance(uint32_t ofAgentID, uint32_t towardsAgentID, int newValue);
+			bool CL_API changeDisposition(uint32_t ofAgentID, uint32_t towardsAgentID, 
+				                                                       float newValue);
+			bool CL_API changeLastStepDisposition(uint32_t ofAgentID, uint32_t towardsAgentID,
+				                                                               float newValue);
 
 		protected:
 			friend class LAstateHandler;
@@ -249,18 +287,25 @@ namespace CL::ClientData {
 							StateControllerLA* data_ptr,
 							std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																	    return false; }
-
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
+			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			bool transferStance(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			bool transferDisposition(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			bool transferLastStepDisposition(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
 			StateControllerLA* m_data_ptr;
 		};
 
 			class PositionHandler: public BaseSubHandler {
 			public:
 		
-				//full insertion
+				bool CL_API changeAll(uint32_t agentID, AS::pos_t newValue);
 
-				//per-simple-field insertion methods
+				bool CL_API changeX(uint32_t AgentID, float newValue);
+				bool CL_API changeY(uint32_t AgentID, float newValue);
 
 			protected:
 				friend class LocationAndConnectionsHandler;
@@ -269,19 +314,24 @@ namespace CL::ClientData {
 								StateControllerLA* data_ptr,
 								std::vector <changedDataInfo_t>* changesVector_ptr);
 
-				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																			return false; }
-
+				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				
+				bool transferX(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				bool transferY(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				
 				StateControllerLA* m_data_ptr;
 			};
 
 		class LocationAndConnectionsHandler: public BaseSubHandler {
 		public:
 		
-			//full insertion
+			bool CL_API changeAll(uint32_t agentID,
+				                 AS::LAlocationAndConnectionData_t* newValue_ptr);
 
-			//per-simple-field insertion methods
-
+				//TO DO: mark that the other fields must be updated!
+				bool CL_API changeConnectedNeighbours(uint32_t AgentID, 
+					                                  AS::LAflagField_t* newvalue_ptr);
+				
 			PositionHandler position;
 
 		protected:
@@ -291,23 +341,24 @@ namespace CL::ClientData {
 				            StateControllerLA* data_ptr,
 		                    std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																	    return false; }
-
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				
+				bool transferConnectedNeighbours(uint32_t agentID, 
+				                                 ASdataControlPtrs_t recepientPtrs);
+				
 			StateControllerLA* m_data_ptr;
 		};
 		
 			class LAresourcesHandler: public BaseSubHandler {
 			public:
 				//Blocks Client Data.
-				bool CL_API changeAll(uint32_t agentID, resources_t newResources) 
-				                                                         { return false; }
+				bool CL_API changeAll(uint32_t agentID, AS::resources_t* newValue_ptr);
 				
 				//Blocks Client Data.
 				bool CL_API changeCurrentTo(uint32_t agentID, float newValue);
 
 				//Blocks Client Data.
-				bool CL_API changeIncomeTo(uint32_t agentID, float newValue) { return false; }
+				bool CL_API changeIncomeTo(uint32_t agentID, float newValue);
 
 			private:
 				friend class LAparametersHandler;
@@ -316,21 +367,25 @@ namespace CL::ClientData {
 								StateControllerLA* data_ptr,
 								std::vector <changedDataInfo_t>* changesVector_ptr);
 
+				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+
 				//Client Data should be blocked upstream from this
 				bool transferCurrent(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 				
-				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																		return false; }
-
+				bool transferIncome(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				
 				StateControllerLA* m_data_ptr;
 			};
 
 			class LAstrenghtHandler: public BaseSubHandler {
 			public:
 		
-				//full insertion
+				bool CL_API changeAll(uint32_t agentID, AS::strenght_t* newValue_ptr);
 
-				//per-simple-field insertion methods
+				bool CL_API changeCurrent(uint32_t agentID, float newValue);
+				bool CL_API changeCurrentUpkeep(uint32_t agentID, float newValue);
+				bool CL_API changeGuard(uint32_t agentID, float newValue);
+				bool CL_API changeThresholdForUpkeed(uint32_t agentID, float newValue);
 
 			protected:
 				friend class LAparametersHandler;
@@ -339,17 +394,20 @@ namespace CL::ClientData {
 								StateControllerLA* data_ptr,
 								std::vector <changedDataInfo_t>* changesVector_ptr);
 
-				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																			return false; }
-
+				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				
+				bool transferCurrent(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				bool transferCurrentUpkeep(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				bool transferGuard(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				bool transferThresholdForUpkeed(uint32_t agentID, 
+				                                ASdataControlPtrs_t recepientPtrs);
+				
 				StateControllerLA* m_data_ptr;
 			};
 
 		class LAparametersHandler: public BaseSubHandler {
 		public:
-			//full insertion
-
-			//per-simple-field insertion methods
+			bool CL_API changeAll(uint32_t agentID, AS::LAparameters_t* newValue_ptr);
 
 			LAresourcesHandler resources;
 			LAstrenghtHandler strenght;
@@ -360,17 +418,17 @@ namespace CL::ClientData {
 			bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
 				                     std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																		  return false;}
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 			StateControllerLA* m_data_ptr;
 		};
 
 	class LAstateHandler: public BaseSubHandler {
 	public:
-		//full insertion
+		bool CL_API changeAll(uint32_t agentID, LA::stateData_t* newValue_ptr);
 
-		//per-simple-field insertion methods
+		bool CL_API changeGAid(uint32_t agentID, uint32_t newValue);
+		bool CL_API changeOnOFF(uint32_t agentID, bool newValue);
 
 		LArelationsHandler relations;
 		LocationAndConnectionsHandler location;
@@ -382,9 +440,11 @@ namespace CL::ClientData {
 		bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
 			                             std::vector <changedDataInfo_t>* changesVector_ptr);
 
-		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) { 
-			                                                                return false; }
-
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
+		bool transferGAid(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferOnOFF(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
 		StateControllerLA* m_data_ptr;
 	};
 
@@ -395,9 +455,13 @@ namespace CL::ClientData {
 		class LApersonalityHandler: public BaseSubHandler {
 		public:
 		
-			//full insertion
+			bool CL_API changeAll(uint32_t agentID, 
+				                  AS::LApersonalityAndGAinfluence_t* newValue_ptr);
 
-			//per-simple-field insertion methods
+			bool CL_API changeGAoffsets(uint32_t agentID, 
+										AS::LAdecisionOffsets_t* newValue_ptr);
+			bool CL_API changePersonality(uint32_t agentID, 
+										  AS::LAdecisionOffsets_t* newValue_ptr);
 
 		protected:
 			friend class LAdecisionDataHandler;
@@ -406,18 +470,19 @@ namespace CL::ClientData {
 				            DecisionSystemLA* data_ptr,
 		                    std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																	    return false; }
-
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
+			bool transferGAoffsets(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferPersonality(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
 			DecisionSystemLA* m_data_ptr;
 		};
 
 	class LAdecisionDataHandler: public BaseSubHandler {
 	public:
 		
-		//full insertion
-
-		//per-simple-field insertion methods
+		bool CL_API changeAll(uint32_t agentID, 
+				              LA::decisionData_t* newValue_ptr);
 
 		LApersonalityHandler personality;
 
@@ -428,8 +493,7 @@ namespace CL::ClientData {
 				        DecisionSystemLA* data_ptr,
 		                std::vector <changedDataInfo_t>* changesVector_ptr);
 
-		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																	return false; }
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 		DecisionSystemLA* m_data_ptr;
 	};
@@ -439,20 +503,22 @@ namespace CL::ClientData {
 	class GAcoldDataHandler: public BaseSubHandler {
 	public:
 		
-		//full insertion
+		bool CL_API changeAll(uint32_t agentID, GA::coldData_t* newValue_ptr);
 
-		//per-simple-field insertion methods
+		bool CL_API changeID(uint32_t agentID, uint32_t newValue);
+		bool CL_API changeName(uint32_t agentID, std::string newValue);
 
 	protected:
 		friend class Handler;
 
-		bool initialize(ClientData::Handler* parentHandlerPtr, 
-				        ColdDataControllerGA* data_ptr,
-		                std::vector <changedDataInfo_t>* changesVector_ptr);
+		bool initialize(ClientData::Handler* parentHandlerPtr, ColdDataControllerGA* data_ptr,
+						                   std::vector <changedDataInfo_t>* changesVector_ptr);
 
-		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																	return false; }
-
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
+			bool transferID(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferName(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
 		ColdDataControllerGA* m_data_ptr;
 	};
 
@@ -463,10 +529,18 @@ namespace CL::ClientData {
 		class GArelationsHandler: public BaseSubHandler {
 		public:
 		
-			//full insertion
+			bool CL_API changeAll(uint32_t agentID, AS::GAneighborRelations_t* newValue_ptr);
 
-			//per-simple-field insertion methods
-
+			//TO DO: Put IDs on low and high 16 bits of changes.agentId
+			bool CL_API changeStanceToNeighbour(uint32_t agentID, 
+				                                uint32_t neighbourID, int newValue);
+			//TO DO: Put IDs on low and high 16 bits of changes.agentId
+			bool CL_API changeDispositionToNeighbour(uint32_t agentID, 
+				                                     uint32_t neighbourID, int newValue);
+			//TO DO: Put IDs on low and high 16 bits of changes.agentId
+			bool CL_API changeLastStepDispositionToNeighbour(uint32_t agentID, 
+				                           uint32_t neighbourID, int newValue);
+			
 		protected:
 			friend class GAstateHandler;
 
@@ -474,18 +548,27 @@ namespace CL::ClientData {
 							StateControllerGA* data_ptr,
 							std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																		return false; }
-
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
+		    //TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			bool transferStanceToNeighbour(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			bool transferDispositionToNeighbour(uint32_t agentID, 
+			                                    ASdataControlPtrs_t recepientPtrs);
+			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			bool transferLastStepDispositionToNeighbour(uint32_t agentID, 
+			                                            ASdataControlPtrs_t recepientPtrs);
+			
 			StateControllerGA* m_data_ptr;
 		};
 
 			class GAresourcesHandler: public BaseSubHandler {
 			public:
 
-				//full insertion
-
-				//per-simple-field insertion methods
+				bool CL_API changeAll(uint32_t agentID, AS::resources_t* newValue_ptr);
+				
+				bool CL_API changeCurrent(uint32_t agentID, float newValue);
+				bool CL_API changeIncome(uint32_t agentID, float newValue);
 
 			protected:
 				friend class GAparametersHandler;
@@ -494,18 +577,21 @@ namespace CL::ClientData {
 					            StateControllerGA* data_ptr,
 					            std::vector <changedDataInfo_t>* changesVector_ptr);
 
-				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																		return false; }
-
+				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				
+				bool transferCurrent(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				bool transferIncome(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				
 				StateControllerGA* m_data_ptr;
 			};
 
 		class GAparametersHandler: public BaseSubHandler {
 		public:
 		
-			//full insertion
-
-			//per-simple-field insertion methods
+			bool CL_API changeAll(uint32_t agentID, AS::GAparameterTotals_t* newValue_ptr);
+				
+			bool CL_API changeGAresources(uint32_t agentID, float newValue);
+			bool CL_API changeLAstrenghtTotal(uint32_t agentID, float newValue);
 
 			GAresourcesHandler LAresourceTotals;
 
@@ -516,18 +602,23 @@ namespace CL::ClientData {
 							StateControllerGA* data_ptr,
 							std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																		return false; }
-
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
+			bool transferGAresources(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			bool transferLAstrenghtTotal(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+			
 			StateControllerGA* m_data_ptr;
 		};
 
 	class GAstateHandler: public BaseSubHandler {
 	public:
 		
-		//full insertion
-
-		//per-simple-field insertion methods
+		bool CL_API changeAll(uint32_t agentID, GA::stateData_t* newValue_ptr);
+		
+		bool CL_API changeConnectedGAs(uint32_t agentID, AS::GAflagField_t* newValue_ptr);
+		bool CL_API changeLocalAgentsBelongingToThis(uint32_t agentID, 
+			                                         AS::LAflagField_t* newValue_ptr);
+		bool CL_API changeOnOff (uint32_t agentID, bool newValue);
 
 		GArelationsHandler relations;
 		GAparametersHandler parameters;
@@ -539,9 +630,11 @@ namespace CL::ClientData {
 						StateControllerGA* data_ptr,
 						std::vector <changedDataInfo_t>* changesVector_ptr);
 
-		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																	return false; }
-
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
+		bool transferGAresources(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferLAstrenghtTotal(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
 		StateControllerGA* m_data_ptr;
 	};
 
@@ -550,9 +643,12 @@ namespace CL::ClientData {
 	class GAdecisionDataHandler: public BaseSubHandler {
 	public:
 		
-		//full insertion
-
-		//per-simple-field insertion methods
+		bool CL_API changeAll(uint32_t agentID, GA::decisionData_t* newValue_ptr);
+		
+		bool CL_API changeInfiltration(uint32_t agentID, 
+									   AS::GAinfiltrationOnNeighbors_t* newValue_ptr);
+		bool CL_API changePersonality(uint32_t agentID, 
+			                                          AS::GApersonality* newValue_ptr);
 
 	protected:
 		friend class Handler;
@@ -561,9 +657,11 @@ namespace CL::ClientData {
 						DecisionSystemGA* data_ptr,
 						std::vector <changedDataInfo_t>* changesVector_ptr);
 
-		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
-																	return false; }
-
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
+		bool transferInfiltration(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferPersonality(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		
 		DecisionSystemGA* m_data_ptr;
 	};
 
