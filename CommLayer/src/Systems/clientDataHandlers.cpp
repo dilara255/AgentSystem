@@ -40,23 +40,38 @@ namespace CL {
 		}
 	}
 
+	bool ClientData::BaseSubHandler::initialize(ClientData::Handler* parentHandlerPtr,
+		                                std::vector <changedDataInfo_t>* changesVector_ptr) {
+
+		if ((parentHandlerPtr == NULL) || (changesVector_ptr == NULL)) {
+			LOG_ERROR("LA State Client Data Handler failed to initialize - received null pointers");
+			return false;
+		}
+
+		m_parentHandlerPtr = parentHandlerPtr;
+		m_changesVector_ptr = changesVector_ptr;
+
+		return true;
+	}
+
 	bool ClientData::LAstateHandler::initialize(ClientData::Handler* parentHandlerPtr,
 										StateControllerLA* data_ptr,
 										std::vector <changedDataInfo_t>* changesVector_ptr) {
 		
 		LOG_TRACE("Initializing LAstate Handler");
 
-		if ((parentHandlerPtr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
-			LOG_ERROR("LA State Client Data Handler failed to initialize - received null vectors");
+		bool result = BaseSubHandler::initialize(parentHandlerPtr, changesVector_ptr);
+		if (!result) { return false; }
+
+		if (data_ptr == NULL) {
+			LOG_ERROR("LA State Client Data Handler failed to initialize - received null data pointer");
 			return false;
 		}
 
-		m_parentHandlerPtr = parentHandlerPtr;
-		m_data_ptr = data_ptr;
-		m_changesVector_ptr = changesVector_ptr;
+		m_data_ptr = data_ptr;		
 
 		LOG_TRACE("Initializing Handlers for the fields of LAstate");
-		bool result = parameters.initialize(parentHandlerPtr, data_ptr, changesVector_ptr);
+		result = parameters.initialize(parentHandlerPtr, data_ptr, changesVector_ptr);
 		//TO DO: the rest of the initialization
 
 		if (!result) {
@@ -73,19 +88,20 @@ namespace CL {
 										  StateControllerLA* data_ptr,
 										  std::vector <changedDataInfo_t>* changesVector_ptr) {
 		
-		LOG_TRACE("- Initializing LA Parameters Handler");
+		LOG_TRACE("- Initializing LA Parameters Client Data Handler");
 
-		if ((parentHandlerPtr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
+		bool result = BaseSubHandler::initialize(parentHandlerPtr, changesVector_ptr);
+		if (!result) { return false;}
+
+		if (data_ptr == NULL) {
 			LOG_ERROR("- LA Parameters Client Data Handler failed to initialize - received null vectors");
 			return false;
 		}
 
-		m_parentHandlerPtr = parentHandlerPtr;
 		m_data_ptr = data_ptr;
-		m_changesVector_ptr = changesVector_ptr;
 
 		LOG_TRACE("- Initializing Handlers for the fields of LA Parameters");
-		bool result = resources.initialize(parentHandlerPtr, data_ptr, changesVector_ptr);
+		result = resources.initialize(parentHandlerPtr, data_ptr, changesVector_ptr);
 		//TO DO: the rest of the initialization
 		
 		if (!result) {
@@ -104,14 +120,15 @@ namespace CL {
 		
 		LOG_TRACE("-- Initializing LA Resources Handler");
 		
-		if ((parentHandlerPtr == NULL) || (data_ptr == NULL) || (changesVector_ptr == NULL)) {
+		bool result = BaseSubHandler::initialize(parentHandlerPtr, changesVector_ptr);
+		if (!result) { return false; }
+
+		if (data_ptr == NULL) {
 			LOG_ERROR("-- LA Resources Client Data Handler failed to initialize - received null vectors");
 			return false;
 		}
 		
-		m_parentHandlerPtr = parentHandlerPtr;
 		m_data_ptr = data_ptr;
-		m_changesVector_ptr = changesVector_ptr;
 
 		LOG_INFO("-- LA Resources Client Data Handler initialized");
 		return true;

@@ -3,9 +3,8 @@
 /*
 //PLANNING:
 //TO DO:
-//- Implement and test a "vertical slice": currentResources transfer for a given agent;
-//-- Simple test of what's already in place;
-//- Base Class, inheritances and "complete stub" for the rest;
+//- Base Class and inheritances for the sub-handlers;
+//- "complete stub" for all handlers : );
 //- A method for data on each "leaf": implement and test one at a time;
 //- Fill out per-field methods;
 //- Methods for "entire structure";
@@ -88,89 +87,132 @@ namespace CL::ClientData {
 
 	class Handler; //forward declaration. Actual declaration way down bellow
 
-	class NetworkParameterDataHandler {
+	class BaseSubHandler {
+	protected:
+		friend class Handler;
+
+		virtual bool initialize(ClientData::Handler* parentHandlerPtr,
+			std::vector <changedDataInfo_t>* changesVector_ptr);
+
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) = 0;
+
+		ClientData::Handler* m_parentHandlerPtr;
+		std::vector <changedDataInfo_t>* m_changesVector_ptr;
+	};
+
+	class NetworkParameterDataHandler: public BaseSubHandler {
 	public:
+		
+		//full insertion
+
+		//per-simple-field insertion methods
+
+	protected:
+		friend class Handler;
+
 		bool initialize(ClientData::Handler* parentHandlerPtr, networkParameters_t* data_ptr,
-			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
+			                             std::vector <changedDataInfo_t>* changesVector_ptr) 
+																{ return true; }
 
-		//full insertion
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) 
+																			{ return false; }
 
-		//per-simple-field insertion methods
-
-	private:
-		//handler_ptr
-		//data_ptr
-		//changes_ptr
+		networkParameters_t* data_ptr;
 	};
 
 
-	class LAcoldDataHandler {
+	class LAcoldDataHandler: public BaseSubHandler {
 	public:
-		bool initialize(ClientData::Handler* parentHandlerPtr, ColdDataControllerLA* data_ptr,
-			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
-
+		
 		//full insertion
 
 		//per-simple-field insertion methods
 
-	private:
-		//handler_ptr
-		//data_ptr
-		//changes_ptr
-	};
+	protected:
+		friend class Handler;
 
+		bool initialize(ClientData::Handler* parentHandlerPtr, ColdDataControllerLA* data_ptr,
+			                             std::vector <changedDataInfo_t>* changesVector_ptr) 
+																{ return true; }
+
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) 
+																			{ return false; }
+
+		ColdDataControllerLA* data_ptr;
+	};
 
 	//LAstate component Handlers:
 
-		class LArelationsHandler {
+		class LArelationsHandler: public BaseSubHandler {
 		public:
-			//initialization
-
+		
 			//full insertion
 
 			//per-simple-field insertion methods
 
-		private:
-			//handler_ptr
-			//data_ptr
-			//changes_ptr
+		protected:
+			friend class LAstateHandler;
+
+			bool initialize(ClientData::Handler* parentHandlerPtr, 
+				            StateControllerLA* data_ptr,
+		                    std::vector <changedDataInfo_t>* changesVector_ptr) {
+																        return true; }
+
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																	    return false; }
+
+			StateControllerLA* data_ptr;
 		};
 
-			class PositionHandler {
+			class PositionHandler: public BaseSubHandler {
 			public:
-				//initialization
-
+		
 				//full insertion
 
 				//per-simple-field insertion methods
 
-			private:
-				//handler_ptr
-				//data_ptr
-				//changes_ptr
+			protected:
+				friend class LocationAndConnectionsHandler;
+
+				bool initialize(ClientData::Handler* parentHandlerPtr, 
+								StateControllerLA* data_ptr,
+								std::vector <changedDataInfo_t>* changesVector_ptr) {
+																			return true; }
+
+				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																			return false; }
+
+				StateControllerLA* data_ptr;
 			};
 
-		class LocationAndConnectionsHandler {
+		class LocationAndConnectionsHandler: public BaseSubHandler {
 		public:
-			//initialization
-
+		
 			//full insertion
 
 			//per-simple-field insertion methods
 
 			PositionHandler position;
 
-		private:
-			//handler_ptr
-			//data_ptr
-			//changes_ptr
+		protected:
+			friend class LAstateHandler;
+
+			bool initialize(ClientData::Handler* parentHandlerPtr, 
+				            StateControllerLA* data_ptr,
+		                    std::vector <changedDataInfo_t>* changesVector_ptr) {
+																        return true; }
+
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																	    return false; }
+
+			StateControllerLA* data_ptr;
 		};
 		
-			class LAparametersHandler;
-			class LAresourcesHandler {
+			class LAresourcesHandler: public BaseSubHandler {
 			public:
 				//Blocks Client Data.
-				bool CL_API changeResources(uint32_t agentID, resources_t newResources) { return false; }
+				bool CL_API changeAll(uint32_t agentID, resources_t newResources) 
+				                                                         { return false; }
 				
 				//Blocks Client Data.
 				bool CL_API changeCurrentTo(uint32_t agentID, float newValue);
@@ -188,27 +230,34 @@ namespace CL::ClientData {
 				//Client Data should be blocked upstream from this
 				bool transferCurrent(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 				
-				ClientData::Handler* m_parentHandlerPtr;
+				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																		return false; }
+
 				StateControllerLA* m_data_ptr;
-				std::vector <changedDataInfo_t>* m_changesVector_ptr;
 			};
 
-			class LAstrenghtHandler {
+			class LAstrenghtHandler: public BaseSubHandler {
 			public:
-				//initialization
-
+		
 				//full insertion
 
 				//per-simple-field insertion methods
 
-			private:
-				//handler_ptr
-				//data_ptr
-				//changes_ptr
+			protected:
+				friend class LAparametersHandler;
+
+				bool initialize(ClientData::Handler* parentHandlerPtr, 
+								StateControllerLA* data_ptr,
+								std::vector <changedDataInfo_t>* changesVector_ptr) {
+																			return true; }
+
+				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																			return false; }
+
+				StateControllerLA* data_ptr;
 			};
 
-		class LAstateHandler;
-		class LAparametersHandler {
+		class LAparametersHandler: public BaseSubHandler {
 		public:
 			//full insertion
 
@@ -221,14 +270,15 @@ namespace CL::ClientData {
 			friend class LAstateHandler;
 
 			bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
-				            std::vector <changedDataInfo_t>* changesVector_ptr);
+				                     std::vector <changedDataInfo_t>* changesVector_ptr);
 
-			ClientData::Handler* m_parentHandlerPtr;
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																		  return false;}
+
 			StateControllerLA* m_data_ptr;
-			std::vector <changedDataInfo_t>* m_changesVector_ptr;
 		};
 
-	class LAstateHandler {
+	class LAstateHandler: public BaseSubHandler {
 	public:
 		//full insertion
 
@@ -238,105 +288,137 @@ namespace CL::ClientData {
 		LocationAndConnectionsHandler location;
 		LAparametersHandler parameters;
 
-	private:
+	protected:
 		friend class Handler;
 
 		bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerLA* data_ptr,
-			std::vector <changedDataInfo_t>* changesVector_ptr);
+			                             std::vector <changedDataInfo_t>* changesVector_ptr);
 
-		ClientData::Handler* m_parentHandlerPtr;
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) { 
+			                                                                return false; }
+
 		StateControllerLA* m_data_ptr;
-		std::vector <changedDataInfo_t>* m_changesVector_ptr;
 	};
 
 
 	//LAdecision component Handlers:
 	
-		class LApersonalityHandler {
+		class LApersonalityHandler: public BaseSubHandler {
 		public:
-			//initialization
-
+		
 			//full insertion
 
 			//per-simple-field insertion methods
 
-		private:
-			//handler_ptr
-			//data_ptr
-			//changes_ptr
+		protected:
+			friend class LAdecisionDataHandler;
+
+			bool initialize(ClientData::Handler* parentHandlerPtr, 
+				            DecisionSystemLA* data_ptr,
+		                    std::vector <changedDataInfo_t>* changesVector_ptr) {
+																        return true; }
+
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																	    return false; }
+
+			DecisionSystemLA* data_ptr;
 		};
 
-	class LAdecisionDataHandler {
+	class LAdecisionDataHandler: public BaseSubHandler {
 	public:
-		bool initialize(ClientData::Handler* parentHandlerPtr, DecisionSystemLA* data_ptr,
-			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
-
+		
 		//full insertion
 
 		//per-simple-field insertion methods
 
-		LApersonalityHandler offsets;
+		LApersonalityHandler personality;
 
-	private:
-		//handler_ptr
-		//data_ptr
-		//changes_ptr
+	protected:
+		friend class Handler;
+
+		bool initialize(ClientData::Handler* parentHandlerPtr, 
+				        DecisionSystemLA* data_ptr,
+		                std::vector <changedDataInfo_t>* changesVector_ptr) {
+																    return true; }
+
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																	return false; }
+
+		DecisionSystemLA* data_ptr;
 	};
 
 
-	class GAcoldDataHandler {
+	class GAcoldDataHandler: public BaseSubHandler {
 	public:
-		bool initialize(ClientData::Handler* parentHandlerPtr, ColdDataControllerGA* data_ptr,
-			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
-
+		
 		//full insertion
 
 		//per-simple-field insertion methods
 
-	private:
-		//handler_ptr
-		//data_ptr
-		//changes_ptr
+	protected:
+		friend class Handler;
+
+		bool initialize(ClientData::Handler* parentHandlerPtr, 
+				        ColdDataControllerGA* data_ptr,
+		                std::vector <changedDataInfo_t>* changesVector_ptr) {
+																    return true; }
+
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																	return false; }
+
+		ColdDataControllerGA* data_ptr;
 	};
 
 
 	//GAstate component Handlers:
 	
-		class GArelationsHandler {
+		class GArelationsHandler: public BaseSubHandler {
 		public:
-			//initialization
-
+		
 			//full insertion
 
 			//per-simple-field insertion methods
 
-		private:
-			//handler_ptr
-			//data_ptr
-			//changes_ptr
+		protected:
+			friend class GAstateHandler;
+
+			bool initialize(ClientData::Handler* parentHandlerPtr, 
+							StateControllerGA* data_ptr,
+							std::vector <changedDataInfo_t>* changesVector_ptr) {
+																		return true; }
+
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																		return false; }
+
+			StateControllerGA* data_ptr;
 		};
 
-		class GAparametersHandler {
+		class GAparametersHandler: public BaseSubHandler {
 		public:
-			//initialization
-
+		
 			//full insertion
 
 			//per-simple-field insertion methods
 
-			LAresourcesHandler LAresources;
+			LAresourcesHandler LAresourceTotals;
 
-		private:
-			//handler_ptr
-			//data_ptr
-			//changes_ptr
-	};
+		protected:
+			friend class GAstateHandler;
 
-	class GAstateHandler {
+			bool initialize(ClientData::Handler* parentHandlerPtr, 
+							StateControllerGA* data_ptr,
+							std::vector <changedDataInfo_t>* changesVector_ptr) {
+																		return true; }
+
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																		return false; }
+
+			StateControllerGA* data_ptr;
+		};
+
+	class GAstateHandler: public BaseSubHandler {
 	public:
-		bool initialize(ClientData::Handler* parentHandlerPtr, StateControllerGA* data_ptr,
-			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
-
+		
 		//full insertion
 
 		//per-simple-field insertion methods
@@ -344,78 +426,111 @@ namespace CL::ClientData {
 		GArelationsHandler relations;
 		GAparametersHandler parameters;
 
-	private:
-		//handler_ptr
-		//data_ptr
-		//changes_ptr
+	protected:
+		friend class Handler;
+
+		bool initialize(ClientData::Handler* parentHandlerPtr, 
+						StateControllerGA* data_ptr,
+						std::vector <changedDataInfo_t>* changesVector_ptr) {
+																	return true; }
+
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																	return false; }
+
+		StateControllerGA* data_ptr;
 	};
 
 		
-	class GAdecisionDataHandler {
+	class GAdecisionDataHandler: public BaseSubHandler {
 	public:
-		bool initialize(ClientData::Handler* parentHandlerPtr, DecisionSystemGA* data_ptr,
-			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
-
+		
 		//full insertion
 
 		//per-simple-field insertion methods
 
-	private:
-		//handler_ptr
-		//data_ptr
-		//changes_ptr
+	protected:
+		friend class Handler;
+
+		bool initialize(ClientData::Handler* parentHandlerPtr, 
+						DecisionSystemGA* data_ptr,
+						std::vector <changedDataInfo_t>* changesVector_ptr) {
+																	return true; }
+
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																	return false; }
+
+		DecisionSystemGA* data_ptr;
 	};
 
 
 	//Action component Handlers:
 	
-		class ActionIDsHandler {
+		class ActionIDsHandler: public BaseSubHandler {
 		public:
-			//initialization
-
+		
 			//full insertion
 
 			//per-simple-field insertion methods
 
-		private:
-			//handler_ptr
-			//data_ptr
-			//changes_ptr
+		protected:
+			friend class ActionsHandler;
+
+			bool initialize(ClientData::Handler* parentHandlerPtr, 
+							std::vector <actionData_t>* data_ptr,
+							std::vector <changedDataInfo_t>* changesVector_ptr) {
+																		return true; }
+
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																		return false; }
+
+			std::vector <actionData_t>* data_ptr;
 		};
 
-		class ActionTickInfoHandler {
+		class ActionTickInfoHandler: public BaseSubHandler {
 		public:
-			//initialization
-
+		
 			//full insertion
 
 			//per-simple-field insertion methods
 
-		private:
-			//handler_ptr
-			//data_ptr
-			//changes_ptr
+		protected:
+			friend class ActionsHandler;
+
+			bool initialize(ClientData::Handler* parentHandlerPtr, 
+							std::vector <actionData_t>* data_ptr,
+							std::vector <changedDataInfo_t>* changesVector_ptr) {
+																		return true; }
+
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																		return false; }
+
+			std::vector <actionData_t>* data_ptr;
 		};
 
-		class ActionDetailsHandler {
+		class ActionDetailsHandler: public BaseSubHandler {
 		public:
-			//initialization
-
+		
 			//full insertion
 
 			//per-simple-field insertion methods
 
-		private:
-			//handler_ptr
-			//data_ptr
-			//changes_ptr
+		protected:
+			friend class ActionsHandler;
+
+			bool initialize(ClientData::Handler* parentHandlerPtr, 
+							std::vector <actionData_t>* data_ptr,
+							std::vector <changedDataInfo_t>* changesVector_ptr) {
+																		return true; }
+
+			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																		return false; }
+
+			std::vector <actionData_t>* data_ptr;
 		};
 
-	class ActionsHandler {
+	class ActionsHandler: public BaseSubHandler {
 	public:
-		bool initialize(ClientData::Handler* parentHandlerPtr, std::vector <actionData_t>* data_ptr,
-			            std::vector <changedDataInfo_t>* changesVector_ptr) { return true; }
-
+		
 		//full insertion
 
 		//per-simple-field insertion methods
@@ -424,12 +539,19 @@ namespace CL::ClientData {
 		ActionTickInfoHandler tickInfo;
 		ActionDetailsHandler details;
 
-	private:
-		//handler_ptr
-		//data_ptr
-		//changes_ptr
-	};
+	protected:
+		friend class Handler;
 
+		bool initialize(ClientData::Handler* parentHandlerPtr, 
+						std::vector <actionData_t>* data_ptr,
+						std::vector <changedDataInfo_t>* changesVector_ptr) {
+																	return true; }
+
+		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs) {
+																	return false; }
+
+		std::vector <actionData_t>* data_ptr;
+	};
 
 	//Handles insertion and loading of changes for the Client Data
 	class Handler {
@@ -467,6 +589,3 @@ namespace CL::ClientData {
 		bool m_initialized;
 	};
 }
-
-
-
