@@ -78,7 +78,12 @@ namespace CL {
 
 	bool ClientData::NetworkParameterDataHandler::transferComment(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		return false;
+		char* commentOnAS_ptr = recepientPtrs.params_ptr->comment;
+		char* commentClient_ptr = m_data_ptr->comment;
+
+		strcpy(commentOnAS_ptr, commentClient_ptr);
+		
+		return true;
 	}
 
 	bool ClientData::NetworkParameterDataHandler::transferIsNetworkInitialized(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
@@ -207,7 +212,43 @@ namespace CL {
 
 	bool ClientData::ActionDetailsHandler::transferAux(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		return false;
+		//TO DO: HACK: a little hackish, must remember origin -> agent, target -> action
+		//MAY NOT BE PORTABLE?
+		AS::IDsToUnsigned_u IDdata;
+		IDdata.IDsAsUnsigned = agentID;
+
+		bool isGlobal = (bool)IDdata.IDs.scope;
+		agentID = IDdata.IDs.origin;
+		uint32_t actionID = IDdata.IDs.target;
+
+		//TO DO: extract functions
+		int maxActionsPerAgent = recepientPtrs.actions_ptr->getMaxActionsPerAgent();
+		int minimumSize = (agentID+1)*maxActionsPerAgent;
+		
+		if (m_data_ptr->size() < minimumSize) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (recepientPtrs.actions_ptr->getDirectLAdataPtr()->size() < minimumSize) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		int index = (agentID)*maxActionsPerAgent + actionID; //IDs start at zero
+		AS::actionData_t* ASaction_ptr;
+
+		if(isGlobal){
+			ASaction_ptr = &recepientPtrs.actions_ptr->getDirectGAdataPtr()->at(index);
+		}
+		else {
+			ASaction_ptr = &recepientPtrs.actions_ptr->getDirectLAdataPtr()->at(index);
+		}
+
+		AS::actionData_t ClientAction = m_data_ptr->at(index);
+
+		*ASaction_ptr = ClientAction;
+		
+		return true;
 	}
 
 
@@ -386,7 +427,24 @@ namespace CL {
 
 	bool ClientData::LAstrenghtHandler::transferGuard(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		return false;
+		//TO DO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->LAstate_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		LA::StateController* LAdata_ptr = recepientPtrs.agentData_ptr->LAstate_ptr;
+		std::vector <LA::stateData_t>* dataVector_ptr = LAdata_ptr->getDirectDataPtr();
+		LA::stateData_t* agentData_ptr = &(dataVector_ptr->at(agentID));
+		
+		agentData_ptr->parameters.strenght.externalGuard =
+			m_data_ptr->data.at(agentID).parameters.strenght.externalGuard;
+		
+		return true;
 	}
 
 	bool ClientData::LAstrenghtHandler::transferThresholdForUpkeed(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
@@ -415,7 +473,31 @@ namespace CL {
 
 	bool ClientData::LApersonalityHandler::transferGAoffsets(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		return false;
+		//TO DO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->LAstate_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		AS::LAdecisionOffsets_t* ClientOffsets_ptr =
+	        &m_data_ptr->data[agentID].offsets.incentivesAndConstraintsFromGA;	
+
+		LA::decisionData_t* ASdecision_ptr =
+			&recepientPtrs.agentData_ptr->LAdecision_ptr->getDirectDataPtr()->at(agentID);
+		AS::LAdecisionOffsets_t* ASoffsets_ptr =
+			&ASdecision_ptr->offsets.incentivesAndConstraintsFromGA;
+		
+		for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+			for (int j = 0; j < AS::TOTAL_MODES; j++) {
+				(*ASoffsets_ptr)[i][j] = (*ClientOffsets_ptr)[i][j];
+			}
+		}
+		
+		return true;	
 	}
 
 	bool ClientData::LApersonalityHandler::transferPersonality(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
@@ -435,7 +517,23 @@ namespace CL {
 
 	bool ClientData::GAcoldDataHandler::transferID(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		return false;
+		//TO DO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->GAcoldData_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		GA::ColdDataController* GAdata_ptr = recepientPtrs.agentData_ptr->GAcoldData_ptr;
+		std::vector <GA::coldData_t>* dataVector_ptr = GAdata_ptr->getDirectDataPtr();
+		GA::coldData_t* agentData_ptr = &(dataVector_ptr->at(agentID));
+		
+		agentData_ptr->id = m_data_ptr->data.at(agentID).id;
+		
+		return true;
 	}
 
 	bool ClientData::GAcoldDataHandler::transferName(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
@@ -453,12 +551,12 @@ namespace CL {
 	}
 
 
-	bool ClientData::GAstateHandler::transferGAresources(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	bool ClientData::GAstateHandler::transferConnectedGAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
 		return false;
 	}
 
-	bool ClientData::GAstateHandler::transferLAstrenghtTotal(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	bool ClientData::GAstateHandler::transferLocalAgentsBelongingToThis(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
 		return false;
 	}
