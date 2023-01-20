@@ -222,7 +222,7 @@ namespace CL::ClientData {
 
 			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool CL_API changeIntensityTo(bool isGlobal, uint32_t agentID, uint32_t actionID, float newValue);
-			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
+			//TODO-CRITICAL: UPDATE COMMENTS HERE : )
 			bool CL_API changeAuxTo(bool isGlobal, uint32_t agentID, uint32_t actionID, float newValue);
 
 		protected:
@@ -697,7 +697,7 @@ namespace CL::ClientData {
 	public:
 		Handler::Handler(AS::networkParameters_t params);
 
-		bool sendNewClientData(ASdataControlPtrs_t recepientPtrs, bool shouldMainLoopBeRunning);
+		bool sendNewClientData(ASdataControlPtrs_t recepientPtrs, bool silent);
 
 		//Returns NULL on time-out or a pointer to the acquired mutex otherwise
 		std::mutex* acquireMutex();
@@ -716,6 +716,11 @@ namespace CL::ClientData {
 
 		ActionsHandler LAaction;
 		ActionsHandler GAaction;
+	protected:
+		int m_referenceNetworkSize = 0;
+		int m_maxActions = 0;
+		int m_LAquantity = 0;
+		int m_GAquantity = 0;
 
 	private:
 		bool processChange(ClientData::changedDataInfo_t change,

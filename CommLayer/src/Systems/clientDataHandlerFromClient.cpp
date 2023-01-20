@@ -170,33 +170,39 @@ namespace CL{
 
 	bool CL_API ClientData::ActionDetailsHandler::changeAuxTo(bool isGlobal, uint32_t agentID, uint32_t actionID, float newValue)
 	{
+		int maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
+		int index = (agentID)*maxActionsPerAgent + actionID;
+
 		//TO DO: extract
-		if (agentID >= m_data_ptr->size()) {
-			LOG_ERROR("Tried to change data for agentID out of range");
+		if (index >= m_data_ptr->size()) {
+			LOG_ERROR("Tried to change data for Index out of range");
 			
 			#ifdef AS_DEBUG
-				printf("Data has capacity %zu, aid was %u\n", 
-												m_data_ptr->size(), agentID);
+				printf("Data has capacity %zu, index was %u\n", 
+												m_data_ptr->size(), index);
 			#endif // AS_DEBUG
 
 			return false;
 		}
 
-		//TO DO: HACK: a little hackish, must remember origin -> agent, target -> action
-		//MAY NOT BE PORTABLE?
-		AS::IDsToUnsigned_u effectiveID;
-		
-		effectiveID.IDs.active = 0;
-		effectiveID.IDs.category = 0;
-		effectiveID.IDs.mode = 0;
-		
-		effectiveID.IDs.scope = (int)isGlobal;
-		effectiveID.IDs.origin = agentID;
-		effectiveID.IDs.target = actionID;
+		#ifdef AS_DEBUG
+			int minimumSize = (agentID+1)*maxActionsPerAgent;
+			
+			LOG_CRITICAL("CHECK M_DATA SIZE!");
+
+			printf("\n\nagentID: %d, minSize: %d, m_data_size: %zu, index: %d, nv: %f\n",
+				                agentID, minimumSize, m_data_ptr->size(), index, newValue);
+		#endif // AS_DEBUG
+
+		//TO DO: EXTRACT
+		uint32_t effectiveID = 0;
+		effectiveID += ((int)isGlobal << (uint32_t)AS::actionIDtoUnsigned::SCOPE_SHIFT);
+		effectiveID += (agentID << (uint32_t)AS::actionIDtoUnsigned::AGENT_SHIFT);
+		effectiveID += (actionID << (uint32_t)AS::actionIDtoUnsigned::ACTION_SHIFT);
 
 		changedDataInfo_t change;
 
-		change.agentID = effectiveID.IDsAsUnsigned;
+		change.agentID = effectiveID;
 
 		//Get the callback ready (so we hold the mutex for as little as possible):
 		auto callback = std::bind(&CL::ClientData::ActionDetailsHandler::transferAux,
@@ -211,7 +217,7 @@ namespace CL{
 		}
 
 		//Actually changes the value:
-		m_data_ptr->at(agentID).details.processingAux = newValue;
+		m_data_ptr->at(index).details.processingAux = newValue;
 
 		//Store the callback function to transfer the change:
 		m_changesVector_ptr->push_back(change);

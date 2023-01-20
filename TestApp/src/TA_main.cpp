@@ -257,29 +257,43 @@ bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 	return true;
 }
 
+//Changes: Comment, GAid, GAconn, Guard, LA GA offsets, aux
 bool testChangingCLdataFromTAandRetrievingFromAS(void) {
-
+	
 	LOG_WARN("TA will try to change some data in CL so AS can check it...");
-
-	LOG_CRITICAL("CRASH HERE : )"); GETCHAR_PAUSE;
+	
+	LOG_TRACE("Will acquire pointers to the DATA on AS and CL");
 
 	const CL::mirror_t* mp = CL::ASmirrorData_ptr;
+	if (mp == NULL) {
+		LOG_ERROR("const AS Data pointer returned null. Aborting test.");
+		return false;
+	}
+
 	CL::ClientData::Handler* cp = CL::getClientDataHandlerPtr();
 	if (cp == NULL) {
 		LOG_ERROR("Client Data Handler pointer returned null. Aborting test.");
 		return false;
 	}
+
+	LOG_TRACE("Pointers acquired and not NULL");
 	
 	std::string newComment;
 	newComment = std::string(mp->networkParams.comment);
 	newComment[0] = TST_COMMENT_LETTER_CHANGE;
+
+	LOG_TRACE("Will issue new network comment");
+
 	bool result = cp->networkParameters.changeCommentTo(0, newComment.c_str());
 	if (!result) {
 		LOG_ERROR("Error issuing comment change. Aborting test.");
 		return false;
 	}
+	
+	//only at most maxGA - 1 have data (last is reserved for "no GA", so:
+	uint32_t lastGA = mp->networkParams.numberGAs - 1 - 1; 
 
-	uint32_t lastGA = mp->networkParams.numberGAs - 1;
+	LOG_TRACE("Will issue new ID for last GA");
 
 	result = cp->GAcold.changeID(lastGA, TST_GA_ID);
 	if (!result) {
@@ -289,6 +303,9 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 
 	AS::GAflagField_t newGAconnectionField;
 	newGAconnectionField.loadField(TST_GA_CONNECTIONS);
+
+	LOG_TRACE("Will issue new GA Connections for last GA");
+
 	result = cp->GAstate.changeConnectedGAs(lastGA, &newGAconnectionField);
 	if (!result) {
 		LOG_ERROR("Error issuing Connected GAs change. Aborting test.");
@@ -296,6 +313,8 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 	}
 
 	uint32_t lastLA = mp->networkParams.numberLAs - 1;
+
+	LOG_TRACE("Will issue new Guard for last LA");
 
 	result = cp->LAstate.parameters.strenght.changeGuard(lastLA ,TST_LA_REINFORCEMENT);
 	if (!result) {
@@ -306,6 +325,8 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 	LA::decisionData_t currentData = mp->agentMirrorPtrs.LAdecision_ptr->data.at(lastLA);
 	AS::LAdecisionOffsets_t newOffsets;
 	
+	LOG_TRACE("Will copy AS's current LA decision offset data...");
+
 	for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
 		for (int j = 0; j < AS::TOTAL_MODES; j++) {
 
@@ -314,6 +335,8 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 	}
 	newOffsets[TST_CHANGED_CATEGORY][TST_CHANGED_MODE]  = (float)TST_LA_OFFSET;
 
+	LOG_TRACE("And issue a change");
+
 	result = cp->LAdecision.personality.changeGAoffsets(lastLA, &newOffsets);
 	if (!result) {
 		LOG_ERROR("Error issuing LA's GA offsets change. Aborting test.");
@@ -321,8 +344,13 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 	}
 
 	int maxActionsPerAgent = mp->networkParams.maxActions;
+
+	LOG_TRACE("Will issue new Aux to last LA's last action");
+
 	cp->LAaction.details.changeAuxTo(false, lastLA, maxActionsPerAgent - 1, 
 		                                               TST_LAST_ACTION_AUX);
+
+	LOG_INFO("All test changes issue...");
 
 	return AS::testGotNewValuesFromASthroughCL();
 }
@@ -423,9 +451,14 @@ bool testFromTAifCLhasInitialized(void) {
 
 	int failed = 0;
 
-	failed += capLAact != (MAX_LA_QUANTITY * MAX_ACTIONS_PER_AGENT * sizeLAact);
-	failed += capGAact != (MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT * sizeGAact);
+	int GAquantity = CL::ASmirrorData_ptr->networkParams.numberGAs; //already corrected
+	int LAquantity = CL::ASmirrorData_ptr->networkParams.numberLAs;
+	int maxActions = CL::ASmirrorData_ptr->networkParams.maxActions;
 
+	failed += capLAact != (LAquantity * maxActions * sizeLAact);
+	failed += capGAact != (GAquantity * maxActions * sizeGAact);
+
+	//TODO-CRITICAL: GA's are counting the "phantom" last one
 	failed += capLAcold != (MAX_LA_QUANTITY* sizeLAcold);
 	failed += capGAcold != (MAX_GA_QUANTITY* sizeGAcold);
 	failed += capLAstate != (MAX_LA_QUANTITY* sizeLAstate);

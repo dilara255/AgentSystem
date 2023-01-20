@@ -14,7 +14,8 @@ namespace CL {
 							data_cptr = NULL;
 						}
 
-		bool initialize(mirror_t** mirrorData_ptr_ptr);
+		bool initialize(mirror_t** mirrorData_ptr_ptr, 
+			            const AS::networkParameters_t* params_cptr);
 		
 		bool receiveReplacementParams(const AS::networkParameters_t* params_cptr);
 		bool receiveReplacementAgentData(CL::agentToMirrorVectorPtrs_t dataPtrs);
@@ -39,7 +40,7 @@ namespace CL {
 		bool clearAllData();
 
 	private:
-		bool createAgentDataControllers();
+		bool createAgentDataControllers(const AS::networkParameters_t* params_cptr);
 
 		mirror_t data;
 		const mirror_t* data_cptr;

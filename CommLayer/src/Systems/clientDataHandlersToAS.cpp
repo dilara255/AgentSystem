@@ -23,9 +23,15 @@ namespace CL {
 
 	//DISPATCHER - ALL
 	bool ClientData::Handler::sendNewClientData(ASdataControlPtrs_t recepientPtrs, 
-		                                        bool shouldMainLoopBeRunning) {
+		                                                              bool silent) {
 
 		int size = (int)m_changes.size();
+
+		#ifdef AS_DEBUG
+			if (!silent) {
+				LOG_TRACE("Will acquire mutex...");
+			}
+		#endif // AS_DEBUG
 
 		std::mutex* mutex_ptr = acquireMutex();
 		if (mutex_ptr == NULL) {
@@ -34,19 +40,41 @@ namespace CL {
 		}
 
 		#ifdef AS_DEBUG
-			if (!shouldMainLoopBeRunning) {
+			if (!silent) {
 				printf("Client Changes to process: %d\n", size);
 			}
 		#endif // AS_DEBUG
 
 		bool result = true;
+		bool tmp;
 		for (int i = 0; i < size; i++) {
-			result &= processChange(m_changes[i], recepientPtrs);
+
+			#ifdef AS_DEBUG
+				if (!silent) {
+					printf("Change %d: %d, %s\n", i, m_changes[i].agentID,
+						                          m_changes[i].getNewData_fptr);
+				}
+			#endif // AS_DEBUG
+			
+			tmp = processChange(m_changes[i], recepientPtrs);
+			result &=tmp;
+
+			#ifdef AS_DEBUG
+				if(!tmp && !silent) {
+					LOG_WARN("Failed to process change!");
+				}
+			#endif // AS_DEBUG
 		}
 
 		if (!result) {
 			LOG_ERROR("Failed to process some changes issue by the Client");
 		}
+
+		#ifdef AS_DEBUG
+			if (!silent) {
+				LOG_INFO("All changes processed! Will release lock...");
+			}
+		#endif // AS_DEBUG
 
 		mutex_ptr->unlock();
 
@@ -212,19 +240,30 @@ namespace CL {
 
 	bool ClientData::ActionDetailsHandler::transferAux(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		//TO DO: HACK: a little hackish, must remember origin -> agent, target -> action
-		//MAY NOT BE PORTABLE?
-		AS::IDsToUnsigned_u IDdata;
-		IDdata.IDsAsUnsigned = agentID;
-
-		bool isGlobal = (bool)IDdata.IDs.scope;
-		agentID = IDdata.IDs.origin;
-		uint32_t actionID = IDdata.IDs.target;
-
-		//TO DO: extract functions
-		int maxActionsPerAgent = recepientPtrs.actions_ptr->getMaxActionsPerAgent();
-		int minimumSize = (agentID+1)*maxActionsPerAgent;
+		//TO DO: Extract
+		bool isGlobal = (bool)(agentID & (uint32_t)AS::actionIDtoUnsigned::SCOPE_MASK);
 		
+		uint32_t actionID = agentID & (uint32_t)AS::actionIDtoUnsigned::ACTION_MASK;
+		actionID = actionID >> (uint32_t)AS::actionIDtoUnsigned::ACTION_SHIFT;
+
+		agentID = agentID & (uint32_t)AS::actionIDtoUnsigned::AGENT_MASK;
+		agentID = agentID >> (uint32_t)AS::actionIDtoUnsigned::AGENT_SHIFT;
+	
+		int maxActionsPerAgent = recepientPtrs.actions_ptr->getMaxActionsPerAgent();
+		int index = (agentID)*maxActionsPerAgent + actionID; //IDs start at zero
+
+		#ifdef AS_DEBUG
+			int minimumSize = (agentID+1)*maxActionsPerAgent;
+			size_t ASsize = recepientPtrs.actions_ptr->getActionsLAsCptr()->size();
+
+			LOG_CRITICAL("CHECK M_DATA SIZE!");
+
+			printf("\n\nagentID: %d, maxActions: %d, minSizer: %d, m_data_size: %zu\n",
+				agentID, recepientPtrs.actions_ptr->getMaxActionsPerAgent(),
+				minimumSize, m_data_ptr->size());
+			printf("\n\nASsize: %zu, index: %d\n", ASsize, index);
+		#endif // AS_DEBUG
+
 		if (m_data_ptr->size() < minimumSize) {
 			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
 			return false;
@@ -234,7 +273,6 @@ namespace CL {
 			return false;
 		}
 
-		int index = (agentID)*maxActionsPerAgent + actionID; //IDs start at zero
 		AS::actionData_t* ASaction_ptr;
 
 		if(isGlobal){
@@ -246,7 +284,7 @@ namespace CL {
 
 		AS::actionData_t ClientAction = m_data_ptr->at(index);
 
-		*ASaction_ptr = ClientAction;
+		ASaction_ptr->details.processingAux = ClientAction.details.processingAux;
 		
 		return true;
 	}
@@ -530,9 +568,9 @@ namespace CL {
 		GA::ColdDataController* GAdata_ptr = recepientPtrs.agentData_ptr->GAcoldData_ptr;
 		std::vector <GA::coldData_t>* dataVector_ptr = GAdata_ptr->getDirectDataPtr();
 		GA::coldData_t* agentData_ptr = &(dataVector_ptr->at(agentID));
-		
+
 		agentData_ptr->id = m_data_ptr->data.at(agentID).id;
-		
+
 		return true;
 	}
 

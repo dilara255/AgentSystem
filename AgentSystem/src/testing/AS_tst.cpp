@@ -39,16 +39,29 @@ namespace AS {
 
 	bool testGotNewValuesFromASthroughCL() {
 		
+		LOG_WARN("Will test changes issued by the Client to the AS through the CL...");
+
+		if ((&actionSystem == NULL) || (!agentDataControllerPtrs.haveBeenCreated) ||
+			(!agentDataControllerPtrs.haveData) || (currentNetworkParams_ptr == NULL) ||
+			(!currentNetworkParams_ptr->isNetworkInitialized)) {
+			LOG_ERROR("Something is wrong with the pointers being used. Aborting test");
+			return false;
+		}
+
+		LOG_TRACE("Will first transfer any unprocessed Client data to the AS...");
+
 		bool result = CL::getNewClientData(currentNetworkParams_ptr,
 			                               &agentDataControllerPtrs, 
 			                               &(actionSystem.data),
-			                               true);
+			                               false);
 		if (!result) {
 			LOG_ERROR("Test Failed to get Client Changes. Will abort");
 			return false;
 		}
 
 		int failed = 0;
+
+		LOG_TRACE("Done. Will check transfered values. First, the network comment...");
 
 		if (currentNetworkParams_cptr->comment[0] != TST_COMMENT_LETTER_CHANGE) {
 			failed++; 
@@ -57,9 +70,12 @@ namespace AS {
 		
 		AS::networkParameters_t* pp = currentNetworkParams_ptr;
 
-		int lastGA = pp->numberGAs - 1;
+		//Only at most max GAs - 1 have data: the "last" is reserved for "no GA", so:
+		int lastGA = pp->numberGAs - 1 - 1;
 
 		AS::dataControllerPointers_t mp = agentDataControllerPtrs;
+
+		LOG_TRACE("Will read Last GA's id...");
 
 		uint32_t idRead = mp.GAcoldData_ptr->getDataCptr()->at(lastGA).id;
 
@@ -67,6 +83,8 @@ namespace AS {
 			failed++; 
 			LOG_TRACE("Value read is not as expected"); 
 		}
+
+		LOG_TRACE("Will read Last GA's GA connection data...");
 
 		AS::GAflagField_t connectedRead = 
 			                        mp.GAstate_ptr->getDataCptr()->at(lastGA).connectedGAs;
@@ -78,11 +96,15 @@ namespace AS {
 
 		int lastLA = pp->numberLAs - 1;
 
+		LOG_TRACE("Will read Last LA's guard...");
+
 		float guardRead = mp.LAstate_ptr->getDataCptr()->at(lastLA).parameters.strenght.externalGuard;
 		if (guardRead != (float)TST_LA_REINFORCEMENT) { 
 			failed++; 
 			LOG_TRACE("Value read is not as expected"); 
 		}
+
+		LOG_TRACE("Will read Last LA's GA decision offsets...");
 
 		const AS::LAdecisionOffsets_t* offsets_ptr =
 	      &mp.LAdecision_ptr->getDataCptr()->at(lastLA).offsets.incentivesAndConstraintsFromGA;
@@ -96,11 +118,15 @@ namespace AS {
 			LOG_TRACE("Value read is not as expected!"); 
 		}
 
+		LOG_TRACE("Will read Last LA's las actions's AUX...");
+
 		float auxRead = actionSystem.data.getActionsLAsCptr()->at(lastLA).details.processingAux;
 		if (auxRead != TST_LAST_ACTION_AUX) { 
 			failed++; 
 			LOG_TRACE("Value read is not as expected"); 
 		}
+
+		LOG_TRACE("Checking results...");
 
 		if (failed) {
 			LOG_ERROR("Some of the values modified by the TA werent read back from the CL as expected");
@@ -108,8 +134,8 @@ namespace AS {
 			#ifdef AS_DEBUG
 				printf("\n%d out of 6 failed. Test action aux: %f - expected %f ", failed,
 					                                         auxRead, TST_LAST_ACTION_AUX);
-				printf("\nGA connection data: %d - expected %d ", connectedRead,
-					                                         TST_GA_CONNECTIONS);
+				printf("\nGA connection data: %d - expected %d ", connectedRead.getField(),
+					                                                    TST_GA_CONNECTIONS);
 				printf(" | comment first letter: %c - expected %c", currentNetworkParams_cptr->comment[0],
 																   TST_COMMENT_LETTER_CHANGE);
 				printf("\nGA id: %d - expected %d ", idRead, TST_GA_ID);
