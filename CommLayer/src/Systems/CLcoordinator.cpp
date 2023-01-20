@@ -11,28 +11,30 @@
 
 namespace CL {
 
-	DataMirrorSystem mirror; //TO DO: change to ASmirror
-	mirror_t* mirrorData_ptr; //WARNING: bypasses mirror instance
-	//TO DO: fix, this is just for initial testing
+	DataMirrorSystem ASmirror;
+	const mirror_t* ASmirrorData_ptr;
 
 	CL::ClientData::Handler* clientData_ptr = NULL;
 
 	bool init() {
 		LOG_INFO("initializing CL...");
 
-		bool result = mirror.initialize(&mirrorData_ptr);
+		mirror_t* tempASmirrorData_ptr;
+
+		bool result = ASmirror.initialize(&tempASmirrorData_ptr);
 		if (!result) {
 			LOG_CRITICAL("CL INITIALIZATION FAILED!");
 			return false;
 		}
+		ASmirrorData_ptr = (const mirror_t*)tempASmirrorData_ptr;
 
-		if (!mirror.isInitialized()) {
+		if (!ASmirror.isInitialized()) {
 			LOG_CRITICAL("CL INITIALIZATION FAILED! (instance lost maybe?)");
 			return false;
 		}
 
-		if ((!mirrorData_ptr->agentMirrorPtrs.haveBeenCreated) ||
-			(!mirrorData_ptr->actionMirror.isInitialized())) {
+		if ((!ASmirrorData_ptr->agentMirrorPtrs.haveBeenCreated) ||
+			(!ASmirrorData_ptr->actionMirror.isInitialized())) {
 			LOG_CRITICAL("CL INITIALIZATION FAILED! (pointer copy / container initialization)");
 			return false;
 		}
@@ -89,7 +91,7 @@ namespace CL {
 		}
 	}
 
-	ClientData::Handler* getDataHandlerPtr() {
+	CL_API ClientData::Handler* getClientDataHandlerPtr() {
 		if ((clientData_ptr == NULL) || (!clientData_ptr->hasInitialized())) {
 			LOG_ERROR("Trying to get unititalized or inexistent Client Data Handler");
 			return NULL;
@@ -157,19 +159,19 @@ namespace CL {
 		actionPtrs.actionsGAs_cptr = actionsGAs_cptr;
 
 		//LOG_TRACE("Created Data bundles. Will clear current mirror data and transfer new...");
-		bool result = mirror.clearAllData();
+		bool result = ASmirror.clearAllData();
 		
-		result &= mirror.receiveReplacementParams(params);
-		result &= mirror.receiveReplacementAgentData(agentDataPtrs);
-		result &= mirror.receiveReplacementActionData(actionPtrs);
+		result &= ASmirror.receiveReplacementParams(params);
+		result &= ASmirror.receiveReplacementAgentData(agentDataPtrs);
+		result &= ASmirror.receiveReplacementActionData(actionPtrs);
 
 		if (!result) { 
-			LOG_ERROR("Aborting transfer, will clear mirror"); 
-			mirror.clearAllData();
+			LOG_ERROR("Aborting transfer, will clear ASmirror"); 
+			ASmirror.clearAllData();
 		}
 
-		mirror.updateHasData();
-		if (!mirror.hasData()) {
+		ASmirror.updateHasData();
+		if (!ASmirror.hasData()) {
 			LOG_ERROR("Mirror System says some data controllers read as not initialized");				
 			return false;
 		}

@@ -39,8 +39,10 @@ namespace CL {
 	CL_API int* getTestArrayPtr();
 	CL_API bool hasTstArrayInitialized();
 	CL_API void setTstArrayHasInitialized(bool hasInitialized);
+	/*DEPRECATED
 	CL_API bool sendDataChangedForTest(char* recipientString, GA::coldData_t* recepientGAcold,
-		GA::stateData_t* recepientGAstate, LA::stateData_t* recipientLAstate,
-		LA::decisionData_t* recipientLAdecision, AS::actionData_t* recepientAction);
+	                     GA::stateData_t* recepientGAstate, LA::stateData_t* recipientLAstate,
+		          LA::decisionData_t* recipientLAdecision, AS::actionData_t* recepientAction);
+	*/
 	//*******************
 }

@@ -142,7 +142,7 @@ int main(void) {
 bool testSendingClientDataAndSaving(void) {
 	LOG_WARN("Will try to send data through CL's Client Data Handler");
 
-	uint32_t id = CL::mirrorData_ptr->networkParams.numberLAs - 1;
+	uint32_t id = CL::ASmirrorData_ptr->networkParams.numberLAs - 1;
 	
 	LOG_TRACE("Calculated last LA's ID from AS mirror data");
 
@@ -175,7 +175,7 @@ bool testSendingClientDataAndSaving(void) {
 bool testClientDataHAndlerInitialization(void) {
 	LOG_WARN("Will test ClientDataHandler acquisition");
 
-	cdHandler_ptr = CL::getDataHandlerPtr();
+	cdHandler_ptr = CL::getClientDataHandlerPtr();
 
 	if (cdHandler_ptr == NULL) {
 		LOG_ERROR("Test failed getting client data handler!");
@@ -195,11 +195,11 @@ bool testClientDataHAndlerInitialization(void) {
 
 void TAreadLoop(int numberTicks) {
 	
-	g_ticksRead[0] = CL::mirrorData_ptr->networkParams.mainLoopTicks;
+	g_ticksRead[0] = CL::ASmirrorData_ptr->networkParams.mainLoopTicks;
 	
 	for (int i = 1; i < numberTicks; i++) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(TST_TA_QUERY_FREQUENCY_MS));
-		g_ticksRead[i] = CL::mirrorData_ptr->networkParams.mainLoopTicks;
+		g_ticksRead[i] = CL::ASmirrorData_ptr->networkParams.mainLoopTicks;
 	}
 }
 
@@ -259,43 +259,70 @@ bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 
 bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 
-	//networkParams.comment = comentário com X na primeira letra
-	//ID ultima GA = TST_GA_ID
-	//connectedGAs ultima GA = loadField(TST_GA_CONNECTIONS)
-	//exernalGuard ultima LA = TST_LA_REINFORCEMENT
-	//incentivesAndConstraintsFromGA[TST_CHANGED_CATEGORY][TST_CHANGED_MODE] = (float)TST_LA_OFFSET
-	//^na ultima LA
-	//processingAux ultima ação LA = TST_LAST_ACTION_AUX
-
 	LOG_WARN("TA will try to change some data in CL so AS can check it...");
 
-	CL::mirrorData_ptr->networkParams.comment[0] = TST_COMMENT_LETTER_CHANGE;
+	LOG_CRITICAL("CRASH HERE : )"); GETCHAR_PAUSE;
 
-	GA::coldData_t newGAcoldData = CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data.back();
-	CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data.pop_back();
-	newGAcoldData.id = TST_GA_ID;
-	CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data.push_back(newGAcoldData);
+	const CL::mirror_t* mp = CL::ASmirrorData_ptr;
+	CL::ClientData::Handler* cp = CL::getClientDataHandlerPtr();
+	if (cp == NULL) {
+		LOG_ERROR("Client Data Handler pointer returned null. Aborting test.");
+		return false;
+	}
+	
+	std::string newComment;
+	newComment = std::string(mp->networkParams.comment);
+	newComment[0] = TST_COMMENT_LETTER_CHANGE;
+	bool result = cp->networkParameters.changeCommentTo(0, newComment.c_str());
+	if (!result) {
+		LOG_ERROR("Error issuing comment change. Aborting test.");
+		return false;
+	}
 
-	GA::stateData_t newGAstate = CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data.back();
-	CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data.pop_back();
-	newGAstate.connectedGAs.loadField(TST_GA_CONNECTIONS);
-	CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data.push_back(newGAstate);
+	uint32_t lastGA = mp->networkParams.numberGAs - 1;
 
-	LA::stateData_t newLAdstate = CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data.back();
-	CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data.pop_back();
-	newLAdstate.parameters.strenght.externalGuard = TST_LA_REINFORCEMENT;
-	CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data.push_back(newLAdstate);
+	result = cp->GAcold.changeID(lastGA, TST_GA_ID);
+	if (!result) {
+		LOG_ERROR("Error issuing GA id. change Aborting test.");
+		return false;
+	}
 
-	LA::decisionData_t newLAdecision = CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data.back();
-	CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data.pop_back();
-	newLAdecision.offsets.incentivesAndConstraintsFromGA[TST_CHANGED_CATEGORY][TST_CHANGED_MODE] 
-		                                                               = (float)TST_LA_OFFSET;
-	CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data.push_back(newLAdecision);
+	AS::GAflagField_t newGAconnectionField;
+	newGAconnectionField.loadField(TST_GA_CONNECTIONS);
+	result = cp->GAstate.changeConnectedGAs(lastGA, &newGAconnectionField);
+	if (!result) {
+		LOG_ERROR("Error issuing Connected GAs change. Aborting test.");
+		return false;
+	}
 
-	AS::actionData_t newLAaction = CL::mirrorData_ptr->actionMirror.dataLAs.back();
-	CL::mirrorData_ptr->actionMirror.dataLAs.pop_back();
-	newLAaction.details.processingAux = TST_LAST_ACTION_AUX;
-	CL::mirrorData_ptr->actionMirror.dataLAs.push_back(newLAaction);
+	uint32_t lastLA = mp->networkParams.numberLAs - 1;
+
+	result = cp->LAstate.parameters.strenght.changeGuard(lastLA ,TST_LA_REINFORCEMENT);
+	if (!result) {
+		LOG_ERROR("Error issuing Guard change. Aborting test.");
+		return false;
+	}
+
+	LA::decisionData_t currentData = mp->agentMirrorPtrs.LAdecision_ptr->data.at(lastLA);
+	AS::LAdecisionOffsets_t newOffsets;
+	
+	for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+		for (int j = 0; j < AS::TOTAL_MODES; j++) {
+
+			newOffsets[i][j] = currentData.offsets.incentivesAndConstraintsFromGA[i][j];
+		}
+	}
+	newOffsets[TST_CHANGED_CATEGORY][TST_CHANGED_MODE]  = (float)TST_LA_OFFSET;
+
+	result = cp->LAdecision.personality.changeGAoffsets(lastLA, &newOffsets);
+	if (!result) {
+		LOG_ERROR("Error issuing LA's GA offsets change. Aborting test.");
+		return false;
+	}
+
+	int maxActionsPerAgent = mp->networkParams.maxActions;
+	cp->LAaction.details.changeAuxTo(false, lastLA, maxActionsPerAgent - 1, 
+		                                               TST_LAST_ACTION_AUX);
 
 	return AS::testGotNewValuesFromASthroughCL();
 }
@@ -304,32 +331,32 @@ bool testReadingCLdataFromTA(void) {
 
 	LOG_WARN("TA will try to read data from CL...");
 
-	bool result = CL::mirrorData_ptr->agentMirrorPtrs.haveData;
-	result &= CL::mirrorData_ptr->networkParams.isNetworkInitialized;
-	result &= CL::mirrorData_ptr->actionMirror.hasData();
+	bool result = CL::ASmirrorData_ptr->agentMirrorPtrs.haveData;
+	result &= CL::ASmirrorData_ptr->networkParams.isNetworkInitialized;
+	result &= CL::ASmirrorData_ptr->actionMirror.hasData();
 	if (!result) {
 		LOG_ERROR("CL Mirror data controllers say they have no data!");
 		return false;
 	}
 	LOG_TRACE("Data Flags ok. Will try to read data...");
 
-	result = (CL::mirrorData_ptr->networkParams.numberGAs == TST_NUMBER_GAS);
-	result &= (CL::mirrorData_ptr->networkParams.numberLAs == TST_NUMBER_LAS);
+	result = (CL::ASmirrorData_ptr->networkParams.numberGAs == TST_NUMBER_GAS);
+	result &= (CL::ASmirrorData_ptr->networkParams.numberLAs == TST_NUMBER_LAS);
 	if (!result) {
 		LOG_ERROR("Agent amounts were not as expected according to CL. Aborting test.");
 		return false;
 	}
 
 	//strcmp returns 0 on perfect match
-	if (strcmp(CL::mirrorData_ptr->networkParams.name, fileNameWithDefaults) != 0) {
+	if (strcmp(CL::ASmirrorData_ptr->networkParams.name, fileNameWithDefaults) != 0) {
 		LOG_ERROR("Network name doesn't match expected.");
 		result = false;
 	}
 	
 	AS::actionData_t firstGAaction =
-		CL::mirrorData_ptr->actionMirror.dataGAs[0];
+		CL::ASmirrorData_ptr->actionMirror.dataGAs[0];
 	AS::actionData_t lastLAaction =
-		CL::mirrorData_ptr->actionMirror.dataLAs[(TST_NUMBER_LAS * MAX_ACTIONS_PER_AGENT) - 1];
+		CL::ASmirrorData_ptr->actionMirror.dataLAs[(TST_NUMBER_LAS * MAX_ACTIONS_PER_AGENT) - 1];
 
 	bool resultAux = (firstGAaction.ticks.initial == DEFAULT_FIRST_TICK);
 	resultAux &= (lastLAaction.details.processingAux == DEFAULT_ACTION_AUX);
@@ -338,8 +365,8 @@ bool testReadingCLdataFromTA(void) {
 		result = false;
 	}
 
-	GA::coldData_t firstGAcold = CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data[0];
-	LA::decisionData_t lastLAdecision = CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data[TST_NUMBER_LAS-1];
+	GA::coldData_t firstGAcold = CL::ASmirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data[0];
+	LA::decisionData_t lastLAdecision = CL::ASmirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data[TST_NUMBER_LAS-1];
 
 	resultAux = (firstGAcold.id == 0);
 	resultAux &= (lastLAdecision.offsets.personality[0][0] == (float)DEFAULT_LA_OFFSET);
@@ -361,8 +388,8 @@ bool testFromTAifCLhasInitialized(void) {
 
 	LOG_WARN("TA will querry wether CL's Data Controller are properly initialized...");
 
-	bool result = CL::mirrorData_ptr->actionMirror.isInitialized();
-	result &= CL::mirrorData_ptr->agentMirrorPtrs.haveBeenCreated;
+	bool result = CL::ASmirrorData_ptr->actionMirror.isInitialized();
+	result &= CL::ASmirrorData_ptr->agentMirrorPtrs.haveBeenCreated;
 	if (!result) {
 		LOG_ERROR("CL Mirror data controllers not initialized or bad pointer");
 		return false;
@@ -370,29 +397,29 @@ bool testFromTAifCLhasInitialized(void) {
 	LOG_TRACE("Initialization flags ok. Checking capacities...");
 	
 	//Dividing by sizeof to get back to quantity of items, which is easier to check expected
-	size_t capLAact = CL::mirrorData_ptr->actionMirror.capacityForDataInBytesLAs();
-	size_t sizeLAact = sizeof(CL::mirrorData_ptr->actionMirror.dataLAs[0]);
+	size_t capLAact = CL::ASmirrorData_ptr->actionMirror.capacityForDataInBytesLAs();
+	size_t sizeLAact = sizeof(CL::ASmirrorData_ptr->actionMirror.dataLAs[0]);
 
-	size_t capGAact = CL::mirrorData_ptr->actionMirror.capacityForDataInBytesGAs();
-	size_t sizeGAact = sizeof(CL::mirrorData_ptr->actionMirror.dataGAs[0]);
+	size_t capGAact = CL::ASmirrorData_ptr->actionMirror.capacityForDataInBytesGAs();
+	size_t sizeGAact = sizeof(CL::ASmirrorData_ptr->actionMirror.dataGAs[0]);
 
-	size_t capLAcold = CL::mirrorData_ptr->agentMirrorPtrs.LAcoldData_ptr->capacityForDataInBytes();
-	size_t sizeLAcold = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.LAcoldData_ptr->data[0]);
+	size_t capLAcold = CL::ASmirrorData_ptr->agentMirrorPtrs.LAcoldData_ptr->capacityForDataInBytes();
+	size_t sizeLAcold = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.LAcoldData_ptr->data[0]);
 
-	size_t capGAcold = CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->capacityForDataInBytes();
-	size_t sizeGAcold = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data[0]);
+	size_t capGAcold = CL::ASmirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->capacityForDataInBytes();
+	size_t sizeGAcold = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data[0]);
 
-	size_t capLAstate = CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->capacityForDataInBytes();
-	size_t sizeLAstate = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data[0]);
+	size_t capLAstate = CL::ASmirrorData_ptr->agentMirrorPtrs.LAstate_ptr->capacityForDataInBytes();
+	size_t sizeLAstate = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data[0]);
 
-	size_t capGAstate = CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->capacityForDataInBytes();
-	size_t sizeGAstate = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data[0]);
+	size_t capGAstate = CL::ASmirrorData_ptr->agentMirrorPtrs.GAstate_ptr->capacityForDataInBytes();
+	size_t sizeGAstate = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data[0]);
 
-	size_t capLAdecs = CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->capacityForDataInBytes();
-	size_t sizeLAdecs = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data[0]);
+	size_t capLAdecs = CL::ASmirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->capacityForDataInBytes();
+	size_t sizeLAdecs = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data[0]);
 
-	size_t capGAdecs = CL::mirrorData_ptr->agentMirrorPtrs.GAdecision_ptr->capacityForDataInBytes();
-	size_t sizeGAdecs = sizeof(CL::mirrorData_ptr->agentMirrorPtrs.GAdecision_ptr->data[0]);
+	size_t capGAdecs = CL::ASmirrorData_ptr->agentMirrorPtrs.GAdecision_ptr->capacityForDataInBytes();
+	size_t sizeGAdecs = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.GAdecision_ptr->data[0]);
 
 	int failed = 0;
 
