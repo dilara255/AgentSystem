@@ -12,8 +12,13 @@ namespace CL {
 		bool result = m_mirrorSystem.initialize(&m_data_ptr,
 			                                   (const AS::networkParameters_t*)&params);
 
-		int referenceNetworkSize = (params.numberGAs + params.numberLAs) * params.maxActions;
-		m_changes.reserve(referenceNetworkSize);
+		m_LAquantity = params.numberLAs;
+		m_GAquantity = params.numberGAs - 1;
+		if(m_GAquantity < 0) m_GAquantity = 0;
+
+		m_maxActions = params.maxActions;
+		m_referenceNetworkSize = ((m_GAquantity) + m_LAquantity) * m_maxActions;
+		m_changes.reserve(m_referenceNetworkSize);
 
 		LOG_TRACE("Changes vector size set. Will initialize Handlers for each Data Category...");
 
@@ -41,6 +46,11 @@ namespace CL {
 		else {
 			LOG_INFO("Client Data Handler constructed and initialized on the CL");
 		}
+		
+		LOG_CRITICAL("CHECK SIZES!");
+		printf("\n\nLAs: %d, GAs: %d, MaxAc: %d, refSize: %d\n", m_LAquantity, m_GAquantity,
+			                                         m_maxActions, m_referenceNetworkSize);
+		getchar();
 	}
 
 
@@ -184,10 +194,15 @@ namespace CL {
 			LOG_ERROR("- Data Handler failed to initialize - received null data pointer");
 			return false;
 		}
-
+		
 		m_data_ptr = data_ptr;		
 
 		LOG_INFO("- Handler initialized");
+
+		LOG_CRITICAL("CHECK SIZE!");
+		printf("capacity: %zu, size: %zu", m_data_ptr->capacity(), m_data_ptr->size());
+		getchar();
+
 		return true;
 	}
 

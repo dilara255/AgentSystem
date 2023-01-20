@@ -45,6 +45,8 @@ namespace CL {
 		bool m_isInitialized = false;
 		bool m_hasData = false;
 		int m_maxActionsPerAgent = 0;
+		int m_LAquantity = 0;
+		int m_GAquantity = 0;
 	};
 }
 

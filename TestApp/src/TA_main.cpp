@@ -451,8 +451,12 @@ bool testFromTAifCLhasInitialized(void) {
 
 	int failed = 0;
 
-	failed += capLAact != (MAX_LA_QUANTITY * MAX_ACTIONS_PER_AGENT * sizeLAact);
-	failed += capGAact != ( (MAX_GA_QUANTITY-1) * MAX_ACTIONS_PER_AGENT * sizeGAact);
+	int GAquantity = CL::ASmirrorData_ptr->networkParams.numberGAs; //already corrected
+	int LAquantity = CL::ASmirrorData_ptr->networkParams.numberLAs;
+	int maxActions = CL::ASmirrorData_ptr->networkParams.maxActions;
+
+	failed += capLAact != (LAquantity * maxActions * sizeLAact);
+	failed += capGAact != (GAquantity * maxActions * sizeGAact);
 
 	//TODO-CRITICAL: GA's are counting the "phantom" last one
 	failed += capLAcold != (MAX_LA_QUANTITY* sizeLAcold);

@@ -716,6 +716,11 @@ namespace CL::ClientData {
 
 		ActionsHandler LAaction;
 		ActionsHandler GAaction;
+	protected:
+		int m_referenceNetworkSize = 0;
+		int m_maxActions = 0;
+		int m_LAquantity = 0;
+		int m_GAquantity = 0;
 
 	private:
 		bool processChange(ClientData::changedDataInfo_t change,

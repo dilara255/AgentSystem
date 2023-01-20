@@ -14,10 +14,13 @@ namespace CL {
     bool ActionMirrorController::initialize(const AS::networkParameters_t* params) {
         LOG_TRACE("Initializing ActionMirrorController");
 
-        m_maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
+        m_maxActionsPerAgent = params->maxActions;
+        m_LAquantity = params->numberLAs;
+		m_GAquantity = params->numberGAs - 1;
+        if(m_GAquantity < 0) m_GAquantity = 0;
 
-        int maxLAactions = m_maxActionsPerAgent * MAX_LA_QUANTITY;
-        int maxGAactions = m_maxActionsPerAgent * (MAX_GA_QUANTITY-1);
+        int maxLAactions = m_maxActionsPerAgent * m_LAquantity;
+        int maxGAactions = m_maxActionsPerAgent * m_GAquantity;
         dataLAs.reserve(maxLAactions);
         dataGAs.reserve(maxGAactions);
 
@@ -39,6 +42,13 @@ namespace CL {
         m_isInitialized = true;
 
         LOG_INFO("ActionMirrorController initialized");
+
+        LOG_CRITICAL("CHECK SIZES!");
+        printf("\n\nMaxAc: %d, LAs: %d, LAacts: %zu, GAs: %d, GAacts: %zu\n",
+                         m_maxActionsPerAgent, m_LAquantity, dataLAs.size(),
+                         m_GAquantity, dataGAs.size());
+        getchar();
+
         return m_isInitialized;
     }
 
