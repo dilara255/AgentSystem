@@ -87,7 +87,6 @@ namespace AS {
 				#ifdef AS_DEBUG
 					printf("\nLocal/Global: %d , ID: %d , size: %d ", localOrGlobal, actionID,
 																		(int)dataLAs.size());
-				getchar();
 				#endif // AS_DEBUG 
 				return false;
 			}
@@ -104,7 +103,6 @@ namespace AS {
 				#ifdef AS_DEBUG
 					printf("\nLocal/Global: %d , ID: %d , size: %d ", localOrGlobal, actionID,
 																		(int)dataGAs.size());
-					getchar();
 				#endif // AS_DEBUG 
 				return false;
 			}

@@ -174,7 +174,7 @@ namespace CL{
 		int index = (agentID)*maxActionsPerAgent + actionID;
 
 		//TO DO: extract
-		if (index >= m_data_ptr->size()) {
+		if ((uint32_t)index >= m_data_ptr->size()) {
 			LOG_ERROR("Tried to change data for Index out of range");
 			
 			#ifdef AS_DEBUG
@@ -184,15 +184,6 @@ namespace CL{
 
 			return false;
 		}
-
-		#ifdef AS_DEBUG
-			int minimumSize = (agentID+1)*maxActionsPerAgent;
-			
-			LOG_CRITICAL("CHECK M_DATA SIZE!");
-
-			printf("\n\nagentID: %d, minSize: %d, m_data_size: %zu, index: %d, nv: %f\n",
-				                agentID, minimumSize, m_data_ptr->size(), index, newValue);
-		#endif // AS_DEBUG
 
 		//TO DO: EXTRACT
 		uint32_t effectiveID = 0;
