@@ -2,8 +2,6 @@
 
 /*
 //PLANNING:
-//TO DO:
-//- MAKE TESTS PASS;
 //- TO DO: Deal with minor 4 and then get back;
 //- TODO-CRITICAL: Test pointer-math transfer idea;
 //- TODO-CRITICAL: All Methods which are already stubbed or equivalent (depending on test above);
