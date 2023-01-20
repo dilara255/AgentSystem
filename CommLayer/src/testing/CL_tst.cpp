@@ -25,6 +25,9 @@ void CL::sanityTest(int ASnumber, int tstArraySize) {
 	return;
 }
 
+/*
+* DEPRECATED
+* 
 bool CL::sendDataChangedForTest(char* recipientString, GA::coldData_t* recepientGAcold,
 	GA::stateData_t* recepientGAstate, LA::stateData_t* recipientLAstate,
 	LA::decisionData_t* recipientLAdecision, AS::actionData_t* recepientAction) {
@@ -50,6 +53,9 @@ bool CL::sendDataChangedForTest(char* recipientString, GA::coldData_t* recepient
 
 	return true;
 }
+* 
+* DEPRECATED
+*/
 
 bool CL::hasTstArrayInitialized() {
 	return tstArrayInitialized;

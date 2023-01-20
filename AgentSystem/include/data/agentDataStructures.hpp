@@ -97,6 +97,7 @@ namespace AS {
 			                TOTAL_POSITION_FIELDS };
 	} AS_API pos_t;
 
+	//TO DO: = operator PLEASE (and hunt down explicit loops)
 	typedef float AS_API LAdecisionOffsets_t[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES];
 
 	typedef struct {

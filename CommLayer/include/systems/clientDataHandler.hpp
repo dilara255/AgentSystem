@@ -3,10 +3,10 @@
 /*
 //PLANNING:
 //TO DO:
-//- Methods for all the data being changed byt the test APP directly;
-//- Substitute old data transfer test and deal with the unecessary pointer (becomes const);
+//- MAKE TESTS PASS;
+//- TO DO: Deal with minor 4 and then get back;
 //- TODO-CRITICAL: Test pointer-math transfer idea;
-//- TODO-CRITICAL: All Methods already stubbed or equivalent (depending on test above);
+//- TODO-CRITICAL: All Methods which are already stubbed or equivalent (depending on test above);
 //- TO DO LATER:
 //-- Relative methods were they'd make sense (addition and multiplication);
 //-- Methods for "all agents" (including for  "entire structure");
