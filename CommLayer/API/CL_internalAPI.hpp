@@ -6,7 +6,7 @@
 #include "../include/data/agentDataControllers.hpp"
 
 namespace CL {
-	CL_API bool init();
+	CL_API bool init(const AS::networkParameters_t* params_cptr);
 
 	//If the handler already exists, will delete and re-instantiate and initialize it.
 	//Is called whenever a network is loaded.
@@ -17,7 +17,7 @@ namespace CL {
 	CL_API bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,
 								 AS::dataControllerPointers_t* agentDataRecepient_ptr,
 		                         AS::ActionDataController* actionsRecepient_ptr,
-								 bool shouldMainLoopBeRunning);
+								 bool silent);
 
 	//TO DO: rename, name should be from the perspective of the caller.
 	CL_API bool acceptReplacementData(const AS::networkParameters_t* params,

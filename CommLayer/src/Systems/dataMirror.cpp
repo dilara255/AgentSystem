@@ -8,7 +8,8 @@
 
 namespace CL {
 
-	bool DataMirrorSystem::initialize(mirror_t** mirrorData_ptr_ptr) {
+	bool DataMirrorSystem::initialize(mirror_t** mirrorData_ptr_ptr,
+		                              const AS::networkParameters_t* params_cptr) {
 			
 		LOG_TRACE("Initializing Data Mirror System...");
 
@@ -18,7 +19,7 @@ namespace CL {
 			return false;
 		}
 
-		bool result = data.actionMirror.initialize();
+		bool result = data.actionMirror.initialize(params_cptr);
 		if (!result) {
 			LOG_CRITICAL("Couldn't initialize Action Mirror System!");
 			return false;
@@ -26,7 +27,7 @@ namespace CL {
 
 		m_isInitialized = true; //provisionally
 
-		result = createAgentDataControllers();
+		result = createAgentDataControllers(params_cptr);
 		if (!result) {
 			LOG_CRITICAL("Couldn't create AgentDataControllers. Aborting...");
 			m_isInitialized = false;
@@ -67,7 +68,7 @@ namespace CL {
 		return true;
 	}
 
-	bool DataMirrorSystem::createAgentDataControllers() {
+	bool DataMirrorSystem::createAgentDataControllers(const AS::networkParameters_t* params_cptr) {
 		LOG_TRACE("Trying to create Agent Data Controllers");
 
 		if (!m_isInitialized) {
@@ -78,6 +79,11 @@ namespace CL {
 		if (data.agentMirrorPtrs.haveBeenCreated) {
 			LOG_WARN("Data Controllers already exist: aborting re-creation (returns true)");
 			return true;
+		}
+
+		if (params_cptr == NULL) {
+			LOG_ERROR("Network parameters pointer is null or network not initialized. Aborting");
+			return false;
 		}
 		
 		CL::agentMirrorControllerPtrs_t* amp = &data.agentMirrorPtrs;
@@ -101,15 +107,17 @@ namespace CL {
 		LA::stateData_t stateStubLA;
 		LA::decisionData_t decisionStubLA;
 
-		for (int i = 0; i < MAX_LA_QUANTITY; i++) {
+		int numberLAs = params_cptr->numberLAs;
+
+		for (int i = 0; i < numberLAs; i++) {
 			amp->LAcoldData_ptr->data.push_back(coldStubLA);
 			amp->LAstate_ptr->data.push_back(stateStubLA);
 			amp->LAdecision_ptr->data.push_back(decisionStubLA);
 		}
 		
-		bool hasPushed = amp->LAcoldData_ptr->data.size() == MAX_LA_QUANTITY;
-		hasPushed &= amp->LAstate_ptr->data.size() == MAX_LA_QUANTITY;
-		hasPushed &= amp->LAdecision_ptr->data.size() == MAX_LA_QUANTITY;
+		bool hasPushed = amp->LAcoldData_ptr->data.size() == numberLAs;
+		hasPushed &= amp->LAstate_ptr->data.size() == numberLAs;
+		hasPushed &= amp->LAdecision_ptr->data.size() == numberLAs;
 
 		amp->GAcoldData_ptr->data.reserve(MAX_GA_QUANTITY);
 		amp->GAstate_ptr->data.reserve(MAX_GA_QUANTITY);
@@ -119,15 +127,17 @@ namespace CL {
 		GA::stateData_t stateStubGA;
 		GA::decisionData_t decisionStubGA;
 
-		for (int i = 0; i < MAX_GA_QUANTITY; i++) {
+		int numberGAs = params_cptr->numberGAs - 1; //las GA is reserved for "no GA"
+		if(numberGAs < 0) numberGAs = 0;
+		for (int i = 0; i < numberGAs; i++) {
 			amp->GAcoldData_ptr->data.push_back(coldStubGA);
 			amp->GAstate_ptr->data.push_back(stateStubGA);
 			amp->GAdecision_ptr->data.push_back(decisionStubGA);
 		}
 
-		hasPushed &= amp->GAcoldData_ptr->data.size() == MAX_GA_QUANTITY;
-		hasPushed &= amp->GAstate_ptr->data.size() == MAX_GA_QUANTITY;
-		hasPushed &= amp->GAdecision_ptr->data.size() == MAX_GA_QUANTITY;
+		hasPushed &= amp->GAcoldData_ptr->data.size() == numberGAs;
+		hasPushed &= amp->GAstate_ptr->data.size() == numberGAs;
+		hasPushed &= amp->GAdecision_ptr->data.size() == numberGAs;
 
 		if (!hasPushed) {
 			LOG_ERROR("Didn't create the right amount of agentData stubs on containers");

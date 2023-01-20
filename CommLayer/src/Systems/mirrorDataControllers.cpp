@@ -11,25 +11,28 @@
 
 namespace CL {
 
-    bool ActionMirrorController::initialize() {
+    bool ActionMirrorController::initialize(const AS::networkParameters_t* params) {
         LOG_TRACE("Initializing ActionMirrorController");
 
         m_maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
-        dataLAs.reserve((int64_t)m_maxActionsPerAgent * MAX_LA_QUANTITY);
-        dataGAs.reserve((int64_t)m_maxActionsPerAgent * MAX_GA_QUANTITY);
+
+        int maxLAactions = m_maxActionsPerAgent * MAX_LA_QUANTITY;
+        int maxGAactions = m_maxActionsPerAgent * (MAX_GA_QUANTITY-1);
+        dataLAs.reserve(maxLAactions);
+        dataGAs.reserve(maxGAactions);
 
         AS::actionData_t stubAction;
 
-        for (int i = 0; i < MAX_LA_QUANTITY; i++) {
+        for (int i = 0; i < maxLAactions; i++) {
             dataLAs.push_back(stubAction);
         }
 
-        for (int i = 0; i < MAX_GA_QUANTITY; i++) {
+        for (int i = 0; i < maxGAactions; i++) {
             dataGAs.push_back(stubAction);
         }
 
-        if ((dataLAs.size() != MAX_LA_QUANTITY) || (dataGAs.size() != MAX_GA_QUANTITY)) {
-            LOG_ERROR("Didn't populate mirror action data vectors with the right amount of stubs");
+        if ((dataLAs.size() != maxLAactions) || (dataGAs.size() != maxGAactions)) {
+            LOG_ERROR("Didn't populate mirror action data vectors with right amount of stubs");
             return false;
         }
 

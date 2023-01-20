@@ -213,7 +213,7 @@ bool AS::initializeASandCL() {
 	}
 
 	//Communications Layer:
-	result = CL::init();
+	result = CL::init(currentNetworkParams_cptr);
 	if (!result) {
 		LOG_CRITICAL("Something went wrong initialing the Communications Layer!");
 		return false;

@@ -16,7 +16,7 @@ namespace CL {
 	class ActionMirrorController {
 	public:
 
-		bool initialize();
+		bool initialize(const AS::networkParameters_t* params);
 
 		bool replaceDataLAs(const std::vector <actionData_t>& newData) { dataLAs = newData; }
 		bool replaceDataGAs(const std::vector <actionData_t>& newData) { dataGAs = newData; }

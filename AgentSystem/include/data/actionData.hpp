@@ -46,10 +46,9 @@ namespace AS {
 	} AS_API ids_t;
 
 	//TO DO: WARNING: MAY NOT BE PORTABLE?
-	typedef union {
-		ids_t IDs;
-		uint32_t IDsAsUnsigned;
-	} AS_API IDsToUnsigned_u;
+	enum class actionIDtoUnsigned: uint32_t {SCOPE_SHIFT = 31, SCOPE_MASK = 2147483648, 
+										     AGENT_SHIFT = 15, AGENT_MASK = 2147450880,
+											 ACTION_SHIFT = 0, ACTION_MASK = 32767 };
 
 	typedef struct {
 		uint32_t initial;

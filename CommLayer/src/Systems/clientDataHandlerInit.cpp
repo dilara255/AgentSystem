@@ -9,7 +9,8 @@ namespace CL {
 	ClientData::Handler::Handler(AS::networkParameters_t params) {
 		LOG_TRACE("Will construct and initialize Client Data Handler on the CL...");
 
-		bool result = m_mirrorSystem.initialize(&m_data_ptr);
+		bool result = m_mirrorSystem.initialize(&m_data_ptr,
+			                                   (const AS::networkParameters_t*)&params);
 
 		int referenceNetworkSize = (params.numberGAs + params.numberLAs) * params.maxActions;
 		m_changes.reserve(referenceNetworkSize);

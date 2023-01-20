@@ -16,12 +16,12 @@ namespace CL {
 
 	CL::ClientData::Handler* clientData_ptr = NULL;
 
-	bool init() {
+	bool init(const AS::networkParameters_t* params_cptr) {
 		LOG_INFO("initializing CL...");
 
 		mirror_t* tempASmirrorData_ptr;
 
-		bool result = ASmirror.initialize(&tempASmirrorData_ptr);
+		bool result = ASmirror.initialize(&tempASmirrorData_ptr, params_cptr);
 		if (!result) {
 			LOG_CRITICAL("CL INITIALIZATION FAILED!");
 			return false;
@@ -120,7 +120,7 @@ namespace CL {
 	bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,
 						  AS::dataControllerPointers_t* agentDataRecepient_ptr,
 		 				  AS::ActionDataController* actionsRecepient_ptr,
-						  bool shouldMainLoopBeRunning) {
+						  bool silent) {
 		
 		CL::ClientData::ASdataControlPtrs_t recepientPtrs;
 
@@ -128,7 +128,7 @@ namespace CL {
 		recepientPtrs.agentData_ptr = agentDataRecepient_ptr;
 		recepientPtrs.actions_ptr = actionsRecepient_ptr;
 
-		return clientData_ptr->sendNewClientData(recepientPtrs, shouldMainLoopBeRunning);
+		return clientData_ptr->sendNewClientData(recepientPtrs, silent);
 	}
 
 	bool acceptReplacementData(const AS::networkParameters_t* params,
