@@ -95,23 +95,32 @@
 * b. After each loop, make AS update CL's data.
 * c. At a different time interval, TA querries CL and compares data with expected values.
 *
-* >> 2. Data injection:
+* 2. Data injection:
 * 
 * a. TA-managed Cold, State and Action data area on CL, plus list of fields with changes.
 * b. On each loop, AS retrieves data from CL which was changed after its last check.
 * 
 * Complete for some fields, and stub for the rest:
-* >> c. Make it so TA can tranfer data to it (methods for field or whole State or Action from
+* c. Make it so TA can tranfer data to it (methods for field or whole State or Action from
 * Agent Object). When the data is received by the CL, it updates the list of changed fields.
-* >> d. Make it so AS can read the fields with changes and absorb them (pointer to const?).
-* >> e. Test running the AS, issuing changes from the TA and reading the data. 
+* d. Make it so AS can read the fields with changes and absorb them (pointer to const?).
+* e. Test running the AS, issuing changes from the TA and reading the data. 
 
 * Note: changing an action to "innactive" essentially ends it, but it is also possible 
 * to advance actions to the moment before their completion. The TA can then check 
 * again a bit later if this is part of a multi-step process.
 *
 * Cleanup
-*
+* 
+* >> TODO-CRITICAL: WARNING: Bug: fix realease x86 bug on saving with main-loop running!
+* -- Debug (both x86 and x64) take no time to save;
+* -- Release x64 takes a little bit;
+* -- Release x86 seems to hang, but doesn't crash;
+* -- Release x86 seems to be getting crazy numbers on ticks (over 32 bit max), but rel x64 not;
+* -- Memory use seems ok, smaller on release and well bounded (on these tests at least);
+* -- Making "frame" slower (sleep more) didn't help (tested on release x86 only;
+* -- Making it much faster also did nothing;
+* 
 * ***** Minor 4. AS loop *****
 *
 * The goal here is to get the AS loop to work as expected.

@@ -274,7 +274,9 @@ void AS::initTstArray() {
 }
 
 void AS::transferData(int* CLtestArray_ptr) {
-	if (!CLtestArray_ptr) LOG_WARN("Null ptr. Will crash");
+	if (!CLtestArray_ptr){
+		LOG_WARN("Null ptr. Will crash");
+	}
 
 	LOG_TRACE("Will transfer data to CL\n");
 
