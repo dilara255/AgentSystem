@@ -46,11 +46,6 @@ namespace CL {
 		else {
 			LOG_INFO("Client Data Handler constructed and initialized on the CL");
 		}
-		
-		LOG_CRITICAL("CHECK SIZES!");
-		printf("\n\nLAs: %d, GAs: %d, MaxAc: %d, refSize: %d\n", m_LAquantity, m_GAquantity,
-			                                         m_maxActions, m_referenceNetworkSize);
-		getchar();
 	}
 
 
@@ -198,10 +193,6 @@ namespace CL {
 		m_data_ptr = data_ptr;		
 
 		LOG_INFO("- Handler initialized");
-
-		LOG_CRITICAL("CHECK SIZE!");
-		printf("capacity: %zu, size: %zu", m_data_ptr->capacity(), m_data_ptr->size());
-		getchar();
 
 		return true;
 	}

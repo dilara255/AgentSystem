@@ -251,24 +251,13 @@ namespace CL {
 	
 		int maxActionsPerAgent = recepientPtrs.actions_ptr->getMaxActionsPerAgent();
 		int index = (agentID)*maxActionsPerAgent + actionID; //IDs start at zero
+		int minimumSize = (agentID+1)*maxActionsPerAgent;
 
-		#ifdef AS_DEBUG
-			int minimumSize = (agentID+1)*maxActionsPerAgent;
-			size_t ASsize = recepientPtrs.actions_ptr->getActionsLAsCptr()->size();
-
-			LOG_CRITICAL("CHECK M_DATA SIZE!");
-
-			printf("\n\nagentID: %d, maxActions: %d, minSizer: %d, m_data_size: %zu\n",
-				agentID, recepientPtrs.actions_ptr->getMaxActionsPerAgent(),
-				minimumSize, m_data_ptr->size());
-			printf("\n\nASsize: %zu, index: %d\n", ASsize, index);
-		#endif // AS_DEBUG
-
-		if (m_data_ptr->size() < minimumSize) {
+		if (m_data_ptr->size() < (uint32_t)minimumSize) {
 			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
 			return false;
 		}
-		if (recepientPtrs.actions_ptr->getDirectLAdataPtr()->size() < minimumSize) {
+		if (recepientPtrs.actions_ptr->getDirectLAdataPtr()->size() < (uint32_t)minimumSize) {
 			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
 			return false;
 		}
@@ -591,7 +580,25 @@ namespace CL {
 
 	bool ClientData::GAstateHandler::transferConnectedGAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		return false;
+		//TO DO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->GAcoldData_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		GA::StateController* GAstate_ptr = recepientPtrs.agentData_ptr->GAstate_ptr;
+		std::vector <GA::stateData_t>* dataVector_ptr = GAstate_ptr->getDirectDataPtr();
+		GA::stateData_t* agentData_ptr = &(dataVector_ptr->at(agentID));
+
+		uint32_t newConnections = m_data_ptr->data.at(agentID).connectedGAs.getField();
+
+		agentData_ptr->connectedGAs.loadField(newConnections);
+
+		return true;
 	}
 
 	bool ClientData::GAstateHandler::transferLocalAgentsBelongingToThis(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)

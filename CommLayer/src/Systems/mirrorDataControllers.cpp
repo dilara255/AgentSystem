@@ -43,12 +43,6 @@ namespace CL {
 
         LOG_INFO("ActionMirrorController initialized");
 
-        LOG_CRITICAL("CHECK SIZES!");
-        printf("\n\nMaxAc: %d, LAs: %d, LAacts: %zu, GAs: %d, GAacts: %zu\n",
-                         m_maxActionsPerAgent, m_LAquantity, dataLAs.size(),
-                         m_GAquantity, dataGAs.size());
-        getchar();
-
         return m_isInitialized;
     }
 

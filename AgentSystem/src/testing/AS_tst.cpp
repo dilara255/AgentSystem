@@ -120,7 +120,8 @@ namespace AS {
 
 		LOG_TRACE("Will read Last LA's las actions's AUX...");
 
-		float auxRead = actionSystem.data.getActionsLAsCptr()->at(lastLA).details.processingAux;
+		int index = lastLA * pp->maxActions + pp->maxActions - 1;
+		float auxRead = actionSystem.data.getActionsLAsCptr()->at(index).details.processingAux;
 		if (auxRead != TST_LAST_ACTION_AUX) { 
 			failed++; 
 			LOG_TRACE("Value read is not as expected"); 
@@ -157,6 +158,7 @@ namespace AS {
 		bool result = AS::sendReplacementDataToCL();
 		if (!result) {
 			LOG_CRITICAL("OOH NOOOES : (");
+			return false;
 		}
 		
 		LOG_INFO("Data sent!");

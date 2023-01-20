@@ -150,9 +150,9 @@ bool testSendingClientDataAndSaving(void) {
 		LOG_ERROR("A pointer to the Client Data Handler has to be acquired before this test");
 		return false;
 	}
-	
-	bool result = cdHandler_ptr->LAstate.parameters.resources.changeCurrentTo(id, 
-															       (float)TST_RES_CHANGE);
+
+	bool result = cdHandler_ptr->LAstate.parameters.resources.changeCurrentTo(id,
+		(float)TST_RES_CHANGE);
 
 	if (!result) {
 		LOG_ERROR("Test failed issuing change!");
@@ -169,7 +169,7 @@ bool testSendingClientDataAndSaving(void) {
 		LOG_INFO("Network saved to ClientDataHandler_*customFilename*");
 	}
 
-	return true;	
+	return true;
 }
 
 bool testClientDataHAndlerInitialization(void) {
@@ -194,34 +194,71 @@ bool testClientDataHAndlerInitialization(void) {
 }
 
 void TAreadLoop(int numberTicks) {
-	
+
 	g_ticksRead[0] = CL::ASmirrorData_ptr->networkParams.mainLoopTicks;
-	
+
 	for (int i = 1; i < numberTicks; i++) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(TST_TA_QUERY_FREQUENCY_MS));
 		g_ticksRead[i] = CL::ASmirrorData_ptr->networkParams.mainLoopTicks;
 	}
 }
 
+//TO DO: This test makes MUCH more sense if we store tick time as well : )
 bool testReadingTickDataWhileASmainLoopRuns_end(void) {
-	
+
 	LOG_WARN("Will check if reader thread's results are as expected. May need to wait for execution to finish");
 	reader.join();
 
 	LOG_TRACE("Execution finished. Checking...");
-	
-	bool result = true;
-	uint64_t offsetOnOdds = (uint64_t)(g_ticksRead[1] == (g_ticksRead[0] + 2));
 
-	for (int i = 1; i < TST_TIMES_TO_QUERRY_TICK; i++) {
+	//Whole part of the multiplier gives a base for the pace of the count
+	uint64_t baseKickUpdateRate = (uint64_t)abs(TST_TA_QUERY_MULTIPLIER);
+	//Remainder will help calculate how often we should diverge from that (jump)
+	double remainder = TST_TA_QUERY_MULTIPLIER - fabs(TST_TA_QUERY_MULTIPLIER);
+	double inverseRemainder = 1.0 / remainder;
 
-		uint64_t deltaTicks = g_ticksRead[i] - g_ticksRead[0];
+	//If the inverse of the remainder has a remainder, then you may skip some jumps;
+	double finalRemainder = inverseRemainder - fabs(inverseRemainder);
 
-		uint64_t expectedOffset = ((i + 1) % 2) * (offsetOnOdds);
-		uint64_t expected = ((i * TST_TA_QUERY_FREQUENCY_MS) / (TST_MAINLOOP_FREQUENCY_MS)) + expectedOffset;
+	//Which makes testing harder, so I'll try to control for that:
+	double refRemainder = (double)baseKickUpdateRate / (double)TST_TIMES_TO_QUERRY_TICK;
+	//this would make skipJumpPerior =~ TST_TIMES_TO_QUERRY_TICK, and let's me define:
+	double small = refRemainder / TST_TICK_COUNT_SAFETY_FACTOR;
 
-		result &= deltaTicks == expected;
+	bool exact;
+	if (finalRemainder <= small) exact = true;
+	else exact = false;
+	if (!exact) {
+		LOG_WARN("Fractional relationship between read and write may make the test's auto-checking fail!");
+		#ifdef AS_DEBUG
+			printf("Final Remainder: %f, small: %f\n", finalRemainder, small);
+		#endif // AS_DEBUG
+
 	}
+
+	//Now we "simulate" the ticking, giving a first error for free, for adjustment
+
+	uint64_t expectedDeltas[TST_TIMES_TO_QUERRY_TICK];
+	double expectedDeltasFrac[TST_TIMES_TO_QUERRY_TICK];
+	expectedDeltas[0] = g_ticksRead[0];
+	expectedDeltasFrac[0] = (double)g_ticksRead[0];
+
+	uint64_t firstJumpID = 0;
+	int fails = 0;
+	for (int i = 1; i < TST_TIMES_TO_QUERRY_TICK; i++) {
+		expectedDeltasFrac[i] = expectedDeltasFrac[i - 1] + TST_TA_QUERY_MULTIPLIER;
+		expectedDeltas[i] = (uint64_t)abs(expectedDeltasFrac[i]);
+
+		if ((firstJumpID == 0) && (g_ticksRead[i] != expectedDeltas[i])) {
+			expectedDeltasFrac[i] = (double)g_ticksRead[i];
+		}
+		else if (g_ticksRead[i] != expectedDeltas[i]){
+			fails++;
+		}
+	}
+
+	//This gives some margin since the fractional part may still byte us in the ass
+	bool result = (fails < TST_TIMES_TO_QUERRY_TICK / TST_TICK_COUNT_SAFETY_FACTOR);
 
 	if (result) {
 		LOG_INFO("TA read ticks correctly from CL while AS was running");
