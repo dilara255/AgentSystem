@@ -126,7 +126,23 @@
 * -- Will try to debug in verbose mode, since it makes things worse apparently;
 * -- First, it seems like should be running is not set to false;
 * -- Actually, it seems like the main loop isn`t even really running.
-* -> Investigate save logic for checking this, and add warning on stop
+* -- BUT bool says it should be and it is joinable, and gives no messages
+* -- MAIN LOOP SLEEPING FOREVER?
+* 
+* -- MAIN LOOP SLEEPS FOREVER, ticks start at 3911893635246850048, mainLoop doesn't touch them
+* -- Tick count test is passing even though all ticks are the same
+* -- Sleep on TAreadLoop seems to be in order
+* -- On AS, loop ticks were already initialized to zero, but main loop never got around to sending them
+* -- Follow ClientDataHandler instantiation/initialization, check for use of networkParams
+* -- check places where we delete handlers: are we dealing with pointers correctly?
+* -- CL_API extern const mirror_t* ASmirrorData_ptr is the thing from which ticks are read
+* -- "acceptReplacementData" could send bad params?
+* -- AS::sendReplacementDataToCL calls it
+* -- Params initialization now seems ok. Try new clock
+* 
+* "On Windows, thread::sleep_for() calls Sleep(). Whose resolution is determined by the clock 
+*  interrupt rate, the mechanism that is used to jerk the processor back from its halt state. 
+*  Default rate is 64 ticks per second. Increasing the rate is possible"
 * 
 * ***** Minor 4. AS loop *****
 *

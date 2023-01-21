@@ -19,12 +19,23 @@ namespace CL {
 			return false;
 		}
 
+		//TODO-CRITICAL: Extract. Note: CL doesn't link to AS stuff. Deal with that first
+		strcpy(data.networkParams.comment, params_cptr->comment);
+		data.networkParams.isNetworkInitialized = params_cptr->isNetworkInitialized;
+		data.networkParams.lastMainLoopStartingTick = params_cptr->lastMainLoopStartingTick;
+		data.networkParams.mainLoopTicks = params_cptr->mainLoopTicks;
+		data.networkParams.maxActions = params_cptr->maxActions;
+		data.networkParams.maxLAneighbours = params_cptr->maxLAneighbours;
+		strcpy(data.networkParams.name, params_cptr->name);
+		data.networkParams.numberGAs = params_cptr->numberGAs;
+		data.networkParams.numberLAs = params_cptr->numberLAs;
+
 		bool result = data.actionMirror.initialize(params_cptr);
 		if (!result) {
 			LOG_CRITICAL("Couldn't initialize Action Mirror System!");
 			return false;
 		}
-
+		
 		m_isInitialized = true; //provisionally
 
 		result = createAgentDataControllers(params_cptr);

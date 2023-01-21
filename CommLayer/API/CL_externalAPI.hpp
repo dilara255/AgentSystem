@@ -18,6 +18,9 @@ namespace CL {
 	//Returns NULL if not initialized
 	CL_API CL::ClientData::Handler* getClientDataHandlerPtr();
 
+	CL_API bool isClientDataPointerInitialized();
+	CL_API bool isASdataPointerInitialized();
+
 	//****For Testing****
 	CL_API void sayHelloExternal();
 	CL_API int getASnumber();

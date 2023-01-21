@@ -246,14 +246,17 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	expectedDeltas[0] = g_ticksRead[0];
 	expectedDeltasFrac[0] = (double)g_ticksRead[0];
 
-	uint64_t firstJumpID = 0;
+	bool firstJumpFound = 0;
 	int fails = 0;
 	for (int i = 1; i < TST_TIMES_TO_QUERRY_TICK; i++) {
+		
+		//TO DO: this may fail if starting tick is huge AND ticks are all the same
 		expectedDeltasFrac[i] = expectedDeltasFrac[i - 1] + TST_TA_QUERY_MULTIPLIER;
 		expectedDeltas[i] = (uint64_t)abs(expectedDeltasFrac[i]);
 
-		if ((firstJumpID == 0) && (g_ticksRead[i] != expectedDeltas[i])) {
+		if ((!firstJumpFound) && (g_ticksRead[i] != expectedDeltas[i])) {
 			expectedDeltasFrac[i] = (double)g_ticksRead[i];
+			firstJumpFound = true;
 		}
 		else if (g_ticksRead[i] != expectedDeltas[i]){
 			fails++;
@@ -266,31 +269,34 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 	if (result) {
 		LOG_INFO("TA read ticks correctly from CL while AS was running");
-		return true;
 	}
-	else
-	{
+	else {
 		LOG_ERROR("TA didn't read ticks correctly from CL while AS was running");
-		#if (defined AS_DEBUG) || VERBOSE_RELEASE
-			printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms):\n",
-				            TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, 
-				                                         TST_MAINLOOP_FREQUENCY_MS);
-			for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
-				printf("%llu ", g_ticksRead[i]);
-			}
-		#endif // AS_DEBUG
-
-		return false;
 	}
+
+	#if (defined AS_DEBUG) || VERBOSE_RELEASE
+		printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms):\n",
+				        TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, 
+				                                        TST_MAINLOOP_FREQUENCY_MS);
+		for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
+			printf("%llu ", g_ticksRead[i]);
+		}
+	#endif // AS_DEBUG
+
+	return result;
 }
 
 bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 
 	LOG_WARN("Will sapwn a new thread which will try to read a few times from CL the number of ticks while AS's main loop runs");
 
-	if (!AS::isMainLoopRunning()) {
+	if (!AS::isMainLoopRunning() || !AS::chekIfMainLoopShouldBeRunning()) {
 		LOG_CRITICAL("Main loop has to be running for this test to work");
 		return false;
+	}
+
+	for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
+		g_ticksRead[i] = 0;
 	}
 
 	reader = std::thread(TAreadLoop, TST_TIMES_TO_QUERRY_TICK);
