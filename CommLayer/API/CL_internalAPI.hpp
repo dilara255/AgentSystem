@@ -28,7 +28,8 @@ namespace CL {
 							  const std::vector <LA::decisionData_t>* decisionLAs_cptr,
 							  const std::vector <GA::coldData_t>* coldDataGAs_cptr,
  							  const std::vector <GA::stateData_t>* stateGAs_cptr,
-  							  const std::vector <GA::decisionData_t>* decisionGAs_cptr);
+  							  const std::vector <GA::decisionData_t>* decisionGAs_cptr,
+					          bool silent);
 
 	//Used for synchronization (sp?), ie, for saving. Acquires and releases mutex.
 	CL_API bool blockClientDataForAmoment();
