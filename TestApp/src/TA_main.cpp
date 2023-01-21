@@ -62,10 +62,12 @@ int main(void) {
 
 	resultsBattery2 += (int)AS::saveNetworkToFile(); GETCHAR_PAUSE;
 
+	//TO DO: FIX: Expects ASmirror to be initialized
 	resultsBattery2 += (int)AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE;
-
+	//TO DO: FIX: Expects ASmirror to be initialized and have data
 	resultsBattery2 += (int)testReadingCLdataFromTA(); GETCHAR_PAUSE;
 
+	//TO DO: FIX: Expects to be able to get reference to a, initialized Client Data Handler
 	resultsBattery2 += (int)testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE;
 
 	resultsBattery2 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
@@ -82,18 +84,24 @@ int main(void) {
 
 	LOG_INFO("Specific functionality tests (THREADED LOOPs):\n",1); GETCHAR_PAUSE;
 
+	//TO DO: FIX: Sets the main loop running, but it fails to get client data
+	//Even though load supposedly creates that
 	LOG_WARN("Will load the previously modified network");
 	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
 	GETCHAR_PAUSE;
 
+	//TO DO: FIX: Expects ASmirror initialized, is not creating thread
 	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_start(); GETCHAR_PAUSE;
 	
+	//TO DO: FIX: Expects last test to have created reader thread
 	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_end(); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 
+	//TO DO: FIX: Expects Client Data Handler initialized, says it isn't
 	resultsBattery3 += (int)testClientDataHAndlerInitialization(); GETCHAR_PAUSE;
 
+	//TO DO: FIX: is deppendent on the last test, which is failing
 	resultsBattery3 += (int)testSendingClientDataAndSaving(); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
@@ -212,8 +220,6 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	else {
 		LOG_WARN("Reader thread seem innactive. If it wasn't created, this test will make no sense!");
 	}
-	
-	
 
 	LOG_TRACE("Execution finished. Checking...");
 
@@ -296,7 +302,7 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 
-	LOG_WARN("Will sapwn a new thread which will try to read a few times from CL the number of ticks while AS's main loop runs");
+	LOG_WARN("Will spawn a new thread which will try to read a few times from CL the number of ticks while AS's main loop runs");
 
 	if (!AS::isMainLoopRunning() || !AS::chekIfMainLoopShouldBeRunning()) {
 		LOG_CRITICAL("Main loop has to be running for this test to work");

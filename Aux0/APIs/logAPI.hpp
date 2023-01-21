@@ -18,7 +18,7 @@ TO DO: Generalize the whole macro thingy and all that's associated with it
 //The default for the following definitions is 0
 
 //Setting this to anything but 0 makes release as verbose as debug.
-#define VERBOSE_RELEASE 1
+#define VERBOSE_RELEASE 0
 
 //Setting this to anything but 0 makes debug not ask for keypresses on GETCHAR_PAUSE
 #define DONT_ASK_KEYPRESS_DEBUG 0

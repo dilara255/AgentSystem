@@ -29,6 +29,8 @@ TODO-CRITICAL: Break up this file. Main loop should probably stay, move most of 
 //TO DO:
 // - Create control class with control structures as members
 
+#define MAX_ERRORS_TO_ACCUMULATE_ON_MAIN 150
+
 bool isInitialized = false;
 
 namespace AS {
@@ -63,6 +65,7 @@ bool AS::quit() {
 }
 
 //Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id;
+//TO DO: FIX: Should check if conditions to run are met (ie: ASmirror and Client Data Handlers)
 bool AS::run() {
 	LOG_TRACE("Starting Main Loop Thread...");
 	
@@ -98,18 +101,16 @@ void AS::mainLoop() {
 	std::chrono::microseconds timeToSleepMicro = zeroMicro;
 	
 	bool result = false;
+	bool hasThrownErrorsRecently = false;
+	int errorsAccumulated = 0;
 
 	do {
-
-		#if (defined AS_DEBUG) || VERBOSE_RELEASE
-			printf("Should be running? %d,\n",(int)shouldMainLoopBeRunning);
-		#endif
-
 		if (!shouldMainLoopBeRunning)
 			{ LOG_TRACE("Main loop will sleep first"); }
 
-		fflush(stdout);
+		//fflush(stdout);
 		std::this_thread::sleep_for(timeToSleepMicro);
+
 		//stepStartTime = blah (get the current time in micro)
 		
 		//do stuff
@@ -119,7 +120,22 @@ void AS::mainLoop() {
 
 		result = CL::getNewClientData(currentNetworkParams_ptr, &agentDataControllerPtrs,
 			                          &(actionSystem.data), shouldMainLoopBeRunning);
-		if (!result) { LOG_ERROR("Failed to get Client Data!"); }
+		
+		//TO DO: Extract
+		if (!result) { 
+			if (!hasThrownErrorsRecently) {
+				LOG_ERROR("Failed to get Client Data!"); 
+				printf("(had accumulated %d errors before this)",errorsAccumulated);
+				hasThrownErrorsRecently = true;
+				errorsAccumulated = 0;
+			}
+			else {
+				errorsAccumulated++;
+				if (errorsAccumulated > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
+					hasThrownErrorsRecently = false;
+				}
+			}
+		}
 		
 		if (!shouldMainLoopBeRunning) 
 			{ LOG_TRACE("Main loop will update ticks"); }
@@ -129,8 +145,21 @@ void AS::mainLoop() {
 		if (!shouldMainLoopBeRunning) 
 			{ LOG_TRACE("Main loop will send AS Data to CL"); }
 
-		result = sendReplacementDataToCL();
-		if (!result) { LOG_ERROR("Failed to send AS Data to the CL!"); }
+		result = sendReplacementDataToCL(true);
+		if (!result) { 
+			if (!hasThrownErrorsRecently) {
+				LOG_ERROR("Failed to send AS Data to the CL!");
+				printf("(had accumulated %d errors before this)",errorsAccumulated);
+				hasThrownErrorsRecently = true;
+				errorsAccumulated = 0;
+			}
+			else {
+				errorsAccumulated++;
+				if (errorsAccumulated > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
+					hasThrownErrorsRecently = false;
+				}
+			}
+		}
 
 		if (!shouldMainLoopBeRunning) 
 			{ LOG_TRACE("Main loop will calculate time to sleep"); }
@@ -255,7 +284,7 @@ bool AS::initializeASandCL() {
 	return true;
 }
 
-bool AS::sendReplacementDataToCL() {
+bool AS::sendReplacementDataToCL(bool silent) {
 
 	return  CL::acceptReplacementData(currentNetworkParams_cptr,
 				actionDataController_cptr->getActionsLAsCptr(),
@@ -265,7 +294,8 @@ bool AS::sendReplacementDataToCL() {
 				agentDataControllers_cptr->LAdecision_ptr->getDataCptr(),
 				agentDataControllers_cptr->GAcoldData_ptr->getDataCptr(),
 				agentDataControllers_cptr->GAstate_ptr->getDataCptr(),
-				agentDataControllers_cptr->GAdecision_ptr->getDataCptr());	
+				agentDataControllers_cptr->GAdecision_ptr->getDataCptr(),
+				silent);	
 }
 
 namespace AS {

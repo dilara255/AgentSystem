@@ -132,7 +132,9 @@ namespace CL {
 						  bool silent) {
 		
 		if (!isClientDataPointerInitialized()) {
-			LOG_ERROR("Can't get Client Data because the Handler is not initialized");
+			if(!silent){
+				LOG_ERROR("Can't get Client Data because the Handler is not initialized");
+			}
 			return false;
 		}
 
@@ -153,10 +155,13 @@ namespace CL {
 					   const std::vector <LA::decisionData_t>* decisionLAs_cptr,
 					   const std::vector <GA::coldData_t>* coldDataGAs_cptr,
 					   const std::vector <GA::stateData_t>* stateGAs_cptr,
-					   const std::vector <GA::decisionData_t>* decisionGAs_cptr) {
+					   const std::vector <GA::decisionData_t>* decisionGAs_cptr,
+					   bool silent) {
 
-		if (!isASdataPointerInitialized) {
-			LOG_ERROR("Can't transfer data from AS because AS data mirror on CL is not initialized");
+		if (!isASdataPointerInitialized()) {
+			if(!silent){
+				LOG_ERROR("Can't transfer data from AS because AS data mirror on CL is not initialized");
+			}
 			return false;
 		}
 

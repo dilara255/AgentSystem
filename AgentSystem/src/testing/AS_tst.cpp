@@ -161,7 +161,7 @@ namespace AS {
 			return false;
 		}
 
-		bool result = AS::sendReplacementDataToCL();
+		bool result = AS::sendReplacementDataToCL(false);
 		if (!result) {
 			LOG_CRITICAL("OOH NOOOES : (");
 			return false;

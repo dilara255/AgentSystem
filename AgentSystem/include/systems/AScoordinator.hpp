@@ -16,7 +16,7 @@ namespace AS {
 	extern const dataControllerPointers_t* agentDataControllers_cptr;
 	extern const ActionDataController* actionDataController_cptr;
 
-	bool sendReplacementDataToCL();
+	bool sendReplacementDataToCL(bool silent);
 	bool run();
 	bool stop();
 	void mainLoop();

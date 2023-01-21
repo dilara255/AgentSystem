@@ -112,39 +112,6 @@
 *
 * Cleanup
 * 
-* >> TODO-CRITICAL: WARNING: Bug: fix realease x86 bug on saving with main-loop running!
-* -- Debug (both x86 and x64) take no time to save;
-* -- Release x64 takes a little bit;
-* -- Release x86 seems to hang, but doesn't crash;
-* -- Release x86 seems to be getting crazy numbers on ticks (over 32 bit max), but rel x64 not;
-* -- Memory use seems ok, smaller on release and well bounded (on these tests at least);
-* -- Making "frame" slower (sleep more) didn't help (tested on release x86 only;
-* -- Making it much faster also did nothing;
-* -- Reducing the tick test also didn't help;
-* -- Main Loop is in fact not finishing execution;
-* -- x64 seems to be hanging too with more logging, but not when it's taken out;
-* -- Will try to debug in verbose mode, since it makes things worse apparently;
-* -- First, it seems like should be running is not set to false;
-* -- Actually, it seems like the main loop isn`t even really running.
-* -- BUT bool says it should be and it is joinable, and gives no messages
-* -- MAIN LOOP SLEEPING FOREVER?
-* 
-* -- MAIN LOOP SLEEPS FOREVER, ticks start at 3911893635246850048, mainLoop doesn't touch them
-* -- Tick count test is passing even though all ticks are the same
-* -- Sleep on TAreadLoop seems to be in order
-* -- On AS, loop ticks were already initialized to zero, but main loop never got around to sending them
-* -- Follow ClientDataHandler instantiation/initialization, check for use of networkParams
-* -- check places where we delete handlers: are we dealing with pointers correctly?
-* -- CL_API extern const mirror_t* ASmirrorData_ptr is the thing from which ticks are read
-* -- "acceptReplacementData" could send bad params?
-* -- AS::sendReplacementDataToCL calls it
-* -- Clock: wasn't initializing wait time before first loop : )
-* -- New initialization stuff means new tests means new errors, and ticks read still weird;
-* 
-* "On Windows, thread::sleep_for() calls Sleep(). Whose resolution is determined by the clock 
-*  interrupt rate, the mechanism that is used to jerk the processor back from its halt state. 
-*  Default rate is 64 ticks per second. Increasing the rate is possible"
-* 
 * ***** Minor 4. AS loop *****
 *
 * The goal here is to get the AS loop to work as expected.
