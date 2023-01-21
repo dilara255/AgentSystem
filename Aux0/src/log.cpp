@@ -69,7 +69,7 @@ namespace az {
 			puts("\n");
 		}
 
-		#ifdef AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			std::string lineInfo = std::string(file) + " @ line " + std::to_string(line) + ":";
 			s_DebugAuxLogger->debug(lineInfo.c_str());
 		#endif

@@ -263,7 +263,7 @@ namespace GA {
 
 namespace AS {
 	bool testDataContainerCapacity(const dataControllerPointers_t* agentDataControllers_cptr) {
-		#ifdef AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			printf("\nData structure sizes (bytes):\n");
 			printf("LA: Cold: %zi, State : %zi Decision : %zi\n",
 				sizeof(LA::coldData_t), sizeof(LA::stateData_t), sizeof(LA::decisionData_t));
@@ -278,7 +278,7 @@ namespace AS {
 		size_t LAtotalSize = LAagentSize * MAX_LA_QUANTITY;
 		size_t GAtotalSize = GAagentSize * MAX_GA_QUANTITY;
 
-		#ifdef AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			printf("Bytes per LA: %zi, per GA: %zi\n", LAagentSize, GAagentSize);
 			printf("LA total bytes: %zi, GA total: %zi\n", LAtotalSize, GAtotalSize);
 			printf("\n\nData Controllers NON-CONST ptr: %p\n", agentDataControllers_cptr);

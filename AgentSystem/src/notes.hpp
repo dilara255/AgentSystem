@@ -120,6 +120,13 @@
 * -- Memory use seems ok, smaller on release and well bounded (on these tests at least);
 * -- Making "frame" slower (sleep more) didn't help (tested on release x86 only;
 * -- Making it much faster also did nothing;
+* -- Reducing the tick test also didn't help;
+* -- Main Loop is in fact not finishing execution;
+* -- x64 seems to be hanging too with more logging, but not when it's taken out;
+* -- Will try to debug in verbose mode, since it makes things worse apparently;
+* -- First, it seems like should be running is not set to false;
+* -- Actually, it seems like the main loop isn`t even really running.
+* -> Investigate save logic for checking this, and add warning on stop
 * 
 * ***** Minor 4. AS loop *****
 *

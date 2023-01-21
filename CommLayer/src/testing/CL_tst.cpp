@@ -25,38 +25,6 @@ void CL::sanityTest(int ASnumber, int tstArraySize) {
 	return;
 }
 
-/*
-* DEPRECATED
-* 
-bool CL::sendDataChangedForTest(char* recipientString, GA::coldData_t* recepientGAcold,
-	GA::stateData_t* recepientGAstate, LA::stateData_t* recipientLAstate,
-	LA::decisionData_t* recipientLAdecision, AS::actionData_t* recepientAction) {
-
-	recipientString[0] = mirrorData_ptr->networkParams.comment[0];
-
-	*recepientGAcold = mirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data.back();
-	*recepientGAstate = mirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data.back();
-	*recipientLAstate = mirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data.back();
-	*recipientLAdecision = mirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data.back();
-	*recepientAction = mirrorData_ptr->actionMirror.dataLAs.back();
-
-	if (mirrorData_ptr->actionMirror.dataLAs.back().details.processingAux 
-		                                                != TST_LAST_ACTION_AUX) {
-		LOG_ERROR("Test last action aux is not as expected");
-		#ifdef AS_DEBUG
-			printf("%f instead of %f",
-				mirrorData_ptr->actionMirror.dataLAs.back().details.processingAux, TST_LAST_ACTION_AUX);
-			getchar();
-			return false;
-		#endif // AS_DEBUG
-	}
-
-	return true;
-}
-* 
-* DEPRECATED
-*/
-
 bool CL::hasTstArrayInitialized() {
 	return tstArrayInitialized;
 }

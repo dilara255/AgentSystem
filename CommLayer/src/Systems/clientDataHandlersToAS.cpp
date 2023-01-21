@@ -27,7 +27,7 @@ namespace CL {
 
 		int size = (int)m_changes.size();
 
-		#ifdef AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			if (!silent) {
 				LOG_TRACE("Will acquire mutex...");
 			}
@@ -39,7 +39,7 @@ namespace CL {
 			return false;
 		}
 
-		#ifdef AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			if (!silent) {
 				printf("Client Changes to process: %d\n", size);
 			}
@@ -49,7 +49,7 @@ namespace CL {
 		bool tmp;
 		for (int i = 0; i < size; i++) {
 
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				if (!silent) {
 					printf("Change %d: %d, %s\n", i, m_changes[i].agentID,
 						                          m_changes[i].getNewData_fptr);
@@ -59,7 +59,7 @@ namespace CL {
 			tmp = processChange(m_changes[i], recepientPtrs);
 			result &=tmp;
 
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				if(!tmp && !silent) {
 					LOG_WARN("Failed to process change!");
 				}
@@ -70,7 +70,7 @@ namespace CL {
 			LOG_ERROR("Failed to process some changes issue by the Client");
 		}
 
-		#ifdef AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			if (!silent) {
 				LOG_INFO("All changes processed! Will release lock...");
 			}

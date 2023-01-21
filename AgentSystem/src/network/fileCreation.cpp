@@ -374,7 +374,7 @@ FILE* AS::acquireFilePointerToSave(std::string name, bool shouldOverwrite, std::
         }
         else {
             LOG_WARN("File already exists. Will append a number to the end of the name");
-            #ifdef AS_DEBUG
+            #if (defined AS_DEBUG) || VERBOSE_RELEASE
                 printf("File name: %s\n", name.c_str());
             #endif // AS_DEBUG
         }
@@ -405,7 +405,7 @@ FILE* AS::acquireFilePointerToSave(std::string name, bool shouldOverwrite, std::
         fp = fopen(newName.c_str(), "r");
     }
 
-    #ifdef AS_DEBUG
+    #if (defined AS_DEBUG) || VERBOSE_RELEASE
         printf("\nFinal file name to save: %s\n", newName.c_str());
     #endif // AS_DEBUG 
         

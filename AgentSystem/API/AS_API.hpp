@@ -22,15 +22,17 @@ namespace AS {
 	AS_API bool isMainLoopRunning();
 
 	//Loads network and instantiates appropriate Client Data Handler.
+	//If active, stops AS's main loop before loading.
 	//v
-	//- WARNING: Clears active Network and Client Data Handler, no confirmation needed! 
+	//- WARNING: CLEARS active Network and Client Data Handler, no confirmation needed! 
 	//Logic to save current network first and etc should be handled by the CLIENT.
 	//- WARNING: Do NOT try to send new Client Data before this returns!
 	//If the Client calls AS and CL in multiple trheads, this should be handled by the CLIENT.
 	AS_API bool loadNetworkFromFile(std::string name, bool runNetwork = false);
 
 	//Saves active network. Client changes made BEFORE call will be consumed.
-	//AS's main loop stops and then resumes after save. Default fileName uses network name.
+	//If active, AS's main loop stops and then resumes after save. 
+	//Default fileName uses network name (as stored by AS).
 	//v
 	//- WARNING: just gets and releases a lock to Client Data. All other sync is on the CLIENT.
 	AS_API bool saveNetworkToFile(std::string fileName = "", bool shouldOverwrite = false);
