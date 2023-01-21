@@ -138,7 +138,8 @@
 * -- CL_API extern const mirror_t* ASmirrorData_ptr is the thing from which ticks are read
 * -- "acceptReplacementData" could send bad params?
 * -- AS::sendReplacementDataToCL calls it
-* -- Params initialization now seems ok. Try new clock
+* -- Clock: wasn't initializing wait time before first loop : )
+* -- New initialization stuff means new tests means new errors, and ticks read still weird;
 * 
 * "On Windows, thread::sleep_for() calls Sleep(). Whose resolution is determined by the clock 
 *  interrupt rate, the mechanism that is used to jerk the processor back from its halt state. 

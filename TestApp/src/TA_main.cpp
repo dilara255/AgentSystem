@@ -205,7 +205,15 @@ void TAreadLoop(int numberTicks) {
 bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 	LOG_WARN("Will check if reader thread's results are as expected. May need to wait for execution to finish");
-	reader.join();
+	
+	if (reader.joinable()) {
+		reader.join();
+	}
+	else {
+		LOG_WARN("Reader thread seem innactive. If it wasn't created, this test will make no sense!");
+	}
+	
+	
 
 	LOG_TRACE("Execution finished. Checking...");
 
@@ -292,6 +300,11 @@ bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 
 	if (!AS::isMainLoopRunning() || !AS::chekIfMainLoopShouldBeRunning()) {
 		LOG_CRITICAL("Main loop has to be running for this test to work");
+		return false;
+	}
+
+	if (!CL::isASdataPointerInitialized()) {
+		LOG_CRITICAL("This test needs the AS mirror in CL to be initialized");
 		return false;
 	}
 

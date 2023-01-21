@@ -94,8 +94,9 @@ void AS::mainLoop() {
 	std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 	//std::chrono::microseconds stepStartTime;
 	std::chrono::microseconds durationThisStepMicro = zeroMicro;
-	std::chrono::microseconds tagetStepTime = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
-	std::chrono::microseconds timeToSleepMicro;
+	std::chrono::microseconds tagetStepTimeMicro = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
+	std::chrono::microseconds timeToSleepMicro = zeroMicro;
+	
 	bool result = false;
 
 	do {
@@ -135,7 +136,7 @@ void AS::mainLoop() {
 			{ LOG_TRACE("Main loop will calculate time to sleep"); }
 
 		//durationThisStepMicro = "current time in micro" - stepStartTime
-		timeToSleepMicro = tagetStepTime - durationThisStepMicro;
+		timeToSleepMicro = tagetStepTimeMicro - durationThisStepMicro;
 		if(timeToSleepMicro < zeroMicro) timeToSleepMicro = zeroMicro;
 
 		if (!shouldMainLoopBeRunning)
