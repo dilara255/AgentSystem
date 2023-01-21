@@ -143,7 +143,7 @@ namespace AS {
 				printf("\nGA id: %d - expected %d ", idRead, TST_GA_ID);
 				printf(" | LA reinforcement : %f - expected %f", guardRead, TST_LA_REINFORCEMENT);
 				printf("\nLA disposition offset: %f - expected %f\n", offsetRead, TST_LA_OFFSET);
-				getchar();
+				GETCHAR_PAUSE;
 			#endif // AS_DEBUG
 			return false;
 		}

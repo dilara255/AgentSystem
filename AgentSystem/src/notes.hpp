@@ -110,16 +110,21 @@
 * to advance actions to the moment before their completion. The TA can then check 
 * again a bit later if this is part of a multi-step process.
 *
-* Cleanup
+* Cleanup and bug-fixing
 * 
-* ***** Minor 4. AS loop *****
+* ***** > Minor 4. AS loop *****
 *
-* The goal here is to get the AS loop to work as expected.
-* No actual decision making yet, just a couple stub decisions.
-* Expected values updating working. WILL HAVE TO SOLVE HOW TO SAVE THIS
-* Couple of stub actions as well, that simply run their course and have a simple resolution.
-*
-* Complete 3c-e.
+* -Understand why x86 versions are getting crazy tick values;
+* 
+* -Implement skeleton of main loop, with dumb loop stubs;
+*	The goal here is to get the AS loop to work as expected.
+* -Update information and expected values. 
+*	WILL HAVE TO SOLVE HOW TO SAVE THIS
+* -Add "desires" data structure (no need to save them, as they're calculated per-step).
+* -Basic PRNG system working.
+* -Couple of simplified decisions and actions (and watever is necessary for that)
+*	should just run their course and have a simple resolution.
+* -Complete 3c-e for a few more the relevant fields.
 * 
 * Cleanup, some (in-code) documentation, and fresh pull+compile test
 *

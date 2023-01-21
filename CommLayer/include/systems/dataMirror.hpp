@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../include/data/mirrorDataControllers.hpp"
+#include "../include/data/dataMisc.hpp"
 
 namespace CL {
 	//Stores, manages, receives and gives access to and info about action and agent data.
