@@ -84,7 +84,7 @@ namespace AS {
 
 			else{
 				LOG_ERROR("Tried to get out of range Local Action. Aborting");
-				#ifdef AS_DEBUG
+				#if (defined AS_DEBUG) || VERBOSE_RELEASE
 					printf("\nLocal/Global: %d , ID: %d , size: %d ", localOrGlobal, actionID,
 																		(int)dataLAs.size());
 				#endif // AS_DEBUG 
@@ -100,7 +100,7 @@ namespace AS {
 
 			else{
 				LOG_ERROR("Tried to get out of range Global Action. Aborting");
-				#ifdef AS_DEBUG
+				#if (defined AS_DEBUG) || VERBOSE_RELEASE
 					printf("\nLocal/Global: %d , ID: %d , size: %d ", localOrGlobal, actionID,
 																		(int)dataGAs.size());
 				#endif // AS_DEBUG 

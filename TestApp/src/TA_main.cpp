@@ -20,12 +20,6 @@ bool testClientDataHAndlerInitialization(void);
 #define SPECIFIC_THREADED_LOOP_TESTS 7
 #define TOTAL_TESTS (BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
-#ifdef AS_DEBUG
-	#define GETCHAR_PAUSE getchar();
-#else
-	#define GETCHAR_PAUSE puts("\n");
-#endif // AS_DEBUG
-
 std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
 
@@ -37,56 +31,58 @@ int main(void) {
 	testSayHello();
 
 	LOG_INFO("AS, CL-internal and CL-external should have said hello above : )");
-	LOG_TRACE("This will run a few batteries of tests..."); GETCHAR_PAUSE
+	LOG_TRACE("This will run a few batteries of tests..."); GETCHAR_PAUSE;
 
-	LOG_INFO("Basic App, AS and CL communicaton and data storage tests:\n",1); GETCHAR_PAUSE
-	int resultsBattery1 = (int)testMockData(); GETCHAR_PAUSE
+	LOG_INFO("Basic App, AS and CL communicaton and data storage tests:\n",1); GETCHAR_PAUSE;
+	int resultsBattery1 = (int)testMockData(); GETCHAR_PAUSE;
 	
 	LOG_TRACE("Actual initialization tests...");
-	resultsBattery1 += (int)AS::initializeASandCL(); GETCHAR_PAUSE
+	resultsBattery1 += (int)AS::initializeASandCL(); GETCHAR_PAUSE;
 
-	resultsBattery1 += (int)AS::testContainersAndAgentObjectCreation(); GETCHAR_PAUSE
+	resultsBattery1 += (int)AS::testContainersAndAgentObjectCreation(); GETCHAR_PAUSE;
 
-	resultsBattery1 += (int)testFromTAifCLhasInitialized(); GETCHAR_PAUSE
+	resultsBattery1 += (int)testFromTAifCLhasInitialized(); GETCHAR_PAUSE;
 
 	if (resultsBattery1 != BASIC_INIT_COMM_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", BASIC_INIT_COMM_TESTS - resultsBattery1, BASIC_INIT_COMM_TESTS);
-		GETCHAR_PAUSE
+		GETCHAR_PAUSE;
 	}
 	else {
-		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
+		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
 	}
 
-	LOG_INFO("Specific functionality tests (DATA manipulation):\n",1); GETCHAR_PAUSE
+	LOG_INFO("Specific functionality tests (DATA manipulation):\n",1); GETCHAR_PAUSE;
 	
 	int resultsBattery2 = (int)AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
-	GETCHAR_PAUSE
+	GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults); GETCHAR_PAUSE
+	LOG_WARN("Will test loading network from a File and then saving it back with network name");
+	resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::saveNetworkToFile(); GETCHAR_PAUSE
+	resultsBattery2 += (int)AS::saveNetworkToFile(); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE
+	resultsBattery2 += (int)AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)testReadingCLdataFromTA(); GETCHAR_PAUSE
+	resultsBattery2 += (int)testReadingCLdataFromTA(); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE
+	resultsBattery2 += (int)testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE
+	resultsBattery2 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 	
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", SPECIFIC_DATA_FUNCTIONALITY_TESTS - resultsBattery2, 
 			                                             SPECIFIC_DATA_FUNCTIONALITY_TESTS);
-		GETCHAR_PAUSE
+		GETCHAR_PAUSE;
 	}
 	else {
-		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
+		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
 	}
 
-	LOG_INFO("Specific functionality tests (THREADED LOOPs):\n",1); GETCHAR_PAUSE
+	LOG_INFO("Specific functionality tests (THREADED LOOPs):\n",1); GETCHAR_PAUSE;
 
+	LOG_WARN("Will load the previously modified network");
 	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
 	GETCHAR_PAUSE;
 
@@ -96,7 +92,7 @@ int main(void) {
 
 	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 
-	resultsBattery3 += (int)testClientDataHAndlerInitialization(); GETCHAR_PAUSE
+	resultsBattery3 += (int)testClientDataHAndlerInitialization(); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)testSendingClientDataAndSaving(); GETCHAR_PAUSE;
 
@@ -106,22 +102,22 @@ int main(void) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery3,
 			SPECIFIC_THREADED_LOOP_TESTS);
-		GETCHAR_PAUSE
+		GETCHAR_PAUSE;
 	}
 	else {
-		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE
+		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
 	}
 
-	LOG_TRACE("Tests ended...\n",1); GETCHAR_PAUSE
+	LOG_TRACE("Tests ended...\n",1); GETCHAR_PAUSE;
 
 	int totalPassed = resultsBattery1 + resultsBattery2 + resultsBattery3;
 	if (totalPassed == TOTAL_TESTS) {
-		LOG_INFO("All automatically checked tests passed!"); GETCHAR_PAUSE
+		LOG_INFO("All automatically checked tests passed!"); GETCHAR_PAUSE;
 	}
 	else {
 		LOG_CRITICAL("Not all tests were passed (as far as we checked)!");
 		printf("%d out of %d failed\n", TOTAL_TESTS - totalPassed, TOTAL_TESTS);
-		GETCHAR_PAUSE
+		GETCHAR_PAUSE;
 	}
 
 	//TO DO: Update expected changes after I'm done updating it
@@ -132,9 +128,10 @@ int main(void) {
 	printf("\t-Last GA`s id = %d and connected GAs = %d ;\n", TST_GA_ID, TST_GA_CONNECTIONS);
 	printf("\t-Last LA`s reinforcement = %f, offset[%d][%d][1] = %f and last actions aux = %f.\n",
 		TST_LA_REINFORCEMENT, TST_CHANGED_CATEGORY, TST_CHANGED_MODE, TST_LA_OFFSET, TST_LAST_ACTION_AUX);
-	getchar();
+	
+	GETCHAR_FORCE_PAUSE;
 
-	LOG_INFO("Done! Enter to exit"); getchar();
+	LOG_INFO("Done! Enter to exit"); GETCHAR_FORCE_PAUSE;
 	
 	return (1 + (totalPassed - TOTAL_TESTS));
 }
@@ -204,6 +201,7 @@ void TAreadLoop(int numberTicks) {
 }
 
 //TO DO: This test makes MUCH more sense if we store tick time as well : )
+//WARNING: this test ONLY makes sense if the loop actually takes the exact expected time
 bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 	LOG_WARN("Will check if reader thread's results are as expected. May need to wait for execution to finish");
@@ -215,10 +213,15 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	uint64_t baseKickUpdateRate = (uint64_t)abs(TST_TA_QUERY_MULTIPLIER);
 	//Remainder will help calculate how often we should diverge from that (jump)
 	double remainder = TST_TA_QUERY_MULTIPLIER - fabs(TST_TA_QUERY_MULTIPLIER);
-	double inverseRemainder = 1.0 / remainder;
+	
+	double finalRemainder;
+	if(remainder == 0) { finalRemainder = 0; }
+	else{
+		double inverseRemainder = 1.0 / remainder;
 
-	//If the inverse of the remainder has a remainder, then you may skip some jumps;
-	double finalRemainder = inverseRemainder - fabs(inverseRemainder);
+		//If the inverse of the remainder has a remainder, then you may skip some jumps;
+		finalRemainder = inverseRemainder - fabs(inverseRemainder);
+	}
 
 	//Which makes testing harder, so I'll try to control for that:
 	double refRemainder = (double)baseKickUpdateRate / (double)TST_TIMES_TO_QUERRY_TICK;
@@ -230,7 +233,7 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	else exact = false;
 	if (!exact) {
 		LOG_WARN("Fractional relationship between read and write may make the test's auto-checking fail!");
-		#ifdef AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			printf("Final Remainder: %f, small: %f\n", finalRemainder, small);
 		#endif // AS_DEBUG
 
@@ -257,7 +260,8 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 		}
 	}
 
-	//This gives some margin since the fractional part may still byte us in the ass
+	//This gives some margin of error since the fractional part may still byte us in the ass
+	//(in practice this may well be effectively the same as fails == zero)
 	bool result = (fails < TST_TIMES_TO_QUERRY_TICK / TST_TICK_COUNT_SAFETY_FACTOR);
 
 	if (result) {
@@ -267,13 +271,14 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	else
 	{
 		LOG_ERROR("TA didn't read ticks correctly from CL while AS was running");
-#ifdef AS_DEBUG
-		printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms):\n",
-			TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, TST_MAINLOOP_FREQUENCY_MS);
-		for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
-			printf("%llu ", g_ticksRead[i]);
-		}
-#endif // AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
+			printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms):\n",
+				            TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, 
+				                                         TST_MAINLOOP_FREQUENCY_MS);
+			for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
+				printf("%llu ", g_ticksRead[i]);
+			}
+		#endif // AS_DEBUG
 
 		return false;
 	}
@@ -506,7 +511,7 @@ bool testFromTAifCLhasInitialized(void) {
 	if (failed) {
 		LOG_ERROR("Some CL data controller capacities don't match the expected!");
 
-		#ifdef AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			printf("Failed on %d out of 8 checks\nsizeLAact; %zi, sizeGAact: %zi\n", 
 															failed, sizeLAact, sizeGAact);
 			printf("capLAact: %zi, expected: %zi - capGAact: %zi, expected: %zi\n",
@@ -514,7 +519,7 @@ bool testFromTAifCLhasInitialized(void) {
 				(MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT* sizeLAact));
 		#endif // AS_DEBUG
 
-		GETCHAR_PAUSE
+		GETCHAR_PAUSE;
 		return false;
 	}
 	
@@ -553,7 +558,7 @@ bool testMockData(void) {
 		result = false;
 	}
 
-	#ifdef AS_DEBUG
+	#if (defined AS_DEBUG) || VERBOSE_RELEASE
 		printf("TstArray[0]: %d \nTstArray[1]: %d \n",
 			   tstArray_ptr[0], tstArray_ptr[1]);
 	#endif
@@ -567,5 +572,5 @@ void testSayHello(void) {
 
 	CL::sayHelloExternal();
 	
-	GETCHAR_PAUSE
+	GETCHAR_PAUSE;
 }

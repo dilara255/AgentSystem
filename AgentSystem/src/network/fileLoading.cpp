@@ -52,7 +52,7 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
         LOG_ERROR("Failed to read part of the header. Will abort file loading.");
     }
 
-    #ifdef AS_DEBUG
+    #if (defined AS_DEBUG) || VERBOSE_RELEASE
         printf("\nSeparator read:      %s\n", separatorRead);
     #endif // AS_DEBUG   
 
@@ -61,7 +61,7 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     char expectedSeparator[COMMENT_LENGHT];
     sscanf(commentSeparator, commentSeparatorFormat, expectedSeparator);
 
-    #ifdef AS_DEBUG
+    #if (defined AS_DEBUG) || VERBOSE_RELEASE
         printf("Expected separator: %s\n\n", expectedSeparator);
     #endif // AS_DEBUG   
 
@@ -88,7 +88,7 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     tokens = fscanf(fp, GAidentity, &cold.id, &onOff);
     if (tokens != 2 ) {
         LOG_ERROR("Error reading identity tokens from GA. Aborting load.");
-        #ifdef AS_DEBUG
+        #if (defined AS_DEBUG) || VERBOSE_RELEASE
             printf("GA: %d , Tokens read = %d , Cold.id = %d , onOff = %d \n\n", 
                     id, tokens, cold.id, onOff);
         #endif // AS_DEBUG 
@@ -196,7 +196,7 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
 
     if (neighboursFound < data_ptr->numberConnectedNeighbors) {
         LOG_ERROR("Found less neighbours than expected when updating LA connection data!");
-        #ifdef AS_DEBUG
+        #if (defined AS_DEBUG) || VERBOSE_RELEASE
             printf("\nFIELDS: %d , %d , %d , %d ", data_ptr->connectedNeighbors.getField(0),
                                                 data_ptr->connectedNeighbors.getField(1),
                                                 data_ptr->connectedNeighbors.getField(2),
@@ -231,7 +231,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     tokens = fscanf(fp, LAidentity, &cold.id, &state.GAid, &onOff);
     if (tokens != 3) {
         LOG_ERROR("Error reading identity tokens from LA. Aborting load.");
-        #ifdef AS_DEBUG
+        #if (defined AS_DEBUG) || VERBOSE_RELEASE
             printf("LA: %d , Tokens read = %d , Cold.id = %d , state.GAid = %d , onOff = %d \n\n",
                 id, tokens, cold.id, state.GAid, onOff);
         #endif // AS_DEBUG 
@@ -399,7 +399,7 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
     //We'll check a "comment separator line" to see if the comment was properly red:
 
     if (strcmp(buffer, GAsectiontittle) != 0) { //try again (don't abort because of trailing newline)
-        #ifdef AS_DEBUG
+        #if (defined AS_DEBUG) || VERBOSE_RELEASE
             printf("\n\nLeu %s em vez de \"%s\"\nVamos tentar mais uma linha...",
                 buffer, GAsectiontittle);
         #endif // AS_DEBUG 

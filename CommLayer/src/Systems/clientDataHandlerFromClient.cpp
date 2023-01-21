@@ -177,7 +177,7 @@ namespace CL{
 		if ((uint32_t)index >= m_data_ptr->size()) {
 			LOG_ERROR("Tried to change data for Index out of range");
 			
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("Data has capacity %zu, index was %u\n", 
 												m_data_ptr->size(), index);
 			#endif // AS_DEBUG
@@ -337,7 +337,7 @@ namespace CL{
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("Data has capacity %zu, aid was %u\n", 
 												m_data_ptr->data.size(), agentID);
 			#endif // AS_DEBUG
@@ -404,7 +404,7 @@ namespace CL{
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("Data has capacity %zu, aid was %u\n", 
 												m_data_ptr->data.size(), agentID);
 			#endif // AS_DEBUG
@@ -469,7 +469,7 @@ namespace CL{
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("Data has capacity %zu, aid was %u\n", 
 												m_data_ptr->data.size(), agentID);
 			#endif // AS_DEBUG
@@ -532,7 +532,7 @@ namespace CL{
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("Data has capacity %zu, aid was %u\n", 
 												m_data_ptr->data.size(), agentID);
 			#endif // AS_DEBUG
@@ -589,7 +589,7 @@ namespace CL{
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("Data has capacity %zu, aid was %u\n", 
 												m_data_ptr->data.size(), agentID);
 			#endif // AS_DEBUG

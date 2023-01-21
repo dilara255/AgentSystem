@@ -15,6 +15,24 @@ TO DO: Generalize the whole macro thingy and all that's associated with it
     #include "../include/log.hpp"
 #endif
 
+//The default for the following definitions is 0
+
+//Setting this to anything but 0 makes release as verbose as debug.
+#define VERBOSE_RELEASE 1
+
+//Setting this to anything but 0 makes debug not ask for keypresses on GETCHAR_PAUSE
+#define DONT_ASK_KEYPRESS_DEBUG 0
+
+//Setting this to anything but 0 makes release ASK for keypresses on GETCHAR_PAUSE
+#define ASK_KEYPRESS_ON_RELEASE 0
+
+//Setting this to anything but 0 makes GETCHAR_FORCE_PAUSE act the same as GETCHAR_PAUSE
+#define DONT_FORCE_KEYPRESS 0
+
+//TO DO: way to define level for test header
+
+//NOTE: changing these may lead to full recompile : (
+
 namespace az {
     void log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file, 
              const int line, const char* message, unsigned trailingNewlines = 0);
@@ -33,6 +51,22 @@ namespace az {
 #define L_CRITICAL 4
 
 //Only macros from here on : )
+
+
+//MACROS for user interaction
+
+
+#if (defined AS_DEBUG && !DONT_ASK_KEYPRESS_DEBUG) || (defined AS_RELEASE && ASK_KEYPRESS_ON_RELEASE)
+	#define GETCHAR_PAUSE getchar()
+#else
+	#define GETCHAR_PAUSE puts("\n")
+#endif // AS_DEBUG
+
+#if (DONT_FORCE_KEYPRESS)
+    #define GETCHAR_FORCE_PAUSE GETCHAR_PAUSE;
+#else
+	#define GETCHAR_FORCE_PAUSE getchar()
+#endif // AS_DEBUG
 
 //MACROS log Agent System
 
@@ -58,7 +92,7 @@ namespace az {
                                    __FILE__, __LINE__, __VA_ARGS__)
 #endif
 
-#ifdef AS_RELEASE
+#if !VERBOSE_RELEASE && defined AS_RELEASE
     #define LOG_WARN(...)
 #else
     #define LOG_WARN(...) az::log(GETLOGGER, L_WARN,\
@@ -72,7 +106,7 @@ namespace az {
                                   __FILE__, __LINE__, __VA_ARGS__)
 #endif
 
-#ifdef AS_RELEASE
+#if !VERBOSE_RELEASE && defined AS_RELEASE
     #define LOG_TRACE(...)
 #else
     #define LOG_TRACE(...) az::log(GETLOGGER, L_TRACE,\

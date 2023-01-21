@@ -132,7 +132,7 @@ namespace AS {
 		if (failed) {
 			LOG_ERROR("Some of the values modified by the TA werent read back from the CL as expected");
 		
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("\n%d out of 6 failed. Test action aux: %f - expected %f ", failed,
 					                                         auxRead, TST_LAST_ACTION_AUX);
 				printf("\nGA connection data: %d - expected %d ", connectedRead.getField(),
@@ -153,7 +153,7 @@ namespace AS {
 
 	bool testDataTransferFromAStoCL(void) {
 
-		LOG_INFO("Will Try to transfer data from AS to CL...");
+		LOG_WARN("Will Try to transfer data from AS to CL...");
 
 		bool result = AS::sendReplacementDataToCL();
 		if (!result) {
@@ -216,14 +216,15 @@ namespace AS {
 
 bool AS::testContainersAndAgentObjectCreation() 
 {
-	LOG_TRACE("Going to test AS data containers and Agent Object instantiation...");
+	LOG_WARN("Going to test AS data containers and Agent Object instantiation...");
 	bool result = AS::testDataContainerCapacity(AS::agentDataControllers_cptr);
 	result &= AS::testAgentDataClassCreation();
 	return result;
 }
 
 bool AS::testFileCreation(std::string nameNoDefaults, std::string nameWithDefaults) {
-	
+	LOG_WARN("Will test file creation, with and withouth defaults");
+
 	int result = AS::createEmptyNetworkFile(nameNoDefaults, nameNoDefaults, TST_NUMBER_LAS, 
 						    TST_NUMBER_GAS, MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT, false);
 
@@ -263,7 +264,7 @@ void AS::initTstArray() {
 	AStestArray_ptr[0] = AS_TST_EXPECTED_ARR0;
 	AStestArray_ptr[1] = AS_TST_EXPECTED_ARR1;
 
-	#ifdef AS_DEBUG
+	#if (defined AS_DEBUG) || VERBOSE_RELEASE
 		printf("AStstArray[0]: %d \nAStstArray[1]: %d \n",
 			   AStestArray_ptr[0], AStestArray_ptr[1]);
 	#endif
@@ -280,7 +281,7 @@ void AS::transferData(int* CLtestArray_ptr) {
 
 	LOG_TRACE("Will transfer data to CL\n");
 
-	#ifdef AS_DEBUG
+	#if (defined AS_DEBUG) || VERBOSE_RELEASE
 		printf("AStstArray[0]: %d \nAStstArray[1]: %d \n",
 			   AStestArray_ptr[0], AStestArray_ptr[1]);
 	#endif
@@ -288,7 +289,7 @@ void AS::transferData(int* CLtestArray_ptr) {
 	memcpy(CLtestArray_ptr, AStestArray_ptr, TST_ARRAY_SIZE * sizeof(int));
 	CL::setTstArrayHasInitialized(true);
 
-	#ifdef AS_DEBUG
+	#if (defined AS_DEBUG) || VERBOSE_RELEASE
 		printf("Copied Test Array to CL (%p):\nCLtstArray[0]: %d \nCLtstArray[1]: %d \n",
 							 CLtestArray_ptr, CLtestArray_ptr[0], CLtestArray_ptr[1]);
 	#endif

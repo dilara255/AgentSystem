@@ -91,12 +91,18 @@ void AS::mainLoop() {
 
 	//std::chrono::microseconds stepStartTime;
 	std::chrono::microseconds stepTimeMicro = std::chrono::microseconds(0);
-	std::chrono::microseconds timeToSleepMicro;
+	std::chrono::microseconds timeToSleepMicro = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
+	std::chrono::microseconds timeToSleepMicroThisStepMicro;
 	bool result = false;
 
 	do {
+
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
+			printf("Should be running? %d,\n",(int)shouldMainLoopBeRunning);
+		#endif
+
 		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will sleep first"); }
-		std::this_thread::sleep_for(timeToSleepMicro);
+		std::this_thread::sleep_for(timeToSleepMicroThisStepMicro);
 		//stepStartTime = blah (get the current time in micro)
 		
 		//do stuff
@@ -115,8 +121,7 @@ void AS::mainLoop() {
 
 		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will calculate time to sleep"); }
 		//stepTimeMicro = "current time in micro" - stepStartTime
-		timeToSleepMicro = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
-		timeToSleepMicro -= stepTimeMicro;
+		timeToSleepMicroThisStepMicro = timeToSleepMicro - stepTimeMicro;
 
 		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop should stop now!"); }
 	} while (shouldMainLoopBeRunning);
@@ -132,13 +137,14 @@ bool AS::stop() {
 	}
 
 	shouldMainLoopBeRunning = false;
-		
+
 	if (mainLoopThread.joinable()) {
 		LOG_TRACE("Waiting for main loop to finish execution...");
 		mainLoopThread.join();
 		mainLoopId = std::thread::id(); //default-constructs to "no thread" value
 		LOG_INFO("Done.");
-		#ifdef AS_DEBUG
+
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			printf("\nRan for %llu ticks\n", currentNetworkParams.mainLoopTicks - 
 				                           currentNetworkParams.lastMainLoopStartingTick);
 		#endif // AS_DEBUG		
@@ -179,7 +185,7 @@ bool AS::initializeASandCL() {
 	bool result = createAgentDataControllers(&agentDataControllerPtrs);
 	if (!result) { return false; }
 
-	#ifdef AS_DEBUG
+	#if (defined AS_DEBUG) || VERBOSE_RELEASE
 		printf("\n\nData Controllers NON-CONST ptr: %p\n", &agentDataControllerPtrs);
 		printf("Data Controllers CONST ptr:     %p\n\n", agentDataControllers_cptr);
 		printf("\n\nLAcoldData_ptr             : %p\n", agentDataControllers_cptr->LAcoldData_ptr);
@@ -260,6 +266,7 @@ namespace AS {
 
 bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 	LOG_INFO("Trying to load network from a file");
+	if(runNetwork) { LOG_INFO("Will start Main Loop if loading succeeds"); }
 
 	if (!isInitialized) {
 		LOG_ERROR("Agent System and Communications Layer must be initialized before loading. Aborting.");
@@ -278,6 +285,18 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 		fclose(fp);
 		LOG_TRACE("File closed");
 		return false;
+	}
+
+	//TO DO: BLOCK CLIENT CHANGES (add some "isLoading" flag on the CL?)
+
+	if (shouldMainLoopBeRunning) {
+		LOG_TRACE("Will stop Main Loop Thread");
+		if(stop()){
+			LOG_TRACE("Thread stopped");
+		}
+		else {
+			LOG_WARN("Something weird is going on with the Main Loop Thread. Saving will proceed but thread won't be resumed...");
+		}
 	}
 
 	clearNetwork(); //in order to load the new one
@@ -349,7 +368,7 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite) {
 	if (name == "") {
 		LOG_TRACE("Using name stored on network params");
 		name = currentNetworkParams.name;
-		#ifdef AS_DEBUG
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			printf("Name: %s\n", name.c_str());
 		#endif // AS_DEBUG
 

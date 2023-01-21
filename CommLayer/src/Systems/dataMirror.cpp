@@ -182,7 +182,7 @@ namespace CL {
 		if (result != 0) {
 			
 			LOG_ERROR("Failed to receive network name...");
-			#ifdef AS_DEBUG
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("name expected : % s | name read : % s\n", params_cptr->name,
 														 data.networkParams.name);
 			#endif // AS_DEBUG
