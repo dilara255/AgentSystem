@@ -64,8 +64,8 @@ bool AS::quit() {
 	return result;
 }
 
-//Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id;
-//TO DO: FIX: Should check if conditions to run are met (ie: ASmirror and Client Data Handlers)
+//Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id.
+//Checks some conditions before initializing, and returns false if any are not met.
 bool AS::run() {
 	LOG_TRACE("Starting Main Loop Thread...");
 	
@@ -75,6 +75,16 @@ bool AS::run() {
 			return false;
 		}
 		LOG_WARN("Main Loop Thread state control variable was set wrong. Will try to fix and start thread");
+	}
+
+	if (!CL::isClientDataPointerInitialized()) {
+		LOG_ERROR("Client Data Pointer not initialized. Main Loop can't run");
+		return false;
+	}
+
+	if (!CL::isASdataPointerInitialized()) {
+		LOG_ERROR("AS Data Mirror not initialized. Main Loop can't run");
+		return false;
 	}
 
 	shouldMainLoopBeRunning = true;
@@ -244,11 +254,12 @@ bool AS::initializeASandCL() {
 	#endif // AS_DEBUG 
 
 	if (agentDataControllers_cptr !=
-		(const dataControllerPointers_t*)&agentDataControllerPtrs) {
+								(const dataControllerPointers_t*)&agentDataControllerPtrs) {
 		LOG_CRITICAL("Pointer and Const Pointer to Data Control are not matching!");
 		return false;
 	}
 
+	//TO DO: test the others as well (extract)
 	if (agentDataControllerPtrs.LAcoldData_ptr == NULL) {
 		LOG_CRITICAL("DATA CONTROLLERS NOT CREATED: ptr to LAcold is NULL");
 		return false;
@@ -269,7 +280,6 @@ bool AS::initializeASandCL() {
 		return false;
 	}
 
-	//Communications Layer:
 	result = CL::init(currentNetworkParams_cptr);
 	if (!result) {
 		LOG_CRITICAL("Something went wrong initialing the Communications Layer!");

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core.hpp"
+#include "CL_core.hpp"
 
 #include "../include/data/mirrorDataControllers.hpp"
 #include "../include/systems/clientDataHandler.hpp"
@@ -17,9 +18,6 @@ namespace CL {
 
 	//Returns NULL if not initialized
 	CL_API CL::ClientData::Handler* getClientDataHandlerPtr();
-
-	CL_API bool isClientDataPointerInitialized();
-	CL_API bool isASdataPointerInitialized();
 
 	//****For Testing****
 	CL_API void sayHelloExternal();

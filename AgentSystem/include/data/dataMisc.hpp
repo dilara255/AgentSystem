@@ -7,4 +7,23 @@ namespace AS {
 		                            const networkParameters_t * source);
 
 	AS_API bool defaultNetworkParameters(networkParameters_t* destination);
+
+	/*
+	typedef struct {
+		bool* shouldMainLoopBeRunning_ptr;
+		std::thread::id* mainLoopId_ptr;
+		std::thread* mainLoopThread_ptr;
+
+	    networkParameters_t* currentNetworkParams_ptr;
+
+	    ActionSystem* actionSystem_ptr; 
+		dataControllerPointers_t* agentDataControllerPtrs_ptr;
+	    networkParameters_t** currentNetworkParams_ptr_ptr;
+
+		const ActionSystem** actionSystem_cptr_ptr;
+		const ActionDataController** actionDataController_cptr_ptr;
+		const networkParameters_t** currentNetworkParams_cptr_ptr;
+		const dataControllerPointers_t** agentDataControllers_cptr_ptr;
+	} ASbaseControllersPtrs_t;
+	*/
 }

@@ -17,13 +17,34 @@ namespace CL {
 	CL::ClientData::Handler* clientData_ptr = NULL;
 
 	bool isClientDataPointerInitialized() {
-		return ((clientData_ptr == NULL) || (!clientData_ptr->hasInitialized()) );
+		bool clientDataPtrIsNull = (clientData_ptr == NULL);
+		bool clientDataHandlerIsInitialized = (clientData_ptr->hasInitialized());
+		if (clientDataPtrIsNull || !clientDataHandlerIsInitialized) {
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
+				printf("Client Data Handler ptr null? %d. Handler initialized? %d.\n",
+								    (int)clientDataPtrIsNull, (int)clientDataHandlerIsInitialized);
+			#endif
+			return false;
+		}
+		
+		return true;
 	}
 
 	bool isASdataPointerInitialized() {
-		return ((ASmirrorData_ptr == NULL) || (!ASmirror.isInitialized()) );
+		bool mirroPtrIsNUll = (ASmirrorData_ptr == NULL);
+		bool ASmirroIsInitialized = (ASmirror.isInitialized());
+		if (mirroPtrIsNUll || !ASmirroIsInitialized) {
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
+				printf("AS mirror data ptr null? %d. AS mirror initialized? %d.\n",
+								    (int)mirroPtrIsNUll, (int)ASmirroIsInitialized);
+			#endif
+			return false;
+		}
+		return true;
 	}
 
+	//Initializes the CL, including ASmirror. 
+	//WARNING: Client Data only initializes on network load!
 	bool init(const AS::networkParameters_t* params_cptr) {
 		LOG_INFO("initializing CL...");
 
@@ -31,20 +52,24 @@ namespace CL {
 
 		bool result = ASmirror.initialize(&tempASmirrorData_ptr, params_cptr);
 		if (!result) {
-			LOG_CRITICAL("CL INITIALIZATION FAILED!");
+			LOG_CRITICAL("ASmirror failed to initialize: CL INITIALIZATION FAILED!");
 			return false;
 		}
 
 		ASmirrorData_ptr = (const mirror_t*)tempASmirrorData_ptr;
+		if (ASmirrorData_ptr == NULL) {
+			LOG_CRITICAL("Failed to set pointer to AS mirror data. CL Initialization failed");
+			return false;
+		}
 
 		if (!ASmirror.isInitialized()) {
-			LOG_CRITICAL("CL INITIALIZATION FAILED! (instance lost maybe?)");
+			LOG_CRITICAL("ASmirror reads as not initialized (instance lost maybe?) - CS failed initialization");
 			return false;
 		}
 
 		if ((!ASmirrorData_ptr->agentMirrorPtrs.haveBeenCreated) ||
 			(!ASmirrorData_ptr->actionMirror.isInitialized())) {
-			LOG_CRITICAL("CL INITIALIZATION FAILED! (pointer copy / container initialization)");
+			LOG_CRITICAL("As Mirror pointer copy or container initialization failed - CL initialization failed");
 			return false;
 		}
 

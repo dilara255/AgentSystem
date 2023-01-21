@@ -8,6 +8,9 @@
 
 namespace CL {
 
+	//TO DO: FIX: "isASdataPointerInitialized()" is failing after this!
+	//Maybe it's looking at CLcoordinator's globals but not this?
+	//Pass pointer to relevant globals here and mark their status!
 	bool DataMirrorSystem::initialize(mirror_t** mirrorData_ptr_ptr,
 		                              const AS::networkParameters_t* params_cptr) {
 			

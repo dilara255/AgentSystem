@@ -18,7 +18,7 @@
 #include "logAPI.hpp"
 
 #include "data/agentDataControllers.hpp"
-
+//sets agentDataControllerPtrs.haveBeenCreated = true on success
 bool AS::createAgentDataControllers(AS::dataControllerPointers_t* agentDataControllers_ptr) {
 	LOG_TRACE("Trying to create Agent Data Controllers\n");
 

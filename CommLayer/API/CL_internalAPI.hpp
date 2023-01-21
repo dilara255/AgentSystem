@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core.hpp"
+#include "CL_core.hpp"
 
 #include "../include/data/mirrorDataControllers.hpp"
 #include "../include/data/agentDataControllers.hpp"

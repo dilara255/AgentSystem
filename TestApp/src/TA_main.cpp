@@ -25,7 +25,6 @@ uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK];
 
 CL::ClientData::Handler* cdHandler_ptr;
 
-//TO DO: make all tests return bool and count results, than match with expected
 int main(void) {
 	
 	testSayHello();
@@ -37,6 +36,7 @@ int main(void) {
 	int resultsBattery1 = (int)testMockData(); GETCHAR_PAUSE;
 	
 	LOG_TRACE("Actual initialization tests...");
+
 	resultsBattery1 += (int)AS::initializeASandCL(); GETCHAR_PAUSE;
 
 	resultsBattery1 += (int)AS::testContainersAndAgentObjectCreation(); GETCHAR_PAUSE;
@@ -62,14 +62,13 @@ int main(void) {
 
 	resultsBattery2 += (int)AS::saveNetworkToFile(); GETCHAR_PAUSE;
 
-	//TO DO: FIX: Expects ASmirror to be initialized
 	resultsBattery2 += (int)AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE;
-	//TO DO: FIX: Expects ASmirror to be initialized and have data
+	
 	resultsBattery2 += (int)testReadingCLdataFromTA(); GETCHAR_PAUSE;
 
-	//TO DO: FIX: Expects to be able to get reference to a, initialized Client Data Handler
 	resultsBattery2 += (int)testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE;
 
+	//TO DO: why does this take a while to start? Other saves are fast
 	resultsBattery2 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 	
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
@@ -84,24 +83,20 @@ int main(void) {
 
 	LOG_INFO("Specific functionality tests (THREADED LOOPs):\n",1); GETCHAR_PAUSE;
 
-	//TO DO: FIX: Sets the main loop running, but it fails to get client data
-	//Even though load supposedly creates that
 	LOG_WARN("Will load the previously modified network");
 	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
 	GETCHAR_PAUSE;
 
-	//TO DO: FIX: Expects ASmirror initialized, is not creating thread
+	//TODO-CRITICAL: 86 bit versions seem to be getting crazy tick numbers. 
+	//Also, not sure the test works
 	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_start(); GETCHAR_PAUSE;
 	
-	//TO DO: FIX: Expects last test to have created reader thread
 	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_end(); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 
-	//TO DO: FIX: Expects Client Data Handler initialized, says it isn't
 	resultsBattery3 += (int)testClientDataHAndlerInitialization(); GETCHAR_PAUSE;
 
-	//TO DO: FIX: is deppendent on the last test, which is failing
 	resultsBattery3 += (int)testSendingClientDataAndSaving(); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
@@ -208,8 +203,11 @@ void TAreadLoop(int numberTicks) {
 	}
 }
 
-//TO DO: This test makes MUCH more sense if we store tick time as well : )
+//TO DO: fairly brittle - is there a (reasonable) way to make this more robust?
+//TODO-CRITICAL: test the test (spoof data which should fail). Why x86 have crazy tick numbers?
+//TO DO: This test makes more sense if we store tick time as well : )
 //WARNING: this test ONLY makes sense if the loop actually takes the exact expected time
+//WARNING: this is fairly brittle, check actual results on failing
 bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 	LOG_WARN("Will check if reader thread's results are as expected. May need to wait for execution to finish");
@@ -255,25 +253,36 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 	//Now we "simulate" the ticking, giving a first error for free, for adjustment
 
-	uint64_t expectedDeltas[TST_TIMES_TO_QUERRY_TICK];
-	double expectedDeltasFrac[TST_TIMES_TO_QUERRY_TICK];
-	expectedDeltas[0] = g_ticksRead[0];
-	expectedDeltasFrac[0] = (double)g_ticksRead[0];
+	uint64_t expectedTicks[TST_TIMES_TO_QUERRY_TICK];
+	double expectedTicksFrac[TST_TIMES_TO_QUERRY_TICK];
+	expectedTicks[0] = g_ticksRead[0];
+	expectedTicksFrac[0] = (double)g_ticksRead[0];
 
-	bool firstJumpFound = 0;
+	//We will give two "chances": first, an initial jump, and then a fixed time grace
+	bool firstJumpFound = false;
+	bool differenceCalculated = false;
 	int fails = 0;
+	int64_t difference = 0;
+	int jumpIndex = -1;
 	for (int i = 1; i < TST_TIMES_TO_QUERRY_TICK; i++) {
 		
 		//TO DO: this may fail if starting tick is huge AND ticks are all the same
-		expectedDeltasFrac[i] = expectedDeltasFrac[i - 1] + TST_TA_QUERY_MULTIPLIER;
-		expectedDeltas[i] = (uint64_t)abs(expectedDeltasFrac[i]);
+		expectedTicksFrac[i] = expectedTicksFrac[i - 1] + TST_TA_QUERY_MULTIPLIER;
+		expectedTicks[i] = (uint64_t)abs(expectedTicksFrac[i]);
 
-		if ((!firstJumpFound) && (g_ticksRead[i] != expectedDeltas[i])) {
-			expectedDeltasFrac[i] = (double)g_ticksRead[i];
+		if ((!firstJumpFound) && (g_ticksRead[i] != expectedTicks[i])) {
+			expectedTicksFrac[i] = (double)g_ticksRead[i];
 			firstJumpFound = true;
+			jumpIndex = i;
 		}
-		else if (g_ticksRead[i] != expectedDeltas[i]){
-			fails++;
+		else if (g_ticksRead[i] != expectedTicks[i]){
+			
+			if (!differenceCalculated) {
+				difference =  g_ticksRead[i] - expectedTicks[i];
+			}                           //not actually keeping pace
+			else if ((expectedTicks[i] + difference) != g_ticksRead[i]) {
+				fails++;
+			}
 		}
 	}
 
@@ -289,11 +298,11 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	}
 
 	#if (defined AS_DEBUG) || VERBOSE_RELEASE
-		printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms):\n",
-				        TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, 
-				                                        TST_MAINLOOP_FREQUENCY_MS);
+		printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms, jumpIndex: %d):\n",
+				                       TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, 
+				                                         TST_MAINLOOP_FREQUENCY_MS, jumpIndex);
 		for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
-			printf("%llu ", g_ticksRead[i]);
+			printf("%llu (%llu) - ", g_ticksRead[i], expectedTicks[i]);
 		}
 	#endif // AS_DEBUG
 
