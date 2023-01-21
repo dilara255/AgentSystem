@@ -12,9 +12,17 @@
 namespace CL {
 
 	DataMirrorSystem ASmirror;
-	const mirror_t* ASmirrorData_ptr;
+	const mirror_t* ASmirrorData_ptr = NULL;
 
 	CL::ClientData::Handler* clientData_ptr = NULL;
+
+	bool isClientDataPointerInitialized() {
+		return ((clientData_ptr == NULL) || (!clientData_ptr->hasInitialized()) );
+	}
+
+	bool isASdataPointerInitialized() {
+		return ((ASmirrorData_ptr == NULL) || (!ASmirror.isInitialized()) );
+	}
 
 	bool init(const AS::networkParameters_t* params_cptr) {
 		LOG_INFO("initializing CL...");
@@ -26,6 +34,7 @@ namespace CL {
 			LOG_CRITICAL("CL INITIALIZATION FAILED!");
 			return false;
 		}
+
 		ASmirrorData_ptr = (const mirror_t*)tempASmirrorData_ptr;
 
 		if (!ASmirror.isInitialized()) {
@@ -44,7 +53,7 @@ namespace CL {
 	}
 
 	//Also creates and initializes its components. Does quite a bit of heap allocation.
-	//TO DO: An "update" method could avoid it's use on AS's loading.
+	//TO DO: An "update" method could avoid its use on AS's loading.
 	bool createClientDataHandler(AS::networkParameters_t params) {
 
 		LOG_TRACE("Will try to create Client Data Handler...");
@@ -70,7 +79,7 @@ namespace CL {
 			delete tempHandler2_ptr;
 			tempHandler2_ptr = NULL;
 			tempHandler_ptr = NULL;
-			//^This little dance is just in case Client tries to acces while we're deleting
+			//^This little dance is just in case Client tries to access while we're deleting
 		}
 		else {
 			clientData_ptr = tempHandler_ptr;
@@ -92,7 +101,7 @@ namespace CL {
 	}
 
 	CL_API ClientData::Handler* getClientDataHandlerPtr() {
-		if ((clientData_ptr == NULL) || (!clientData_ptr->hasInitialized())) {
+		if (!isClientDataPointerInitialized()) {
 			LOG_ERROR("Trying to get unititalized or inexistent Client Data Handler");
 			return NULL;
 		}
@@ -101,7 +110,7 @@ namespace CL {
 	}
 
 	bool blockClientDataForAmoment() {
-		if (clientData_ptr == NULL) {
+		if (!isClientDataPointerInitialized()) {
 			LOG_WARN("Client Data not initialized. Will proceed without blocking, but something may be wrong");
 			return true;
 		}
@@ -122,6 +131,11 @@ namespace CL {
 		 				  AS::ActionDataController* actionsRecepient_ptr,
 						  bool silent) {
 		
+		if (!isClientDataPointerInitialized()) {
+			LOG_ERROR("Can't get Client Data because the Handler is not initialized");
+			return false;
+		}
+
 		CL::ClientData::ASdataControlPtrs_t recepientPtrs;
 
 		recepientPtrs.params_ptr = paramsRecepient_ptr;
@@ -140,6 +154,11 @@ namespace CL {
 					   const std::vector <GA::coldData_t>* coldDataGAs_cptr,
 					   const std::vector <GA::stateData_t>* stateGAs_cptr,
 					   const std::vector <GA::decisionData_t>* decisionGAs_cptr) {
+
+		if (!isASdataPointerInitialized) {
+			LOG_ERROR("Can't transfer data from AS because AS data mirror on CL is not initialized");
+			return false;
+		}
 
 		//LOG_TRACE("Will accept replacement data from the AS");
 

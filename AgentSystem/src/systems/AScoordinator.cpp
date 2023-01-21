@@ -24,6 +24,8 @@ TODO-CRITICAL: Break up this file. Main loop should probably stay, move most of 
 
 #include "systems/AScoordinator.hpp"
 
+#include "data/dataMisc.hpp"
+
 //TO DO:
 // - Create control class with control structures as members
 
@@ -89,10 +91,11 @@ bool AS::run() {
 void AS::mainLoop() {
 	uint64_t initialTick = currentNetworkParams.mainLoopTicks;
 
+	std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 	//std::chrono::microseconds stepStartTime;
-	std::chrono::microseconds stepTimeMicro = std::chrono::microseconds(0);
-	std::chrono::microseconds timeToSleepMicro = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
-	std::chrono::microseconds timeToSleepMicroThisStepMicro;
+	std::chrono::microseconds durationThisStepMicro = zeroMicro;
+	std::chrono::microseconds tagetStepTime = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
+	std::chrono::microseconds timeToSleepMicro;
 	bool result = false;
 
 	do {
@@ -101,29 +104,43 @@ void AS::mainLoop() {
 			printf("Should be running? %d,\n",(int)shouldMainLoopBeRunning);
 		#endif
 
-		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will sleep first"); }
-		std::this_thread::sleep_for(timeToSleepMicroThisStepMicro);
+		if (!shouldMainLoopBeRunning)
+			{ LOG_TRACE("Main loop will sleep first"); }
+
+		fflush(stdout);
+		std::this_thread::sleep_for(timeToSleepMicro);
 		//stepStartTime = blah (get the current time in micro)
 		
 		//do stuff
 
-		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will get Client Data"); }
+		if (!shouldMainLoopBeRunning) 
+			{ LOG_TRACE("Main loop will get Client Data"); }
+
 		result = CL::getNewClientData(currentNetworkParams_ptr, &agentDataControllerPtrs,
 			                          &(actionSystem.data), shouldMainLoopBeRunning);
 		if (!result) { LOG_ERROR("Failed to get Client Data!"); }
 		
-		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will update ticks"); }
+		if (!shouldMainLoopBeRunning) 
+			{ LOG_TRACE("Main loop will update ticks"); }
+
 		currentNetworkParams.mainLoopTicks++;
 
-		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will send AS Data to CL"); }
+		if (!shouldMainLoopBeRunning) 
+			{ LOG_TRACE("Main loop will send AS Data to CL"); }
+
 		result = sendReplacementDataToCL();
 		if (!result) { LOG_ERROR("Failed to send AS Data to the CL!"); }
 
-		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop will calculate time to sleep"); }
-		//stepTimeMicro = "current time in micro" - stepStartTime
-		timeToSleepMicroThisStepMicro = timeToSleepMicro - stepTimeMicro;
+		if (!shouldMainLoopBeRunning) 
+			{ LOG_TRACE("Main loop will calculate time to sleep"); }
 
-		if (!shouldMainLoopBeRunning) { LOG_TRACE("Main loop should stop now!"); }
+		//durationThisStepMicro = "current time in micro" - stepStartTime
+		timeToSleepMicro = tagetStepTime - durationThisStepMicro;
+		if(timeToSleepMicro < zeroMicro) timeToSleepMicro = zeroMicro;
+
+		if (!shouldMainLoopBeRunning)
+			{ LOG_TRACE("Main loop should stop now!"); }
+
 	} while (shouldMainLoopBeRunning);
 }
 
@@ -138,7 +155,7 @@ bool AS::stop() {
 
 	shouldMainLoopBeRunning = false;
 
-	if (mainLoopThread.joinable()) {
+	if (isMainLoopRunning()) {
 		LOG_TRACE("Waiting for main loop to finish execution...");
 		mainLoopThread.join();
 		mainLoopId = std::thread::id(); //default-constructs to "no thread" value
@@ -156,8 +173,12 @@ bool AS::stop() {
 	}	
 }
 
+bool AS::chekIfMainLoopShouldBeRunning() {
+	return AS::shouldMainLoopBeRunning;
+}
+
 bool AS::isMainLoopRunning() {
-	return shouldMainLoopBeRunning;
+	return mainLoopThread.joinable();
 }
 
 bool AS::initializeASandCL() {
@@ -171,6 +192,9 @@ bool AS::initializeASandCL() {
 	LOG_INFO("Loggers Initialized");
 
 	//Agent Data and Network Parameters:
+	bool result = defaultNetworkParameters(&currentNetworkParams);
+	if (!result) { return false; }
+
 	currentNetworkParams.isNetworkInitialized = false;
 	agentDataControllerPtrs.haveBeenCreated = false;
 	agentDataControllerPtrs.haveData = false;
@@ -179,10 +203,7 @@ bool AS::initializeASandCL() {
 	currentNetworkParams_ptr = &currentNetworkParams;
 	agentDataControllers_cptr = (const dataControllerPointers_t*)&agentDataControllerPtrs;
 
-	currentNetworkParams.lastMainLoopStartingTick = 0;
-	currentNetworkParams.mainLoopTicks = 0;
-
-	bool result = createAgentDataControllers(&agentDataControllerPtrs);
+	result = createAgentDataControllers(&agentDataControllerPtrs);
 	if (!result) { return false; }
 
 	#if (defined AS_DEBUG) || VERBOSE_RELEASE
@@ -235,7 +256,6 @@ bool AS::initializeASandCL() {
 
 bool AS::sendReplacementDataToCL() {
 
-//agentDataControllers_cptr.
 	return  CL::acceptReplacementData(currentNetworkParams_cptr,
 				actionDataController_cptr->getActionsLAsCptr(),
 				actionDataController_cptr->getActionsGAsCptr(),

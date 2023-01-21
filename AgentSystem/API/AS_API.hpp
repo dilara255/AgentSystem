@@ -20,6 +20,7 @@ namespace AS {
 	AS_API bool initializeASandCL();
 	AS_API bool quit();	
 	AS_API bool isMainLoopRunning();
+	AS_API bool chekIfMainLoopShouldBeRunning();
 
 	//Loads network and instantiates appropriate Client Data Handler.
 	//If active, stops AS's main loop before loading.

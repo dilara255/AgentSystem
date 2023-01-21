@@ -18,6 +18,7 @@ TO DO: tests:
 
 #include "AS_API.hpp"
 #include "CL_internalAPI.hpp"
+#include "CL_externalAPI.hpp"
 
 #include "systems/AScoordinator.hpp"
 #include "data/agentDataStructures.hpp"
@@ -154,6 +155,11 @@ namespace AS {
 	bool testDataTransferFromAStoCL(void) {
 
 		LOG_WARN("Will Try to transfer data from AS to CL...");
+
+		if (!CL::isASdataPointerInitialized()) {
+			LOG_ERROR("As mirror on CL is not yet initialized.");
+			return false;
+		}
 
 		bool result = AS::sendReplacementDataToCL();
 		if (!result) {
