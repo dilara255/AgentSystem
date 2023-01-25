@@ -9,7 +9,7 @@
 * initialization and loading of different networks, avoiding more manual
 * memory management.
 *
-* (outside of loading, performance impact should be minimal. TO DO: test this)
+* (outside of loading, performance impact should be minimal. TODO: test this)
 */
 
 #include "miscStdHeaders.h"

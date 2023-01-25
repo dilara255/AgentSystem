@@ -3,8 +3,8 @@ Assumes defined maximum local and global agents, as well as maximum actions
 per agent, so the size of all data structures is fixed for a given network.
 */
 
-//TO DO: TESTING
-//TO DO: methods could check wheter hasData
+//TODO: TESTING
+//TODO: methods could check wheter hasData
 
 #include "miscStdHeaders.h"
 #include "core.hpp"

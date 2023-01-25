@@ -6,7 +6,7 @@ NOTE: network specificed MUST be within confines of the fixed parameters (see in
 WARNING: loading includes discarding any active networks. Asking to save them first, if
 needed, is to be handled by the application, at least for now.
 
-TO DO: should get the file name into the "network name" from the parameters file.
+TODO: should get the file name into the "network name" from the parameters file.
 (same with comment)
 */
 
@@ -23,6 +23,7 @@ TO DO: should get the file name into the "network name" from the parameters file
 
 #include "data/agentDataControllers.hpp"
 
+//BUT: invalidating param's tick information
 bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     
     LOG_TRACE("Will load the information from file's header...");
@@ -33,7 +34,7 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
 
     tokensRead = fscanf(fp, headerLine, &version, &pp->numberGAs, &pp->numberLAs,
         &pp->maxLAneighbours, &pp->maxActions, &pp->mainLoopTicks);
-    result &= (tokensRead == 6); //TO DO: maybe bundle the number of tokens with the format?
+    result &= (tokensRead == 6); //TODO: maybe bundle the number of tokens with the format?
 
     LOG_TRACE("Will load the comment line...");
 
@@ -75,7 +76,7 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
 }
 
 bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEffectiveGAs) {
-    //TO DO: extract functions
+    //TODO: extract functions
 
     int tokens; //to test how many have been read in each call to scanf
 
@@ -83,7 +84,7 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     GA::stateData_t state;
     GA::decisionData_t decision;
 
-    int onOff = -99;//TO DO: set a "TEST_INTEGER_VALUE" or something?
+    int onOff = -99;//TODO: set a "TEST_INTEGER_VALUE" or something?
 
     tokens = fscanf(fp, GAidentity, &cold.id, &onOff);
     if (tokens != 2 ) {
@@ -218,7 +219,7 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
 
 bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNeighbours, 
                                                                             int numberLAs) {
-    //TO DO: extract functions
+    //TODO: extract functions
 
     int tokens; //to test how many have been read in each call to scanf
 
@@ -226,7 +227,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     LA::stateData_t state;
     LA::decisionData_t decision;
 
-    int onOff = -99;//TO DO: set a "TEST_INTEGER_VALUE" or something?
+    int onOff = -99;//TODO: set a "TEST_INTEGER_VALUE" or something?
 
     tokens = fscanf(fp, LAidentity, &cold.id, &state.GAid, &onOff);
     if (tokens != 3) {
@@ -385,7 +386,7 @@ bool addLAactionFromFile(int id, FILE* fp, AS::ActionDataController* ap) {
     return ap->addActionData(action);
 }
 
-//TO DO: extect functions?
+//TODO: extect functions?
 bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPointers_t* dp,
                                                                AS::ActionDataController* ap) {
     bool result;
@@ -484,7 +485,7 @@ bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
     LOG_TRACE("Header read, parameters updated. Will load data."); 
 
     actionDataController_ptr->setMaxActionsPerAgent(currentNetworkParams_ptr->maxActions);
-    
+
     result = loadDataFromFp(fp, currentNetworkParams_ptr, &agentDataControllers,
                                                           actionDataController_ptr);
     if (!result) {

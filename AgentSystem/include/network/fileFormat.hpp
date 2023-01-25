@@ -1,10 +1,10 @@
 #pragma once
 
-/*TO DO: write parser, build data, insert data, create agent object, add new agent from it.
+/*TODO: write parser, build data, insert data, create agent object, add new agent from it.
 * Write it all back on a file on this format. See if new agent is really there (one LA, one GA).
 * Will need a control structure which knows the amount of LAs and GAs and coordinates controllers?
 * 
-*TO DO: Write Brief Description of the Format and of this file */
+*TODO: Write Brief Description of the Format and of this file */
 
 #include "miscStdHeaders.h"
 
@@ -12,7 +12,7 @@
 #define MAX_LINE_LENGHT 500
 #define GA_CONNECTED_LA_FIELDS 4
 
-//TO DO: Move all of this into some namespace!
+//TODO: Move all of this into some namespace!
 
 static const char* defaultGAnamePrefix = "GA_";
 static const char* defaultLAnamePrefix = "LA_";

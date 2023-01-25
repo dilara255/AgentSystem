@@ -9,7 +9,7 @@ This file holds:
 - Defaults for agent and action data, used when creating new files and tests;
 - Test-related defines.
 
-//TO DO: this should be split in a couple to a few different files
+//TODO: this should be split in a couple to a few different files
 
 networkParameters_t includes:
 - number of local and global agents;
@@ -43,7 +43,7 @@ and data sizes static.
 
 //DEFAULT values for new network creation:
 #define DEFAULT_ONOFF (true)
-#define DEFAULT_GA_RESOURCES 0
+#define DEFAULT_GA_RESOURCES (0.0)
 #define DEFAULT_GA_STANCE 2
 #define DEFAULT_GA_DISPOSITION (0.0)
 #define DEFAULT_LA_STRENGHT (10.0)

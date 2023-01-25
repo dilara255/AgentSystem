@@ -5,7 +5,7 @@ Define macros de API para facilitar log em console. Usa spdlog.
 No momento não dá pra passar variáveis nem gravar em arquivo, 
 apesar da biblioteca suportar isso.
 
-TO DO: Generalize the whole macro thingy and all that's associated with it
+TODO: Generalize the whole macro thingy and all that's associated with it
 */
 
 #include "core.hpp"
@@ -29,7 +29,7 @@ TO DO: Generalize the whole macro thingy and all that's associated with it
 //Setting this to anything but 0 makes GETCHAR_FORCE_PAUSE act the same as GETCHAR_PAUSE
 #define DONT_FORCE_KEYPRESS 0
 
-//TO DO: way to define level for test header
+//TODO: way to define level for test header
 
 //NOTE: changing these may lead to full recompile : (
 

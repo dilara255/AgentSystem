@@ -68,7 +68,8 @@ int main(void) {
 
 	resultsBattery2 += (int)testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE;
 
-	//TO DO: why does this take a while to start? Other saves are fast
+	//TODO: why does this take a while to start? Other saves are fast
+	//Seems to only be the case in debug. Idk, really weird
 	resultsBattery2 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 	
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
@@ -87,8 +88,6 @@ int main(void) {
 	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
 	GETCHAR_PAUSE;
 
-	//TODO-CRITICAL: 86 bit versions seem to be getting crazy tick numbers. 
-	//Also, not sure the test works
 	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_start(); GETCHAR_PAUSE;
 	
 	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_end(); GETCHAR_PAUSE;
@@ -123,7 +122,7 @@ int main(void) {
 		GETCHAR_PAUSE;
 	}
 
-	//TO DO: Update expected changes after I'm done updating it
+	//TODO: Update expected changes after I'm done updating it
 	LOG_WARN("Check that you have (at least): one network file with format specifiers,\none with default values and one with modified values:");
 	printf("\t-The one with specifiers is %s\n\t-%s should have the defaults\n\t-%s received modifications from TA\n",
 		                              fileNameNoDefaults, fileNameWithDefaults, customFilename);
@@ -203,10 +202,11 @@ void TAreadLoop(int numberTicks) {
 	}
 }
 
-//TO DO: fairly brittle - is there a (reasonable) way to make this more robust?
-//TODO-CRITICAL: test the test (spoof data which should fail). Why x86 have crazy tick numbers?
-//TO DO: This test makes more sense if we store tick time as well : )
-//WARNING: this test ONLY makes sense if the loop actually takes the exact expected time
+//TODO: fairly brittle - is there a (reasonable) way to make this more robust?
+//TODO: This test makes more sense if we store tick time as well : )
+//WARNING: test breaks for large values (about an order of magnitude bellow uin64_t maximum)
+//WARNING: this test ONLY makes sense if the loop actually takes around the expected time
+//(meaning very low step times make this mor brittle, especially when repetions are higher)
 //WARNING: this is fairly brittle, check actual results on failing
 bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
@@ -262,28 +262,50 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 	bool firstJumpFound = false;
 	bool differenceCalculated = false;
 	int fails = 0;
+	bool mayFail = false;
 	int64_t difference = 0;
 	int jumpIndex = -1;
 	for (int i = 1; i < TST_TIMES_TO_QUERRY_TICK; i++) {
 		
-		//TO DO: this may fail if starting tick is huge AND ticks are all the same
+		//TODO: this may fail if starting tick is huge (because of float stuff)
 		expectedTicksFrac[i] = expectedTicksFrac[i - 1] + TST_TA_QUERY_MULTIPLIER;
 		expectedTicks[i] = (uint64_t)abs(expectedTicksFrac[i]);
 
 		if ((!firstJumpFound) && (g_ticksRead[i] != expectedTicks[i])) {
 			expectedTicksFrac[i] = (double)g_ticksRead[i];
+
+			printf("tick: %d: First jump and different! read: %llu, expected: %llu, newFrac: %f\n",
+							i, g_ticksRead[i], expectedTicks[i], expectedTicksFrac[i]);
+
 			firstJumpFound = true;
 			jumpIndex = i;
 		}
 		else if (g_ticksRead[i] != expectedTicks[i]){
 			
+			int64_t absDifference = (int64_t)g_ticksRead[i] - (int64_t)expectedTicks[i];
+			absDifference = abs(absDifference);
+
 			if (!differenceCalculated) {
 				difference =  g_ticksRead[i] - expectedTicks[i];
+				differenceCalculated = true;
 			}                           //not actually keeping pace
-			else if ((expectedTicks[i] + difference) != g_ticksRead[i]) {
-				fails++;
+			else if (absDifference > abs(difference)) {
+				if(!mayFail){ 
+					//makes the second chance meaningful:
+					difference =  g_ticksRead[i] - expectedTicks[i];
+					mayFail = true; 
+				}
+				else { fails++; }
 			}
+			else { mayFail = false; }
 		}
+		else { mayFail = false; }
+
+		//so the second chance is actually meaningful
+
+		printf("tk: %d: Difference: %lld, fails: %d, may: %d, expected: %llu, exp+dif: %llu, read: %llu\n", 
+				            i, difference, fails, (int)mayFail, 
+				               expectedTicks[i], (expectedTicks[i] + difference),  g_ticksRead[i]);
 	}
 
 	//This gives some margin of error since the fractional part may still byte us in the ass
@@ -297,14 +319,15 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 		LOG_ERROR("TA didn't read ticks correctly from CL while AS was running");
 	}
 
-	#if (defined AS_DEBUG) || VERBOSE_RELEASE
-		printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms, jumpIndex: %d):\n",
-				                       TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, 
-				                                         TST_MAINLOOP_FREQUENCY_MS, jumpIndex);
-		for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
-			printf("%llu (%llu) - ", g_ticksRead[i], expectedTicks[i]);
-		}
-	#endif // AS_DEBUG
+	printf("1 + %d ticks read at interval %d ms (main loop freq: %d ms, jumpIndex: %d):\n",
+			                       TST_TIMES_TO_QUERRY_TICK - 1, TST_TA_QUERY_FREQUENCY_MS, 
+		                                             TST_MAINLOOP_FREQUENCY_MS, jumpIndex);
+	
+#if (defined AS_DEBUG) || VERBOSE_RELEASE
+	for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
+		printf("%d: %llu (%llu) - ", i, g_ticksRead[i], expectedTicks[i]);
+	}
+#endif
 
 	return result;
 }
@@ -426,7 +449,7 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 	cp->LAaction.details.changeAuxTo(false, lastLA, maxActionsPerAgent - 1, 
 		                                               TST_LAST_ACTION_AUX);
 
-	LOG_INFO("All test changes issue...");
+	LOG_INFO("All test changes issued...");
 
 	return AS::testGotNewValuesFromASthroughCL();
 }

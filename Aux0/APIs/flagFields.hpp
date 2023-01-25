@@ -3,8 +3,8 @@
 #include "miscStdHeaders.h"
 #include "core.hpp"
 
-//TO DO: eventually template each
-//TO DO: TEST
+//TODO: eventually template each
+//TODO: TEST
 namespace AZ {
 	class FlagField32 {
 	
@@ -46,7 +46,7 @@ namespace AZ {
 			field = field & (~(BIT(bit)));
 		}
 
-		/*TO DO: implement toggle
+		/*TODO: implement toggle
 		bool toggleBit(int bit) {
 
 		}
@@ -120,7 +120,7 @@ namespace AZ {
 			return sizeof(field[0]);
 		}
 
-		/*TO DO: implement toggle
+		/*TODO: implement toggle
 		void toggleBit(int bit) {
 
 		}

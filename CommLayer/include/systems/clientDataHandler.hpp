@@ -2,7 +2,7 @@
 
 /*
 //PLANNING:
-//- TO DO: Deal with minor 4 and then get back;
+//- TODO: Deal with minor 4 and then get back;
 //- TODO-CRITICAL: Test pointer-math transfer idea;
 //- TODO-CRITICAL: All Methods which are already stubbed or equivalent (depending on test above);
 //- TO DO LATER:
@@ -18,7 +18,7 @@ API: Internal: The AS will only have acces to a "CL::getNewClientData()" functio
 ClientDataHandler:
 - Takes data from the Client and stores it in a member mirror_t;
 - Stores which changes have been made in a member vector of changedDataInfo_t;
--- Both are private. TO DO: did the vector need to be warped for easier dll exporting?
+-- Both are private. TODO: did the vector need to be warped for easier dll exporting?
 - Retrieves changed data from the mirror_t;
 - Handles mutex to the mirror_t;
 - Clears the mirror_t after full retrieval from the AS.
@@ -60,7 +60,7 @@ At each step, the AS CALLS CL::retrieveAndEraseClientChanges(&recepient), from C
 	- After the loop is done, clears the changes vector;
 	- Finally, releases the mutex;
 
-* TO DO:
+* TODO:
 * - CL::ClientData::BaseFieldHandler;
 */
 
@@ -145,20 +145,20 @@ namespace CL::ClientData {
 
 		class ActionIDsHandler: public BaseSubHandler {
 		public:
-			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			//TODO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
 			bool CL_API changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::ids_t newValue);
 			
-			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			//TODO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
 			bool CL_API changeActiveTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
-			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			//TODO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
 			bool CL_API changeCategoryTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
-			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			//TODO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
 			bool CL_API changeModeTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
-			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			//TODO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
 			bool CL_API changeOriginTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
-			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			//TODO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
 			bool CL_API changeScopeTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
-			//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+			//TODO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
 			bool CL_API changeTargetTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
 
 		protected:
@@ -242,7 +242,7 @@ namespace CL::ClientData {
 
 	class ActionsHandler: public BaseSubHandler {
 	public:
-		//TO DO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
+		//TODO: Pack agentID, actionID and scope in (uint32_t)AS::ids_t
 		bool CL_API changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, actionData_t newValue);
 
 		ActionIDsHandler IDs;
@@ -295,7 +295,7 @@ namespace CL::ClientData {
 		
 			bool CL_API changeAll(uint32_t agentID, AS::LAneighborRelations_t* newValue_ptr);
 
-			//TO DO: Put IDs on low and high 16 bits of changes.agentId
+			//TODO: Put IDs on low and high 16 bits of changes.agentId
 			bool CL_API changeStance(uint32_t ofAgentID, uint32_t towardsAgentID, int newValue);
 			bool CL_API changeDisposition(uint32_t ofAgentID, uint32_t towardsAgentID, 
 				                                                       float newValue);
@@ -311,11 +311,11 @@ namespace CL::ClientData {
 
 			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 			
-			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			//TODO: from one agent toward another: IDs on low and high 16 bits agentId
 			bool transferStance(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			//TODO: from one agent toward another: IDs on low and high 16 bits agentId
 			bool transferDisposition(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			//TODO: from one agent toward another: IDs on low and high 16 bits agentId
 			bool transferLastStepDisposition(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 			
 			StateControllerLA* m_data_ptr;
@@ -350,7 +350,7 @@ namespace CL::ClientData {
 			bool CL_API changeAll(uint32_t agentID,
 				                 AS::LAlocationAndConnectionData_t* newValue_ptr);
 
-				//TO DO: mark that the other fields must be updated!
+				//TODO: mark that the other fields must be updated!
 				bool CL_API changeConnectedNeighbours(uint32_t AgentID, 
 					                                  AS::LAflagField_t* newvalue_ptr);
 				
@@ -553,13 +553,13 @@ namespace CL::ClientData {
 		
 			bool CL_API changeAll(uint32_t agentID, AS::GAneighborRelations_t* newValue_ptr);
 
-			//TO DO: Put IDs on low and high 16 bits of changes.agentId
+			//TODO: Put IDs on low and high 16 bits of changes.agentId
 			bool CL_API changeStanceToNeighbour(uint32_t agentID, 
 				                                uint32_t neighbourID, int newValue);
-			//TO DO: Put IDs on low and high 16 bits of changes.agentId
+			//TODO: Put IDs on low and high 16 bits of changes.agentId
 			bool CL_API changeDispositionToNeighbour(uint32_t agentID, 
 				                                     uint32_t neighbourID, int newValue);
-			//TO DO: Put IDs on low and high 16 bits of changes.agentId
+			//TODO: Put IDs on low and high 16 bits of changes.agentId
 			bool CL_API changeLastStepDispositionToNeighbour(uint32_t agentID, 
 				                           uint32_t neighbourID, int newValue);
 			
@@ -572,12 +572,12 @@ namespace CL::ClientData {
 
 			virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 			
-		    //TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+		    //TODO: from one agent toward another: IDs on low and high 16 bits agentId
 			bool transferStanceToNeighbour(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			//TODO: from one agent toward another: IDs on low and high 16 bits agentId
 			bool transferDispositionToNeighbour(uint32_t agentID, 
 			                                    ASdataControlPtrs_t recepientPtrs);
-			//TO DO: from one agent toward another: IDs on low and high 16 bits agentId
+			//TODO: from one agent toward another: IDs on low and high 16 bits agentId
 			bool transferLastStepDispositionToNeighbour(uint32_t agentID, 
 			                                            ASdataControlPtrs_t recepientPtrs);
 			

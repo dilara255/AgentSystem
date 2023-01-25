@@ -2,7 +2,7 @@
 
 /*
 * WARNING: THIS FILE WILL BE EXPOSED TO THE APPLICATION!
-* - TO DO: MOVE TO API/AS_dataTypes
+* - TODO: MOVE TO API/AS_dataTypes
 * 
 * This file declares the basic data structres of agents, as well as enum classes for each field.
 * These structures build up from primitives to "cold", "state" and "decision" data types,
@@ -27,7 +27,7 @@
 * - decisionData_t;
 *	- AS::LAinfiltrationOnNeighbors_t infiltration
 *	- AS::LApersonalityAndGAinfluence_t offsets
-*	- TO DO: the rest of the decision data for LAs
+*	- TODO: the rest of the decision data for LAs
 * 
 * GA::
 * * - coldData_t
@@ -42,7 +42,7 @@
 * - decisionData_t;
 *	- AS::GAinfiltrationOnNeighbors_t infiltration
 *	- AS::GApersonality personality
-*   - TO DO: the rest of the decision data for GAs
+*   - TODO: the rest of the decision data for GAs
 */
 
 #include "../include/network/parameters.hpp"
@@ -97,7 +97,7 @@ namespace AS {
 			                TOTAL_POSITION_FIELDS };
 	} AS_API pos_t;
 
-	//TO DO: = operator PLEASE (and hunt down explicit loops)
+	//TODO: = operator PLEASE (and hunt down explicit loops)
 	typedef float AS_API LAdecisionOffsets_t[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES];
 
 	typedef struct {
@@ -193,7 +193,7 @@ namespace LA {
 		AS::LAinfiltrationOnNeighbors_t infiltration;
 		AS::LApersonalityAndGAinfluence_t offsets;
 
-		//TO DO: -A list of the expected values, for each neighbor, of:
+		//TODO: -A list of the expected values, for each neighbor, of:
 		//resources, income, strenght, diplomacyand relations to this LA.
 			
 		//TO DO : -Desires, Impediments and Potential Actions Data;
@@ -228,7 +228,7 @@ namespace GA {
 		AS::GAinfiltrationOnNeighbors_t infiltration;
 		AS::GApersonality personality;
 
-		//TO DO: -A list of the expected values, for each neighbor, of:
+		//TODO: -A list of the expected values, for each neighbor, of:
 		//GA resources, totals, diplomacy and relations.
 
 		//TO DO : -Desires, Impediments and Potential Actions Data;

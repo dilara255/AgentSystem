@@ -5,17 +5,12 @@
 *
 * Some of the Specs have been changed to better accomodate the decision-making proccess.
 * LA Thresholds have become "score offsets" instead. The spec doc is NOT updated yet.
-* TO DO: Mark areas of the specification needing update version 0.6, and finish with 1.0
-* TO DO: On these notes, correct uses of array when actually we're using vectors;
+* TODO: Mark areas of the specification needing update version 0.6, and finish with 1.0
+* TODO: On these notes, correct uses of array when actually we're using vectors;
 *
 * TECHNICAL DEBT:
 * 
-* TO DO: Use constexpr instead of defines where possible.
-* TO DO: Rework the avilability and use of AS data structres by CL and AS
-* (if they need it, it should be part of the API)
-* TO DO: swap scanfs family for scanf_s family
-* TO DO: evaluate wether I need classes with vectors as part of the API and, if so, learn to do that
-* 
+* Being tracked on a separate file 
 * 
 * Versioning:
 * 
@@ -115,16 +110,22 @@
 * ***** > Minor 4. AS loop *****
 *
 * -Understand why x86 versions are getting crazy tick values;
+* -Understand why saving can sometimes take a while (but don't loose sleep over it);
+* >See if I need to rework offsets;
 * 
 * -Implement skeleton of main loop, with dumb loop stubs;
-*	The goal here is to get the AS loop to work as expected.
+* --Implement timing of main loop;
+* --The goal here is to get the AS loop to work as expected and emit mesages from each "leaf";
+* --Start populating the systems files;
+* -Implement state self-updating (ie, from income and upkeep, no actions involved);
 * -Update information and expected values. 
-*	WILL HAVE TO SOLVE HOW TO SAVE THIS
-* -Add "desires" data structure (no need to save them, as they're calculated per-step).
-* -Basic PRNG system working.
+* --WILL HAVE TO SOLVE HOW TO SAVE THIS
+* -Add "desires" data structure (no need to save them, as they're calculated per-step);
+* -PRNG system;
 * -Couple of simplified decisions and actions (and watever is necessary for that)
-*	should just run their course and have a simple resolution.
-* -Complete 3c-e for a few more the relevant fields.
+* --Should just run their course and have a simple resolution;
+* -Complete 3c-e for a few more of the most relevant fields;
+* --Check we have at least one of each data type and add to testing;
 * 
 * Cleanup, some (in-code) documentation, and fresh pull+compile test
 *

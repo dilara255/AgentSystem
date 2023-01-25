@@ -1,5 +1,5 @@
 /*
-TO DO: tests:
+TODO: tests:
 
 - Test clearing a network (sizes should equal zero);
 
@@ -31,7 +31,7 @@ int initTestNumber;
 int* AStestArray_ptr;
 int* CLtestArray_ptr;
 
-//TO DO: Add reasonable return values to all tests : )
+//TODO: Add reasonable return values to all tests : )
 namespace AS {
 
 	extern ActionSystem actionSystem;
@@ -188,7 +188,7 @@ namespace AS {
 		AS::LAdata LAagentDataObject(LAcoldData, LAstate, LAdecisionData);
 		AS::GAdata GAagentDataObject(GAcoldData, GAstate, GAdecisionData);
 
-		//TO DO: implement actual testing : )
+		//TODO: implement actual testing : )
 		//(load from default network and compare values with defaults)
 		LAagentDataObject.m_coldData.id = testLAid;
 		LAagentDataObject.m_decisionData.offsets.personality[0][0] = testOffset;
@@ -258,7 +258,7 @@ void AS::CLsanityTest() {
 
 	AS::transferData(CLtestArray_ptr);
 
-	//TO DO: ADD RESULTS FFS
+	//TODO: ADD RESULTS FFS
 }
 
 void AS::initTstArray() {

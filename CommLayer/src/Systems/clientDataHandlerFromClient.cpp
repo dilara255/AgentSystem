@@ -173,7 +173,7 @@ namespace CL{
 		int maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
 		int index = (agentID)*maxActionsPerAgent + actionID;
 
-		//TO DO: extract
+		//TODO: extract
 		if ((uint32_t)index >= m_data_ptr->size()) {
 			LOG_ERROR("Tried to change data for Index out of range");
 			
@@ -185,7 +185,7 @@ namespace CL{
 			return false;
 		}
 
-		//TO DO: EXTRACT
+		//TODO: EXTRACT
 		uint32_t effectiveID = 0;
 		effectiveID += ((int)isGlobal << (uint32_t)AS::actionIDtoUnsigned::SCOPE_SHIFT);
 		effectiveID += (agentID << (uint32_t)AS::actionIDtoUnsigned::AGENT_SHIFT);
@@ -333,7 +333,7 @@ namespace CL{
 
 	bool ClientData::LAresourcesHandler::changeCurrentTo(uint32_t agentID, float newValue) {
 		
-		//TO DO: extract
+		//TODO: extract
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
@@ -400,7 +400,7 @@ namespace CL{
 
 	bool CL_API ClientData::LAstrenghtHandler::changeGuard(uint32_t agentID, float newValue)
 	{
-		//TO DO: extract
+		//TODO: extract
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
@@ -465,7 +465,7 @@ namespace CL{
 
 	bool CL_API CL::ClientData::LApersonalityHandler::changeGAoffsets(uint32_t agentID, AS::LAdecisionOffsets_t * newValue_ptr)
 	{
-		//TO DO: extract
+		//TODO: extract
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
@@ -528,7 +528,7 @@ namespace CL{
 
 	bool CL_API ClientData::GAcoldDataHandler::changeID(uint32_t agentID, uint32_t newValue)
 	{
-		//TO DO: extract
+		//TODO: extract
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
@@ -585,7 +585,7 @@ namespace CL{
 
 	bool CL_API ClientData::GAstateHandler::changeConnectedGAs(uint32_t agentID, AS::GAflagField_t* newValue_ptr)
 	{
-		//TO DO: extract
+		//TODO: extract
 		if (agentID >= m_data_ptr->data.size()) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			

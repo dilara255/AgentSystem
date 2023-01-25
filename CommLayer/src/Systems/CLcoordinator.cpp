@@ -43,7 +43,7 @@ namespace CL {
 		return true;
 	}
 
-	//Initializes the CL, including ASmirror. 
+	//Initializes the CL, including ASmirror (with values sent by AS). 
 	//WARNING: Client Data only initializes on network load!
 	bool init(const AS::networkParameters_t* params_cptr) {
 		LOG_INFO("initializing CL...");
@@ -78,7 +78,7 @@ namespace CL {
 	}
 
 	//Also creates and initializes its components. Does quite a bit of heap allocation.
-	//TO DO: An "update" method could avoid its use on AS's loading.
+	//TODO: An "update" method could avoid its use on AS's loading.
 	bool createClientDataHandler(AS::networkParameters_t params) {
 
 		LOG_TRACE("Will try to create Client Data Handler...");

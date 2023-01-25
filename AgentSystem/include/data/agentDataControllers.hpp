@@ -2,8 +2,8 @@
 
 #include "agentDataStructures.hpp"
 
-//TO DO: too much repetition
-//TO DO: make these Classes singleton
+//TODO: too much repetition
+//TODO: make these Classes singleton
 namespace LA {
 	class ColdDataController {
 	public:

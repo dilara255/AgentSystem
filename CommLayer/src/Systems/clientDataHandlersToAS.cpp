@@ -240,7 +240,7 @@ namespace CL {
 
 	bool ClientData::ActionDetailsHandler::transferAux(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		//TO DO: Extract
+		//TODO: Extract
 		bool isGlobal = (bool)(agentID & (uint32_t)AS::actionIDtoUnsigned::SCOPE_MASK);
 		
 		uint32_t actionID = agentID & (uint32_t)AS::actionIDtoUnsigned::ACTION_MASK;
@@ -407,7 +407,7 @@ namespace CL {
 	bool ClientData::LAresourcesHandler::transferCurrent(uint32_t agentID, 
 													ASdataControlPtrs_t recepientPtrs){
 		
-		//TO DO: extract functions
+		//TODO: extract functions
 		if (agentID > m_data_ptr->data.size()) {
 			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
 			return false;
@@ -454,7 +454,7 @@ namespace CL {
 
 	bool ClientData::LAstrenghtHandler::transferGuard(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		//TO DO: extract functions
+		//TODO: extract functions
 		if (agentID > m_data_ptr->data.size()) {
 			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
 			return false;
@@ -500,7 +500,7 @@ namespace CL {
 
 	bool ClientData::LApersonalityHandler::transferGAoffsets(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		//TO DO: extract functions
+		//TODO: extract functions
 		if (agentID > m_data_ptr->data.size()) {
 			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
 			return false;
@@ -544,7 +544,7 @@ namespace CL {
 
 	bool ClientData::GAcoldDataHandler::transferID(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		//TO DO: extract functions
+		//TODO: extract functions
 		if (agentID > m_data_ptr->data.size()) {
 			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
 			return false;
@@ -580,7 +580,7 @@ namespace CL {
 
 	bool ClientData::GAstateHandler::transferConnectedGAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		//TO DO: extract functions
+		//TODO: extract functions
 		if (agentID > m_data_ptr->data.size()) {
 			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
 			return false;
