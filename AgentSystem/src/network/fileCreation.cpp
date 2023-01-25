@@ -9,7 +9,7 @@ file with a number appended to the end, but can be set to overwrite.
 
 NOTE: for "empty" file, the network specificed MUST be within bounds of the fixed parameters
 
-TO DO: this has quite a bit of repetition. Text files may be palceholder, so this should be
+TODO: this has quite a bit of repetition. Text files may be palceholder, so this should be
 reevaluated once the actual format and save system needs are known.
 */
 
@@ -28,7 +28,7 @@ reevaluated once the actual format and save system needs are known.
 
 int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int numberLAs,
     int numberGAs, int maxNeighbors, int maxActions, bool setDefaults, std::string filePath) {
-    //TO DO: add logic to insert decision data once that's added to the file format
+    //TODO: add logic to insert decision data once that's added to the file format
 
     LOG_TRACE("Creating new Network File");
 
@@ -49,10 +49,11 @@ int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int nu
 
     int result = 1;
     int resultAux = 0;
+    uint64_t tickCount = 0;
 
     //Header, with version control, network sizes, comment and tick count (0)
     resultAux = fprintf(fp, headerLine,
-        FILE_FORMAT_VERSION, numberGAs, numberLAs, maxNeighbors, maxActions, 0);
+        FILE_FORMAT_VERSION, numberGAs, numberLAs, maxNeighbors, maxActions, tickCount);
     result *= (resultAux > 0); //fprintf returns negative number on error
     
     resultAux = fprintf(fp, commentLine, comment.c_str());
@@ -554,7 +555,7 @@ bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
     const AS::networkParameters_t* pp, const AS::ActionDataController* ap) {
 
     LOG_TRACE("Will write the Actions to file...");
-    //TO DO: Actually write once the data structures and loading are in place
+    //TODO: Actually write once the data structures and loading are in place
 
     int result = 1;
     int resultAux;

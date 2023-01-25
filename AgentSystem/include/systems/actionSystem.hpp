@@ -5,7 +5,7 @@ This file declares the classes:
 - The ActionSystem itself, which includes:
 -- ActionDataController class, with two bundles of action data: for LAs and GAs;
 -- Action Variations class, wich warps information about which action variations are possible;
-- TO DO: the base ActionCategoy class.
+- TODO: the base ActionCategoy class.
 */
 
 #include "miscStdHeaders.h"
@@ -14,7 +14,7 @@ This file declares the classes:
 #include "../include/network/parameters.hpp"
 
 namespace AS {	
-	//TO DO: singleton, initialize, test
+	//TODO: singleton, initialize, test
 	class ActionDataController {
 	public:
 		bool initialize(int maxActionsPerAgent, int numberLas, int numberGAs);
@@ -68,7 +68,7 @@ namespace AS {
 		int m_maxActionsPerAgent = 0;
 	};
 
-	//TO DO: singleton, initialize, test
+	//TODO: singleton, initialize, test
 	class ActionVariations {
 	public:
 
@@ -160,7 +160,7 @@ namespace AS {
 		}
 
 	private:
-		//TO DO: Review these when action system is implemented
+		//TODO: Review these when action system is implemented
 		const int availableVariations[TOTAL_CATEGORIES][TOTAL_MODES][TOTAL_SCOPES] = {
 			
 			//KEY for the numbers: see AS::actionAvailability enum above
@@ -184,7 +184,7 @@ namespace AS {
 		};
 	};
 
-	//TO DO: singleton, initialize, test
+	//TODO: singleton, initialize, test
 	class ActionSystem {
 	public:
 		ActionDataController data; //all action data is here!
@@ -192,7 +192,7 @@ namespace AS {
 
 		bool initializeDataController(const networkParameters_t* pp,
 			                     const ActionDataController** actionDataController_cptr_ptr);
-		//TO DO: the actual system to use these
+		//TODO: the actual system to use these
 
 		bool initialize(const ActionSystem** actionSystem_cptr_ptr) {
 			LOG_TRACE("Initializing Action System (stub)");

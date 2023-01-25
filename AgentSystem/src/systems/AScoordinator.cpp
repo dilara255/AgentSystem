@@ -26,7 +26,7 @@ TODO-CRITICAL: Break up this file. Main loop should probably stay, move most of 
 
 #include "data/dataMisc.hpp"
 
-//TO DO:
+//TODO:
 // - Create control class with control structures as members
 
 #define MAX_ERRORS_TO_ACCUMULATE_ON_MAIN 150
@@ -57,8 +57,8 @@ bool AS::quit() {
 	
 	bool result = AS::stop();
 	
-	//TO DO: Kill all the stuff in the pointers here
-	//TO DO: implement and call CL::quit, doing the same for the CL;
+	//TODO: Kill all the stuff in the pointers here
+	//TODO: implement and call CL::quit, doing the same for the CL;
 	//isInitialized = false;
 	
 	return result;
@@ -100,7 +100,7 @@ bool AS::run() {
 //Main loop STARTS sleeping, does its thing*, consumes Client Changes and sends data to the CL.
 //After this it just updates timmings. Ticks are updated right before AS sends its data.
 //*includes progressing all actions and updating the states and the decisions of each agent;
-//TO DO: implement what is described : )
+//TODO: implement what is described : )
 void AS::mainLoop() {
 	uint64_t initialTick = currentNetworkParams.mainLoopTicks;
 
@@ -131,7 +131,7 @@ void AS::mainLoop() {
 		result = CL::getNewClientData(currentNetworkParams_ptr, &agentDataControllerPtrs,
 			                          &(actionSystem.data), shouldMainLoopBeRunning);
 		
-		//TO DO: Extract
+		//TODO: Extract
 		if (!result) { 
 			if (!hasThrownErrorsRecently) {
 				LOG_ERROR("Failed to get Client Data!"); 
@@ -222,7 +222,7 @@ bool AS::isMainLoopRunning() {
 }
 
 bool AS::initializeASandCL() {
-//TO DO: possibly extract functions
+//TODO: possibly extract functions
 
 	if (isInitialized) {
 		LOG_ERROR("AS already initialized. Aborting initialization.");
@@ -259,7 +259,7 @@ bool AS::initializeASandCL() {
 		return false;
 	}
 
-	//TO DO: test the others as well (extract)
+	//TODO: test the others as well (extract)
 	if (agentDataControllerPtrs.LAcoldData_ptr == NULL) {
 		LOG_CRITICAL("DATA CONTROLLERS NOT CREATED: ptr to LAcold is NULL");
 		return false;
@@ -348,7 +348,7 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 		return false;
 	}
 
-	//TO DO: BLOCK CLIENT CHANGES (add some "isLoading" flag on the CL?)
+	//TODO: BLOCK CLIENT CHANGES (add some "isLoading" flag on the CL?)
 
 	if (shouldMainLoopBeRunning) {
 		LOG_TRACE("Will stop Main Loop Thread");
@@ -368,7 +368,8 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 	result = loadNetworkFromFileToDataControllers(fp, agentDataControllerPtrs, 
 		                                              currentNetworkParams_ptr,
 		                                                     &actionSystem.data);
-	
+
+
 	fclose(fp);
 	LOG_TRACE("File closed");
 
@@ -376,19 +377,19 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 		LOG_ERROR("Load failed. Will clear the network.");
 		clearNetwork(); //we don't leave an incomplete state behind. Marks data as not initialized.
 	}
-	
-	//TO DO: check capacities and sizes to make sure things are in order?
+
+	//TODO: check capacities and sizes to make sure things are in order?
 
 	if(result){
 		agentDataControllerPtrs.haveData = true;
 		currentNetworkParams.isNetworkInitialized = true;
 		LOG_INFO("File loaded...");
 
-		//TO DO: This could be just an update(), which clears + shrinks + reserves stuff.
+		//TODO: This could be just an update(), which clears + shrinks + reserves stuff.
 		result = CL::createClientDataHandler(*currentNetworkParams_ptr);
 	}
 	
-	//TO DO: do whatever else should be done after load, clear on error
+	//TODO: do whatever else should be done after load, clear on error
 	
 	if(result && runNetwork) { result = AS::run(); }
 

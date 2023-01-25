@@ -2,8 +2,8 @@
 
 /*
 * WARNING: THIS FILE WILL BE EXPOSED TO THE APPLICATION!
-* - TO DO: MOVE TO API/AS_dataTypes
-* - TO DO: Moce into namespace and turn enums into enum classes
+* - TODO: MOVE TO API/AS_dataTypes
+* - TODO: Moce into namespace and turn enums into enum classes
 
 This file:
 - Describes the data structure of actions;
@@ -19,11 +19,11 @@ namespace AS {
 	enum actionCategories { STRENGHT, RESOURCES, ATTACK, GUARD,
 						    SPY, SABOTAGE, DIPLOMACY, CONQUEST,
 							TOTAL_CATEGORIES };
-	//TO DO: brief description of each
+	//TODO: brief description of each
 
 	enum actionModes { IMMEDIATE, REQUEST, SELF,
 		               TOTAL_MODES };
-	//TO DO: brief description of each
+	//TODO: brief description of each
 
 	enum actionScopes { LOCAL, GLOBAL,
 		                TOTAL_SCOPES };
@@ -32,7 +32,7 @@ namespace AS {
 	//WARNING: any updates to this should be reflected on the initialization of
 	//Actions::availableVariations
 
-	//TO DO: WARNING: MAY NOT BE PORTABLE?
+	//TODO: WARNING: MAY NOT BE PORTABLE?
 	typedef struct {
 		uint32_t active : 1;
 		uint32_t origin : 13;
@@ -45,7 +45,7 @@ namespace AS {
 			                TOTAL_ACTION_FIELDS };
 	} AS_API ids_t;
 
-	//TO DO: WARNING: MAY NOT BE PORTABLE?
+	//TODO: WARNING: MAY NOT BE PORTABLE?
 	enum class actionIDtoUnsigned: uint32_t {SCOPE_SHIFT = 31, SCOPE_MASK = 2147483648, 
 										     AGENT_SHIFT = 15, AGENT_MASK = 2147450880,
 											 ACTION_SHIFT = 0, ACTION_MASK = 32767 };

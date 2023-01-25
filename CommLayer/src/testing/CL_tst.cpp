@@ -6,7 +6,7 @@
 
 #include "testing/CL_tst.hpp"
 
-//TO DO: TEST DATA STRUCTURE
+//TODO: TEST DATA STRUCTURE
 initTestNumbers_t initNumbers;
 int* testArray_ptr;
 bool tstArrayInitialized;

@@ -1,12 +1,12 @@
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\
    //      WARNING: *AWFUL* REPETITION GOING ON HERE        \\
-  //  TO DO: FIX IT BY PROPERLY EXPORTING THE WANTED CLASSES \\
+  //  TODO: FIX IT BY PROPERLY EXPORTING THE WANTED CLASSES \\
  //                       (how, tho?)                         \\
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\
 
 #include "data/mirrorDataControllers.hpp"
 
-//TO DO: Copy the definitions here - and then take a shower :'(
+//TODO: Copy the definitions here - and then take a shower :'(
 //(also, eventually understand how to export stuff with std containers)
 
 namespace CL {
