@@ -40,6 +40,7 @@ namespace AS {
 	std::thread mainLoopThread;
 
 	networkParameters_t currentNetworkParams;
+	AS::PRNserver prnServer;
 
 	ActionSystem actionSystem; 
 	dataControllerPointers_t agentDataControllerPtrs;
@@ -128,7 +129,8 @@ bool AS::initializeASandCL() {
 	}
 
 	result = initMainLoopControl(&shouldMainLoopBeRunning, &mainLoopId, &mainLoopThread,
-		               &actionSystem, &agentDataControllerPtrs, currentNetworkParams_ptr);
+		               &actionSystem, &agentDataControllerPtrs, currentNetworkParams_ptr,
+		               &prnServer);
 	if(!result) {
 		LOG_CRITICAL("Something went wrong initialing Main Loop Controller!");
 		return false;

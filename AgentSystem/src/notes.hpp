@@ -115,14 +115,15 @@
 * > 1. Basic structure:
 * 
 * -Review notes, sketch on paper;
-* > -Implement skeleton of main loop, with dummy loop stubs;
+* -Implement skeleton of main loop, with dummy loop stubs;
 * --Implement timing of main loop (and lastTickTime to params);
-* --The goal here is to get the AS loop to work as expected and emit messages from each "leaf";
-* --Start populating the systems files;
+* --Main loop implemented except for "step()" (for which there will be stubs)
 * 
 * 2. PRNG:
 * 
-* -Create PRNG system (and add them to their step and time it);
+* > -Create PRNG system (and add them to their step and time it);
+* --System on AS, to draw numbers as required;
+* --Actual PRNG, on Aux0;
 * 
 * 3. Updates:
 * 
@@ -158,6 +159,7 @@
 * -- Prioritize what to deal with now, document the rest;
 * 
 * - Any groundwork still necessary before focusing on behaviour;
+* --Especially action-related;
 *
 * ***** Minor 7. Basic decision making and actions *****
 *

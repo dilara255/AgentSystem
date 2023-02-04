@@ -8,6 +8,7 @@
 #include "network/parameters.hpp" //exposes "currentNetworkParams"
 
 #include "systems/AScoordinator.hpp"
+#include "systems/prnsServer.hpp"
 
 #define MAX_ERRORS_TO_ACCUMULATE_ON_MAIN 150
 
@@ -15,6 +16,7 @@ namespace AS{
 	bool* g_shouldMainLoopBeRunning_ptr;
 	std::thread::id* g_mainLoopId_ptr;
 	std::thread* g_mainLoopThread_ptr;
+	AS::PRNserver* g_prnServer_ptr;
 
 	ActionSystem* g_actionSystem_ptr; 
 	dataControllerPointers_t* g_agentDataControllerPtrs_ptr;
@@ -31,7 +33,8 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 	                        std::thread* mainLoopThread_ptr,
 						    ActionSystem* actionSystem_ptr, 
 							dataControllerPointers_t* agentDataControllerPtrs_ptr,
-							networkParameters_t* currentNetworkParams_ptr);
+							networkParameters_t* currentNetworkParams_ptr,
+	                        AS::PRNserver* prnServer_ptr);
 
 std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
@@ -72,12 +75,18 @@ void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_
 	*shouldMakeDecisions_ptr = ((*stepsWithoutDecisions_ptr) == AS_STEPS_PER_DECISION_STEP);
 	if(*shouldMakeDecisions_ptr) {*stepsWithoutDecisions_ptr = 0;}
 
-	AS::drawPRNs(*shouldMakeDecisions_ptr);
+	
+	AS::g_prnServer_ptr->drawPRNs(*shouldMakeDecisions_ptr, 
+								  AS::g_currentNetworkParams_ptr->numberLAs,
+								  AS::g_currentNetworkParams_ptr->numberGAs);
 }
 
 void step(bool shouldMakeDecisions) {
-	AS::stepActions();
-	AS::stepAgents(shouldMakeDecisions);
+	int numberLAs = AS::g_currentNetworkParams_ptr->numberLAs;
+	int numberGAs = AS::g_currentNetworkParams_ptr->numberGAs;
+
+	AS::stepActions(AS::g_actionSystem_ptr, numberLAs, numberGAs);
+	AS::stepAgents(shouldMakeDecisions, AS::g_agentDataControllerPtrs_ptr, numberLAs, numberGAs);
 }
 
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr) {
@@ -135,7 +144,8 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 	                        std::thread* mainLoopThread_ptr,
 						    ActionSystem* actionSystem_ptr, 
 							dataControllerPointers_t* agentDataControllerPtrs_ptr,
-							networkParameters_t* currentNetworkParams_ptr){
+							networkParameters_t* currentNetworkParams_ptr,
+	                        AS::PRNserver* prnServer_ptr){
 
 	LOG_TRACE("Getting Main Loop Control Pointers...");
 
@@ -144,7 +154,8 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 					  || (mainLoopThread_ptr == NULL)
 					  || (actionSystem_ptr == NULL)
 					  || (agentDataControllerPtrs_ptr == NULL)
-					  || (currentNetworkParams_ptr == NULL);
+					  || (currentNetworkParams_ptr == NULL)
+		              || (prnServer_ptr == NULL);
 		
 	if (hasNullPtr) {
 		LOG_ERROR("At least one of the passed pointers is NULL");
@@ -157,6 +168,7 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 	g_actionSystem_ptr = actionSystem_ptr;
 	g_agentDataControllerPtrs_ptr = agentDataControllerPtrs_ptr;
 	g_currentNetworkParams_ptr = currentNetworkParams_ptr;
+	g_prnServer_ptr = prnServer_ptr;
 
 	LOG_INFO("Done");
 	return true;
