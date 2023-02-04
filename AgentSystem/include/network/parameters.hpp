@@ -100,6 +100,7 @@ namespace AS {
 		bool isNetworkInitialized;
 		uint64_t mainLoopTicks;
 		uint64_t lastMainLoopStartingTick;
+		std::chrono::microseconds lastStepTimeMicros;
 		int numberLAs;
 		int numberGAs;
 		int maxLAneighbours;

@@ -26,6 +26,8 @@
 	#define AZ_LOG_TRACE_COLOR (FOREGROUND_BLUE | FOREGROUND_GREEN)
 	#define AZ_LOG_INFO_COLOR (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
 
+	#define SYS_WAKEUP_DELAY_MICROS 0
+
 #else
 	#error no support for other platforms as of yet : /
 #endif
