@@ -121,9 +121,10 @@
 * 
 * 2. PRNG:
 * 
-* > -Create PRNG system (and add them to their step and time it);
+* -Create PRNG system (and add them to their step and time it);
 * --System on AS, to draw numbers as required;
 * --Actual PRNG, on Aux0;
+* > --Seeds: default and loading;
 * 
 * 3. Updates:
 * 
