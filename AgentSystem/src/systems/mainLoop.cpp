@@ -43,9 +43,11 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 void timeAndSleep(std::chrono::microseconds tagetStepTimeMicro,
 	              std::chrono::microseconds* stepStartTimeMicro_ptr);
 
+void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
+							                                                char* message);
+
 void AS::mainLoop() {
 	uint64_t initialTick = g_currentNetworkParams_ptr->mainLoopTicks;
-
 
 	std::chrono::microseconds tagetStepTimeMicro = 
 		                       std::chrono::microseconds(AS_MILLISECONDS_PER_STEP*1000);
@@ -82,47 +84,22 @@ void step(bool shouldMakeDecisions) {
 
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr) {
 	if (!*AS::g_shouldMainLoopBeRunning_ptr) 
-			{ LOG_TRACE("Main loop will get Client Data"); }
+			{ LOG_TRACE("Main loop will get Client Data and send AS Data to CL"); }
 
 		bool result = CL::getNewClientData(AS::g_currentNetworkParams_ptr, 
 			                               AS::g_agentDataControllerPtrs_ptr,
 						   			       &(AS::g_actionSystem_ptr->data), 
 			                               *AS::g_shouldMainLoopBeRunning_ptr);
-		
-		//TODO: Extract
 		if (!result) { 
-			if (!(*hasThrownErrorsRecently_ptr)) {
-				LOG_ERROR("Failed to get Client Data!"); 
-				printf("(had accumulated %d errors before this)",*errorsAccumulated_ptr);
-				*hasThrownErrorsRecently_ptr = true;
-				*errorsAccumulated_ptr = 0;
-			}
-			else {
-				(*errorsAccumulated_ptr)++;
-				if (*errorsAccumulated_ptr > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
-					*hasThrownErrorsRecently_ptr = false;
-				}
-			}
+			accumulateOrTrhowError(hasThrownErrorsRecently_ptr, errorsAccumulated_ptr,
+									                     "Failed to get Client Data!");
 		}
-		
-		if (!*AS::g_shouldMainLoopBeRunning_ptr) 
-			{ LOG_TRACE("Main loop will send AS Data to CL"); }
 
 		result = AS::sendReplacementDataToCL(true);
 		if (!result) { 
-			if (!(*hasThrownErrorsRecently_ptr)) {
-				LOG_ERROR("Failed to send AS Data to the CL!");
-				printf("(had accumulated %d errors before this)",*errorsAccumulated_ptr);
-				*hasThrownErrorsRecently_ptr = true;
-				*errorsAccumulated_ptr = 0;
-			}
-			else {
-				(*errorsAccumulated_ptr)++;
-				if (*errorsAccumulated_ptr > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
-					*hasThrownErrorsRecently_ptr = false;
-				}
-			}
-		}	
+				accumulateOrTrhowError(hasThrownErrorsRecently_ptr, errorsAccumulated_ptr,
+									                  "Failed to send AS Data to the CL!");
+		}		
 }
 
 void timeAndSleep(std::chrono::microseconds tagetStepTimeMicro,
@@ -231,7 +208,7 @@ bool AS::stop() {
 	if (isMainLoopRunning()) {
 		LOG_TRACE("Waiting for main loop to finish execution...");
 		g_mainLoopThread_ptr->join();
-		*g_mainLoopId_ptr = std::thread::id(); //default-constructs to "no thread" value
+		*g_mainLoopId_ptr = std::thread::id();
 		LOG_INFO("Done.");
 
 		#if (defined AS_DEBUG) || VERBOSE_RELEASE
@@ -252,4 +229,20 @@ bool AS::chekIfMainLoopShouldBeRunning() {
 
 bool AS::isMainLoopRunning() {
 	return g_mainLoopThread_ptr->joinable();
+}
+
+void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
+							                                                char* message) {
+	if (!(*hasThrownErrorsRecently_ptr)) {
+				LOG_ERROR(message); 
+				printf("(had accumulated %d errors before this)",*errorsAccumulated_ptr);
+				*hasThrownErrorsRecently_ptr = true;
+				*errorsAccumulated_ptr = 0;
+	}
+	else {
+		(*errorsAccumulated_ptr)++;
+		if (*errorsAccumulated_ptr > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
+			*hasThrownErrorsRecently_ptr = false;
+		}
+	}
 }
