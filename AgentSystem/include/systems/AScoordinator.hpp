@@ -16,6 +16,12 @@ namespace AS {
 	extern const dataControllerPointers_t* agentDataControllers_cptr;
 	extern const ActionDataController* actionDataController_cptr;
 
+	bool initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
+							 std::thread::id* mainLoopId_ptr,
+							 std::thread* mainLoopThread_ptr,
+							 ActionSystem* actionSystem_ptr, 
+							 dataControllerPointers_t* agentDataControllerPtrs_ptr,
+							 networkParameters_t* currentNetworkParams_ptr);
 	bool sendReplacementDataToCL(bool silent);
 	bool run();
 	bool stop();

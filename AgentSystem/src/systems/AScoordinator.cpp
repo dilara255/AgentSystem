@@ -29,8 +29,6 @@ TODO-CRITICAL: Break up this file. Main loop should probably stay, move most of 
 //TODO:
 // - Create control class with control structures as members
 
-#define MAX_ERRORS_TO_ACCUMULATE_ON_MAIN 150
-
 bool isInitialized = false;
 
 namespace AS {
@@ -62,163 +60,6 @@ bool AS::quit() {
 	//isInitialized = false;
 	
 	return result;
-}
-
-//Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id.
-//Checks some conditions before initializing, and returns false if any are not met.
-bool AS::run() {
-	LOG_TRACE("Starting Main Loop Thread...");
-	
-	if (shouldMainLoopBeRunning) {
-		if (mainLoopThread.joinable()) {
-			LOG_CRITICAL("Main Loop Thread already be running!");
-			return false;
-		}
-		LOG_WARN("Main Loop Thread state control variable was set wrong. Will try to fix and start thread");
-	}
-
-	if (!CL::isClientDataPointerInitialized()) {
-		LOG_ERROR("Client Data Pointer not initialized. Main Loop can't run");
-		return false;
-	}
-
-	if (!CL::isASdataPointerInitialized()) {
-		LOG_ERROR("AS Data Mirror not initialized. Main Loop can't run");
-		return false;
-	}
-
-	shouldMainLoopBeRunning = true;
-	currentNetworkParams.lastMainLoopStartingTick = currentNetworkParams.mainLoopTicks;
-	mainLoopThread = std::thread(mainLoop);
-	mainLoopId = mainLoopThread.get_id();
-
-	LOG_INFO("Started main loop on new thread");
-
-	return true;
-}
-
-//Main loop STARTS sleeping, does its thing*, consumes Client Changes and sends data to the CL.
-//After this it just updates timmings. Ticks are updated right before AS sends its data.
-//*includes progressing all actions and updating the states and the decisions of each agent;
-//TODO: implement what is described : )
-void AS::mainLoop() {
-	uint64_t initialTick = currentNetworkParams.mainLoopTicks;
-
-	std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
-	//std::chrono::microseconds stepStartTime;
-	std::chrono::microseconds durationThisStepMicro = zeroMicro;
-	std::chrono::microseconds tagetStepTimeMicro = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
-	std::chrono::microseconds timeToSleepMicro = zeroMicro;
-	
-	bool result = false;
-	bool hasThrownErrorsRecently = false;
-	int errorsAccumulated = 0;
-
-	do {
-		if (!shouldMainLoopBeRunning)
-			{ LOG_TRACE("Main loop will sleep first"); }
-
-		//fflush(stdout);
-		std::this_thread::sleep_for(timeToSleepMicro);
-
-		//stepStartTime = blah (get the current time in micro)
-		
-		//do stuff
-
-		if (!shouldMainLoopBeRunning) 
-			{ LOG_TRACE("Main loop will get Client Data"); }
-
-		result = CL::getNewClientData(currentNetworkParams_ptr, &agentDataControllerPtrs,
-			                          &(actionSystem.data), shouldMainLoopBeRunning);
-		
-		//TODO: Extract
-		if (!result) { 
-			if (!hasThrownErrorsRecently) {
-				LOG_ERROR("Failed to get Client Data!"); 
-				printf("(had accumulated %d errors before this)",errorsAccumulated);
-				hasThrownErrorsRecently = true;
-				errorsAccumulated = 0;
-			}
-			else {
-				errorsAccumulated++;
-				if (errorsAccumulated > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
-					hasThrownErrorsRecently = false;
-				}
-			}
-		}
-		
-		if (!shouldMainLoopBeRunning) 
-			{ LOG_TRACE("Main loop will update ticks"); }
-
-		currentNetworkParams.mainLoopTicks++;
-
-		if (!shouldMainLoopBeRunning) 
-			{ LOG_TRACE("Main loop will send AS Data to CL"); }
-
-		result = sendReplacementDataToCL(true);
-		if (!result) { 
-			if (!hasThrownErrorsRecently) {
-				LOG_ERROR("Failed to send AS Data to the CL!");
-				printf("(had accumulated %d errors before this)",errorsAccumulated);
-				hasThrownErrorsRecently = true;
-				errorsAccumulated = 0;
-			}
-			else {
-				errorsAccumulated++;
-				if (errorsAccumulated > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
-					hasThrownErrorsRecently = false;
-				}
-			}
-		}
-
-		if (!shouldMainLoopBeRunning) 
-			{ LOG_TRACE("Main loop will calculate time to sleep"); }
-
-		//durationThisStepMicro = "current time in micro" - stepStartTime
-		timeToSleepMicro = tagetStepTimeMicro - durationThisStepMicro;
-		if(timeToSleepMicro < zeroMicro) timeToSleepMicro = zeroMicro;
-
-		if (!shouldMainLoopBeRunning)
-			{ LOG_TRACE("Main loop should stop now!"); }
-
-	} while (shouldMainLoopBeRunning);
-}
-
-//Stops AS execution thread, marks it as stopped and clears the stored thread::id;
-bool AS::stop() {
-	LOG_TRACE("Stopping Main Loop Thread...");
-		
-	if (!shouldMainLoopBeRunning) {
-		LOG_ERROR("Main Loop Thread already supposed to be stopped...");
-		return false;
-	}
-
-	shouldMainLoopBeRunning = false;
-
-	if (isMainLoopRunning()) {
-		LOG_TRACE("Waiting for main loop to finish execution...");
-		mainLoopThread.join();
-		mainLoopId = std::thread::id(); //default-constructs to "no thread" value
-		LOG_INFO("Done.");
-
-		#if (defined AS_DEBUG) || VERBOSE_RELEASE
-			printf("\nRan for %llu ticks\n", currentNetworkParams.mainLoopTicks - 
-				                           currentNetworkParams.lastMainLoopStartingTick);
-		#endif // AS_DEBUG		
-		return true;
-	}
-	else {
-		LOG_ERROR("Main Loop Thread was supposed to be active, but was not!");
-		return false;
-	}	
-}
-
-bool AS::chekIfMainLoopShouldBeRunning() {
-	return AS::shouldMainLoopBeRunning;
-}
-
-bool AS::isMainLoopRunning() {
-	return mainLoopThread.joinable();
 }
 
 bool AS::initializeASandCL() {
@@ -283,6 +124,13 @@ bool AS::initializeASandCL() {
 	result = CL::init(currentNetworkParams_cptr);
 	if (!result) {
 		LOG_CRITICAL("Something went wrong initialing the Communications Layer!");
+		return false;
+	}
+
+	result = initMainLoopControl(&shouldMainLoopBeRunning, &mainLoopId, &mainLoopThread,
+		               &actionSystem, &agentDataControllerPtrs, currentNetworkParams_ptr);
+	if(!result) {
+		LOG_CRITICAL("Something went wrong initialing Main Loop Controller!");
 		return false;
 	}
 
