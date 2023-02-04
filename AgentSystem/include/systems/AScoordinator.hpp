@@ -26,4 +26,8 @@ namespace AS {
 	bool run();
 	bool stop();
 	void mainLoop();
+
+	void drawPRNs(bool willAgentsMakeDecisions);
+	void stepActions();
+	void stepAgents(bool shouldMakeDecisions);
 }

@@ -40,6 +40,8 @@ and data sizes static.
 #define GA_PERSONALITY_TRAITS 4
 #define SLEEP_TIME_WAITING_MUTEX_MICROS 50
 #define MAX_MUTEX_TRY_LOCKS 200
+#define AS_MILLISECONDS_PER_STEP TST_MAINLOOP_FREQUENCY_MS
+#define AS_STEPS_PER_DECISION_STEP 2
 
 //DEFAULT values for new network creation:
 #define DEFAULT_ONOFF (true)
