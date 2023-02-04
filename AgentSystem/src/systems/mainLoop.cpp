@@ -80,6 +80,10 @@ void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_
 	AS::g_prnServer_ptr->drawPRNs(AS::g_currentNetworkParams_ptr->numberLAs,
 								  AS::g_currentNetworkParams_ptr->numberGAs,
 		                          *prnChopIndex_ptr);
+	for (int i = 0; i < DRAW_WIDTH; i++) {
+		AS::g_currentNetworkParams_ptr->seeds[i] = AS::g_prnServer_ptr->getSeed(i);
+	}
+	
 
 	(*prnChopIndex_ptr)++;
 	*prnChopIndex_ptr %= AS_STEPS_PER_DECISION_STEP;
@@ -88,13 +92,6 @@ void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_
 void step(bool shouldMakeDecisions) {
 	int numberLAs = AS::g_currentNetworkParams_ptr->numberLAs;
 	int numberGAs = AS::g_currentNetworkParams_ptr->numberGAs;
-
-	if(shouldMakeDecisions){
-		AS::g_prnServer_ptr->printDataDebug();
-		GETCHAR_PAUSE;
-		GETCHAR_PAUSE;
-		GETCHAR_PAUSE;
-	}
 
 	AS::stepActions(AS::g_actionSystem_ptr, numberLAs, numberGAs);
 	AS::stepAgents(shouldMakeDecisions, AS::g_agentDataControllerPtrs_ptr, numberLAs, numberGAs);
@@ -207,6 +204,14 @@ bool AS::run() {
 		LOG_ERROR("AS Data Mirror not initialized. Main Loop can't run");
 		return false;
 	}
+
+	LOG_TRACE("Loading seeds...");
+
+	for (int i = 0; i < DRAW_WIDTH; i++) {
+		AS::g_prnServer_ptr->setSeed(i, AS::g_currentNetworkParams_ptr->seeds[i]);
+	}
+
+	LOG_TRACE("Creating Main Loop Thread and marking as started...");
 
 	*g_shouldMainLoopBeRunning_ptr = true;
 	g_currentNetworkParams_ptr->lastMainLoopStartingTick = 

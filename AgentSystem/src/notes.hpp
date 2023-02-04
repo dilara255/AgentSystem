@@ -124,9 +124,9 @@
 * -Create PRNG system (and add them to their step and time it);
 * --System on AS, to draw numbers as required;
 * --Actual PRNG, on Aux0;
-* > --Seeds: default and loading;
+* --Seeds: default and loading;
 * 
-* 3. Updates:
+* > 3. Updates:
 * 
 * -Implement state self-updating (ie, from income and upkeep, no actions involved);
 * -Update information and expected values;

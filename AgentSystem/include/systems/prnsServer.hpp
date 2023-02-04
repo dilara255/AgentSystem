@@ -29,7 +29,9 @@ namespace AS{
 	public:
 		void drawPRNs(int numberLAs, int numberGAs, int chopIndex);
 		float getNext() {return PRNs[nextToUse++];}
-		void reSeed0(uint64_t newSeed){seeds[0] = newSeed;}
+		uint64_t getSeed(int index) const {return seeds[index];}
+		void setSeed(int index, uint64_t newSeed) {seeds[index] = newSeed;}
+
 		void printDataDebug() {
 			printf("\n\n----> PRNs GENERATED: %d:\n\n", drawn);
 
@@ -44,6 +46,6 @@ namespace AS{
 		int drawn = 0;
 		int nextToUse = 0;
 		float PRNs[MAX_PRNS];
-		uint64_t seeds[4];
+		uint64_t seeds[DRAW_WIDTH];
 	};
 }
