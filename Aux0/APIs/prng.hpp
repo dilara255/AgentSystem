@@ -3,7 +3,12 @@
 #include "miscStdHeaders.h"
 
 namespace AZ{
-    //on test system tends to about 13,5 nanos per prn + float mult + assignment for large n
+    //PERFORMANCE: on a phenon II x4 820, 2,8 Ghz, 8gb DDR2 1333Mhz ram (for large n):
+    //(times to draw numbers, multiply by a float and assign to an array)
+    //x86 debug: ~29 - 33 (with load) nanos per PRN
+    //x64 debug: ~13,5 - 14,5 (with load) nanos per PRN
+    //x86 release: ~11,5 - 12,5 (with load) nanos per PRN
+    //x64 release: ~2,75 - 2,8 (with load) nanos per PRN
 	void draw4spcg32s(uint64_t* s0, uint64_t* s1, uint64_t* s2, uint64_t* s3,
                       uint32_t* dest0, uint32_t* dest1, uint32_t* dest2, uint32_t* dest3){ 
         uint64_t m = 0x9b60933458e17d7d;
@@ -27,7 +32,7 @@ namespace AZ{
 
 
     //from https://nullprogram.com/blog/2017/09/21/
-    //on test system tends to about 16,5 nanos per prn + float mult + assignment for large n
+    //on test system debug x64 tends to about 16,5 nanos per prn
 	uint32_t spcg32(uint64_t* s) {
         uint64_t m = 0x9b60933458e17d7d;
         uint64_t a = 0xd737232eeccdf7ed;
