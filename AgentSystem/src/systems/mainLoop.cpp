@@ -34,8 +34,6 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 							networkParameters_t* currentNetworkParams_ptr);
 
 std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
-std::chrono::microseconds sysWakeUpDelayMicros = 
-										std::chrono::microseconds(SYS_WAKEUP_DELAY_MICROS);
 
 void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr);
 void step(bool shouldMakeDecisions);
@@ -49,7 +47,7 @@ void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumu
 void AS::mainLoop() {
 	uint64_t initialTick = g_currentNetworkParams_ptr->mainLoopTicks;
 
-	std::chrono::microseconds tagetStepTimeMicro = 
+	std::chrono::microseconds targetStepTimeMicro = 
 		                       std::chrono::microseconds(AS_MILLISECONDS_PER_STEP*1000);
 	
 	bool hasThrownErrorsRecently = false;
@@ -63,7 +61,7 @@ void AS::mainLoop() {
 		prepareStep(&stepsWithoutDecisions, &shouldMakeDecisions);
 		step(shouldMakeDecisions);
 		receiveAndSendData(&hasThrownErrorsRecently, &errorsAccumulated);
-		timeAndSleep(tagetStepTimeMicro, &stepStartTimeMicro);
+		timeAndSleep(targetStepTimeMicro, &stepStartTimeMicro);
 	} while (*g_shouldMainLoopBeRunning_ptr);
 }
 
@@ -102,7 +100,7 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 		}		
 }
 
-void timeAndSleep(std::chrono::microseconds tagetStepTimeMicro,
+void timeAndSleep(std::chrono::microseconds targetStepTimeMicro,
 	              std::chrono::microseconds* stepStartTimeMicro_ptr) {
 	
 	if (!*AS::g_shouldMainLoopBeRunning_ptr) { 
@@ -110,8 +108,12 @@ void timeAndSleep(std::chrono::microseconds tagetStepTimeMicro,
 	}
 
 	std::chrono::microseconds elapsedMicro = nowMicros() - *stepStartTimeMicro_ptr;
-	std::chrono::microseconds microsToSleep = tagetStepTimeMicro - elapsedMicro - 
-		                                                      sysWakeUpDelayMicros;
+	std::chrono::microseconds remainingStepTimeMicro = targetStepTimeMicro - elapsedMicro;
+		                                               
+	std::chrono::microseconds sysWakeUpDelayMicro = 
+		std::chrono::microseconds(AZ::getExpectedWakeUpDelay(remainingStepTimeMicro.count()));
+
+	std::chrono::microseconds microsToSleep = remainingStepTimeMicro - sysWakeUpDelayMicro;
 	
 	if(microsToSleep > zeroMicro) {
 		std::this_thread::sleep_for(microsToSleep);
@@ -212,8 +214,8 @@ bool AS::stop() {
 		LOG_INFO("Done.");
 
 		#if (defined AS_DEBUG) || VERBOSE_RELEASE
-			printf("\nRan for %llu ticks\n", currentNetworkParams.mainLoopTicks - 
-											currentNetworkParams.lastMainLoopStartingTick);
+			printf("\nRan for %llu ticks\n", g_currentNetworkParams_ptr->mainLoopTicks - 
+								   g_currentNetworkParams_ptr->lastMainLoopStartingTick);
 		#endif // AS_DEBUG		
 		return true;
 	}
