@@ -93,6 +93,14 @@ void step(bool shouldMakeDecisions) {
 	int numberLAs = AS::g_currentNetworkParams_ptr->numberLAs;
 	int numberGAs = AS::g_currentNetworkParams_ptr->numberGAs;
 
+	/*
+	//TODO-CRITICAL: MOVE TO TEST
+	if (shouldMakeDecisions) {
+		AS::g_prnServer_ptr->printDataDebug();
+		GETCHAR_PAUSE;
+	}
+	*/
+
 	AS::stepActions(AS::g_actionSystem_ptr, numberLAs, numberGAs);
 	AS::stepAgents(shouldMakeDecisions, AS::g_agentDataControllerPtrs_ptr, numberLAs, numberGAs);
 }

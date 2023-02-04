@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
+VisualStudioVersion = 16.0.31515.178
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestApp", "TestApp\TestApp.vcxproj", "{8655D639-F234-55D5-FB4C-E0AB67ABBB36}"
 	ProjectSection(ProjectDependencies) = postProject
 		{6E1D9EA9-DA87-5220-23C6-03C68F6F3075} = {6E1D9EA9-DA87-5220-23C6-03C68F6F3075}
@@ -64,5 +66,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C53722B9-1B5E-4D98-90D6-B6FD2BFC5FA0}
 	EndGlobalSection
 EndGlobal

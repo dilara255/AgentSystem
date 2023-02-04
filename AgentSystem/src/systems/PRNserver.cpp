@@ -63,11 +63,17 @@ void AS::PRNserver::drawPRNs(int numberLAs, int numberGAs, int chopIndex) {
 	           
 	float invUint32max = 1.0/UINT32_MAX;	
 	uint32_t dest[DRAW_WIDTH];
-		
+	
+	/*
+	//TODO-CRITICAL: MOVE TO TEST
+	int testRepetitions = 6666;
+	std::chrono::nanoseconds start = AZ::nowNanos();
+
+	for(int i = 0; i < testRepetitions; i++){*/
 	for (int i = draw4startIndex; i < draw4indexIsSmallerThan; i++) {
 		
 		AZ::draw4spcg32s(&seeds[0], &seeds[1], &seeds[2], &seeds[3], 
-							 &dest[0], &dest[1], &dest[2], &dest[3]);
+								&dest[0], &dest[1], &dest[2], &dest[3]);
 
 		PRNs[4*i+draw4IndexOffset] = dest[0]*invUint32max;
 		PRNs[4*i+1+draw4IndexOffset] = dest[1]*invUint32max;
@@ -78,12 +84,22 @@ void AS::PRNserver::drawPRNs(int numberLAs, int numberGAs, int chopIndex) {
 	for (int i = draw1startIndex; i < chopIndexIsSmallerThan; i++) {
 		PRNs[i] = AZ::spcg32(&seeds[0])*invUint32max;
 	}
+	/* }
+	//TODO-CRITICAL: MOVE TO TEST
+	std::chrono::nanoseconds end = AZ::nowNanos();
+	std::chrono::nanoseconds deltaT = end - start;
+	int totalDraws = testRepetitions*prnsToDrawThisChop;
+	double nanosPerPRN = deltaT.count()/((double)totalDraws);
 
+	printf("\n\n#s: %d, deltaT: %llu, nanosPerPRN: %f\n",totalDraws,deltaT,nanosPerPRN);
+	*/
+	
 	drawn += prnsToDrawThisChop;
 
 	
-	//TODO-CRITICAL: Make into a test:
+	
 	/*
+	//TODO-CRITICAL: MOVE TO TEST
 	printf("\n\nchop: % d, i4: %d <= %d + i1: %d < %d (prns: %d, perChop: %d)\n", chopIndex, 
 		                                        draw4startIndex*DRAW_WIDTH+draw4IndexOffset, 
 		                                   4*(draw4indexIsSmallerThan-1)+3+draw4IndexOffset, 
