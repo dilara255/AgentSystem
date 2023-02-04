@@ -105,7 +105,7 @@ void step(uint64_t* stepsWithoutDecisions_ptr) {
 
 	stepActions();
 
-	*stepsWithoutDecisions_ptr++;
+	(*stepsWithoutDecisions_ptr)++;
 	bool shouldMakeDecisions = ((*stepsWithoutDecisions_ptr) == AS_STEPS_PER_DECISION_STEP);
 	if(shouldMakeDecisions) {*stepsWithoutDecisions_ptr = 0;}
 
@@ -130,7 +130,7 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 				*errorsAccumulated_ptr = 0;
 			}
 			else {
-				*errorsAccumulated_ptr++;
+				(*errorsAccumulated_ptr)++;
 				if (*errorsAccumulated_ptr > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
 					*hasThrownErrorsRecently_ptr = false;
 				}
@@ -149,7 +149,7 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 				*errorsAccumulated_ptr = 0;
 			}
 			else {
-				*errorsAccumulated_ptr++;
+				(*errorsAccumulated_ptr)++;
 				if (*errorsAccumulated_ptr > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
 					*hasThrownErrorsRecently_ptr = false;
 				}
