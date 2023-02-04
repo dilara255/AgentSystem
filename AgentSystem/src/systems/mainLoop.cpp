@@ -10,6 +10,8 @@
 #include "systems/AScoordinator.hpp"
 #include "systems/prnsServer.hpp"
 
+#include "timeHelpers.hpp"
+
 #define MAX_ERRORS_TO_ACCUMULATE_ON_MAIN 150
 
 namespace AS{
@@ -23,11 +25,6 @@ namespace AS{
 	networkParameters_t* g_currentNetworkParams_ptr;
 }
 
-std::chrono::microseconds nowMicros() {
-	auto now = std::chrono::steady_clock::now().time_since_epoch();
-	return std::chrono::duration_cast<std::chrono::microseconds>(now);
-}
-
 bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 							std::thread::id* mainLoopId_ptr,
 	                        std::thread* mainLoopThread_ptr,
@@ -38,7 +35,8 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 
 std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
-void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr);
+void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr,
+	                                                          int* prnChopIndex_ptr);
 void step(bool shouldMakeDecisions);
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr);
 void timeAndSleep(std::chrono::microseconds tagetStepTimeMicro,
@@ -57,33 +55,46 @@ void AS::mainLoop() {
 	int errorsAccumulated = 0;
 	uint64_t stepsWithoutDecisions = 0;
 	bool shouldMakeDecisions = false;
+	int prnChopIndex = 0;
 
-	std::chrono::microseconds stepStartTimeMicro = nowMicros();
+	std::chrono::microseconds stepStartTimeMicro = AZ::nowMicros();
 
 	do {
-		prepareStep(&stepsWithoutDecisions, &shouldMakeDecisions);
+		prepareStep(&stepsWithoutDecisions, &shouldMakeDecisions, &prnChopIndex);
 		step(shouldMakeDecisions);
 		receiveAndSendData(&hasThrownErrorsRecently, &errorsAccumulated);
 		timeAndSleep(targetStepTimeMicro, &stepStartTimeMicro);
 	} while (*g_shouldMainLoopBeRunning_ptr);
 }
 
-void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr) {
+void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr,
+	                                                          int* prnChopIndex_ptr) {
 	
 	//Should the Agents Step calculate decisions?
 	(*stepsWithoutDecisions_ptr)++;
 	*shouldMakeDecisions_ptr = ((*stepsWithoutDecisions_ptr) == AS_STEPS_PER_DECISION_STEP);
 	if(*shouldMakeDecisions_ptr) {*stepsWithoutDecisions_ptr = 0;}
 
+
 	
-	AS::g_prnServer_ptr->drawPRNs(*shouldMakeDecisions_ptr, 
-								  AS::g_currentNetworkParams_ptr->numberLAs,
-								  AS::g_currentNetworkParams_ptr->numberGAs);
+	AS::g_prnServer_ptr->drawPRNs(AS::g_currentNetworkParams_ptr->numberLAs,
+								  AS::g_currentNetworkParams_ptr->numberGAs,
+		                          *prnChopIndex_ptr);
+
+	(*prnChopIndex_ptr)++;
+	*prnChopIndex_ptr %= AS_STEPS_PER_DECISION_STEP;
 }
 
 void step(bool shouldMakeDecisions) {
 	int numberLAs = AS::g_currentNetworkParams_ptr->numberLAs;
 	int numberGAs = AS::g_currentNetworkParams_ptr->numberGAs;
+
+	if(shouldMakeDecisions){
+		AS::g_prnServer_ptr->printDataDebug();
+		GETCHAR_PAUSE;
+		GETCHAR_PAUSE;
+		GETCHAR_PAUSE;
+	}
 
 	AS::stepActions(AS::g_actionSystem_ptr, numberLAs, numberGAs);
 	AS::stepAgents(shouldMakeDecisions, AS::g_agentDataControllerPtrs_ptr, numberLAs, numberGAs);
@@ -116,7 +127,7 @@ void timeAndSleep(std::chrono::microseconds targetStepTimeMicro,
 		LOG_TRACE("Main loop will sleep first"); 
 	}
 
-	std::chrono::microseconds elapsedMicro = nowMicros() - *stepStartTimeMicro_ptr;
+	std::chrono::microseconds elapsedMicro = AZ::nowMicros() - *stepStartTimeMicro_ptr;
 	std::chrono::microseconds remainingStepTimeMicro = targetStepTimeMicro - elapsedMicro;
 		                                               
 	std::chrono::microseconds sysWakeUpDelayMicro = 
@@ -128,7 +139,7 @@ void timeAndSleep(std::chrono::microseconds targetStepTimeMicro,
 		std::this_thread::sleep_for(microsToSleep);
 	}
 
-	*stepStartTimeMicro_ptr = nowMicros();
+	*stepStartTimeMicro_ptr = AZ::nowMicros();
 
 	AS::g_currentNetworkParams_ptr->lastStepTimeMicros = elapsedMicro;
 
