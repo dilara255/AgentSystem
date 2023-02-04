@@ -1,3 +1,4 @@
+//TODO-CRITICAL: These things probably should be in a networkParameters_t handler class
 
 #include "data/dataMisc.hpp"
 
@@ -10,6 +11,7 @@ bool AS::copyNetworkParameters(networkParameters_t * destination,
 	destination->isNetworkInitialized = source->isNetworkInitialized;
 	destination->lastMainLoopStartingTick = source->lastMainLoopStartingTick;
 	destination->mainLoopTicks = source->mainLoopTicks;
+	destination->lastStepTimeMicros = source->lastStepTimeMicros;
 	destination->maxActions = source->maxActions;
 	destination->maxLAneighbours = source->maxLAneighbours;
 	strcpy(destination->name, source->name);
@@ -25,6 +27,7 @@ bool AS::defaultNetworkParameters(networkParameters_t* destination) {
 	destination->isNetworkInitialized = false;
 	destination->lastMainLoopStartingTick = 0;
 	destination->mainLoopTicks = 0;
+	destination->lastStepTimeMicros = std::chrono::microseconds(0);
 	destination->maxActions = 0;
 	destination->maxLAneighbours = 0;
 	strcpy(destination->name, "");

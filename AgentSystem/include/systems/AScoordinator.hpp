@@ -10,6 +10,7 @@ This includes:
 */
 
 #include "data/agentDataControllers.hpp"
+#include "systems/prnsServer.hpp"
 
 namespace AS {
 	extern const networkParameters_t* currentNetworkParams_cptr;
@@ -21,13 +22,15 @@ namespace AS {
 							 std::thread* mainLoopThread_ptr,
 							 ActionSystem* actionSystem_ptr, 
 							 dataControllerPointers_t* agentDataControllerPtrs_ptr,
-							 networkParameters_t* currentNetworkParams_ptr);
+							 networkParameters_t* currentNetworkParams_ptr,
+	                         AS::PRNserver* prnServer_ptr);
 	bool sendReplacementDataToCL(bool silent);
 	bool run();
 	bool stop();
 	void mainLoop();
 
-	void drawPRNs(bool willAgentsMakeDecisions);
-	void stepActions();
-	void stepAgents(bool shouldMakeDecisions);
+	class PRNserver;
+	void stepActions(ActionSystem* actionSystem_ptr, int numberLAs, int numberGAs);
+	void stepAgents(bool shouldMakeDecisions, dataControllerPointers_t* agentDataPointers_ptr,
+		                                                         int numberLAs, int numberGAs);
 }

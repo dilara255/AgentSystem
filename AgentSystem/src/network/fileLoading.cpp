@@ -496,6 +496,7 @@ bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
         LOG_INFO("Data loaded from file to data controllers.");
         return true;
     }   
+    currentNetworkParams_ptr->lastStepTimeMicros = std::chrono::microseconds(0);
 }
 
 FILE* AS::acquireFilePointerToLoad(std::string name) {
