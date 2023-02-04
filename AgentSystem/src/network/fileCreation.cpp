@@ -50,10 +50,15 @@ int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int nu
     int result = 1;
     int resultAux = 0;
     uint64_t tickCount = 0;
+    uint64_t seed0 = DEFAULT_PRNG_SEED0;
+    uint64_t seed1 = DEFAULT_PRNG_SEED1;
+    uint64_t seed2 = DEFAULT_PRNG_SEED2;
+    uint64_t seed3 = DEFAULT_PRNG_SEED3;
 
     //Header, with version control, network sizes, comment and tick count (0)
     resultAux = fprintf(fp, headerLine,
-        FILE_FORMAT_VERSION, numberGAs, numberLAs, maxNeighbors, maxActions, tickCount);
+        FILE_FORMAT_VERSION, numberGAs, numberLAs, maxNeighbors, maxActions, tickCount,
+                                                            seed0, seed1, seed2, seed3);
     result *= (resultAux > 0); //fprintf returns negative number on error
     
     resultAux = fprintf(fp, commentLine, comment.c_str());
@@ -604,7 +609,8 @@ bool AS::createNetworkFileFromData(FILE* fp,
 
     //Header, with version control, network sizes and comment
     resultAux = fprintf(fp, headerLine, FILE_FORMAT_VERSION, pp->numberGAs, 
-                        pp->numberLAs, pp->maxLAneighbours, pp->maxActions, pp->mainLoopTicks);
+                        pp->numberLAs, pp->maxLAneighbours, pp->maxActions, pp->mainLoopTicks,
+                                       pp->seeds[0], pp->seeds[1], pp->seeds[2], pp->seeds[3]);
     result &= (resultAux > 0); //fprintf returns negative number on error
 
     resultAux = fprintf(fp, commentLine, pp->comment);

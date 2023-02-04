@@ -47,6 +47,7 @@ and data sizes static.
 #define GA_FIELDS_TO_DEDUCE_EXPECTED 10
 #define PRNS_PER_FIELD_DEDUCED 2
 #define PRNS_TO_CHOOSE_ACTION 1
+#define DRAW_WIDTH 4
 
 //DEFAULT values for new network creation:
 #define DEFAULT_ONOFF (true)
@@ -76,6 +77,10 @@ and data sizes static.
 #define DEFAULT_LAST_TICK 1
 #define DEFAULT_INTENSITY (-3.0)
 #define DEFAULT_ACTION_AUX (99.0)
+#define DEFAULT_PRNG_SEED0 0x2545f4914f6cdd1d
+#define DEFAULT_PRNG_SEED1 (0x2545f4914f6cdd1d + 1595721457336359713)
+#define DEFAULT_PRNG_SEED2 (0x2545f4914f6cdd1d*3)
+#define DEFAULT_PRNG_SEED3 1595721457336359713
 
 //TEST-related defines:
 #define TST_NUMBER_LAS 15
@@ -114,6 +119,7 @@ namespace AS {
 		int maxActions;
 		char name[NAME_LENGHT];
 		char comment[COMMENT_LENGHT];
+		uint64_t seeds[DRAW_WIDTH];
 	} AS_API networkParameters_t;
 
 	enum gaPersonalityTraits {

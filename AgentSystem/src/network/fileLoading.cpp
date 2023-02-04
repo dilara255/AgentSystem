@@ -33,8 +33,9 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     int tokensRead;
 
     tokensRead = fscanf(fp, headerLine, &version, &pp->numberGAs, &pp->numberLAs,
-        &pp->maxLAneighbours, &pp->maxActions, &pp->mainLoopTicks);
-    result &= (tokensRead == 6); //TODO: maybe bundle the number of tokens with the format?
+                       &pp->maxLAneighbours, &pp->maxActions, &pp->mainLoopTicks,
+                      &pp->seeds[0], &pp->seeds[1], &pp->seeds[2], &pp->seeds[3]);
+    result &= (tokensRead == 10); //TODO: maybe bundle the number of tokens with the format?
 
     LOG_TRACE("Will load the comment line...");
 
@@ -511,9 +512,11 @@ bool AS::fileIsCompatible(FILE* fp) {
 
     int version, GAs, LAs, maxNeighbours, maxActions;
     uint64_t ticks;
+    uint64_t seeds[DRAW_WIDTH];
 
-    int tokens = fscanf(fp, headerLine, &version, &GAs, &LAs, &maxNeighbours, &maxActions, &ticks);
-    if (tokens != 6) {
+    int tokens = fscanf(fp, headerLine, &version, &GAs, &LAs, &maxNeighbours, &maxActions,
+                                       &ticks, &seeds[0], &seeds[1], &seeds[2], &seeds[3]);
+    if (tokens != 10) {
         LOG_ERROR("Couldn't read all tokens from header to validade file format. Aborting load.");
         return false;
     }

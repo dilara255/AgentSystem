@@ -16,8 +16,6 @@ Has methods to:
 
 #include "timeHelpers.hpp"
 
-#define DRAW_WIDTH 4
-
 bool isLastChopForPRNG(int chop) {
 	
 	//if decisions are made every 4 steps, we calculate the PRNGs in the first 3 steps.
@@ -62,13 +60,6 @@ void AS::PRNserver::drawPRNs(int numberLAs, int numberGAs, int chopIndex) {
 		LOG_ERROR("Trying to draw more than the maximum number of PRNs: will abort generation");
 		return;
 	}
-
-	//TODO-CRITICAL: take this out of here (default seeds + setting on load)
-	//WHILE THIS IS HERE EVERY STEP GETS SAME VALUES
-	seeds[0] = 0x2545f4914f6cdd1d;
-	seeds[1] = 0x2545f4914f6cdd1d + 1595721457336359713;
-	seeds[2] = 0x2545f4914f6cdd1d*3;
-	seeds[3] = 1595721457336359713;
 	           
 	float invUint32max = 1.0/UINT32_MAX;	
 	uint32_t dest[DRAW_WIDTH];
