@@ -87,92 +87,130 @@ bool AS::run() {
 	return true;
 }
 
-//Main loop STARTS sleeping, does its thing*, consumes Client Changes and sends data to the CL.
-//After this it just updates timmings. Ticks are updated right before AS sends its data.
-//*includes progressing all actions and updating the states and the decisions of each agent;
-//TODO: implement what is described : )
-void AS::mainLoop() {
-	uint64_t initialTick = g_currentNetworkParams_ptr->mainLoopTicks;
+void prepareStep() {
+	return;
+}
 
-	std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
-	//std::chrono::microseconds stepStartTime;
-	std::chrono::microseconds durationThisStepMicro = zeroMicro;
-	std::chrono::microseconds tagetStepTimeMicro = std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
-	std::chrono::microseconds timeToSleepMicro = zeroMicro;
-	
-	bool result = false;
-	bool hasThrownErrorsRecently = false;
-	int errorsAccumulated = 0;
+void stepActions() {
+	return;
+}
 
-	do {
-		if (!*g_shouldMainLoopBeRunning_ptr)
-			{ LOG_TRACE("Main loop will sleep first"); }
+void stepAgents(bool shouldMakeDecisions) {
+	return;
+}
 
-		//fflush(stdout);
-		std::this_thread::sleep_for(timeToSleepMicro);
+#define AS_STEPS_PER_DECISION_STEP 2
 
-		//stepStartTime = blah (get the current time in micro)
-		
-		//do stuff
+void step(uint64_t* stepsWithoutDecisions_ptr) {
 
-		if (!*g_shouldMainLoopBeRunning_ptr) 
+	stepActions();
+
+	*stepsWithoutDecisions_ptr++;
+	bool shouldMakeDecisions = ((*stepsWithoutDecisions_ptr) == AS_STEPS_PER_DECISION_STEP);
+	if(shouldMakeDecisions) {*stepsWithoutDecisions_ptr = 0;}
+
+	stepAgents(shouldMakeDecisions);
+}
+
+void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr) {
+	if (!*AS::g_shouldMainLoopBeRunning_ptr) 
 			{ LOG_TRACE("Main loop will get Client Data"); }
 
-		result = CL::getNewClientData(g_currentNetworkParams_ptr, 
-			                          g_agentDataControllerPtrs_ptr,
-									  &(g_actionSystem_ptr->data), 
-			                          *g_shouldMainLoopBeRunning_ptr);
+		bool result = CL::getNewClientData(AS::g_currentNetworkParams_ptr, 
+			                               AS::g_agentDataControllerPtrs_ptr,
+						   			       &(AS::g_actionSystem_ptr->data), 
+			                               *AS::g_shouldMainLoopBeRunning_ptr);
 		
 		//TODO: Extract
 		if (!result) { 
-			if (!hasThrownErrorsRecently) {
+			if (!(*hasThrownErrorsRecently_ptr)) {
 				LOG_ERROR("Failed to get Client Data!"); 
-				printf("(had accumulated %d errors before this)",errorsAccumulated);
-				hasThrownErrorsRecently = true;
-				errorsAccumulated = 0;
+				printf("(had accumulated %d errors before this)",*errorsAccumulated_ptr);
+				*hasThrownErrorsRecently_ptr = true;
+				*errorsAccumulated_ptr = 0;
 			}
 			else {
-				errorsAccumulated++;
-				if (errorsAccumulated > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
-					hasThrownErrorsRecently = false;
+				*errorsAccumulated_ptr++;
+				if (*errorsAccumulated_ptr > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
+					*hasThrownErrorsRecently_ptr = false;
 				}
 			}
 		}
 		
-		if (!*g_shouldMainLoopBeRunning_ptr) 
-			{ LOG_TRACE("Main loop will update ticks"); }
-
-		g_currentNetworkParams_ptr->mainLoopTicks++;
-
-		if (!*g_shouldMainLoopBeRunning_ptr) 
+		if (!*AS::g_shouldMainLoopBeRunning_ptr) 
 			{ LOG_TRACE("Main loop will send AS Data to CL"); }
 
-		result = sendReplacementDataToCL(true);
+		result = AS::sendReplacementDataToCL(true);
 		if (!result) { 
-			if (!hasThrownErrorsRecently) {
+			if (!(*hasThrownErrorsRecently_ptr)) {
 				LOG_ERROR("Failed to send AS Data to the CL!");
-				printf("(had accumulated %d errors before this)",errorsAccumulated);
-				hasThrownErrorsRecently = true;
-				errorsAccumulated = 0;
+				printf("(had accumulated %d errors before this)",*errorsAccumulated_ptr);
+				*hasThrownErrorsRecently_ptr = true;
+				*errorsAccumulated_ptr = 0;
 			}
 			else {
-				errorsAccumulated++;
-				if (errorsAccumulated > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
-					hasThrownErrorsRecently = false;
+				*errorsAccumulated_ptr++;
+				if (*errorsAccumulated_ptr > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
+					*hasThrownErrorsRecently_ptr = false;
 				}
 			}
-		}
+		}	
+}
 
-		if (!*g_shouldMainLoopBeRunning_ptr) 
-			{ LOG_TRACE("Main loop will calculate time to sleep"); }
+std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
-		//durationThisStepMicro = "current time in micro" - stepStartTime
-		timeToSleepMicro = tagetStepTimeMicro - durationThisStepMicro;
-		if(timeToSleepMicro < zeroMicro) timeToSleepMicro = zeroMicro;
+std::chrono::microseconds nowMicros() {
+	auto now = std::chrono::steady_clock::now().time_since_epoch();
+	return std::chrono::duration_cast<std::chrono::microseconds>(now);
+}
 
-		if (!*g_shouldMainLoopBeRunning_ptr)
-			{ LOG_TRACE("Main loop should stop now!"); }
+std::chrono::microseconds sysWakeUpDelayMicros = 
+										std::chrono::microseconds(SYS_WAKEUP_DELAY_MICROS);
 
+void timeAndSleep(std::chrono::microseconds tagetStepTimeMicro,
+	              std::chrono::microseconds* stepStartTimeMicro_ptr) {
+	
+	if (!*AS::g_shouldMainLoopBeRunning_ptr) { 
+		LOG_TRACE("Main loop will sleep first"); 
+	}
+
+	std::chrono::microseconds elapsedMicro = nowMicros() - *stepStartTimeMicro_ptr;
+	std::chrono::microseconds microsToSleep = tagetStepTimeMicro - elapsedMicro - 
+		                                                      sysWakeUpDelayMicros;
+	
+	if(microsToSleep > zeroMicro) {
+		std::this_thread::sleep_for(microsToSleep);
+	}
+
+	*stepStartTimeMicro_ptr = nowMicros();
+
+	AS::g_currentNetworkParams_ptr->lastStepTimeMicros = elapsedMicro;
+
+	AS::g_currentNetworkParams_ptr->mainLoopTicks++;	
+
+	if (!*AS::g_shouldMainLoopBeRunning_ptr) { 
+		LOG_TRACE("Main loop should stop now!"); 
+	}
+}
+
+void AS::mainLoop() {
+	uint64_t initialTick = g_currentNetworkParams_ptr->mainLoopTicks;
+
+
+	std::chrono::microseconds tagetStepTimeMicro = 
+		                       std::chrono::microseconds(TST_MAINLOOP_FREQUENCY_MS*1000);
+	
+	bool hasThrownErrorsRecently = false;
+	int errorsAccumulated = 0;
+	uint64_t stepsWithoutDecisions = 0;
+
+	std::chrono::microseconds stepStartTimeMicro = nowMicros();
+
+	do {
+		prepareStep();
+		step(&stepsWithoutDecisions);
+		receiveAndSendData(&hasThrownErrorsRecently, &errorsAccumulated);
+		timeAndSleep(tagetStepTimeMicro, &stepStartTimeMicro);
 	} while (*g_shouldMainLoopBeRunning_ptr);
 }
 
