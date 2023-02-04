@@ -26,7 +26,7 @@ uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK];
 CL::ClientData::Handler* cdHandler_ptr;
 
 int main(void) {
-	
+
 	testSayHello();
 
 	LOG_INFO("AS, CL-internal and CL-external should have said hello above : )");

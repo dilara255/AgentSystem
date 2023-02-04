@@ -72,7 +72,8 @@ namespace AS {
 	class ActionVariations {
 	public:
 
-		//see AS::actionAvailability enum (now: 0: not, 1: specific, -1: standard)
+		//see AS::actionAvailability enum in actionData.hpp
+		//(right now, it is: 0: not, 1: specific, -1: standard)
 		int isVariationValid(int category, int mode, int scope) {
 			return availableVariations[category][mode][scope];
 		}	
@@ -163,7 +164,7 @@ namespace AS {
 		//TODO: Review these when action system is implemented
 		const int availableVariations[TOTAL_CATEGORIES][TOTAL_MODES][TOTAL_SCOPES] = {
 			
-			//KEY for the numbers: see AS::actionAvailability enum above
+			//KEY for the numbers: see AS::actionAvailability enum on actionData.hpp
 			//Innermost Order is: { LOCAL, GLOBAL }
 			
 			            //STRENGHT                            //RESOURCES                
@@ -192,7 +193,8 @@ namespace AS {
 
 		bool initializeDataController(const networkParameters_t* pp,
 			                     const ActionDataController** actionDataController_cptr_ptr);
-		//TODO: the actual system to use these
+		
+		//TODO-CRITICAL: is the system done? Is this a "system"? Should rename? : p
 
 		bool initialize(const ActionSystem** actionSystem_cptr_ptr) {
 			LOG_TRACE("Initializing Action System (stub)");
