@@ -106,7 +106,7 @@ namespace AS {
 		float dispositionToNeighborsLastStep[MAX_LA_NEIGHBOURS];
 
 		enum class fields { STANCE, DISPOSITION, DISPOSITION_LAST_STEP,
-						    TOTAL_GA_RELATION_PARAMETERS };
+						    TOTAL_LA_RELATION_PARAMETERS };
 	} AS_API LAneighborRelations_t;
 
 	typedef struct {

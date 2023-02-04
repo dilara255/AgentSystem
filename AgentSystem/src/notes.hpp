@@ -111,21 +111,37 @@
 *
 * -Understand why x86 versions are getting crazy tick values;
 * -Understand why saving can sometimes take a while (but don't loose sleep over it);
-* >See if I need to rework offsets;
 * 
-* -Implement skeleton of main loop, with dumb loop stubs;
-* --Implement timing of main loop;
-* --The goal here is to get the AS loop to work as expected and emit mesages from each "leaf";
+* > 1. Basic structure:
+* 
+* -Review notes, sketch on paper;
+* > -Implement skeleton of main loop, with dummy loop stubs;
+* --Implement timing of main loop (and lastTickTime to params);
+* --The goal here is to get the AS loop to work as expected and emit messages from each "leaf";
 * --Start populating the systems files;
+* 
+* 2. PRNG:
+* 
+* -Create PRNG system (and add them to their step and time it);
+* 
+* 3. Updates:
+* 
 * -Implement state self-updating (ie, from income and upkeep, no actions involved);
-* -Update information and expected values. 
-* --WILL HAVE TO SOLVE HOW TO SAVE THIS
-* -Add "desires" data structure (no need to save them, as they're calculated per-step);
-* -PRNG system;
-* -Couple of simplified decisions and actions (and watever is necessary for that)
+* -Update information and expected values;
+* --Add data structure for expected values;
+* --WILL HAVE TO SOLVE HOW TO SAVE THIS (at the bottom of the file seems good);
+* 
+* 4. Notions:
+* 
+* -Add "notions" data structure (no need to save them, as they're calculated per-step);
+* 
+* 5. MVP:
+* 
+* -Couple of simplified decisions and actions (and watever is necessary for that);
+* --Data structure to hold action-decision scores, zero for all other actions;
 * --Should just run their course and have a simple resolution;
-* -Complete 3c-e for a few more of the most relevant fields;
-* --Check we have at least one of each data type and add to testing;
+* -Complete 3.2.c-e for a few more of the most relevant fields;
+* --Check that we have at least one of each data type and add to testing;
 * 
 * Cleanup, some (in-code) documentation, and fresh pull+compile test
 *
@@ -135,33 +151,40 @@
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
-* * ***** Minor 6. More groundwork *****
+* * ***** Minor 6. More groundwork and Technical Debt *****
 *
-* Any groundwork necessary before focusing on behaviour.
-* Specially the sub-loops of different systems (eg Decision and Action).
-*
-* Cleanup, documentation (update specs), and fresh pull+compile test
+* - Technical debt pass;
+* -- Take a look at technical debt and TODOs (especially CRITICALs);
+* -- Prioritize what to deal with now, document the rest;
 * 
+* - Any groundwork still necessary before focusing on behaviour;
+*
 * ***** Minor 7. Basic decision making and actions *****
 *
 * A complete, but very simple version of the AS.
 * Very simple versions of all initially expected actions.
-* One Action for GAs and another for LAs made in more detail.
 * 
 * Validation of the basic system and initial exploration of the decision process.
 *
-* Cleanup, documentation, and fresh pull+compile test
-*
 * ***** Minor 8. Behaviour *****
 *
-* Developing actions and decision procedures and checking the results.
-* The goal is to have the initial minimum expected functionality in order. Fuck Equilibrium.
 *
-* Cleanup, documentation, and fresh pull+compile test
+* => MAY MERGE WITH PREVIOUS MINOR:
+* - Minimum necessary detailed behaviour + reasonable behaviour for the rest, so that:
+* -- We have the initial minimum expected functionality in order. Fuck Equilibrium.
+* -- We can check that agent growth can be kept under control;
+* -- We can check the emergency of one key "complex" scnario with the detailed behaviour;
+* 
 *
 * ***** Major 1. Tying things up *****
 *
-* A last pass and some more testing, including a final fresh clone+compile test.
+* - A last pass on TODO's, documenting any left behind;
+* - A last cleanup and comments pass;
+* - A last pass on tests and possible bugs;
+* - Fresh clone+compile, plus testing on other pcs;
+* - Updated specification, diagrams and results;
+* - Video with overview of results;
+* - Delivery;
 *
 * *************************************
 *
