@@ -1,29 +1,66 @@
 #include "systems/AScoordinator.hpp"
+#include "systems/diplomacy.hpp"
 
-void updateLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
-void updateGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
+void updateLA(LA::stateData_t* state_ptr, int agentId, AS::dataControllerPointers_t* agentDataPtrs_ptr);
+void updateGA(GA::stateData_t* state_ptr, int agentId, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
 void AS::stepAgents(bool shouldMakeDecisions, dataControllerPointers_t* dp,
 	                                          int numberLAs, int numberGAs) {
 	
-	for (int i = 0; i < numberLAs; i++) {
-		updateLA(i, dp);
+	std::vector<LA::stateData_t>* LAstateData_ptr = dp->LAstate_ptr->getDirectDataPtr();
+
+	for (int i = 0; i < numberLAs; i++) {	
+		updateLA(&LAstateData_ptr->at(i), i, dp);
 		if(shouldMakeDecisions) makeDecisionLA(i, dp);
 	}
 	
+	std::vector<GA::stateData_t>* GAstateData_ptr = dp->GAstate_ptr->getDirectDataPtr();
+
 	for (int i = 0; i < numberGAs; i++) {
-		updateGA(i, dp);
+		updateGA(&GAstateData_ptr->at(i), i, dp);
 		if(shouldMakeDecisions) makeDecisionGA(i, dp);
 	}
 }
 
-void updateLA(int agent, AS::dataControllerPointers_t* dp) {
+void updateLA(LA::stateData_t* state_ptr, int agentId, AS::dataControllerPointers_t* dp) {
+	
+	if (state_ptr->onOff == false) {
+		return;
+	}
 
+	AS::resources_t* res_ptr = &state_ptr->parameters.resources;
+	AS::strenght_t* str_ptr = &state_ptr->parameters.strenght;
+
+	float timeFactor = AS_MILLISECONDS_PER_STEP/1000;
+
+	//External guard costs a portion of upkeep for each agent:
+	float externalUpkeep = str_ptr->externalGuard*EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
+	//upkeep is lienar with strenght above trheshold:
+	str_ptr->currentUpkeep = str_ptr->current + externalUpkeep - str_ptr->thresholdToCostUpkeep;
+	if(str_ptr->currentUpkeep < 0) str_ptr->currentUpkeep = 0;
+
+	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep)*timeFactor;
+	
+	int quantityNeighbours = state_ptr->locationAndConnections.numberConnectedNeighbors;
+	for (int i = 0; i < quantityNeighbours; i++) {
+		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[i];
+
+		if ((stance == AS::diploStance::TRADE) || (stance == AS::diploStance::ALLY_WITH_TRADE)) {
+			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
+			res_ptr->current += LA::calculateTradeIncome(partnerID, stance, dp);
+
+		}
+
+		if ((stance == AS::diploStance::WAR)) {
+			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
+			str_ptr->current -= LA::calculateAttritionLosses(agentId, partnerID, dp);
+		}
+	}
 }
 
-void updateGA(int agent, AS::dataControllerPointers_t* dp) {
+void updateGA(GA::stateData_t* state_ptr, int agentId, AS::dataControllerPointers_t* dp) {
 
 }
 

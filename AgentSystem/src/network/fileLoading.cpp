@@ -168,7 +168,7 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
                 return false;
             }
 
-            state.relations.diplomaticStanceToNeighbors[otherId] = stance;
+            state.relations.diplomaticStanceToNeighbors[otherId] = (AS::diploStance)stance;
             state.relations.dispositionToNeighbors[otherId] = disposition;
             state.relations.dispositionToNeighborsLastStep[otherId] = dispositionLastStep;
             decision.infiltration[otherId] = infiltration;
@@ -318,7 +318,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
             return false;
         }
 
-        state.relations.diplomaticStanceToNeighbors[otherId] = stance;
+        state.relations.diplomaticStanceToNeighbors[otherId] = (AS::diploStance)stance;
         state.relations.dispositionToNeighbors[otherId] = disposition;
         decision.infiltration[otherId] = infiltration;
     }

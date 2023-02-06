@@ -3,7 +3,7 @@
 /*
 * WARNING: THIS FILE WILL BE EXPOSED TO THE APPLICATION!
 * - TODO: MOVE TO API/AS_dataTypes
-* - TODO: Moce into namespace and turn enums into enum classes
+* - TODO: Move into namespace and turn enums into enum classes
 
 This file:
 - Describes the data structure of actions;
