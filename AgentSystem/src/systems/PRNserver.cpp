@@ -14,46 +14,75 @@ Has methods to:
 #include "logAPI.hpp"
 #include "prng.hpp"
 
+#include "network/fileFormat.hpp"
 #include "timeHelpers.hpp"
+#include "fileHelpers.h"
 
-bool isLastChopForPRNG(int chop) {
-	
-	//if decisions are made every 4 steps, we calculate the PRNGs in the first 3 steps.
-	//That 3 is "TOTAL_PRNG_CHOPS". Usually, we use n-1 steps for prng and 1 for decisions
-	//exception: if we decide every step, then prng + decision happens every step
-	//this exception is already handled by the "TOTAL_PRNG_CHOPS" macro
+static const char* defaultPRNGdumpFilename = "dumpPRNG";
 
-	return chop == (TOTAL_PRNG_CHOPS - 1);
+bool AS::PRNserver::dumpData(std::string filename) {
+
+	LOG_TRACE("Dumping PRNG info");
+
+	std::string name;
+
+	if (filename == "") {
+        name = std::string(defaultPRNGdumpFilename);
+    }
+    else {
+        name = filename;
+    }
+
+	FILE* fp = AZ::acquireFilePointerToSave(name, false, defaultFilePath);
+
+	if (fp == NULL) {
+        LOG_ERROR("Couldn't create the file (check if folders exist), aborting creation...");
+        return false;
+    }
+
+	LOG_TRACE("File Acquired, will write");
+
+	int result = 1;
+	int resultAux = 0;
+
+	resultAux = fprintf(fp, "PRNG DUMP:\nGENERATED: %d:\n\n", drawn);
+    result *= (resultAux > 0);
+
+	resultAux = fprintf(fp, "Current Seeds: %llu, %llu, %llu, %llu\n\nPRNs:\n\n",
+				                 seeds[0], seeds[1], seeds[2], seeds[3]);
+    result *= (resultAux > 0);
+
+	for (int i = 0; i < drawn; i++) {
+		 fprintf(fp, "%f\n", PRNs[i]);
+		 result *= (resultAux > 0);
+	}
+
+    resultAux = fputs("\n**** END OF PRNG DUMP ****\n", fp);
+	if (resultAux == EOF) {result *= 0;} //fputs returns EOF on error
+
+	if (!result) {
+		LOG_ERROR("Failed Writting PRNG Dump to File!");
+	}
+	return result;
 }
 
 //TODO-CRITICAL: Implement chop test at least
 //TODO-CRITICAL: clean up / extract stuff / comment
-void AS::PRNserver::drawPRNs(int numberLAs, int numberGAs, int chopIndex) {
-	
-	int totalPrnsToDraw = PRNS_PER_LA*numberLAs + PRNS_PER_GA*numberGAs + MAX_ACT_PRNS;
-	int prnsToDrawPerRegularChop = totalPrnsToDraw / TOTAL_PRNG_CHOPS;
-	int remainderPRNs = totalPrnsToDraw % TOTAL_PRNG_CHOPS;
-
-	int prnsToDrawThisChop = prnsToDrawPerRegularChop;
-	if (isLastChopForPRNG(chopIndex)) {
-		prnsToDrawThisChop += remainderPRNs;
-	}
-	else if (chopIndex == 0) {
+void AS::PRNserver::drawPRNs(int chopIndex, int PRNsToDrawThisChop, int PRNsToDrawTotal) {
+		
+	if (chopIndex == 0) {
 		drawn = 0;
 		nextToUse = 0;
 	}
-	else if (chopIndex == TOTAL_PRNG_CHOPS) {
-		//we've generated all PRNs, this step is dedicated to decision-making
-		return;
-	}
-
+	
+	int prnsToDrawPerRegularChop = PRNsToDrawTotal / AS_TOTAL_CHOPS;
 	int draw4startIndex = (prnsToDrawPerRegularChop/DRAW_WIDTH) * chopIndex;
 	int draw4IndexOffset = (prnsToDrawPerRegularChop*chopIndex) - draw4startIndex*DRAW_WIDTH;
-	int itersDraw4 = prnsToDrawThisChop / DRAW_WIDTH;
+	int itersDraw4 = PRNsToDrawThisChop / DRAW_WIDTH;
 	int draw4indexIsSmallerThan = draw4startIndex + itersDraw4;
 	
-	int chopIndexIsSmallerThan = (prnsToDrawPerRegularChop*chopIndex) + prnsToDrawThisChop;
-	int itersDraw1 = prnsToDrawThisChop % DRAW_WIDTH;
+	int chopIndexIsSmallerThan = (prnsToDrawPerRegularChop*chopIndex) + PRNsToDrawThisChop;
+	int itersDraw1 = PRNsToDrawThisChop % DRAW_WIDTH;
 	int draw1startIndex = chopIndexIsSmallerThan - itersDraw1;
 
 	if(chopIndexIsSmallerThan >= MAX_PRNS) {
@@ -94,7 +123,7 @@ void AS::PRNserver::drawPRNs(int numberLAs, int numberGAs, int chopIndex) {
 	printf("\n\n#s: %d, deltaT: %llu, nanosPerPRN: %f\n",totalDraws,deltaT,nanosPerPRN);
 	*/
 	
-	drawn += prnsToDrawThisChop;
+	drawn += PRNsToDrawThisChop;
 
 	
 	

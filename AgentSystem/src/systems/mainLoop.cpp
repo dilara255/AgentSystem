@@ -26,6 +26,7 @@ namespace AS{
 	dataControllerPointers_t* g_agentDataControllerPtrs_ptr;
 	networkParameters_t* g_currentNetworkParams_ptr;
 
+	//TODO: CHANGE NAME (not really just about micro seconds any more)
 	struct timingMicros_st {
 		uint64_t ticks = 0;
 		float timeMultiplier;
@@ -53,11 +54,15 @@ namespace AS{
 
 std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
-void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr,
-	                                                          int* prnChopIndex_ptr);
-void step(bool shouldMakeDecisions, float timeMultiplier);
+void prepareStep(AS::chopControl_st* chopControl_ptr);
+void step(AS::chopControl_st chopControl, float timeMultiplier);
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr);
 void timeAndSleep(AS::timingMicros_st* timing_ptr);
+
+int getTotalPRNsToDraw(int numberLAs, int numberGAs);
+inline bool isLastChop(int chopIndex);
+int howManyPRNsThisCHop(int chopIndex, int numberLAs, int numberGAs);
+int howManyDecisionsThisChop(int chopIndex, int numberAgents);
 
 void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
 	               std::chrono::steady_clock::time_point* newReferenceTime,
@@ -77,15 +82,15 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 
 void AS::mainLoop() {
 	//setup:
-	uint64_t initialTick = g_currentNetworkParams_ptr->mainLoopTicks;
-	
 	bool hasThrownErrorsRecently = false;
 	int errorsAccumulated = 0;
-	uint64_t stepsWithoutDecisions = 0;
-	bool shouldMakeDecisions = false;
-	int prnChopIndex = 0;
 
 	timingMicros_st timingMicros;
+	chopControl_st chopControl;
+	chopControl.numberLAs = g_currentNetworkParams_ptr->numberLAs;
+	chopControl.numberGAs = g_currentNetworkParams_ptr->numberGAs;
+	chopControl.totalPRNsNeeded = 
+		            getTotalPRNsToDraw(chopControl.numberLAs, chopControl.numberGAs);
 	
 	timingMicros.targetStepTime = 
 		            std::chrono::milliseconds(AS_MILLISECONDS_PER_STEP);
@@ -97,11 +102,11 @@ void AS::mainLoop() {
 
 	//Actual loop:
 	do {
-		prepareStep(&stepsWithoutDecisions, &shouldMakeDecisions, &prnChopIndex);
+		prepareStep(&chopControl);
 		timeOperation(timingMicros.endTimmingAndSleep, &timingMicros.endPreparation,
 		                                       &timingMicros.totalMicrosPreparation);
 		
-		step(shouldMakeDecisions, timingMicros.timeMultiplier);
+		step(chopControl, timingMicros.timeMultiplier);
 		timeOperation(timingMicros.endPreparation, &timingMicros.endStep,
 			                               &timingMicros.totalMicrosStep);
 
@@ -117,32 +122,37 @@ void AS::mainLoop() {
 	calculateAndprintMainTimingInfo(timingMicros);
 }
 
-void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr,
-	                                                          int* prnChopIndex_ptr) {
+void prepareStep(AS::chopControl_st* chopControl_ptr) {
 	
-	//Should the Agents Step calculate decisions?
-	(*stepsWithoutDecisions_ptr)++;
-	*shouldMakeDecisions_ptr = ((*stepsWithoutDecisions_ptr) == AS_STEPS_PER_DECISION_STEP);
-	if(*shouldMakeDecisions_ptr) {*stepsWithoutDecisions_ptr = 0;}
+	int numLAs = chopControl_ptr->numberLAs;
+	int numGAs = chopControl_ptr->numberGAs;
 
-	AS::g_prnServer_ptr->drawPRNs(AS::g_currentNetworkParams_ptr->numberLAs,
-								  AS::g_currentNetworkParams_ptr->numberGAs,
-		                          *prnChopIndex_ptr);
+	//How many PRNs should be generated this tick?
+	chopControl_ptr->PRNsToDrawThisChop =
+	                howManyPRNsThisCHop(chopControl_ptr->chopIndex, numLAs, numGAs);
+
+	AS::g_prnServer_ptr->drawPRNs(chopControl_ptr->chopIndex, 
+			chopControl_ptr->PRNsToDrawThisChop, chopControl_ptr->totalPRNsNeeded);
+
 	for (int i = 0; i < DRAW_WIDTH; i++) {
 		AS::g_currentNetworkParams_ptr->seeds[i] = AS::g_prnServer_ptr->getSeed(i);
-		static double dummyAcc = 0; 
-		dummyAcc += AS::g_prnServer_ptr->getNext();
 	}
-	
 
-	(*prnChopIndex_ptr)++;
-	*prnChopIndex_ptr %= AS_STEPS_PER_DECISION_STEP;
+	//How many decisions should the Agents Step calculate this tick?
+	chopControl_ptr->LAdecisionsToMake = 
+		               howManyDecisionsThisChop(chopControl_ptr->chopIndex, numLAs);
+	chopControl_ptr->GAdecisionsToMake = 
+		               howManyDecisionsThisChop(chopControl_ptr->chopIndex, numGAs);
+	
+	
+	chopControl_ptr->chopIndex++;
+	chopControl_ptr->chopIndex %= AS_TOTAL_CHOPS;
 }
 
-void step(bool shouldMakeDecisions, float timeMultiplier) {
+void step(AS::chopControl_st chopControl, float timeMultiplier) {
 	
-	int numberLAs = AS::g_currentNetworkParams_ptr->numberLAs;
-	int numberGAs = AS::g_currentNetworkParams_ptr->numberGAs;
+	int numberLAs = chopControl.numberLAs;
+	int numberGAs = chopControl.numberGAs;
 
 	/*
 	//TODO-CRITICAL: MOVE TO TEST
@@ -153,8 +163,10 @@ void step(bool shouldMakeDecisions, float timeMultiplier) {
 	*/
 
 	AS::stepActions(AS::g_actionSystem_ptr, numberLAs, numberGAs, timeMultiplier);
-	AS::stepAgents(shouldMakeDecisions, AS::g_agentDataControllerPtrs_ptr, 
-		                             numberLAs, numberGAs, timeMultiplier);
+
+	AS::stepAgents(chopControl.LAdecisionsToMake, chopControl.GAdecisionsToMake, 
+		                                      AS::g_agentDataControllerPtrs_ptr, 
+		                                   timeMultiplier, numberLAs, numberGAs);
 }
 
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr) {
@@ -296,6 +308,31 @@ void calculateAndprintMainTimingInfo(AS::timingMicros_st timingMicros) {
 
 	GETCHAR_PAUSE;
 #endif //AS_DEBUG
+}
+
+int getTotalPRNsToDraw(int numberLAs, int numberGAs) {
+	return PRNS_PER_LA*numberLAs + PRNS_PER_GA*numberGAs + MAX_ACT_PRNS;
+}
+
+inline bool isLastChop(int chopIndex) {
+	return (chopIndex == (AS_TOTAL_CHOPS-1));
+}
+
+int howManyPRNsThisCHop(int chopIndex, int numberLAs, int numberGAs) {
+
+	int totalPrnsToDraw = getTotalPRNsToDraw(numberLAs, numberGAs);
+	int prnsToDrawPerRegularChop = totalPrnsToDraw / AS_TOTAL_CHOPS;
+	int remainderPRNs = totalPrnsToDraw % AS_TOTAL_CHOPS;
+
+	return (prnsToDrawPerRegularChop + (isLastChop(chopIndex))*remainderPRNs);
+}
+
+int howManyDecisionsThisChop(int chopIndex, int numberAgents) {
+
+	int decisionsToTakePerRegularChop = numberAgents / AS_TOTAL_CHOPS;
+	int remainderDecisions = numberAgents % AS_TOTAL_CHOPS;
+
+	return (decisionsToTakePerRegularChop + (isLastChop(chopIndex))*remainderDecisions);
 }
 
 bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
