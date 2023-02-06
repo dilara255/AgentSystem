@@ -30,7 +30,7 @@ and data sizes static.
 //FIXED parameters:
 #define NAME_LENGHT 30
 #define COMMENT_LENGHT 250
-#define DIPLOMATIC_STANCES 5
+#define DIPLOMATIC_STANCES 5 //TODO: this would be better left to the enum class diploStances
 #define MAX_LA_NEIGHBOURS 10
 #define MAX_GA_QUANTITY 16 //NOTE: last one is reserved to "belong to no GA"
 #define MAX_LA_QUANTITY 128
@@ -48,6 +48,14 @@ and data sizes static.
 #define PRNS_PER_FIELD_DEDUCED 2
 #define PRNS_TO_CHOOSE_ACTION 1
 #define DRAW_WIDTH 4
+#define EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED (0.5)
+#define EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDER (1-EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED)
+#define TRADE_SATURATION_MULTIPLIER (1.0)
+#define TRADE_SATURATION_FROM_WAR 3
+#define TRADE_SATURATION_FROM_NEUTRAL 0
+#define TRADE_SATURATION_FROM_TRADE 1
+#define TRADE_SATURATION_FROM_ALLY 1
+#define TRADE_SATURATION_FROM_ALLY_WITH_TRADE 2
 
 //DEFAULT values for new network creation:
 #define DEFAULT_ONOFF (true)

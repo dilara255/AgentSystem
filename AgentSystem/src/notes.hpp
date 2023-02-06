@@ -126,9 +126,9 @@
 * --Actual PRNG, on Aux0;
 * --Seeds: default and loading;
 * 
-* > 3. Updates:
+* 3. Updates:
 * 
-* -Implement state self-updating (ie, from income and upkeep, no actions involved);
+* > -Implement state self-updating (ie, from income and upkeep, no actions involved);
 * -Update information and expected values;
 * --Add data structure for expected values;
 * --WILL HAVE TO SOLVE HOW TO SAVE THIS (at the bottom of the file seems good);

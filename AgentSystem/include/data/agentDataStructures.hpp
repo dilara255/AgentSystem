@@ -100,8 +100,10 @@ namespace AS {
 	//TODO: = operator PLEASE (and hunt down explicit loops)
 	typedef float AS_API LAdecisionOffsets_t[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES];
 
+	enum class diploStance: uint8_t {WAR, NEUTRAL, TRADE, ALLY, ALLY_WITH_TRADE, TOTAL_STANCES};
+
 	typedef struct {
-		int diplomaticStanceToNeighbors[MAX_LA_NEIGHBOURS];
+		diploStance diplomaticStanceToNeighbors[MAX_LA_NEIGHBOURS];
 		float dispositionToNeighbors[MAX_LA_NEIGHBOURS];
 		float dispositionToNeighborsLastStep[MAX_LA_NEIGHBOURS];
 
@@ -110,7 +112,7 @@ namespace AS {
 	} AS_API LAneighborRelations_t;
 
 	typedef struct {
-		int diplomaticStanceToNeighbors[MAX_GA_QUANTITY];
+		diploStance diplomaticStanceToNeighbors[MAX_GA_QUANTITY];
 		float dispositionToNeighbors[MAX_GA_QUANTITY];
 		float dispositionToNeighborsLastStep[MAX_GA_QUANTITY];
 
