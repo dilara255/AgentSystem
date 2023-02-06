@@ -18,7 +18,7 @@ Has methods to:
 #include "timeHelpers.hpp"
 #include "fileHelpers.h"
 
-static const char* defaultPRNGdumpFilename = "dumpPRNG";
+static const char* defaultPRNGdumpFilename = "dumpPRNG.txt";
 
 bool AS::PRNserver::dumpData(std::string filename) {
 
@@ -59,6 +59,9 @@ bool AS::PRNserver::dumpData(std::string filename) {
 
     resultAux = fputs("\n**** END OF PRNG DUMP ****\n", fp);
 	if (resultAux == EOF) {result *= 0;} //fputs returns EOF on error
+
+	resultAux =  fclose(fp);
+	if (resultAux == EOF) {result *= 0;}
 
 	if (!result) {
 		LOG_ERROR("Failed Writting PRNG Dump to File!");

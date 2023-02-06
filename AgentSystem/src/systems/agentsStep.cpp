@@ -86,6 +86,8 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 void updateGA(GA::stateData_t* state_ptr, int agentId, 
 	          AS::dataControllerPointers_t* dp, float timeMultiplier) {
 
+	//placeholder
+	state_ptr->parameters.GAresources += 1*timeMultiplier;
 }
 
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);

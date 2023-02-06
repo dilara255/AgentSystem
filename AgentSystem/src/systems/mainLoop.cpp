@@ -117,6 +117,20 @@ void AS::mainLoop() {
 		timeAndSleep(&timingMicros);
 		timeOperation(timingMicros.endDataTransfer, &timingMicros.endTimmingAndSleep,
 			                                &timingMicros.totalMicrosTimmingAndSleep);
+
+		/*TODO-CRITICAL: EXTRACT INTO TEST:
+		auto startDump = std::chrono::steady_clock::now();
+		if(!g_prnServer_ptr->dumpData()){
+			LOG_CRITICAL("CONSTIPATED");
+			GETCHAR_PAUSE;
+		}
+		auto endDump = std::chrono::steady_clock::now();
+		
+		auto dumpDuration = (endDump-startDump);;
+		auto dumpDurationMicro = 
+					std::chrono::duration_cast<std::chrono::microseconds>(dumpDuration);
+		timingMicros.totalMicrosPreparation -= dumpDurationMicro.count();
+		*/
 	} while (*g_shouldMainLoopBeRunning_ptr);
 
 	calculateAndprintMainTimingInfo(timingMicros);
@@ -324,7 +338,12 @@ int howManyPRNsThisCHop(int chopIndex, int numberLAs, int numberGAs) {
 	int prnsToDrawPerRegularChop = totalPrnsToDraw / AS_TOTAL_CHOPS;
 	int remainderPRNs = totalPrnsToDraw % AS_TOTAL_CHOPS;
 
-	return (prnsToDrawPerRegularChop + (isLastChop(chopIndex))*remainderPRNs);
+	int toDrawThisChop = prnsToDrawPerRegularChop;
+	if (isLastChop(chopIndex)) {
+		toDrawThisChop += remainderPRNs;
+	}
+
+	return toDrawThisChop;
 }
 
 int howManyDecisionsThisChop(int chopIndex, int numberAgents) {
@@ -332,7 +351,12 @@ int howManyDecisionsThisChop(int chopIndex, int numberAgents) {
 	int decisionsToTakePerRegularChop = numberAgents / AS_TOTAL_CHOPS;
 	int remainderDecisions = numberAgents % AS_TOTAL_CHOPS;
 
-	return (decisionsToTakePerRegularChop + (isLastChop(chopIndex))*remainderDecisions);
+	int toDecideThisChop = decisionsToTakePerRegularChop;
+	if (isLastChop(chopIndex)) {
+		toDecideThisChop += remainderDecisions;
+	}
+
+	return toDecideThisChop;
 }
 
 bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
