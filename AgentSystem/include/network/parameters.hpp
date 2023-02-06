@@ -57,6 +57,7 @@ and data sizes static.
 #define TRADE_SATURATION_FROM_ALLY 1
 #define TRADE_SATURATION_FROM_ALLY_WITH_TRADE 2
 #define LA_UPKEEP_PER_EXCESS_STRENGHT (0.5)
+#define MAX_PROPORTIONAL_STEP_DURATION_ERROR (5) 
 
 //DEFAULT values for new network creation:
 #define DEFAULT_ONOFF (true)

@@ -30,7 +30,8 @@ namespace AS {
 	void mainLoop();
 
 	class PRNserver;
-	void stepActions(ActionSystem* actionSystem_ptr, int numberLAs, int numberGAs);
+	void stepActions(ActionSystem* actionSystem_ptr, 
+		             int numberLAs, int numberGAs, float timeMultiplier);
 	void stepAgents(bool shouldMakeDecisions, dataControllerPointers_t* agentDataPointers_ptr,
-		                                                         int numberLAs, int numberGAs);
+		                                   int numberLAs, int numberGAs, float timeMultiplier);
 }
