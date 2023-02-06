@@ -26,6 +26,8 @@ reevaluated once the actual format and save system needs are known.
 #include "network/parameters.hpp"
 #include "network/fileFormat.hpp"
 
+#include "fileHelpers.h"
+
 int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int numberLAs,
     int numberGAs, int maxNeighbors, int maxActions, bool setDefaults, std::string filePath) {
     //TODO: add logic to insert decision data once that's added to the file format
@@ -369,54 +371,7 @@ FILE* AS::acquireFilePointerToSave(std::string name, bool shouldOverwrite, std::
         name = filePath + name;
     }
 
-    FILE* fp = fopen(name.c_str(), "r");
-
-    if (fp == NULL) {
-        return fopen(name.c_str(), "w");
-    }
-    else {
-        if (shouldOverwrite) {
-            LOG_WARN("Will overwrite an existing file...");
-            return fopen(name.c_str(), "w");
-        }
-        else {
-            LOG_WARN("File already exists. Will append a number to the end of the name");
-            #if (defined AS_DEBUG) || VERBOSE_RELEASE
-                printf("File name: %s\n", name.c_str());
-            #endif // AS_DEBUG
-        }
-    }
-
-    std::string tempName = "";
-    int i = 0;
-    const char delim = '.';
-    while ( (name.c_str()[i] != '\0') && (name.c_str()[i] != delim)) {
-        tempName += name.c_str()[i];
-        i++;
-    }
-
-    std::string restOfName = "";
-    while (name.c_str()[i] != '\0') {
-        restOfName += name.c_str()[i];
-        i++;
-    }
-   
-    std::string newName;
-    int append = 1;
-    while (fp != NULL) {
-        fclose(fp);
-
-        append++;
-        newName = tempName + std::to_string(append) + restOfName;
-
-        fp = fopen(newName.c_str(), "r");
-    }
-
-    #if (defined AS_DEBUG) || VERBOSE_RELEASE
-        printf("\nFinal file name to save: %s\n", newName.c_str());
-    #endif // AS_DEBUG 
-        
-    return fopen(newName.c_str(), "w");
+    return AZ::acquireFilePointerToSave(name, shouldOverwrite, filePath);
 }
 
 bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,

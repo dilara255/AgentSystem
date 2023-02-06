@@ -17,30 +17,21 @@ Has methods to:
 #define MAX_ACT_PRNS (PRNS_PER_ACT*MAX_AGENTS)
 #define MAX_PRNS (MAX_LA_PRNS + MAX_GA_PRNS + MAX_ACT_PRNS)
 
-#if (AS_STEPS_PER_DECISION_STEP > 1)
-	#define TOTAL_PRNG_CHOPS (AS_STEPS_PER_DECISION_STEP - 1)
-#else
-	#define TOTAL_PRNG_CHOPS 1
-#endif
 
 namespace AS{
 
+	
+
 	class PRNserver {
 	public:
-		void drawPRNs(int numberLAs, int numberGAs, int chopIndex);
+		void drawPRNs(int chopIndex, int PRNsToDrawThisChop, int PRNsToDrawTotal);
 		float getNext() {return PRNs[nextToUse++];}
 		uint64_t getSeed(int index) const {return seeds[index];}
 		void setSeed(int index, uint64_t newSeed) {seeds[index] = newSeed;}
 
-		void printDataDebug() {
-			printf("\n\n----> PRNs GENERATED: %d:\n\n", drawn);
-
-			for (int i = 0; i < drawn; i++) {
-				printf("%f\n",PRNs[i]);
-			}
-
-			printf("\n\n----> END OF PRNG DEBUG PRINT\n\n");
-		}
+		//Dumps to a file seeds, number of PRNs generated on this sequence of chops,
+		//and the PRNs themselves. Has a default filename. Saves on default networks folder
+		bool dumpData(std::string = "");
 
 	private:
 		int drawn = 0;

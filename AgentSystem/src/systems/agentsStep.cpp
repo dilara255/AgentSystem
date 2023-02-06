@@ -9,23 +9,36 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
-void AS::stepAgents(bool shouldMakeDecisions, dataControllerPointers_t* dp,
-	                    int numberLAs, int numberGAs, float timeMultiplier) {
+void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
+	                          dataControllerPointers_t* dp, float timeMultiplier,
+	                                                int numberLAs, int numberGAs) {
 
 	std::vector<LA::stateData_t>* LAstateData_ptr = dp->LAstate_ptr->getDirectDataPtr();
-
+	
 	for (int i = 0; i < numberLAs; i++) {	
 		updateLA(&LAstateData_ptr->at(i), i, dp, timeMultiplier);
-		if(shouldMakeDecisions) makeDecisionLA(i, dp);
+	}
+	
+	static int nextDecisionLAindex = 0;	
+	if(nextDecisionLAindex >= numberLAs) nextDecisionLAindex = 0;
+
+	for (int i = nextDecisionLAindex; i < LAdecisionsToTakeThisChop; i++) {	
+		makeDecisionLA(i, dp);
 	}
 	
 	std::vector<GA::stateData_t>* GAstateData_ptr = dp->GAstate_ptr->getDirectDataPtr();
 
 	//Remember last GA doesn't count 
 	//TODO-CRITICAL: FIX: should store "numberEffectiveGAs" or something, and fix everywhere
-	for (int i = 0; i < (numberGAs - 1); i++) {
+	for (int i = 0; i < (numberGAs - 1); i++) {	
 		updateGA(&GAstateData_ptr->at(i), i, dp, timeMultiplier);
-		if(shouldMakeDecisions) makeDecisionGA(i, dp);
+	}
+	
+	static int nextDecisionGAindex = 0;	
+	if(nextDecisionGAindex >= (numberGAs-1)) nextDecisionGAindex = 0;
+
+	for (int i = nextDecisionGAindex; i < GAdecisionsToTakeThisChop; i++) {	
+		makeDecisionGA(i, dp);
 	}
 }
 
@@ -48,7 +61,8 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	//and never smaller then zero : )
 	if(str_ptr->currentUpkeep < 0) {str_ptr->currentUpkeep = 0;}
 
-	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep)*timeMultiplier;
+	res_ptr->current +=
+		(res_ptr->updateRate - str_ptr->currentUpkeep)*timeMultiplier;
 	
 	int quantityNeighbours = state_ptr->locationAndConnections.numberConnectedNeighbors;
 	for (int i = 0; i < quantityNeighbours; i++) {

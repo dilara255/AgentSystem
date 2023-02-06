@@ -32,6 +32,20 @@ namespace AS {
 	class PRNserver;
 	void stepActions(ActionSystem* actionSystem_ptr, 
 		             int numberLAs, int numberGAs, float timeMultiplier);
-	void stepAgents(bool shouldMakeDecisions, dataControllerPointers_t* agentDataPointers_ptr,
-		                                   int numberLAs, int numberGAs, float timeMultiplier);
+	void stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop,
+		                         dataControllerPointers_t* agentDataPointers_ptr,
+		                      float timeMultiplier, int numberLAs, int numberGAs);
+
+	struct chopControl_st {
+		int chopIndex = 0;
+
+		int totalPRNsNeeded = 0;
+		int PRNsToDrawThisChop = 0;
+
+		int LAdecisionsToMake = 0;
+		int GAdecisionsToMake = 0;
+
+		int numberLAs = 0;
+		int numberGAs = 0;
+	};
 }

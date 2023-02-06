@@ -500,8 +500,13 @@ bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
     currentNetworkParams_ptr->lastStepTimeMicros = std::chrono::microseconds(0);
 }
 
-FILE* AS::acquireFilePointerToLoad(std::string name) {
-    name = defaultFilePath + name;
+FILE* AS::acquireFilePointerToLoad(std::string name, std::string filePath) {
+    if (filePath == "") {
+        name = defaultFilePath + name;
+    }
+    else {
+        name = filePath + name;
+    }
 
     return fopen(name.c_str(), "r");
 }
