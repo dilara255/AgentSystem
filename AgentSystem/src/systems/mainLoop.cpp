@@ -90,6 +90,7 @@ void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_
 }
 
 void step(bool shouldMakeDecisions) {
+	
 	int numberLAs = AS::g_currentNetworkParams_ptr->numberLAs;
 	int numberGAs = AS::g_currentNetworkParams_ptr->numberGAs;
 

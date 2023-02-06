@@ -56,6 +56,7 @@ and data sizes static.
 #define TRADE_SATURATION_FROM_TRADE 1
 #define TRADE_SATURATION_FROM_ALLY 1
 #define TRADE_SATURATION_FROM_ALLY_WITH_TRADE 2
+#define LA_UPKEEP_PER_EXCESS_STRENGHT (0.5)
 
 //DEFAULT values for new network creation:
 #define DEFAULT_ONOFF (true)
@@ -63,7 +64,6 @@ and data sizes static.
 #define DEFAULT_GA_STANCE 2
 #define DEFAULT_GA_DISPOSITION (0.0)
 #define DEFAULT_LA_STRENGHT (10.0)
-#define DEFAULT_LA_UPKEEP_PER_STRENGHT (0.5)
 #define DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP (100.0)
 #define DEFAULT_LA_RESOURCES (100.0)
 #define DEFAULT_LA_INCOME (0.5)
