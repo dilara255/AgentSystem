@@ -94,6 +94,7 @@ int main(void) {
 
 	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 
+	//Also saves another network, with steps, and resumes it:
 	resultsBattery3 += (int)testClientDataHAndlerInitialization(); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)testSendingClientDataAndSaving(); GETCHAR_PAUSE;
