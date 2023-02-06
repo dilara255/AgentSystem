@@ -4,7 +4,7 @@
 
 void processAction(AS::actionData_t action);
 
-void AS::stepActions(ActionSystem* ap, int numberLAs, int numberGAs) {
+void AS::stepActions(ActionSystem* ap, int numberLAs, int numberGAs, float timeMultiplier) {
 	
 	std::vector<AS::actionData_t>* laActs;
 	std::vector<AS::actionData_t>* gaActs;

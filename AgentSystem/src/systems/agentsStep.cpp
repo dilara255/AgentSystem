@@ -1,18 +1,21 @@
 #include "systems/AScoordinator.hpp"
 #include "systems/diplomacy.hpp"
 
-void updateLA(LA::stateData_t* state_ptr, int agentId, AS::dataControllerPointers_t* agentDataPtrs_ptr);
-void updateGA(GA::stateData_t* state_ptr, int agentId, AS::dataControllerPointers_t* agentDataPtrs_ptr);
+void updateLA(LA::stateData_t* state_ptr, int agentId, 
+	          AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier);
+void updateGA(GA::stateData_t* state_ptr, int agentId, 
+	          AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier);
+
 void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
 void AS::stepAgents(bool shouldMakeDecisions, dataControllerPointers_t* dp,
-	                                          int numberLAs, int numberGAs) {
+	                    int numberLAs, int numberGAs, float timeMultiplier) {
 
 	std::vector<LA::stateData_t>* LAstateData_ptr = dp->LAstate_ptr->getDirectDataPtr();
 
 	for (int i = 0; i < numberLAs; i++) {	
-		updateLA(&LAstateData_ptr->at(i), i, dp);
+		updateLA(&LAstateData_ptr->at(i), i, dp, timeMultiplier);
 		if(shouldMakeDecisions) makeDecisionLA(i, dp);
 	}
 	
@@ -21,12 +24,13 @@ void AS::stepAgents(bool shouldMakeDecisions, dataControllerPointers_t* dp,
 	//Remember last GA doesn't count 
 	//TODO-CRITICAL: FIX: should store "numberEffectiveGAs" or something, and fix everywhere
 	for (int i = 0; i < (numberGAs - 1); i++) {
-		updateGA(&GAstateData_ptr->at(i), i, dp);
+		updateGA(&GAstateData_ptr->at(i), i, dp, timeMultiplier);
 		if(shouldMakeDecisions) makeDecisionGA(i, dp);
 	}
 }
 
-void updateLA(LA::stateData_t* state_ptr, int agentId, AS::dataControllerPointers_t* dp) {
+void updateLA(LA::stateData_t* state_ptr, int agentId, 
+	          AS::dataControllerPointers_t* dp, float timeMultiplier) {
 	
 	if (state_ptr->onOff == false) {
 		return;
@@ -35,8 +39,6 @@ void updateLA(LA::stateData_t* state_ptr, int agentId, AS::dataControllerPointer
 	AS::resources_t* res_ptr = &state_ptr->parameters.resources;
 	AS::strenght_t* str_ptr = &state_ptr->parameters.strenght;
 
-	float timeFactor = AS_MILLISECONDS_PER_STEP/1000.0;
-
 	//External guard costs a portion of upkeep for each agent:
 	float externalUpkeep = str_ptr->externalGuard*EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
 	//upkeep is linear with strenght above trheshold:
@@ -44,30 +46,31 @@ void updateLA(LA::stateData_t* state_ptr, int agentId, AS::dataControllerPointer
 	//and proportional to a factor:
 	str_ptr->currentUpkeep *= LA_UPKEEP_PER_EXCESS_STRENGHT;
 	//and never smaller then zero : )
-	if(str_ptr->currentUpkeep < 0) str_ptr->currentUpkeep = 0;
+	if(str_ptr->currentUpkeep < 0) {str_ptr->currentUpkeep = 0;}
 
-	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep)*timeFactor;
+	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep)*timeMultiplier;
 	
-	/*
 	int quantityNeighbours = state_ptr->locationAndConnections.numberConnectedNeighbors;
 	for (int i = 0; i < quantityNeighbours; i++) {
 		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[i];
 
-		if ((stance == AS::diploStance::TRADE) || (stance == AS::diploStance::ALLY_WITH_TRADE)) {
+		if ((stance == AS::diploStance::TRADE) ||
+		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
-			res_ptr->current += LA::calculateTradeIncome(partnerID, stance, dp);
-
+			res_ptr->current += 
+				LA::calculateTradeIncome(partnerID, stance, dp)*timeMultiplier;
 		}
 
 		if ((stance == AS::diploStance::WAR)) {
 			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
-			str_ptr->current -= LA::calculateAttritionLosses(agentId, partnerID, dp);
+			str_ptr->current -= 
+				LA::calculateAttritionLosses(agentId, partnerID, dp)*timeMultiplier;
 		}
 	}
-	*/
 }
 
-void updateGA(GA::stateData_t* state_ptr, int agentId, AS::dataControllerPointers_t* dp) {
+void updateGA(GA::stateData_t* state_ptr, int agentId, 
+	          AS::dataControllerPointers_t* dp, float timeMultiplier) {
 
 }
 

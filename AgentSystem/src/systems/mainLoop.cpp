@@ -12,6 +12,10 @@
 
 #include "timeHelpers.hpp"
 
+#define MICROS_IN_A_SECOND 1000000
+#define MILLIS_IN_A_SECOND 1000
+#define DELAY_FROM_SLEEP_CALCULATIONS_MICROS (400)
+
 #define MAX_ERRORS_TO_ACCUMULATE_ON_MAIN 150
 
 namespace AS{
@@ -23,33 +27,42 @@ namespace AS{
 	ActionSystem* g_actionSystem_ptr; 
 	dataControllerPointers_t* g_agentDataControllerPtrs_ptr;
 	networkParameters_t* g_currentNetworkParams_ptr;
-}
 
-bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
-							std::thread::id* mainLoopId_ptr,
-	                        std::thread* mainLoopThread_ptr,
-						    ActionSystem* actionSystem_ptr, 
-							dataControllerPointers_t* agentDataControllerPtrs_ptr,
-							networkParameters_t* currentNetworkParams_ptr,
-	                        AS::PRNserver* prnServer_ptr);
+	struct timingMicros_st {
+		uint64_t ticks = 0;
+		int64_t totalSnoozedMicros = 0; //time spent sleeping more then expected (or less)
+		float timeMultiplier;
+		double accumulatedMiltiplier = 0;
+		std::chrono::microseconds startFirstStep;
+		std::chrono::microseconds startLastStep;
+		std::chrono::microseconds startThisStep;
+		std::chrono::microseconds targetStepTime;
+		std::chrono::microseconds totalHotTime;
+	};
+}
 
 std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
 void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr,
 	                                                          int* prnChopIndex_ptr);
-void step(bool shouldMakeDecisions);
+void step(bool shouldMakeDecisions, float timeMultiplier);
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr);
-void timeAndSleep(std::chrono::microseconds tagetStepTimeMicro,
-	              std::chrono::microseconds* stepStartTimeMicro_ptr);
+void timeAndSleep(AS::timingMicros_st* timing_ptr);
 
 void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
 							                                                char* message);
 
-void AS::mainLoop() {
-	uint64_t initialTick = g_currentNetworkParams_ptr->mainLoopTicks;
+bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
+							 std::thread::id* mainLoopId_ptr,
+	                         std::thread* mainLoopThread_ptr,
+						     ActionSystem* actionSystem_ptr, 
+							 dataControllerPointers_t* agentDataControllerPtrs_ptr,
+							 networkParameters_t* currentNetworkParams_ptr,
+	                         AS::PRNserver* prnServer_ptr);
 
-	std::chrono::microseconds targetStepTimeMicro = 
-		                       std::chrono::microseconds(AS_MILLISECONDS_PER_STEP*1000);
+void AS::mainLoop() {
+	//setup:
+	uint64_t initialTick = g_currentNetworkParams_ptr->mainLoopTicks;
 	
 	bool hasThrownErrorsRecently = false;
 	int errorsAccumulated = 0;
@@ -57,14 +70,40 @@ void AS::mainLoop() {
 	bool shouldMakeDecisions = false;
 	int prnChopIndex = 0;
 
-	std::chrono::microseconds stepStartTimeMicro = AZ::nowMicros();
-
+	timingMicros_st timingMicros;
+	
+	timingMicros.totalHotTime = zeroMicro;
+	timingMicros.targetStepTime = 
+		            std::chrono::microseconds(AS_MILLISECONDS_PER_STEP*MILLIS_IN_A_SECOND);
+	timingMicros.timeMultiplier = 1;
+	timingMicros.startThisStep = AZ::nowMicros();
+	timingMicros.startLastStep = timingMicros.startThisStep;
+	timingMicros.startFirstStep = timingMicros.startThisStep;
+	
+	//Actual loop:
 	do {
 		prepareStep(&stepsWithoutDecisions, &shouldMakeDecisions, &prnChopIndex);
-		step(shouldMakeDecisions);
+		step(shouldMakeDecisions, timingMicros.timeMultiplier);
 		receiveAndSendData(&hasThrownErrorsRecently, &errorsAccumulated);
-		timeAndSleep(targetStepTimeMicro, &stepStartTimeMicro);
+		timeAndSleep(&timingMicros);
 	} while (*g_shouldMainLoopBeRunning_ptr);
+
+	//Debugging info:
+#if (defined AS_DEBUG) || VERBOSE_RELEASE
+	float durationSeconds = 
+		 (float)((AZ::nowMicros() - timingMicros.startFirstStep).count())/MICROS_IN_A_SECOND;
+	float averagaTimeMultiplier = timingMicros.accumulatedMiltiplier/timingMicros.ticks;
+	float msPerTick = (durationSeconds/timingMicros.ticks)*MILLIS_IN_A_SECOND;
+	int64_t targetMicrosPerTick = timingMicros.targetStepTime.count();
+	float averageSnoozeMicros = (float)timingMicros.totalSnoozedMicros/timingMicros.ticks;
+	float hotMicrosPerTick = (float)timingMicros.totalHotTime.count()/timingMicros.ticks;
+	float percentHot = (hotMicrosPerTick/targetMicrosPerTick)*100;
+
+	printf("Main Loop Ended: %llu ticks in %f seconds (%f ms/tick, target: %lld micros)\n", 
+		             timingMicros.ticks, durationSeconds, msPerTick, targetMicrosPerTick);
+	printf("averages: soozed micros: %f, time multiplier: %f, hot micros/tick: %f (%f %% target)\n\n",
+					averageSnoozeMicros, averagaTimeMultiplier, hotMicrosPerTick, percentHot);
+#endif //AS_DEBUG
 }
 
 void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr,
@@ -89,7 +128,7 @@ void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_
 	*prnChopIndex_ptr %= AS_STEPS_PER_DECISION_STEP;
 }
 
-void step(bool shouldMakeDecisions) {
+void step(bool shouldMakeDecisions, float timeMultiplier) {
 	
 	int numberLAs = AS::g_currentNetworkParams_ptr->numberLAs;
 	int numberGAs = AS::g_currentNetworkParams_ptr->numberGAs;
@@ -102,8 +141,9 @@ void step(bool shouldMakeDecisions) {
 	}
 	*/
 
-	AS::stepActions(AS::g_actionSystem_ptr, numberLAs, numberGAs);
-	AS::stepAgents(shouldMakeDecisions, AS::g_agentDataControllerPtrs_ptr, numberLAs, numberGAs);
+	AS::stepActions(AS::g_actionSystem_ptr, numberLAs, numberGAs, timeMultiplier);
+	AS::stepAgents(shouldMakeDecisions, AS::g_agentDataControllerPtrs_ptr, 
+		                             numberLAs, numberGAs, timeMultiplier);
 }
 
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr) {
@@ -126,29 +166,64 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 		}		
 }
 
-void timeAndSleep(std::chrono::microseconds targetStepTimeMicro,
-	              std::chrono::microseconds* stepStartTimeMicro_ptr) {
-	
-	if (!*AS::g_shouldMainLoopBeRunning_ptr) { 
-		LOG_TRACE("Main loop will sleep first"); 
-	}
+//returns time wich should have passed between call and return
+std::chrono::microseconds actuallySleep(AS::timingMicros_st* timing_ptr,
+	                                  std::chrono::microseconds bedTime) {
 
-	std::chrono::microseconds elapsedMicro = AZ::nowMicros() - *stepStartTimeMicro_ptr;
-	std::chrono::microseconds remainingStepTimeMicro = targetStepTimeMicro - elapsedMicro;
+	std::chrono::microseconds remainingStepTimeMicro = 
+		                  timing_ptr->targetStepTime - (bedTime - timing_ptr->startThisStep);
 		                                               
 	std::chrono::microseconds sysWakeUpDelayMicro = 
 		std::chrono::microseconds(AZ::getExpectedWakeUpDelay(remainingStepTimeMicro.count()));
 
-	std::chrono::microseconds microsToSleep = remainingStepTimeMicro - sysWakeUpDelayMicro;
-	
+	std::chrono::microseconds delayFromThis = 
+		                    std::chrono::microseconds(DELAY_FROM_SLEEP_CALCULATIONS_MICROS);
+
+	std::chrono::microseconds microsToSleep = 
+		                        remainingStepTimeMicro - sysWakeUpDelayMicro - delayFromThis;
+
 	if(microsToSleep > zeroMicro) {
 		std::this_thread::sleep_for(microsToSleep);
 	}
 
-	*stepStartTimeMicro_ptr = AZ::nowMicros();
+	return remainingStepTimeMicro;
+}
 
-	AS::g_currentNetworkParams_ptr->lastStepTimeMicros = elapsedMicro;
+void timeAndSleep(AS::timingMicros_st* timing_ptr) {
+	
+	if (!*AS::g_shouldMainLoopBeRunning_ptr) { 
+		LOG_TRACE("Main loop will sleep first"); 
+	}
+	
+	timing_ptr->startLastStep = timing_ptr->startThisStep;
 
+	std::chrono::microseconds bedTime = AZ::nowMicros();
+	std::chrono::microseconds expectedSleepTime = actuallySleep(timing_ptr, bedTime);
+	timing_ptr->startThisStep = AZ::nowMicros();
+	timing_ptr->totalHotTime += bedTime - timing_ptr->startLastStep;
+	
+	timing_ptr->totalSnoozedMicros += 
+		               ((timing_ptr->startThisStep - bedTime) - expectedSleepTime).count();
+	
+	//Calculate timeMultiplier, which will be used to keep logic frquency-independent (to an extent)
+	double lastStepDurationMicros =
+			  (double)(timing_ptr->startThisStep.count() - timing_ptr->startLastStep.count());
+	
+	double targetStepTimeMicros = (double)timing_ptr->targetStepTime.count();
+	double proportionalDurationError = lastStepDurationMicros/targetStepTimeMicros;
+
+	if (proportionalDurationError > MAX_PROPORTIONAL_STEP_DURATION_ERROR) {
+		lastStepDurationMicros = targetStepTimeMicros*MAX_PROPORTIONAL_STEP_DURATION_ERROR;
+	}
+
+	timing_ptr->timeMultiplier = (float)lastStepDurationMicros/MICROS_IN_A_SECOND;
+	timing_ptr->accumulatedMiltiplier += timing_ptr->timeMultiplier;
+
+	//update externally available step counting and timing information:
+	AS::g_currentNetworkParams_ptr->lastStepTimeMicros = 
+		                             timing_ptr->startThisStep - timing_ptr->startLastStep;
+
+	timing_ptr->ticks++;
 	AS::g_currentNetworkParams_ptr->mainLoopTicks++;	
 
 	if (!*AS::g_shouldMainLoopBeRunning_ptr) { 
