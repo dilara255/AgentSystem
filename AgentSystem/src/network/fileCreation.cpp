@@ -205,8 +205,9 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
         float upkeep = 0;
         if (DEFAULT_LA_STRENGHT > DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP) {
-            upkeep = (DEFAULT_LA_STRENGHT - DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
-            upkeep *= DEFAULT_LA_UPKEEP_PER_STRENGHT;
+            float guardCost = DEFAULT_REINFORCEMENT*EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
+            upkeep = (guardCost + DEFAULT_LA_STRENGHT - DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
+            upkeep *= LA_UPKEEP_PER_EXCESS_STRENGHT;
         }
         resultAux = fprintf(fp, LAresources, DEFAULT_LA_RESOURCES, DEFAULT_LA_INCOME,
             upkeep);
