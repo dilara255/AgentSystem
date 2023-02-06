@@ -45,5 +45,6 @@ namespace AS {
 	AS_API bool testFileCreation(std::string nameNoDefaults, std::string nameWithDefaults);
 	AS_API bool testDataTransferFromAStoCL(void);
 	AS_API bool testGotNewValuesFromASthroughCL();
+	AS_API bool testMainLoopStopAndRestart();
 	//*******************
 }

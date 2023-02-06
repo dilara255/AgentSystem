@@ -1,20 +1,28 @@
 #include "systems/clientDataHandler.hpp"
+#include "timeHelpers.hpp"
 
 namespace CL {
 
 	//MUTEX HANDLING
 	std::mutex* ClientData::Handler::acquireMutex() {
-		int tries = 0;
-		bool acquired = false;
-		while (!acquired && (tries < MAX_MUTEX_TRY_LOCKS)) {
-			acquired = m_mutex.try_lock();
-			tries++;
-			std::this_thread::sleep_for(
-				std::chrono::microseconds(SLEEP_TIME_WAITING_MUTEX_MICROS));
-		}
-		if (!acquired) {
-			LOG_ERROR("lock acquisition timed out!");
-			return NULL;
+		
+		bool acquired = m_mutex.try_lock();
+		int extraTries = 0;
+
+		if(!acquired){
+			auto sleepTime = std::chrono::microseconds(SLEEP_TIME_WAITING_MUTEX_MICROS);
+
+			do {			
+				AZ::hybridBusySleepForMicros(sleepTime);
+
+				acquired = m_mutex.try_lock();
+				extraTries++;
+			} while (!acquired && (extraTries < MAX_MUTEX_TRY_LOCKS));
+
+			if (!acquired) {
+				LOG_ERROR("lock acquisition timed out!");
+				return NULL;
+			} 
 		}
 		
 		return &m_mutex;

@@ -7,7 +7,7 @@ float LA::calculateTradeIncome(int partnerID, AS::diploStance theirStance,
 				  AS::dataControllerPointers_t* agentDataPtrs_ptr) {
 
 
-	return 0;
+	return 0.1f;
 }
 	
 float LA::calculateAttritionLosses(int agentId1, int agentId2,
