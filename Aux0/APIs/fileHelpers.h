@@ -4,9 +4,15 @@
 
 #include "miscStdHeaders.h"
 
+#define AZ_MAX_FP_AQUISITION_TRIES 1000
 
 namespace AZ {
 	
+    //Opens a file for writting. If shouldOverwrite, will, no questions asked.
+    //Of not, will instead find the next integer which appended at the end of name
+    //makes it unique (tries at most AZ_MAX_FP_AQUISITION_TRIES times).
+    //NOTE: at end of name but before ".": searcbes for delimiter, will leave
+    //without extension if no "." found.
 	static FILE* acquireFilePointerToSave(std::string name, bool shouldOverwrite, 
 		                                                   std::string filePath) {
 
@@ -41,14 +47,17 @@ namespace AZ {
         std::string newName;
 
         //appends the number to end of name. Stars trying at *2*
+        int tries = 0;
         int append = 1;
-        while (fp != NULL) {
+        while ((fp != NULL) && (tries < AZ_MAX_FP_AQUISITION_TRIES)) {
             fclose(fp);
 
             append++;
             newName = tempName + std::to_string(append) + restOfName;
 
             fp = fopen(newName.c_str(), "r");
+
+            tries++;
         }
         
         return fopen(newName.c_str(), "w");

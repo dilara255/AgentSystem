@@ -33,7 +33,7 @@ namespace AS{
 		double accumulatedMultiplier = 0;
 		int64_t totalSnoozedMicros = 0; //time spent sleeping more then expected (or less)
 		int64_t largestSnoozeMicros = 0;
-		int64_t totalHotMicros = 0; //time spent actually doing work
+		int64_t totalHotMicros = 0; //time spent actually doing work (except busy-waiting)
 		int64_t largestHotMicros = 0;
 		int64_t totalSleepMicros = 0;
 		int64_t largestSleepMicros = 0;
