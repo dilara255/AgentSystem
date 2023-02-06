@@ -12,9 +12,6 @@
 
 #include "timeHelpers.hpp"
 
-#define MICROS_IN_A_SECOND 1000000
-#define MILLIS_IN_A_SECOND 1000
-#define DELAY_FROM_SLEEP_CALCULATIONS_MICROS (400)
 #define MICROS_TO_BUSY_WAIT (10)
 
 #define MAX_ERRORS_TO_ACCUMULATE_ON_MAIN 150
@@ -39,9 +36,17 @@ namespace AS{
 		int64_t largestHotMicros = 0;
 		int64_t totalSleepMicros = 0;
 		int64_t largestSleepMicros = 0;
+		int64_t totalMicrosPreparation = 0;
+		int64_t totalMicrosStep = 0;
+		int64_t totalMicrosDataTransfer = 0;
+		int64_t totalMicrosTimmingAndSleep = 0;
 		std::chrono::steady_clock::time_point startFirstStep;
 		std::chrono::steady_clock::time_point startLastStep;
 		std::chrono::steady_clock::time_point startThisStep;
+		std::chrono::steady_clock::time_point endPreparation;
+		std::chrono::steady_clock::time_point endStep;
+		std::chrono::steady_clock::time_point endDataTransfer;
+		std::chrono::steady_clock::time_point endTimmingAndSleep;
 		std::chrono::microseconds targetStepTime;
 	};
 }
@@ -53,8 +58,11 @@ void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_
 void step(bool shouldMakeDecisions, float timeMultiplier);
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr);
 void timeAndSleep(AS::timingMicros_st* timing_ptr);
-void hybridBusySleep(std::chrono::steady_clock::time_point targetWakeTime,
-	                                  std::chrono::microseconds threshold);
+
+void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
+	               std::chrono::steady_clock::time_point* newReferenceTime,
+	                                           int64_t* counterToIncrement);
+void calculateAndprintMainTimingInfo(AS::timingMicros_st timingMicros);
 
 void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
 							                                                char* message);
@@ -85,51 +93,28 @@ void AS::mainLoop() {
 	timingMicros.startThisStep = std::chrono::steady_clock::now();
 	timingMicros.startLastStep = timingMicros.startThisStep;
 	timingMicros.startFirstStep = timingMicros.startThisStep;
-	
+	timingMicros.endTimmingAndSleep =  timingMicros.startThisStep; //for first iteration
+
 	//Actual loop:
 	do {
 		prepareStep(&stepsWithoutDecisions, &shouldMakeDecisions, &prnChopIndex);
+		timeOperation(timingMicros.endTimmingAndSleep, &timingMicros.endPreparation,
+		                                       &timingMicros.totalMicrosPreparation);
+		
 		step(shouldMakeDecisions, timingMicros.timeMultiplier);
+		timeOperation(timingMicros.endPreparation, &timingMicros.endStep,
+			                               &timingMicros.totalMicrosStep);
+
 		receiveAndSendData(&hasThrownErrorsRecently, &errorsAccumulated);
+		timeOperation(timingMicros.endStep, &timingMicros.endDataTransfer,
+			                        &timingMicros.totalMicrosDataTransfer);
+
 		timeAndSleep(&timingMicros);
+		timeOperation(timingMicros.endDataTransfer, &timingMicros.endTimmingAndSleep,
+			                                &timingMicros.totalMicrosTimmingAndSleep);
 	} while (*g_shouldMainLoopBeRunning_ptr);
-	
-	//Debugging info:
-#if (defined AS_DEBUG) || VERBOSE_RELEASE
-	
-	auto duration = std::chrono::steady_clock::now() - timingMicros.startFirstStep;
 
-	LOG_CRITICAL("MainLoop Timings:");
-	GETCHAR_PAUSE;
-
-	double inverseOfTicks = 1.0/timingMicros.ticks;
-
-	int64_t durationMicro = 
-		std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
-	double durationSeconds = (double)durationMicro/MICROS_IN_A_SECOND;
-	
-	double averagaTimeMultiplier = timingMicros.accumulatedMultiplier*inverseOfTicks;
-	double msPerTick = (durationSeconds*inverseOfTicks)*MILLIS_IN_A_SECOND;
-	int64_t targetMicrosPerTick = timingMicros.targetStepTime.count();
-	double averageSnoozeMicros = timingMicros.totalSnoozedMicros*inverseOfTicks;
-	double hotMicrosPerTick = timingMicros.totalHotMicros*inverseOfTicks;
-	double percentHot = (hotMicrosPerTick/targetMicrosPerTick)*100;
-	double averageSleepMicros = timingMicros.totalSleepMicros*inverseOfTicks;
-
-	printf("Main Loop Ended: %llu ticks in %f seconds (%f ms/tick, target: %lld micros)\n", 
-		   timingMicros.ticks, durationSeconds, msPerTick, targetMicrosPerTick);
-	printf("Averages (micro): sleep: %f (soozed: %f), time multiplier: %f, hot micros/tick: %f\n(%f %% target)\n",
-		   averageSleepMicros, averageSnoozeMicros, averagaTimeMultiplier, 
-		   hotMicrosPerTick, percentHot);
-	printf("Largest (micro): sleep: %lld, snooze: %lld, hot: %lld\n",
-		   timingMicros.largestSleepMicros, timingMicros.largestSnoozeMicros, 
-		                                     timingMicros.largestHotMicros);
-	printf("Totals (micro): sleep: %lld, snooze: %lld, hot: %lld\n\n",
-		   timingMicros.totalSleepMicros, timingMicros.totalSnoozedMicros, 
-		   timingMicros.totalHotMicros);
-
-	GETCHAR_PAUSE;
-#endif //AS_DEBUG
+	calculateAndprintMainTimingInfo(timingMicros);
 }
 
 void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_ptr,
@@ -140,13 +125,13 @@ void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_
 	*shouldMakeDecisions_ptr = ((*stepsWithoutDecisions_ptr) == AS_STEPS_PER_DECISION_STEP);
 	if(*shouldMakeDecisions_ptr) {*stepsWithoutDecisions_ptr = 0;}
 
-
-	
 	AS::g_prnServer_ptr->drawPRNs(AS::g_currentNetworkParams_ptr->numberLAs,
 								  AS::g_currentNetworkParams_ptr->numberGAs,
 		                          *prnChopIndex_ptr);
 	for (int i = 0; i < DRAW_WIDTH; i++) {
 		AS::g_currentNetworkParams_ptr->seeds[i] = AS::g_prnServer_ptr->getSeed(i);
+		static double dummyAcc = 0; 
+		dummyAcc += AS::g_prnServer_ptr->getNext();
 	}
 	
 
@@ -201,7 +186,7 @@ void timeAndSleep(AS::timingMicros_st* timing_ptr) {
 
 	auto bedTime = std::chrono::steady_clock::now();
 	
-	hybridBusySleep(targetWakeTime, threshold);
+	AZ::hybridBusySleep(targetWakeTime, threshold);
 
 	//this is when next step timing starts
 	timing_ptr->startThisStep = std::chrono::steady_clock::now();
@@ -254,19 +239,63 @@ void timeAndSleep(AS::timingMicros_st* timing_ptr) {
 	AS::g_currentNetworkParams_ptr->mainLoopTicks++;
 }
 
-//This loops while yielding via Sleep(0) up to targetWakeTime - threshold,
-//then busy-waits until threshold. Does nothing if now >= targetWakeTime
-//WARNING: NO IDEA how portable this is (HACKY?)
-//TODO-CRITICAL: Implement testing of this specifically
-void hybridBusySleep(std::chrono::steady_clock::time_point targetWakeTime,
-	                                  std::chrono::microseconds threshold) {
+void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
+	               std::chrono::steady_clock::time_point* newReferenceTime,
+	                                           int64_t* counterToIncrement) {
+	*newReferenceTime = std::chrono::steady_clock::now();
+	auto delta = *newReferenceTime - lastReferenceTime;
+	*counterToIncrement += std::chrono::duration_cast<std::chrono::microseconds>(delta).count();
+}
 
-	int dummy = 0;
+void calculateAndprintMainTimingInfo(AS::timingMicros_st timingMicros) {
+	
+	auto duration = std::chrono::steady_clock::now() - timingMicros.startFirstStep;
 
-	while ((targetWakeTime - std::chrono::steady_clock::now()) > threshold) {
-		std::this_thread::sleep_for(zeroMicro);
-	}
-	while (std::chrono::steady_clock::now() < targetWakeTime){dummy++;}
+	double inverseOfTicks = 1.0/timingMicros.ticks;
+
+	int64_t durationMicro = 
+		std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+	double durationSeconds = (double)durationMicro/MICROS_IN_A_SECOND;
+	
+	double averagaTimeMultiplier = timingMicros.accumulatedMultiplier*inverseOfTicks;
+	double msPerTick = (durationSeconds*inverseOfTicks)*MILLIS_IN_A_SECOND;
+	int64_t targetMicrosPerTick = timingMicros.targetStepTime.count();
+	double averageSnoozeMicros = timingMicros.totalSnoozedMicros*inverseOfTicks;
+	double hotMicrosPerTick = timingMicros.totalHotMicros*inverseOfTicks;
+	double percentHot = (hotMicrosPerTick/targetMicrosPerTick)*100;
+	double averageSleepMicros = timingMicros.totalSleepMicros*inverseOfTicks;
+	int64_t totalMicrosTimming = timingMicros.totalMicrosTimmingAndSleep -
+		           (timingMicros.totalSleepMicros - timingMicros.totalSnoozedMicros);
+	double avgMicrosPreparation = timingMicros.totalMicrosPreparation*inverseOfTicks;
+	double avgMicrosStep = timingMicros.totalMicrosStep*inverseOfTicks;
+	double avgMicrosDataTransfer = timingMicros.totalMicrosDataTransfer*inverseOfTicks;
+	double avglMicrosTimming = totalMicrosTimming*inverseOfTicks;
+
+	LOG_INFO("MainLoop Timings:");
+
+	printf("Main Loop Ended: %llu ticks in %f seconds (%f ms/tick, target: %lld micros)\n", 
+		   timingMicros.ticks, durationSeconds, msPerTick, targetMicrosPerTick);
+	printf("Averages (micro): sleep: %f (soozed: %f), time multiplier: %f, hot micros/tick: %f\n(%f %% target)\n",
+		   averageSleepMicros, averageSnoozeMicros, averagaTimeMultiplier, 
+		   hotMicrosPerTick, percentHot);
+
+#if (defined AS_DEBUG) || VERBOSE_RELEASE
+	printf("Largest (micro): sleep: %lld, snooze: %lld, hot: %lld\n",
+		   timingMicros.largestSleepMicros, timingMicros.largestSnoozeMicros, 
+		                                     timingMicros.largestHotMicros);
+	printf("Totals (micro): sleep: %lld, snooze: %lld, hot: %lld\n",
+		   timingMicros.totalSleepMicros, timingMicros.totalSnoozedMicros, 
+		   timingMicros.totalHotMicros);
+	printf("Substep Averages (micro): preparation: %f, step: %f, dataTransfer: %f, timming: %f\n",
+		   avgMicrosPreparation, avgMicrosStep, avgMicrosDataTransfer, avglMicrosTimming);
+	printf("Substep Percents of Budget: preparation: %f%%, step: %f%%, dataTransfer: %f%%, timming: %f%%\n",
+		   (avgMicrosPreparation/targetMicrosPerTick)*100, 
+		   (avgMicrosStep/targetMicrosPerTick)*100,
+		   (avgMicrosDataTransfer/targetMicrosPerTick)*100, 
+		   (avglMicrosTimming/targetMicrosPerTick)*100);
+
+	GETCHAR_PAUSE;
+#endif //AS_DEBUG
 }
 
 bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,

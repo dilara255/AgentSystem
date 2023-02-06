@@ -4,6 +4,8 @@
 #include "AS_API.hpp"
 #include "CL_ExternalAPI.hpp"
 
+#include "timeHelpers.hpp"
+
 void testSayHello(void);
 bool testMockData(void);
 bool testFromTAifCLhasInitialized(void);
@@ -196,9 +198,12 @@ bool testClientDataHAndlerInitialization(void) {
 void TAreadLoop(int numberTicks) {
 
 	g_ticksRead[0] = CL::ASmirrorData_ptr->networkParams.mainLoopTicks;
-
+	
+	auto sleepTime = std::chrono::milliseconds(TST_TA_QUERY_FREQUENCY_MS);
 	for (int i = 1; i < numberTicks; i++) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(TST_TA_QUERY_FREQUENCY_MS));
+		
+		AZ::hybridBusySleepForMicros(sleepTime);
+
 		g_ticksRead[i] = CL::ASmirrorData_ptr->networkParams.mainLoopTicks;
 	}
 }
@@ -213,11 +218,17 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 	LOG_WARN("Will check if reader thread's results are as expected. May need to wait for execution to finish");
 	
+	bool result = false;
 	if (reader.joinable()) {
 		reader.join();
+		result = AS::testMainLoopStopAndRestart();
 	}
 	else {
 		LOG_WARN("Reader thread seem innactive. If it wasn't created, this test will make no sense!");
+	}
+
+	if(!result) {
+		return false;
 	}
 
 	LOG_TRACE("Execution finished. Checking...");
@@ -311,7 +322,7 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 	//This gives some margin of error since the fractional part may still byte us in the ass
 	//(in practice this may well be effectively the same as fails == zero)
-	bool result = (fails < TST_TIMES_TO_QUERRY_TICK / TST_TICK_COUNT_SAFETY_FACTOR);
+	result = (fails < TST_TIMES_TO_QUERRY_TICK / TST_TICK_COUNT_SAFETY_FACTOR);
 
 	if (result) {
 		LOG_INFO("TA read ticks correctly from CL while AS was running");
@@ -325,7 +336,11 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 		                                             TST_MAINLOOP_FREQUENCY_MS, jumpIndex);
 	
 #if (defined AS_DEBUG) || VERBOSE_RELEASE
-	for (int i = 0; i < TST_TIMES_TO_QUERRY_TICK; i++) {
+	int maxPrint = 10;
+	if (TST_TIMES_TO_QUERRY_TICK < maxPrint) {
+		maxPrint = maxPrint;
+	}
+	for (int i = 0; i < maxPrint; i++) {
 		printf("%d: %llu (%llu) - ", i, g_ticksRead[i], expectedTicks[i]);
 	}
 #endif

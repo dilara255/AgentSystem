@@ -25,6 +25,7 @@ TODO: tests:
 #include "data/agentClasses.hpp"
 #include "network/fileManager.hpp"
 
+#include "systems/AScoordinator.hpp"
 #include "testing/AS_tst.hpp"
 
 int initTestNumber;
@@ -37,6 +38,19 @@ namespace AS {
 	extern ActionSystem actionSystem;
 	extern dataControllerPointers_t agentDataControllerPtrs;
 	extern networkParameters_t* currentNetworkParams_ptr;
+
+	bool testMainLoopStopAndRestart() {
+		if(!isMainLoopRunning()) {return false;}
+		if (!stop()) {
+			LOG_ERROR("Couldn't stop main loop (or it wasn't running)");
+			return false;
+		}
+		if(!run()){
+			LOG_ERROR("Couldn't start main loop (or it was already running)");
+			return false;
+		}
+		return true;
+	}
 
 	bool testGotNewValuesFromASthroughCL() {
 		
