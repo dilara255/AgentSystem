@@ -15,6 +15,7 @@
 #define MICROS_IN_A_SECOND 1000000
 #define MILLIS_IN_A_SECOND 1000
 #define DELAY_FROM_SLEEP_CALCULATIONS_MICROS (400)
+#define MICROS_TO_BUSY_WAIT (10)
 
 #define MAX_ERRORS_TO_ACCUMULATE_ON_MAIN 150
 
@@ -30,14 +31,18 @@ namespace AS{
 
 	struct timingMicros_st {
 		uint64_t ticks = 0;
-		int64_t totalSnoozedMicros = 0; //time spent sleeping more then expected (or less)
 		float timeMultiplier;
-		double accumulatedMiltiplier = 0;
-		std::chrono::microseconds startFirstStep;
-		std::chrono::microseconds startLastStep;
-		std::chrono::microseconds startThisStep;
+		double accumulatedMultiplier = 0;
+		int64_t totalSnoozedMicros = 0; //time spent sleeping more then expected (or less)
+		int64_t largestSnoozeMicros = 0;
+		int64_t totalHotMicros = 0; //time spent actually doing work
+		int64_t largestHotMicros = 0;
+		int64_t totalSleepMicros = 0;
+		int64_t largestSleepMicros = 0;
+		std::chrono::steady_clock::time_point startFirstStep;
+		std::chrono::steady_clock::time_point startLastStep;
+		std::chrono::steady_clock::time_point startThisStep;
 		std::chrono::microseconds targetStepTime;
-		std::chrono::microseconds totalHotTime;
 	};
 }
 
@@ -48,6 +53,8 @@ void prepareStep(uint64_t* stepsWithoutDecisions_ptr, bool* shouldMakeDecisions_
 void step(bool shouldMakeDecisions, float timeMultiplier);
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr);
 void timeAndSleep(AS::timingMicros_st* timing_ptr);
+void hybridBusySleep(std::chrono::steady_clock::time_point targetWakeTime,
+	                                  std::chrono::microseconds threshold);
 
 void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
 							                                                char* message);
@@ -72,11 +79,10 @@ void AS::mainLoop() {
 
 	timingMicros_st timingMicros;
 	
-	timingMicros.totalHotTime = zeroMicro;
 	timingMicros.targetStepTime = 
-		            std::chrono::microseconds(AS_MILLISECONDS_PER_STEP*MILLIS_IN_A_SECOND);
-	timingMicros.timeMultiplier = 1;
-	timingMicros.startThisStep = AZ::nowMicros();
+		            std::chrono::milliseconds(AS_MILLISECONDS_PER_STEP);
+	timingMicros.timeMultiplier = (float)AS_MILLISECONDS_PER_STEP/MILLIS_IN_A_SECOND;
+	timingMicros.startThisStep = std::chrono::steady_clock::now();
 	timingMicros.startLastStep = timingMicros.startThisStep;
 	timingMicros.startFirstStep = timingMicros.startThisStep;
 	
@@ -87,22 +93,42 @@ void AS::mainLoop() {
 		receiveAndSendData(&hasThrownErrorsRecently, &errorsAccumulated);
 		timeAndSleep(&timingMicros);
 	} while (*g_shouldMainLoopBeRunning_ptr);
-
+	
 	//Debugging info:
 #if (defined AS_DEBUG) || VERBOSE_RELEASE
-	float durationSeconds = 
-		 (float)((AZ::nowMicros() - timingMicros.startFirstStep).count())/MICROS_IN_A_SECOND;
-	float averagaTimeMultiplier = timingMicros.accumulatedMiltiplier/timingMicros.ticks;
-	float msPerTick = (durationSeconds/timingMicros.ticks)*MILLIS_IN_A_SECOND;
+	
+	auto duration = std::chrono::steady_clock::now() - timingMicros.startFirstStep;
+
+	LOG_CRITICAL("MainLoop Timings:");
+	GETCHAR_PAUSE;
+
+	double inverseOfTicks = 1.0/timingMicros.ticks;
+
+	int64_t durationMicro = 
+		std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+	double durationSeconds = (double)durationMicro/MICROS_IN_A_SECOND;
+	
+	double averagaTimeMultiplier = timingMicros.accumulatedMultiplier*inverseOfTicks;
+	double msPerTick = (durationSeconds*inverseOfTicks)*MILLIS_IN_A_SECOND;
 	int64_t targetMicrosPerTick = timingMicros.targetStepTime.count();
-	float averageSnoozeMicros = (float)timingMicros.totalSnoozedMicros/timingMicros.ticks;
-	float hotMicrosPerTick = (float)timingMicros.totalHotTime.count()/timingMicros.ticks;
-	float percentHot = (hotMicrosPerTick/targetMicrosPerTick)*100;
+	double averageSnoozeMicros = timingMicros.totalSnoozedMicros*inverseOfTicks;
+	double hotMicrosPerTick = timingMicros.totalHotMicros*inverseOfTicks;
+	double percentHot = (hotMicrosPerTick/targetMicrosPerTick)*100;
+	double averageSleepMicros = timingMicros.totalSleepMicros*inverseOfTicks;
 
 	printf("Main Loop Ended: %llu ticks in %f seconds (%f ms/tick, target: %lld micros)\n", 
-		             timingMicros.ticks, durationSeconds, msPerTick, targetMicrosPerTick);
-	printf("averages: soozed micros: %f, time multiplier: %f, hot micros/tick: %f (%f %% target)\n\n",
-					averageSnoozeMicros, averagaTimeMultiplier, hotMicrosPerTick, percentHot);
+		   timingMicros.ticks, durationSeconds, msPerTick, targetMicrosPerTick);
+	printf("Averages (micro): sleep: %f (soozed: %f), time multiplier: %f, hot micros/tick: %f\n(%f %% target)\n",
+		   averageSleepMicros, averageSnoozeMicros, averagaTimeMultiplier, 
+		   hotMicrosPerTick, percentHot);
+	printf("Largest (micro): sleep: %lld, snooze: %lld, hot: %lld\n",
+		   timingMicros.largestSleepMicros, timingMicros.largestSnoozeMicros, 
+		                                     timingMicros.largestHotMicros);
+	printf("Totals (micro): sleep: %lld, snooze: %lld, hot: %lld\n\n",
+		   timingMicros.totalSleepMicros, timingMicros.totalSnoozedMicros, 
+		   timingMicros.totalHotMicros);
+
+	GETCHAR_PAUSE;
 #endif //AS_DEBUG
 }
 
@@ -166,48 +192,50 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 		}		
 }
 
-//returns time wich should have passed between call and return
-std::chrono::microseconds actuallySleep(AS::timingMicros_st* timing_ptr,
-	                                  std::chrono::microseconds bedTime) {
-
-	std::chrono::microseconds remainingStepTimeMicro = 
-		                  timing_ptr->targetStepTime - (bedTime - timing_ptr->startThisStep);
-		                                               
-	std::chrono::microseconds sysWakeUpDelayMicro = 
-		std::chrono::microseconds(AZ::getExpectedWakeUpDelay(remainingStepTimeMicro.count()));
-
-	std::chrono::microseconds delayFromThis = 
-		                    std::chrono::microseconds(DELAY_FROM_SLEEP_CALCULATIONS_MICROS);
-
-	std::chrono::microseconds microsToSleep = 
-		                        remainingStepTimeMicro - sysWakeUpDelayMicro - delayFromThis;
-
-	if(microsToSleep > zeroMicro) {
-		std::this_thread::sleep_for(microsToSleep);
-	}
-
-	return remainingStepTimeMicro;
-}
-
 void timeAndSleep(AS::timingMicros_st* timing_ptr) {
-	
-	if (!*AS::g_shouldMainLoopBeRunning_ptr) { 
-		LOG_TRACE("Main loop will sleep first"); 
-	}
 	
 	timing_ptr->startLastStep = timing_ptr->startThisStep;
 
-	std::chrono::microseconds bedTime = AZ::nowMicros();
-	std::chrono::microseconds expectedSleepTime = actuallySleep(timing_ptr, bedTime);
-	timing_ptr->startThisStep = AZ::nowMicros();
-	timing_ptr->totalHotTime += bedTime - timing_ptr->startLastStep;
+	auto targetWakeTime = timing_ptr->startThisStep + timing_ptr->targetStepTime;
+	std::chrono::microseconds threshold(MICROS_TO_BUSY_WAIT);
+
+	auto bedTime = std::chrono::steady_clock::now();
 	
-	timing_ptr->totalSnoozedMicros += 
-		               ((timing_ptr->startThisStep - bedTime) - expectedSleepTime).count();
+	hybridBusySleep(targetWakeTime, threshold);
+
+	//this is when next step timing starts
+	timing_ptr->startThisStep = std::chrono::steady_clock::now();
+	timing_ptr->ticks++;
+
+	auto actualSleepTime = timing_ptr->startThisStep - bedTime;
+	int64_t actualSleepTimeMicros =
+		    std::chrono::duration_cast<std::chrono::microseconds>(actualSleepTime).count();
+	timing_ptr->totalSleepMicros += actualSleepTimeMicros;
+	if (actualSleepTimeMicros > timing_ptr->largestSleepMicros) {
+		timing_ptr->largestSleepMicros = actualSleepTimeMicros;
+	}
+	
+	auto hotTime = bedTime - timing_ptr->startLastStep;
+	int64_t hotTimeMicros = 
+		        std::chrono::duration_cast<std::chrono::microseconds>(hotTime).count();
+	timing_ptr->totalHotMicros += hotTimeMicros;
+	if (hotTimeMicros > timing_ptr->largestHotMicros) {
+		timing_ptr->largestHotMicros = hotTimeMicros;
+	}
+
+	auto snoozed = timing_ptr->startThisStep - targetWakeTime;
+	if(hotTime > timing_ptr->targetStepTime){snoozed = zeroMicro;}
+	int64_t snoozedMicros = 
+		 std::chrono::duration_cast<std::chrono::microseconds>(snoozed).count();
+	timing_ptr->totalSnoozedMicros += snoozedMicros;
+	if (snoozedMicros > timing_ptr->largestSnoozeMicros) {
+		timing_ptr->largestSnoozeMicros = snoozedMicros;
+	}
 	
 	//Calculate timeMultiplier, which will be used to keep logic frquency-independent (to an extent)
+	auto lastStepDuration = timing_ptr->startThisStep - timing_ptr->startLastStep;
 	double lastStepDurationMicros =
-			  (double)(timing_ptr->startThisStep.count() - timing_ptr->startLastStep.count());
+			  (double)(std::chrono::duration_cast<std::chrono::microseconds>(lastStepDuration).count());
 	
 	double targetStepTimeMicros = (double)timing_ptr->targetStepTime.count();
 	double proportionalDurationError = lastStepDurationMicros/targetStepTimeMicros;
@@ -217,18 +245,28 @@ void timeAndSleep(AS::timingMicros_st* timing_ptr) {
 	}
 
 	timing_ptr->timeMultiplier = (float)lastStepDurationMicros/MICROS_IN_A_SECOND;
-	timing_ptr->accumulatedMiltiplier += timing_ptr->timeMultiplier;
+	timing_ptr->accumulatedMultiplier += timing_ptr->timeMultiplier;
 
 	//update externally available step counting and timing information:
 	AS::g_currentNetworkParams_ptr->lastStepTimeMicros = 
-		                             timing_ptr->startThisStep - timing_ptr->startLastStep;
+		       std::chrono::duration_cast<std::chrono::microseconds>(timing_ptr->startThisStep - timing_ptr->startLastStep);
 
-	timing_ptr->ticks++;
-	AS::g_currentNetworkParams_ptr->mainLoopTicks++;	
+	AS::g_currentNetworkParams_ptr->mainLoopTicks++;
+}
 
-	if (!*AS::g_shouldMainLoopBeRunning_ptr) { 
-		LOG_TRACE("Main loop should stop now!"); 
+//This loops while yielding via Sleep(0) up to targetWakeTime - threshold,
+//then busy-waits until threshold. Does nothing if now >= targetWakeTime
+//WARNING: NO IDEA how portable this is (HACKY?)
+//TODO-CRITICAL: Implement testing of this specifically
+void hybridBusySleep(std::chrono::steady_clock::time_point targetWakeTime,
+	                                  std::chrono::microseconds threshold) {
+
+	int dummy = 0;
+
+	while ((targetWakeTime - std::chrono::steady_clock::now()) > threshold) {
+		std::this_thread::sleep_for(zeroMicro);
 	}
+	while (std::chrono::steady_clock::now() < targetWakeTime){dummy++;}
 }
 
 bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
