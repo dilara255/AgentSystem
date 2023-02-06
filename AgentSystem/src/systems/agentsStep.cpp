@@ -61,8 +61,7 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	//and never smaller then zero : )
 	if(str_ptr->currentUpkeep < 0) {str_ptr->currentUpkeep = 0;}
 
-	res_ptr->current +=
-		(res_ptr->updateRate - str_ptr->currentUpkeep)*timeMultiplier;
+	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep)*timeMultiplier;
 	
 	int quantityNeighbours = state_ptr->locationAndConnections.numberConnectedNeighbors;
 	for (int i = 0; i < quantityNeighbours; i++) {
