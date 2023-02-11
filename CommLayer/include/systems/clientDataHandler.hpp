@@ -698,7 +698,7 @@ namespace CL::ClientData {
 		bool sendNewClientData(ASdataControlPtrs_t recepientPtrs, bool silent);
 
 		//Returns NULL on time-out or a pointer to the acquired mutex otherwise
-		std::mutex* acquireMutex();
+		std::mutex* acquireMutex(int microsPerWait = SLEEP_TIME_WAITING_MUTEX_MICROS);
 
 		bool hasInitialized() const { return m_initialized; }
 

@@ -4,13 +4,13 @@
 namespace CL {
 
 	//MUTEX HANDLING
-	std::mutex* ClientData::Handler::acquireMutex() {
+	std::mutex* ClientData::Handler::acquireMutex(int microsPerWait) {
 		
 		bool acquired = m_mutex.try_lock();
 		int extraTries = 0;
 
 		if(!acquired){
-			auto sleepTime = std::chrono::microseconds(SLEEP_TIME_WAITING_MUTEX_MICROS);
+			auto sleepTime = std::chrono::microseconds(microsPerWait);
 
 			do {			
 				AZ::hybridBusySleepForMicros(sleepTime);
