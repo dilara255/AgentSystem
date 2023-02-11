@@ -32,11 +32,11 @@ and data sizes static.
 #define COMMENT_LENGHT 250
 #define DIPLOMATIC_STANCES 5 //TODO: this would be better left to the enum class diploStances
 #define MAX_LA_NEIGHBOURS 10
-#define MAX_GA_QUANTITY 16 //NOTE: last one is reserved to "belong to no GA"
+#define MAX_GA_QUANTITY 16 //NOTE: last one is reserved to "belongs to no GA"
 #define MAX_LA_QUANTITY 128
 #define MAX_AGENTS (MAX_GA_QUANTITY + MAX_LA_QUANTITY)
 #define MAX_ACTIONS_PER_AGENT 10
-#define NUMBER_LA_OFFSETS (MAX_ACTIONS_PER_AGENT + DIPLOMATIC_STANCES - 1)
+#define NUMBER_LA_OFFSETS (MAX_ACTIONS_PER_AGENT + (DIPLOMATIC_STANCES - 1))
 #define GA_PERSONALITY_TRAITS 4
 #define SLEEP_TIME_WAITING_MUTEX_MICROS 10
 #define MAX_MUTEX_TRY_LOCKS 500 //will try at least twice anyway

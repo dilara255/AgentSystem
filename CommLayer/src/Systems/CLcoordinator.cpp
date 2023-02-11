@@ -30,6 +30,10 @@ namespace CL {
 		return true;
 	}
 
+	bool isClintDataInitialized() {
+		return isClientDataPointerInitialized();
+	}
+
 	bool isASdataPointerInitialized() {
 		bool mirroPtrIsNUll = (ASmirrorData_ptr == NULL);
 		bool ASmirroIsInitialized = (ASmirror.isInitialized());
@@ -134,21 +138,19 @@ namespace CL {
 		return clientData_ptr;
 	}
 
-	bool blockClientDataForAmoment() {
+	std::mutex* blockClientData() {
 		if (!isClientDataPointerInitialized()) {
 			LOG_WARN("Client Data not initialized. Will proceed without blocking, but something may be wrong");
-			return true;
+			return NULL;
 		}
 
 		std::mutex* mutex_ptr = clientData_ptr->acquireMutex();
 		
 		if (mutex_ptr == NULL) {
 			LOG_ERROR("Client Data blocking failed!");
-			return false;
 		}
-
-		mutex_ptr->unlock();
-		return true;
+		
+		return mutex_ptr;
 	}
 
 	bool getNewClientData(AS::networkParameters_t* paramsRecepient_ptr,

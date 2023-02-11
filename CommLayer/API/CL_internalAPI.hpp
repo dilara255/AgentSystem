@@ -9,6 +9,8 @@
 namespace CL {
 	CL_API bool init(const AS::networkParameters_t* params_cptr);
 
+	CL_API bool isClintDataInitialized();
+
 	//If the handler already exists, will delete and re-instantiate and initialize it.
 	//Is called whenever a network is loaded.
 	CL_API bool createClientDataHandler(AS::networkParameters_t params);
@@ -32,8 +34,9 @@ namespace CL {
   							  const std::vector <GA::decisionData_t>* decisionGAs_cptr,
 					          bool silent);
 
-	//Used for synchronization (sp?), ie, for saving. Acquires and releases mutex.
-	CL_API bool blockClientDataForAmoment();
+	//Used for synchronization (sp?), ie, for saving. 
+	//Acquires mutex and returns pointer to it. NULL on failure. Remember to unlock!
+	CL_API std::mutex* blockClientData();
 
 	//****For Testing****
 	CL_API void sanityTest(int ASinitTestNumber, int tstArraySize);

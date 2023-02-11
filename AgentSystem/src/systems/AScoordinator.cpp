@@ -246,13 +246,8 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 	return result; //not much information is given, but the app may decide what to do on failure
 }
 
-bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite) {
+bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite, bool willResumeAfterSave) {
 	LOG_INFO("Trying to save network to a file...");
-
-	if (!CL::blockClientDataForAmoment()) {
-		LOG_ERROR("Couldn't acquire mutex to synchronize with Client Changes. Will abort saving.");
-		return false;
-	}
 
 	if (!isInitialized) {
 		LOG_ERROR("Agent System and Communications Layer must be initialized before saving. Aborting.");
@@ -269,13 +264,39 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite) {
 	if (shouldMainLoopBeRunning) {
 		LOG_TRACE("Will stop main loop (if saving fails, mainLoop is not resumed either)");
 		if(stop()){
-			shouldResumeThread = true;
+			shouldResumeThread = willResumeAfterSave;
 			LOG_TRACE("Will resume main loop after saving");
 		}
 		else {
 			LOG_WARN("Something weird is going on with the Main Loop Thread. Saving will proceed but thread won't be resumed...");
 		}
 	}
+
+	//If we're quitting, let's not loose any issued data changes:
+	std::mutex* clientDataMutex_ptr = NULL;
+	if(!willResumeAfterSave){
+		if (CL::isClintDataInitialized()) {
+
+			//Make client stop issuing data before proceeding:
+			clientDataMutex_ptr = CL::blockClientData();
+			if(clientDataMutex_ptr == NULL){
+				LOG_ERROR("Couldn't acquire mutex to synchronize with Client Changes. Will abort saving.");
+				return false;
+			}
+
+			//Make sure any dangling data issued by the Client is captured:
+			bool result = CL::getNewClientData(currentNetworkParams_ptr, 
+											   &agentDataControllerPtrs,
+						   					   &(actionSystem.data), 
+											   shouldMainLoopBeRunning);
+			if (!result) {
+				LOG_ERROR("Couldn't receive Client Changes. Will abort saving");
+				goto returnWithError;
+			}
+		}
+	}
+
+	//Proceed with save:
 
 	if (name == "") {
 		LOG_TRACE("Using name stored on network params");
@@ -290,17 +311,17 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite) {
 	
 	if (fp == NULL) {
 		LOG_ERROR("Failed to create new file, aborting save.");
-		return false;
+		goto returnWithError;
 	}
 
 	LOG_TRACE("File Acquired. Will save network");
 	
 	bool result = createNetworkFileFromData(fp, agentDataControllers_cptr, 
-		 							        currentNetworkParams_cptr,
+		 	   				                currentNetworkParams_cptr,
 		                                    actionDataController_cptr);
 	if (!result) {
 		LOG_ERROR("Saving failed!");
-		return false;
+		goto returnWithError;
 	}
 	else {
 		LOG_INFO("Network Saved to File!");
@@ -310,9 +331,24 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite) {
 	LOG_TRACE("File closed.");
 	
 	if (shouldResumeThread) { 
-		LOG_TRACE("File closed. Will resume mainLoop"); 
-		result &= run(); 
+		LOG_TRACE("File closed. Will resume mainLoop..."); 
+		result = run(); 
+		if (!result) {
+			LOG_ERROR("Failed to resume AS's main loop!"); 
+			goto returnWithError;
+		}
 	}
 
-	return result;
+	return true;
+
+returnWithError:
+
+	if (fp != NULL) {
+		fclose(fp);
+	}
+	if (clientDataMutex_ptr != NULL) {
+		clientDataMutex_ptr->unlock();
+	}
+
+	return false;
 }
