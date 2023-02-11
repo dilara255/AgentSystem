@@ -17,12 +17,17 @@ namespace CL {
 	CL::ClientData::Handler* clientData_ptr = NULL;
 
 	bool isClientDataPointerInitialized() {
-		bool clientDataPtrIsNull = (clientData_ptr == NULL);
-		bool clientDataHandlerIsInitialized = (clientData_ptr->hasInitialized());
-		if (clientDataPtrIsNull || !clientDataHandlerIsInitialized) {
+	
+		if (clientData_ptr == NULL) {
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
-				printf("Client Data Handler ptr null? %d. Handler initialized? %d.\n",
-								    (int)clientDataPtrIsNull, (int)clientDataHandlerIsInitialized);
+				LOG_TRACE("Client Data ptr is NULL");
+			#endif
+			return false;
+		}
+		
+		if (!clientData_ptr->hasInitialized()) {
+			#if (defined AS_DEBUG) || VERBOSE_RELEASE
+				LOG_TRACE("Client Data Handler not initialized");
 			#endif
 			return false;
 		}
@@ -97,23 +102,31 @@ namespace CL {
 		if (!tempHandler_ptr->hasInitialized()) {
 			LOG_ERROR("New Client Data Handler failed to initialize. Will delete and abort creation");
 			delete tempHandler_ptr;
-			tempHandler_ptr = NULL;
 			return false;
 		}
 
-		if (clientData_ptr != NULL) {
-			LOG_TRACE("Handler already exists, will delete old and substitute");
-			CL::ClientData::Handler* tempHandler2_ptr = clientData_ptr;
+		if (clientData_ptr == NULL) {
 			clientData_ptr = tempHandler_ptr;
-			delete tempHandler2_ptr;
-			tempHandler2_ptr = NULL;
-			tempHandler_ptr = NULL;
-			//^This little dance is just in case Client tries to access while we're deleting
-		}
-		else {
-			clientData_ptr = tempHandler_ptr;
-			tempHandler_ptr = NULL;
 		}	
+		else{
+			LOG_TRACE("Handler already exists, will substitute and delete old");
+
+			//make sure no one is holding the lock before deletion:
+			std::mutex* mutex_ptr = clientData_ptr->acquireMutex();
+			if(mutex_ptr != NULL){
+				CL::ClientData::Handler* tempHandler2_ptr = clientData_ptr;
+				clientData_ptr = tempHandler_ptr;
+				mutex_ptr->unlock();
+				delete tempHandler2_ptr;
+				LOG_TRACE("Substition and deletion done");
+			}
+			else {
+				//couldn't secure mutex. Won't be able to delete old handler: delete new one.
+				LOG_ERROR("Couldn't delete old Handler. Will keep it, discard the new one and fail");
+				delete tempHandler_ptr;
+				return false;
+			}			
+		}
 
 		LOG_TRACE("New handler created");
 
