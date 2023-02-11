@@ -71,13 +71,13 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
 			res_ptr->current += 
-				LA::calculateTradeIncome(partnerID, stance, dp)*timeMultiplier;
+				LA::calculateTradeIncomePerSecond(partnerID, stance, dp)*timeMultiplier;
 		}
 
 		if ((stance == AS::diploStance::WAR)) {
 			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
 			str_ptr->current -= 
-				LA::calculateAttritionLosses(agentId, partnerID, dp)*timeMultiplier;
+				LA::calculateAttritionLossesPerSecond(agentId, partnerID, dp)*timeMultiplier;
 		}
 	}
 }
