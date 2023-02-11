@@ -22,14 +22,12 @@ namespace AS {
 	AS_API bool isMainLoopRunning();
 	AS_API bool chekIfMainLoopShouldBeRunning();
 
-	//TODO-CRITICAL: block client data while loading.
 	//Loads network and instantiates appropriate Client Data Handler.
 	//If active, stops AS's main loop before loading.
+	//Client is blocked from issuing data before new Client Data Handler is instantiated.
 	//v
 	//- WARNING: CLEARS active Network and Client Data Handler, no confirmation needed! 
-	//Logic to save current network first and etc should be handled by the CLIENT.
-	//- WARNING: Do NOT try to send new Client Data before this returns!
-	//If the Client calls AS and CL in multiple trheads, this should be handled by the CLIENT.
+	//Any logic to save current network first and etc should be handled by the CLIENT.
 	AS_API bool loadNetworkFromFile(std::string name, bool runNetwork = false);
 
 	//Saves active network. If AS's main loop is running, saves AFTER step is done.

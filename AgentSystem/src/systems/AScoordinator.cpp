@@ -176,26 +176,43 @@ namespace AS {
 }
 
 bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
+	
+	bool shouldBlockClientFromIssuingData = CL::isClintDataInitialized();
+	std::mutex* clientDataMutex_ptr = NULL;
+
+	if (shouldBlockClientFromIssuingData) {
+		clientDataMutex_ptr = CL::blockClientData();
+		if(clientDataMutex_ptr == NULL){
+			LOG_ERROR("Couldn't acquire mutex to block further Client Changes. Will abort loading.");
+			return false;
+		}
+		else {
+			LOG_TRACE("Mutex Acquired");
+		}
+	}
+
 	LOG_INFO("Trying to load network from a file");
 	if(runNetwork) { LOG_INFO("Will start Main Loop if loading succeeds"); }
 
+	bool result = true;
 	if (!isInitialized) {
 		LOG_ERROR("Agent System and Communications Layer must be initialized before loading. Aborting.");
-		return false;
+		result = false;
+		goto cleanUpAndReturn;
 	}
 
 	FILE* fp = acquireFilePointerToLoad(name);
 
 	if (fp == NULL) {
 		LOG_ERROR("Failed to open file, aborting load. Current network preserved.");
-		return false;
+		result = false;
+		goto cleanUpAndReturn;
 	}
 
 	if (!fileIsCompatible(fp)) {
 		LOG_ERROR("File format version incompatible. Aborting load. Current network preserved.");
-		fclose(fp);
-		LOG_TRACE("File closed");
-		return false;
+		result = false;
+		goto cleanUpAndReturn;
 	}
 
 	//TODO: BLOCK CLIENT CHANGES (add some "isLoading" flag on the CL?)
@@ -206,7 +223,7 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 			LOG_TRACE("Thread stopped");
 		}
 		else {
-			LOG_WARN("Something weird is going on with the Main Loop Thread. Saving will proceed but thread won't be resumed...");
+			LOG_WARN("Something weird is going on with the Main Loop Thread. Loading will proceed but may fail...");
 		}
 	}
 
@@ -214,36 +231,59 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 	strcpy(currentNetworkParams.name, name.c_str());
 	LOG_TRACE("File Acquired and of compatiple version. Network cleared and new name set");
 
-	bool result;
 	result = loadNetworkFromFileToDataControllers(fp, agentDataControllerPtrs, 
-		                                              currentNetworkParams_ptr,
-		                                                     &actionSystem.data);
+		                                          currentNetworkParams_ptr,
+		                                          &actionSystem.data);
 
 
 	fclose(fp);
 	LOG_TRACE("File closed");
 
 	if (!result) {
-		LOG_ERROR("Load failed. Will clear the network.");
+		LOG_ERROR("Load failed mid-way through. Will clear the network.");
 		clearNetwork(); //we don't leave an incomplete state behind. Marks data as not initialized.
+		goto cleanUpAndReturn;
 	}
 
 	//TODO: check capacities and sizes to make sure things are in order?
 
-	if(result){
-		agentDataControllerPtrs.haveData = true;
-		currentNetworkParams.isNetworkInitialized = true;
-		LOG_INFO("File loaded...");
+	agentDataControllerPtrs.haveData = true;
+	currentNetworkParams.isNetworkInitialized = true;
+	LOG_INFO("File loaded...");
 
-		//TODO: This could be just an update(), which clears + shrinks + reserves stuff.
-		result = CL::createClientDataHandler(*currentNetworkParams_ptr);
+	//if acquired, release mutex so we can delete the old Handler to create a new one
+	if (clientDataMutex_ptr != NULL) {
+		clientDataMutex_ptr->unlock();
+		clientDataMutex_ptr = NULL; //so we don't try to release again later
+		LOG_TRACE("Mutex Released closed");
+	}
+
+	//TODO: This could be just an update(), which clears + shrinks + reserves stuff.
+	result = CL::createClientDataHandler(*currentNetworkParams_ptr);
+	if(!result){
+		LOG_ERROR("Failed to create new Client Data Handler!");
+		goto cleanUpAndReturn;
 	}
 	
-	//TODO: do whatever else should be done after load, clear on error
-	
-	if(result && runNetwork) { result = AS::run(); }
+	if(runNetwork) { 
+		result = AS::run(); 
+		if(!result){
+			LOG_ERROR("Couldn't restart AS's main loop after load!");
+			goto cleanUpAndReturn;
+		}
+	}
 
-	return result; //not much information is given, but the app may decide what to do on failure
+cleanUpAndReturn:
+	if (fp != NULL) {
+		fclose(fp);
+		LOG_TRACE("File closed");
+	}
+	if (clientDataMutex_ptr != NULL) {
+		clientDataMutex_ptr->unlock();
+		LOG_TRACE("Mutex Released");
+	}
+
+	return result; //not much info is given, but the app may decide what to do on failure
 }
 
 bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite, bool willResumeAfterSave) {
@@ -345,9 +385,11 @@ returnWithError:
 
 	if (fp != NULL) {
 		fclose(fp);
+		LOG_TRACE("File closed");
 	}
 	if (clientDataMutex_ptr != NULL) {
 		clientDataMutex_ptr->unlock();
+		LOG_TRACE("Mutex Released");
 	}
 
 	return false;
