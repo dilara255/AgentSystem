@@ -30,14 +30,12 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	
 	auto GAstateData_ptr = dp->GAstate_ptr->getDirectDataPtr();
 
-	//Remember last GA doesn't count 
-	//TODO-CRITICAL: FIX: should store "numberEffectiveGAs" or something, and fix everywhere
-	for (int i = 0; i < (numberGAs - 1); i++) {	
+	for (int i = 0; i < numberGAs; i++) {	
 		updateGA(&GAstateData_ptr->at(i), i, dp, timeMultiplier);
 	}
 	
 	static int nextDecisionGAindex = 0;	
-	if(nextDecisionGAindex >= (numberGAs-1)) nextDecisionGAindex = 0;
+	if(nextDecisionGAindex >= numberGAs) nextDecisionGAindex = 0;
 	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
 
 	for (int i = nextDecisionGAindex; i <= finalDecisionGAindex; i++) {	
@@ -95,9 +93,8 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 		return;
 	}
 
-	auto param_ptr = &state_ptr->parameters;
-
 	int quantityLAs = state_ptr->localAgentsBelongingToThis.howManyAreOn();
+	auto param_ptr = &state_ptr->parameters;
 	param_ptr->LAesourceTotals.current = 0;
 	param_ptr->LAesourceTotals.updateRate = 0;
 	param_ptr->LAstrenghtTotal = 0;

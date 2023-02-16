@@ -45,7 +45,7 @@ namespace AS {
 		int LAdecisionsToMake = 0;
 		int GAdecisionsToMake = 0;
 
-		int numberLAs = 0;
-		int numberGAs = 0;
+		int quantityLAs = 0;
+		int quantityEffectiveGAs = 0;
 	};
 }
