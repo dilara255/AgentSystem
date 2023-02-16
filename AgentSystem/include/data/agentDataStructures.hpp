@@ -217,10 +217,11 @@ namespace GA {
 
 	typedef struct {
 		bool onOff;
+		AS::GAflagField_t connectedGAs;
+		int neighbourIDs[MAX_GA_QUANTITY];
 		AS::GAneighborRelations_t relations;
 		AS::LAflagField_t localAgentsBelongingToThis;
-		AS::GAparameterTotals_t parameters;
-		AS::GAflagField_t connectedGAs;
+		AS::GAparameterTotals_t parameters;		
 
 		enum class fields { ONOFF, RELATIONS, LOCAL_AGENTS, PARAMETERS, CONNECTED_GAS,
 			                TOTAL_GA_STATE_FIELDS };
