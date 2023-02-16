@@ -243,7 +243,7 @@ void timeAndSleep(AS::timingMicros_st* timing_ptr) {
 		timing_ptr->largestSnoozeMicros = snoozedMicros;
 	}
 	
-	//Calculate timeMultiplier, which will be used to keep logic frquency-independent (to an extent)
+	//Calculate timeMultiplier, which will be used to keep logic frequency-independent (to an extent)
 	auto lastStepDuration = timing_ptr->startThisStep - timing_ptr->startLastStep;
 	double lastStepDurationMicros =
 			  (double)(std::chrono::duration_cast<std::chrono::microseconds>(lastStepDuration).count());

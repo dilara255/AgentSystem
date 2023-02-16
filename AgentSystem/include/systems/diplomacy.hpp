@@ -16,9 +16,6 @@ namespace LA{
 namespace GA{
 	float calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStance, 
 		                                AS::dataControllerPointers_t* agentDataPtrs_ptr);
-	
-	float calculateAttritionLossesPerSecond(int agentId1, int agentId2, 
-		                                    AS::dataControllerPointers_t* agentDataPtrs_ptr);
 }
 
 namespace AS {
