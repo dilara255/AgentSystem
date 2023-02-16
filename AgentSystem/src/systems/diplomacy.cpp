@@ -52,8 +52,8 @@ float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 	int tradeSaturation = 0;
 	int partnersNeighbours = partner.connectedGAs.howManyAreOn();
 
-	//TODO_CRITICAL: check order of diplomatic stances to neighbours!
 	for (int i = 0; i < partnersNeighbours; i++) {
+		//TODO-CRITICAL: wrong (should use neighbourIDs[i]
 		int diploStance = (int)partner.relations.diplomaticStanceToNeighbors[i];
 		tradeSaturation += AS::tradeSaturationFromStance[diploStance];
 	}
