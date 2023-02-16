@@ -12,7 +12,7 @@ void AS::stepActions(ActionSystem* ap, int numberLAs, int numberGAs, float timeM
 	gaActs = ap->data.getDirectGAdataPtr();
 
 	int LAactions = ap->data.getMaxActionsPerAgent()*numberLAs;
-	int GAactions = ap->data.getMaxActionsPerAgent()*(numberGAs-1);
+	int GAactions = ap->data.getMaxActionsPerAgent()*numberGAs;
 
 	for (int i = 0; i < LAactions; i++) {
 		processAction(laActs->at(i));

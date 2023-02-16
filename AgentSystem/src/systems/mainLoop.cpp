@@ -26,8 +26,7 @@ namespace AS{
 	dataControllerPointers_t* g_agentDataControllerPtrs_ptr;
 	networkParameters_t* g_currentNetworkParams_ptr;
 
-	//TODO: CHANGE NAME (not really just about micro seconds any more)
-	struct timingMicros_st {
+	struct timing_st {
 		uint64_t ticks = 0;
 		float timeMultiplier;
 		double accumulatedMultiplier = 0;
@@ -57,7 +56,7 @@ std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 void prepareStep(AS::chopControl_st* chopControl_ptr);
 void step(AS::chopControl_st chopControl, float timeMultiplier);
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr);
-void timeAndSleep(AS::timingMicros_st* timing_ptr);
+void timeAndSleep(AS::timing_st* timing_ptr);
 
 int getTotalPRNsToDraw(int numberLAs, int numberGAs);
 inline bool isLastChop(int chopIndex);
@@ -67,7 +66,7 @@ int howManyDecisionsThisChop(int chopIndex, int numberAgents);
 void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
 	               std::chrono::steady_clock::time_point* newReferenceTime,
 	                                           int64_t* counterToIncrement);
-void calculateAndprintMainTimingInfo(AS::timingMicros_st timingMicros);
+void calculateAndprintMainTimingInfo(AS::timing_st timingMicros);
 
 void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
 							                                                char* message);
@@ -85,13 +84,9 @@ void AS::mainLoop() {
 	bool hasThrownErrorsRecently = false;
 	int errorsAccumulated = 0;
 
-	timingMicros_st timingMicros;
+	timing_st timingMicros;
 	chopControl_st chopControl;
-	chopControl.numberLAs = g_currentNetworkParams_ptr->numberLAs;
-	chopControl.numberGAs = g_currentNetworkParams_ptr->numberGAs;
-	chopControl.totalPRNsNeeded = 
-		            getTotalPRNsToDraw(chopControl.numberLAs, chopControl.numberGAs);
-	
+		
 	timingMicros.targetStepTime = 
 		            std::chrono::milliseconds(AS_MILLISECONDS_PER_STEP);
 	timingMicros.timeMultiplier = (float)AS_MILLISECONDS_PER_STEP/MILLIS_IN_A_SECOND;
@@ -138,8 +133,12 @@ void AS::mainLoop() {
 
 void prepareStep(AS::chopControl_st* chopControl_ptr) {
 	
-	int numLAs = chopControl_ptr->numberLAs;
-	int numGAs = chopControl_ptr->numberGAs;
+	int numLAs = AS::g_currentNetworkParams_ptr->numberLAs;
+	int numGAs = AS::g_currentNetworkParams_ptr->numberGAs - 1;//last doesn't count
+
+	chopControl_ptr->quantityLAs = numLAs;
+	chopControl_ptr->quantityEffectiveGAs = numGAs;
+	chopControl_ptr->totalPRNsNeeded = getTotalPRNsToDraw(numLAs, numGAs);
 
 	//How many PRNs should be generated this tick?
 	chopControl_ptr->PRNsToDrawThisChop =
@@ -165,8 +164,8 @@ void prepareStep(AS::chopControl_st* chopControl_ptr) {
 
 void step(AS::chopControl_st chopControl, float timeMultiplier) {
 	
-	int numberLAs = chopControl.numberLAs;
-	int numberGAs = chopControl.numberGAs;
+	int numLAs = chopControl.quantityLAs;
+	int numGAs = chopControl.quantityEffectiveGAs;
 
 	/*
 	//TODO-CRITICAL: MOVE TO TEST
@@ -176,11 +175,11 @@ void step(AS::chopControl_st chopControl, float timeMultiplier) {
 	}
 	*/
 
-	AS::stepActions(AS::g_actionSystem_ptr, numberLAs, numberGAs, timeMultiplier);
+	AS::stepActions(AS::g_actionSystem_ptr, numLAs, numGAs, timeMultiplier);
 
 	AS::stepAgents(chopControl.LAdecisionsToMake, chopControl.GAdecisionsToMake, 
 		                                      AS::g_agentDataControllerPtrs_ptr, 
-		                                   timeMultiplier, numberLAs, numberGAs);
+		                                         timeMultiplier, numLAs, numGAs);
 }
 
 void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr) {
@@ -203,7 +202,7 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 		}		
 }
 
-void timeAndSleep(AS::timingMicros_st* timing_ptr) {
+void timeAndSleep(AS::timing_st* timing_ptr) {
 	
 	timing_ptr->startLastStep = timing_ptr->startThisStep;
 
@@ -273,7 +272,7 @@ void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
 	*counterToIncrement += std::chrono::duration_cast<std::chrono::microseconds>(delta).count();
 }
 
-void calculateAndprintMainTimingInfo(AS::timingMicros_st timingMicros) {
+void calculateAndprintMainTimingInfo(AS::timing_st timingMicros) {
 	
 	auto duration = std::chrono::steady_clock::now() - timingMicros.startFirstStep;
 
