@@ -221,6 +221,7 @@ namespace GA {
 		int neighbourIDs[MAX_GA_QUANTITY];
 		AS::GAneighborRelations_t relations;
 		AS::LAflagField_t localAgentsBelongingToThis;
+		int laIDs[MAX_LA_QUANTITY];
 		AS::GAparameterTotals_t parameters;		
 
 		enum class fields { ONOFF, RELATIONS, LOCAL_AGENTS, PARAMETERS, CONNECTED_GAS,

@@ -53,8 +53,8 @@ float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 	int partnersNeighbours = partner.connectedGAs.howManyAreOn();
 
 	for (int i = 0; i < partnersNeighbours; i++) {
-		//TODO-CRITICAL: wrong (should use neighbourIDs[i]
-		int diploStance = (int)partner.relations.diplomaticStanceToNeighbors[i];
+		int idOther = partner.neighbourIDs[i];
+		int diploStance = (int)partner.relations.diplomaticStanceToNeighbors[idOther];
 		tradeSaturation += AS::tradeSaturationFromStance[diploStance];
 	}
 

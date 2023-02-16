@@ -76,12 +76,15 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     return true;
 }
 
-bool setGAneighbourIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveGAs,
-                                                        int neighbourIDs[MAX_GA_QUANTITY]) {
+bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveGAs,
+                                                        int neighbourIDs[MAX_GA_QUANTITY],
+                                       AS::LAflagField_t* connectedLAs_ptr, int numberLAs,
+                                                               int laIDs[MAX_LA_QUANTITY]) {
+    //set IDs of neighbouring GAs:
     int neighboursFound = 0;
     
     uint32_t i = 0;
-    uint32_t connected = (uint32_t)connectedGAs_ptr->howManyAreOn();
+    int connected = connectedGAs_ptr->howManyAreOn();
 
     while ( (neighboursFound < connected) && (i < (uint32_t)numberEffectiveGAs) ) {
         if (connectedGAs_ptr->isBitOn(i)) {
@@ -103,11 +106,39 @@ bool setGAneighbourIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveG
         #endif // AS_DEBUG 
         return false;
     }
+
+    //set IDs LAs belonging to this:
+    i = 0;
+    int connectedLAs = (uint32_t)connectedLAs_ptr->howManyAreOn();
+    int belongingLAsFound = 0;
+
+    while ( (belongingLAsFound < connectedLAs) && (i < (uint32_t)numberLAs) ) {
+        if (connectedLAs_ptr->isBitOn(i)) {
+            laIDs[belongingLAsFound] = i;
+            belongingLAsFound++;
+        }
+        i++;
+    }
+
+    if (belongingLAsFound < connectedLAs) {
+        LOG_ERROR("Found less connected LAs than expected when updating GA connection data!");
+        #if (defined AS_DEBUG) || VERBOSE_RELEASE
+            printf("\nFIELDS: %d , %d , %d , %d ", connectedLAs_ptr->getField(0),
+                                                   connectedLAs_ptr->getField(1),
+                                                   connectedLAs_ptr->getField(2),
+                                                   connectedLAs_ptr->getField(3));
+            printf("\nID[0]: %d , ID[1] %d , ID[2] %d , ID[3]: %d , ID[%d ]: %d ",
+                                           laIDs[0], laIDs[1], laIDs[2], laIDs[3],
+                                        connectedLAs - 1, laIDs[connectedLAs - 1]);             
+        #endif // AS_DEBUG 
+        return false;
+    }
     
     return true;
 }
 
-bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEffectiveGAs) {
+bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEffectiveGAs,
+                                                                             int numberLAs) {
     //TODO: extract functions
 
     int tokens; //to test how many have been read in each call to scanf
@@ -182,7 +213,8 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
         return false;
     }
     state.connectedGAs.loadField(connectedGAsFlagField);
-    if (!setGAneighbourIDs(&state.connectedGAs, numEffectiveGAs, state.neighbourIDs)) {
+    if (!setGAneighboursAndLAsIDs(&state.connectedGAs, numEffectiveGAs, state.neighbourIDs,
+                                  &state.localAgentsBelongingToThis, numberLAs, state.laIDs)) {
         LOG_ERROR("Couldn't set Global Agent's neighbours IDs");
     }
     
@@ -453,7 +485,7 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
 
     int numEffectiveGAs = pp->numberGAs - 1;//one GA is left to represent "belongs to no GA"
     for (int i = 0; i < numEffectiveGAs; i++) {
-        result = addGAfromFile(i, fp, dp, numEffectiveGAs);
+        result = addGAfromFile(i, fp, dp, numEffectiveGAs, pp->numberLAs);
         if (!result) break;
     }
     if (!result) {

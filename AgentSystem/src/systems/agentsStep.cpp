@@ -92,33 +92,41 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	if (state_ptr->onOff == false) {
 		return;
 	}
-	int quantityLAs = state_ptr->localAgentsBelongingToThis.howManyAreOn();
+
+	//Update totals
+	int connectedLAs = state_ptr->localAgentsBelongingToThis.howManyAreOn();
 	auto param_ptr = &state_ptr->parameters;
 	param_ptr->LAesourceTotals.current = 0;
 	param_ptr->LAesourceTotals.updateRate = 0;
 	param_ptr->LAstrenghtTotal = 0;
+	auto LAstates_cptr = dp->LAstate_ptr->getDataCptr();
 
-	//TODO-CRITICAL: GAs need to KEEP IDs of their LAs (and initialize that on load)
-	for (int i = 0; i < quantityLAs; i++) {
-		param_ptr->LAesourceTotals.current += 0;
-		param_ptr->LAesourceTotals.updateRate += 0;
-		param_ptr->LAstrenghtTotal += 0;
+	for (int i = 0; i < connectedLAs; i++) {
+		int id = state_ptr->laIDs[i];
+		
+		param_ptr->LAesourceTotals.current += 
+			LAstates_cptr->at(id).parameters.resources.current;
+		param_ptr->LAesourceTotals.updateRate += 
+			LAstates_cptr->at(id).parameters.resources.updateRate;
+		param_ptr->LAstrenghtTotal += 
+			LAstates_cptr->at(id).parameters.strenght.current;
 	}
 	
+	//Get resoures:
 	float taxIncome = GA_TAX_RATE_PER_SECOND*state_ptr->parameters.LAesourceTotals.current;
 	
 	param_ptr->GAresources += taxIncome*timeMultiplier;
+
+	//from trade:
 	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
 	for (int i = 0; i < quantityNeighbours; i++) {
-		//TODO-CRITICAL: wrong (should use neighbourIDs[i]
-		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[i];
+		int idOther = state_ptr->neighbourIDs[i];
+		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[idOther];
 
 		if ((stance == AS::diploStance::TRADE) ||
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
-			//TODO-CRITICAL: GA neighbour IDs!
-			int partnerID = 0;
 			param_ptr->GAresources += 
-				GA::calculateTradeIncomePerSecond(partnerID, stance, dp)*timeMultiplier;
+				GA::calculateTradeIncomePerSecond(idOther, stance, dp)*timeMultiplier;
 		}
 	}
 }
