@@ -59,6 +59,9 @@ and data sizes static.
 #define TRADE_SATURATION_FROM_ALLY_WITH_TRADE 2
 #define LA_UPKEEP_PER_EXCESS_STRENGHT (0.5)
 #define MAX_PROPORTIONAL_STEP_DURATION_ERROR (5) 
+#define TRADE_FACTOR_PER_SECOND (0.5)
+#define ATTRITION_FACTOR_PER_SECOND (0.001)
+#define GA_TAX_RATE_PER_SECOND (0.001)
 
 //DEFAULT values for new network creation:
 #define DEFAULT_ONOFF (true)
@@ -110,7 +113,7 @@ and data sizes static.
 	//TODO: SHOULD BE PERIOD
 	#define TST_MAINLOOP_FREQUENCY_MS (AS_MILLISECONDS_PER_STEP)
 #endif// AS_DEBUG
-#define TST_TA_QUERY_MULTIPLIER (1.75) //~250 / 144, for 250 cyles/sec, as a limiting case
+#define TST_TA_QUERY_MULTIPLIER (1.75) //~250 / 144 (4 ms vs 144 fps), as a limiting case
 #define TST_TA_QUERY_FREQUENCY_MS ((unsigned)(TST_TA_QUERY_MULTIPLIER*TST_MAINLOOP_FREQUENCY_MS))
 #define TST_TIMES_TO_QUERRY_TICK 25
 #define TST_TICK_COUNT_SAFETY_FACTOR (50.0)

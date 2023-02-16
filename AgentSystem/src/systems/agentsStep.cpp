@@ -9,11 +9,12 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
+
 void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
 	                          dataControllerPointers_t* dp, float timeMultiplier,
 	                                                int numberLAs, int numberGAs) {
 
-	std::vector<LA::stateData_t>* LAstateData_ptr = dp->LAstate_ptr->getDirectDataPtr();
+	auto LAstateData_ptr = dp->LAstate_ptr->getDirectDataPtr();
 	
 	for (int i = 0; i < numberLAs; i++) {	
 		updateLA(&LAstateData_ptr->at(i), i, dp, timeMultiplier);
@@ -21,12 +22,13 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	
 	static int nextDecisionLAindex = 0;	
 	if(nextDecisionLAindex >= numberLAs) nextDecisionLAindex = 0;
+	int finalDecisionLAindex = nextDecisionLAindex + LAdecisionsToTakeThisChop - 1;
 
-	for (int i = nextDecisionLAindex; i < LAdecisionsToTakeThisChop; i++) {	
+	for (int i = nextDecisionLAindex; i <= finalDecisionLAindex; i++) {	
 		makeDecisionLA(i, dp);
 	}
 	
-	std::vector<GA::stateData_t>* GAstateData_ptr = dp->GAstate_ptr->getDirectDataPtr();
+	auto GAstateData_ptr = dp->GAstate_ptr->getDirectDataPtr();
 
 	//Remember last GA doesn't count 
 	//TODO-CRITICAL: FIX: should store "numberEffectiveGAs" or something, and fix everywhere
@@ -36,8 +38,9 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	
 	static int nextDecisionGAindex = 0;	
 	if(nextDecisionGAindex >= (numberGAs-1)) nextDecisionGAindex = 0;
+	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
 
-	for (int i = nextDecisionGAindex; i < GAdecisionsToTakeThisChop; i++) {	
+	for (int i = nextDecisionGAindex; i <= finalDecisionGAindex; i++) {	
 		makeDecisionGA(i, dp);
 	}
 }
@@ -49,8 +52,8 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 		return;
 	}
 
-	AS::resources_t* res_ptr = &state_ptr->parameters.resources;
-	AS::strenght_t* str_ptr = &state_ptr->parameters.strenght;
+	auto res_ptr = &state_ptr->parameters.resources;
+	auto str_ptr = &state_ptr->parameters.strenght;
 
 	//External guard costs a portion of upkeep for each agent:
 	float externalUpkeep = str_ptr->externalGuard*EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
@@ -80,14 +83,50 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 				LA::calculateAttritionLossesPerSecond(agentId, partnerID, dp)*timeMultiplier;
 		}
 	}
+
+	//finally, LAs pay tax to GA (and can cost the GA if in debt):
+	res_ptr->current -= GA_TAX_RATE_PER_SECOND*res_ptr->current;
 }
 
 void updateGA(GA::stateData_t* state_ptr, int agentId, 
 	          AS::dataControllerPointers_t* dp, float timeMultiplier) {
 
-	//placeholder
-	state_ptr->parameters.GAresources += 1*timeMultiplier;
+	if (state_ptr->onOff == false) {
+		return;
+	}
+
+	auto param_ptr = &state_ptr->parameters;
+
+	int quantityLAs = state_ptr->localAgentsBelongingToThis.howManyAreOn();
+	param_ptr->LAesourceTotals.current = 0;
+	param_ptr->LAesourceTotals.updateRate = 0;
+	param_ptr->LAstrenghtTotal = 0;
+
+	//TODO-CRITICAL: GAs need to KEEP IDs of their LAs (and initialize that on load)
+	for (int i = 0; i < quantityLAs; i++) {
+		param_ptr->LAesourceTotals.current += 0;
+		param_ptr->LAesourceTotals.updateRate += 0;
+		param_ptr->LAstrenghtTotal += 0;
+	}
+	
+	float taxIncome = GA_TAX_RATE_PER_SECOND*state_ptr->parameters.LAesourceTotals.current;
+	
+	param_ptr->GAresources += taxIncome*timeMultiplier;
+	
+	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
+	for (int i = 0; i < quantityNeighbours; i++) {
+		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[i];
+
+		if ((stance == AS::diploStance::TRADE) ||
+		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
+			//TODO-CRITICAL: GA neighbour IDs!
+			int partnerID = 0;
+			param_ptr->GAresources += 
+				GA::calculateTradeIncomePerSecond(partnerID, stance, dp)*timeMultiplier;
+		}
+	}
 }
+
 
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void preScoreActionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
