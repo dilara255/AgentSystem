@@ -92,7 +92,6 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	if (state_ptr->onOff == false) {
 		return;
 	}
-
 	int quantityLAs = state_ptr->localAgentsBelongingToThis.howManyAreOn();
 	auto param_ptr = &state_ptr->parameters;
 	param_ptr->LAesourceTotals.current = 0;
@@ -109,9 +108,9 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	float taxIncome = GA_TAX_RATE_PER_SECOND*state_ptr->parameters.LAesourceTotals.current;
 	
 	param_ptr->GAresources += taxIncome*timeMultiplier;
-	
 	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
 	for (int i = 0; i < quantityNeighbours; i++) {
+		//TODO-CRITICAL: wrong (should use neighbourIDs[i]
 		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[i];
 
 		if ((stance == AS::diploStance::TRADE) ||

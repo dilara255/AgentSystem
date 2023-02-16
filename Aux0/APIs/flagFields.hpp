@@ -6,44 +6,58 @@
 //TODO: eventually template each
 //TODO: TEST
 namespace AZ {
+
+	typedef struct field_st {
+		uint32_t flags = 0;
+		int8_t areOn = 0;
+	} field_t;
+
 	class FlagField32 {
 	
 	public:
-		FlagField32() { field = 0; }
+		FlagField32() { }
 
 		void loadField(uint32_t flagsToLoad) {
-			field = flagsToLoad;
+			field.flags = flagsToLoad;
+			updateHowManyAreOn();
 		}
 
 		uint32_t getField() {
-			return field;
+			return field.flags;
 		}
 
-		int howManyAreOn() {
-			int amount = 0;
+		void updateHowManyAreOn() {
+			field.areOn = 0;
 
 			for (int i = 0; i < (sizeof(field) * 8); i++) {
-					amount += ((field & BIT(i)) != 0);
+					field.areOn += ((field.flags & BIT(i)) != 0);
 			}
-			return amount;
+		}
+		
+		int howManyAreOn() {
+			return field.areOn;
 		}
 
 		bool isBitOn(unsigned bit) {
 			if (bit > 31) return false; //doesn't exist: not active
 
-			return (field & BIT(bit));
+			return (field.flags & BIT(bit));
 		}
 
 		void setBitOn(int bit) {
 			if (bit > 31) return; //doesn't exist
 
-			field = field | (BIT(bit));
+			field.areOn += ~(field.flags & BIT(bit));
+
+			field.flags = field.flags | (BIT(bit));
 		}
 
 		void setBitOff(int bit) {
 			if (bit > 31) return; //doesn't exist
 
-			field = field & (~(BIT(bit)));
+			field.areOn -= field.flags & BIT(bit);
+
+			field.flags = field.flags & (~(BIT(bit)));
 		}
 
 		/*TODO: implement toggle
@@ -53,36 +67,40 @@ namespace AZ {
 		*/
 
 	private:
-		uint32_t field;
+		field_t field;
 	};
 
 	class FlagField128 {
 
 	public:
-		FlagField128() { field[0] = 0; field[1] = 0; field[2] = 0; field[3] = 0;}
+		FlagField128() { }
 
 		bool loadField(uint32_t flagsToLoad, unsigned toWhichField) {
 			if (toWhichField > 3) return false; //doesn't exist: not active
 
-			field[toWhichField] = flagsToLoad;
+			field[toWhichField].flags = flagsToLoad;
+
+			updateHowManyAreOn();
+
 			return true;
 		}
 
 		uint32_t getField(unsigned whichField) {
 			if (whichField > 3) return 0; //doesn't exist: not active
 
-			return field[whichField];
+			return field[whichField].flags;
+		}
+
+		void updateHowManyAreOn() {
+			areOn = 0;
+			for (int i = 0; i < blocks; i++) {
+				updateHowManyAreOnBlock(i);
+				areOn += field[i].areOn;
+			}
 		}
 
 		int howManyAreOn() {
-			int amount = 0;
-
-			for (int i = 0; i < blocks; i++) {
-				for (int j = 0; j < (sizeof(field[0]) * 8); j++) {
-					amount += ( (field[i] & BIT(j)) != 0);
-				}
-			}
-			return amount;
+			return areOn;
 		}
 
 		bool isBitOn(int bit) {
@@ -91,7 +109,7 @@ namespace AZ {
 			int element = bit / 32;
 			int bitOnTheElement = bit - (element * 8);
 
-			return (field[element] & BIT(bitOnTheElement));
+			return (field[element].flags & BIT(bitOnTheElement));
 		}
 
 		void setBitOn(int bit) {
@@ -100,7 +118,9 @@ namespace AZ {
 			int element = bit / 32;
 			int bitOnTheElement = bit - (element * 8);
 
-			field[element] = field[element] | (BIT(bit));
+			field[element].areOn += ~(field[element].flags & BIT(bit));
+
+			field[element].flags = field[element].flags | (BIT(bit));
 		}
 
 		void setBitOff(int bit) {
@@ -109,7 +129,9 @@ namespace AZ {
 			int element = bit / 32;
 			int bitOnTheElement = bit - (element * 8);
 
-			field[element] = field[element] & (~(BIT(bit)));
+			field[element].areOn -= field[element].flags & BIT(bit);
+
+			field[element].flags = field[element].flags & (~(BIT(bit)));
 		}
 
 		int getNumberOfBlocks() {
@@ -128,6 +150,15 @@ namespace AZ {
 
 	private:
 		int blocks = 4;
-		uint32_t field[4];
+		field_t field[4];
+		int areOn = 0;
+
+		void updateHowManyAreOnBlock(unsigned whichField) {
+			field[whichField].areOn = 0;
+
+			for (int j = 0; j < (sizeof(field[0]) * 8); j++) {
+				field[whichField].areOn += ( (field[whichField].flags & BIT(j)) != 0);
+			}
+		}	
 	};
 }
