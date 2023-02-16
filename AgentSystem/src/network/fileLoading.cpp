@@ -76,6 +76,37 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     return true;
 }
 
+bool setGAneighbourIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveGAs,
+                                                        int neighbourIDs[MAX_GA_QUANTITY]) {
+    int neighboursFound = 0;
+    
+    uint32_t i = 0;
+    uint32_t connected = (uint32_t)connectedGAs_ptr->howManyAreOn();
+
+    while ( (neighboursFound < connected) && (i < (uint32_t)numberEffectiveGAs) ) {
+        if (connectedGAs_ptr->isBitOn(i)) {
+            neighbourIDs[neighboursFound] = i;
+            neighboursFound++;
+        }
+        i++;
+    }
+
+    if (neighboursFound < connected) {
+        LOG_ERROR("Found less neighbours than expected when updating GA connection data!");
+        #if (defined AS_DEBUG) || VERBOSE_RELEASE
+            printf("\nFIELD: %d", connectedGAs_ptr->getField());
+      
+            printf("\nID[0]: %d , ID[1] %d , ID[2] %d , ID[3]: %d , ID[%d ]: %d ",
+                                                 neighbourIDs[0], neighbourIDs[1],
+                                                 neighbourIDs[2], neighbourIDs[3],
+                                       connected - 1, neighbourIDs[connected - 1]);        
+        #endif // AS_DEBUG 
+        return false;
+    }
+    
+    return true;
+}
+
 bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEffectiveGAs) {
     //TODO: extract functions
 
@@ -151,6 +182,10 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
         return false;
     }
     state.connectedGAs.loadField(connectedGAsFlagField);
+    if (!setGAneighbourIDs(&state.connectedGAs, numEffectiveGAs, state.neighbourIDs)) {
+        LOG_ERROR("Couldn't set Global Agent's neighbours IDs");
+    }
+    
 
     for (int i = 0; i < numEffectiveGAs; i++) {
         if (i != id) {
@@ -301,7 +336,9 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     int connections = state.locationAndConnections.connectedNeighbors.howManyAreOn();
     state.locationAndConnections.numberConnectedNeighbors = connections;
 
-    setLAneighbourIDsAndFirst(&state.locationAndConnections, numberLAs);
+    if(!setLAneighbourIDsAndFirst(&state.locationAndConnections, numberLAs)){
+        LOG_ERROR("Couldn't set Local Agent's neighbours IDs");
+    };
 
     for (int i = 0; i < connections; i++) {
         int otherId, stance;
