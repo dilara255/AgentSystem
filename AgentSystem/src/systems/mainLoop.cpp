@@ -18,6 +18,7 @@
 
 namespace AS{
 	bool* g_shouldMainLoopBeRunning_ptr;
+	bool g_shouldMainLoopBePaused = false;
 	std::thread::id* g_mainLoopId_ptr;
 	std::thread* g_mainLoopThread_ptr;
 	AS::PRNserver* g_prnServer_ptr;
@@ -25,6 +26,8 @@ namespace AS{
 	ActionSystem* g_actionSystem_ptr; 
 	dataControllerPointers_t* g_agentDataControllerPtrs_ptr;
 	networkParameters_t* g_currentNetworkParams_ptr;
+
+	std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
 	struct timing_st {
 		uint64_t ticks = 0;
@@ -48,10 +51,9 @@ namespace AS{
 		std::chrono::steady_clock::time_point endDataTransfer;
 		std::chrono::steady_clock::time_point endTimmingAndSleep;
 		std::chrono::microseconds targetStepTime;
+		std::chrono::microseconds timeSpentPaused = zeroMicro;
 	};
 }
-
-std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
 void prepareStep(AS::chopControl_st* chopControl_ptr);
 void step(AS::chopControl_st chopControl, float timeMultiplier);
@@ -234,7 +236,7 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 	}
 
 	auto snoozed = timing_ptr->startThisStep - targetWakeTime;
-	if(hotTime > timing_ptr->targetStepTime){snoozed = zeroMicro;}
+	if(hotTime > timing_ptr->targetStepTime){snoozed = AS::zeroMicro;}
 	int64_t snoozedMicros = 
 		 std::chrono::duration_cast<std::chrono::microseconds>(snoozed).count();
 	timing_ptr->totalSnoozedMicros += snoozedMicros;
@@ -262,6 +264,23 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 		       std::chrono::duration_cast<std::chrono::microseconds>(timing_ptr->startThisStep - timing_ptr->startLastStep);
 
 	AS::g_currentNetworkParams_ptr->mainLoopTicks++;
+
+	//Deals with pause (pause sleeps in cycles of targetStepTime until unpaused)
+	if(AS::g_shouldMainLoopBePaused){
+		auto pauseStartTime = std::chrono::steady_clock::now();
+		auto pauseStepStartTime = pauseStartTime;
+		auto targetWakeTimePause = pauseStepStartTime + timing_ptr->targetStepTime;
+		while (AS::g_shouldMainLoopBePaused) {
+			AZ::hybridBusySleep(targetWakeTimePause, threshold);
+			pauseStepStartTime = std::chrono::steady_clock::now();
+			targetWakeTimePause = pauseStepStartTime + timing_ptr->targetStepTime;
+		}
+		auto pauseEndTime = std::chrono::steady_clock::now();
+		auto timePaused = 
+			std::chrono::duration_cast<std::chrono::microseconds>(pauseEndTime - pauseStartTime);
+		timing_ptr->timeSpentPaused += timePaused;
+		timing_ptr->startThisStep = std::chrono::steady_clock::now();
+	}
 }
 
 void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
@@ -425,6 +444,7 @@ bool AS::run() {
 	LOG_TRACE("Creating Main Loop Thread and marking as started...");
 
 	*g_shouldMainLoopBeRunning_ptr = true;
+	g_shouldMainLoopBePaused = false;
 	g_currentNetworkParams_ptr->lastMainLoopStartingTick = 
 												g_currentNetworkParams_ptr->mainLoopTicks;
 	*g_mainLoopThread_ptr = std::thread(mainLoop);
@@ -466,6 +486,18 @@ bool AS::stop() {
 
 bool AS::chekIfMainLoopShouldBeRunning() {
 	return *g_shouldMainLoopBeRunning_ptr;
+}
+
+bool AS::chekIfMainLoopShouldBePaused() {
+	return g_shouldMainLoopBePaused;
+}
+
+void AS::pauseMainLoop() {
+	g_shouldMainLoopBePaused = true;
+}
+
+void AS::unpauseMainLoop() {
+	g_shouldMainLoopBePaused = false;
 }
 
 bool AS::isMainLoopRunning() {

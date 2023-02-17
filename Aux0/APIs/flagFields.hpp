@@ -3,8 +3,13 @@
 #include "miscStdHeaders.h"
 #include "core.hpp"
 
-//TODO: eventually template each
-//TODO: TEST
+//TODO-CRITICAL: TESTS
+//TODO: template
+//TODO: Rethink counting method: 
+//-- https://en.cppreference.com/w/cpp/numeric/popcount
+//--- But Byte-At-A-Time Lookup Table seems to be within ~17% of native popcount
+//---- ( https://github.com/intvnut/bit_count )
+
 namespace AZ {
 
 	typedef struct field_st {
