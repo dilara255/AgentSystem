@@ -112,7 +112,7 @@
 * -Understand why x86 versions are getting crazy tick values;
 * -Understand why saving can sometimes take a while (but don't loose sleep over it);
 * 
-* > 1. Basic structure:
+* 1. Basic structure:
 * 
 * -Review notes, sketch on paper;
 * -Implement skeleton of main loop, with dummy loop stubs;
@@ -128,7 +128,8 @@
 * 
 * 3. Updates:
 * 
-* > -Implement state self-updating (ie, from income and upkeep, no actions involved);
+* -Implement state self-updating (ie, from income and upkeep, no actions involved);
+* > -Add tests;
 * -Update information and expected values;
 * --Add data structure for expected values;
 * --WILL HAVE TO SOLVE HOW TO SAVE THIS (at the bottom of the file seems good);

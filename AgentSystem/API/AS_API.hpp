@@ -21,6 +21,12 @@ namespace AS {
 	AS_API bool quit();	
 	AS_API bool isMainLoopRunning();
 	AS_API bool chekIfMainLoopShouldBeRunning();
+	AS_API bool chekIfMainLoopShouldBePaused();
+	//pausing already paused loop has no effect. Pause effective starts after mainLoop step
+	//pause sleeps in cycles of targetStepTime until unpaused
+	AS_API void pauseMainLoop();
+	//unpausing already unpaused loop has no effect. Resumes after up to target step time
+	AS_API void unpauseMainLoop();
 
 	//Loads network and instantiates appropriate Client Data Handler.
 	//If active, stops AS's main loop before loading.
