@@ -76,6 +76,7 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     return true;
 }
 
+//TODO: has some duplication with setLAneighbourIDsAndFirst
 bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveGAs,
                                                         int neighbourIDs[MAX_GA_QUANTITY],
                                        AS::LAflagField_t* connectedLAs_ptr, int numberLAs,
@@ -83,9 +84,13 @@ bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEff
     //set IDs of neighbouring GAs:
     int neighboursFound = 0;
     
-    uint32_t i = 0;
     int connected = connectedGAs_ptr->howManyAreOn();
+    if (connected > numberEffectiveGAs) {
+            LOG_ERROR("Received data with more connections than the amount of effective GAs"); 
+            return false;
+    }
 
+    uint32_t i = 0;
     while ( (neighboursFound < connected) && (i < (uint32_t)numberEffectiveGAs) ) {
         if (connectedGAs_ptr->isBitOn(i)) {
             neighbourIDs[neighboursFound] = i;
@@ -120,8 +125,8 @@ bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEff
         i++;
     }
 
-    if (belongingLAsFound < connectedLAs) {
-        LOG_ERROR("Found less connected LAs than expected when updating GA connection data!");
+    if (belongingLAsFound != connectedLAs) {
+        LOG_ERROR("Didn't find expected number of LAs when updating GA connection data!");
         #if (defined AS_DEBUG) || VERBOSE_RELEASE
             printf("\nFIELDS: %d , %d , %d , %d ", connectedLAs_ptr->getField(0),
                                                    connectedLAs_ptr->getField(1),
@@ -249,9 +254,14 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     return true;
 }
 
+//TODO: has some duplication with setGAneighbourIDsAndFirst
 bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int numberLAs) {
     
     data_ptr->numberConnectedNeighbors = data_ptr->connectedNeighbors.howManyAreOn();
+    if (data_ptr->numberConnectedNeighbors > MAX_LA_NEIGHBOURS) {
+        LOG_ERROR("Received data with more than MAX_LA_NEIGHBOURS connections"); 
+        return false;
+    }
 
     int neighboursFound = 0;
     uint32_t i = 0;
@@ -267,12 +277,6 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
     data_ptr->firstConnectedNeighborId = data_ptr->neighbourIDs[0];
 
     if (neighboursFound < data_ptr->numberConnectedNeighbors) {
-        
-        if (neighboursFound == MAX_LA_NEIGHBOURS) {
-            LOG_WARN("Received data with more than MAX_LA_NEIGHBOURS connections"); 
-            LOG_TRACE("Processed only the first MAX_LA_NEIGHBOURS of them.Will pass test, but may be a problem...");
-            return true;
-        }
 
         LOG_ERROR("Found less neighbours than expected when updating LA connection data!");
         #if (defined AS_DEBUG) || VERBOSE_RELEASE
