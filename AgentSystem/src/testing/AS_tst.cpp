@@ -32,12 +32,160 @@ int initTestNumber;
 int* AStestArray_ptr;
 int* CLtestArray_ptr;
 
+bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int numberLAs);
+bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveGAs,
+                                                        int neighbourIDs[MAX_GA_QUANTITY],
+                                       AS::LAflagField_t* connectedLAs_ptr, int numberLAs,
+                                                               int laIDs[MAX_LA_QUANTITY]);
+
 //TODO: Add reasonable return values to all tests : )
 namespace AS {
 
 	extern ActionSystem actionSystem;
 	extern dataControllerPointers_t agentDataControllerPtrs;
 	extern networkParameters_t* currentNetworkParams_ptr;
+
+	//TODO: some of the sub-tests can be extracted into FlagField functionality and tests
+	bool testNeighbourIDsetting() {
+		LOG_WARN("Will test setting neighbour IDs for LAs and GAs based on connections");
+		
+		//First we will test the LA side: 
+		AS::LAlocationAndConnectionData_t connectionData;
+
+		const int blocks = (MAX_LA_QUANTITY / (sizeof(uint32_t)*BITS_IN_A_BYTE));
+		if (blocks != 4) {
+			LOG_ERROR("Expected a different block size: MAX_LA_QUANTITY not supported by this teste. Will fail)");
+			return false;
+		}
+
+		uint32_t connectedLAs[blocks];
+		connectedLAs[0] = 0b01001011011000011110111110011100;
+		connectedLAs[1] = 0b01010010011000101010110111010001;
+		connectedLAs[2] = 0b10100101101000011001100001110011;
+		connectedLAs[3] = 0b11100011001010011001011100100110;
+
+		AZ::FlagField128 effectiveLAsMaskFlags;
+		for(int i = 0; i < blocks; i++){
+			effectiveLAsMaskFlags.loadField(0,i);
+		}		
+		for (int i = 0; i < TST_NUMBER_LAS; i++) {
+			effectiveLAsMaskFlags.setBitOn(i);
+		}
+
+		for(int i = 0; i < blocks; i++){
+			uint32_t effectiveBlock = connectedLAs[i] & effectiveLAsMaskFlags.getField(i);
+			connectionData.connectedNeighbors.loadField(effectiveBlock,i);
+		}
+		int totalConnected = connectionData.connectedNeighbors.howManyAreOn();
+		int* totalConnected_ptr = &totalConnected;
+
+		bool result = setLAneighbourIDsAndFirst(&connectionData, MAX_LA_QUANTITY);
+		if (!result) {
+			LOG_ERROR("Failed setting neighbour IDs and first connected");
+		}
+		
+		if (connectionData.numberConnectedNeighbors != totalConnected) {
+			LOG_ERROR("LA's total connected neighbours is not registered as expected");
+			return false;
+		}
+
+		int firstNeighbour = -1;
+		int i = 0;
+		while (firstNeighbour == -1) {
+			if (connectionData.connectedNeighbors.isBitOn(i)) {
+				firstNeighbour = i;
+			}
+			i++;
+		}
+		if (connectionData.firstConnectedNeighborId != firstNeighbour) {
+			LOG_ERROR("LA's First Neighbour ID not as expected");
+			result = false;
+		}
+
+		int found = 0;
+		bool neighbourIDsOk = true;
+		for (int i = 0; i < TST_NUMBER_LAS; i++) {
+			if (connectionData.connectedNeighbors.isBitOn(i)) {
+				neighbourIDsOk &= (connectionData.neighbourIDs[found] == i);
+				found++;
+			}
+			if(found == MAX_LA_NEIGHBOURS) { break; }
+		}
+		if (!neighbourIDsOk) {
+			LOG_ERROR("LA neighbours IDs don't match expected");
+			result = false;
+		}
+
+		//And then the GA side: 
+		GA::stateData_t GAstate;
+
+		AS::GAflagField_t* connectedGAs_ptr = &GAstate.connectedGAs;
+		AS::LAflagField_t* connectedLAs_ptr = &GAstate.localAgentsBelongingToThis;
+
+		int numberEffectiveGAs = (TST_NUMBER_GAS - 1);
+		AZ::FlagField32 effectiveGAsMaskFlags;
+		effectiveGAsMaskFlags.loadField(0);
+		for (int i = 0; i < numberEffectiveGAs; i++) {
+			effectiveGAsMaskFlags.setBitOn(i);
+		}
+		uint32_t effectiveGAsMask = effectiveGAsMaskFlags.getField();
+
+		GAstate.connectedGAs.loadField(connectedLAs[0] & effectiveGAsMask);
+
+		for(int i = 0; i < blocks; i++){
+			uint32_t effectiveBlock = connectedLAs[i] & effectiveLAsMaskFlags.getField(i);
+			GAstate.localAgentsBelongingToThis.loadField(effectiveBlock,i);
+		}
+
+		int* neighbourIDs = &GAstate.neighbourIDs[0];
+		int* laIDs = &GAstate.laIDs[0];		
+		
+		result = setGAneighboursAndLAsIDs(connectedGAs_ptr, numberEffectiveGAs, neighbourIDs, 
+                                                     connectedLAs_ptr, TST_NUMBER_LAS, laIDs);
+		if (!result) {
+			LOG_ERROR("Failed setting neighbour and LA IDs");
+		}
+
+		//Cheking GA neighbor IDs:
+
+		found = 0;
+		neighbourIDsOk = true;
+		for (int i = 0; i < numberEffectiveGAs; i++) {
+			if (GAstate.connectedGAs.isBitOn(i)) {
+				neighbourIDsOk &= (GAstate.neighbourIDs[found] == i);
+				found++;
+			}
+		}
+		if (!neighbourIDsOk) {
+			LOG_ERROR("LA neighbours IDs don't match expected");
+			result = false;
+		}
+		if (found != GAstate.connectedGAs.howManyAreOn()) {
+			LOG_ERROR("Didn't find as many GA neighbours as expected");
+			result = false;
+		}
+
+		//Cheking GA connections with its LAs: ID matches:
+		
+		found = 0;
+		neighbourIDsOk = true;
+		for (int i = 0; i < MAX_LA_NEIGHBOURS; i++) {
+			if (GAstate.localAgentsBelongingToThis.isBitOn(i)) {
+				neighbourIDsOk &= (GAstate.laIDs[found] == i);
+				found++;
+			}
+		}
+		if (!neighbourIDsOk) {
+			LOG_ERROR("LA neighbours IDs don't match expected");
+			result = false;
+		}
+		if (found != GAstate.localAgentsBelongingToThis.howManyAreOn()) {
+			LOG_ERROR("Didn't find as many connected LA as expected");
+			result = false;
+		}
+
+		return result;
+	}
 
 	bool testMainLoopStopAndRestart() {
 		if(!isMainLoopRunning()) {return false;}

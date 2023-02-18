@@ -57,5 +57,6 @@ namespace AS {
 	AS_API bool testDataTransferFromAStoCL(void);
 	AS_API bool testGotNewValuesFromASthroughCL();
 	AS_API bool testMainLoopStopAndRestart();
+	AS_API bool testNeighbourIDsetting();
 	//*******************
 }

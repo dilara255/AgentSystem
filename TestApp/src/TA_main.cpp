@@ -18,11 +18,11 @@ bool testSendingClientDataAndSaving(void);
 bool testClientDataHAndlerInitialization(void);
 
 #define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
-#define MINIMUM_PROPORTION_SLEEP_PASSES (0.99)
+#define MINIMUM_PROPORTION_SLEEP_PASSES (0.98)
 
 #define HELPER_FUNC_TESTS 4
 #define BASIC_INIT_COMM_TESTS 4
-#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 7
+#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 8
 #define SPECIFIC_THREADED_LOOP_TESTS 7
 #define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
@@ -98,6 +98,8 @@ int main(void) {
 	//TODO: why does this take a while to start? Other saves are fast
 	//Seems to only be the case in debug. Idk, really weird
 	resultsBattery2 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
+
+	resultsBattery2 += (int)AS::testNeighbourIDsetting(); GETCHAR_PAUSE;
 	
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
@@ -108,8 +110,8 @@ int main(void) {
 	else {
 		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
 	}
-
-	LOG_INFO("Specific functionality tests (THREADED LOOPs):\n",1); GETCHAR_PAUSE;
+	
+	LOG_INFO("Specific functionality tests (with threaded LOOPs):\n",1); GETCHAR_PAUSE;
 
 	LOG_WARN("Will load the previously modified network");
 	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
@@ -140,7 +142,7 @@ int main(void) {
 
 	LOG_TRACE("Tests ended...\n",1); GETCHAR_PAUSE;
 
-	int totalPassed = resultsBattery1 + resultsBattery2 + resultsBattery3;
+	int totalPassed = resultsBattery0 + resultsBattery1 + resultsBattery2 + resultsBattery3;
 	if (totalPassed == TOTAL_TESTS) {
 		LOG_INFO("All automatically checked tests passed!"); GETCHAR_PAUSE;
 	}

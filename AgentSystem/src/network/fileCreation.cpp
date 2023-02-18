@@ -118,7 +118,19 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
         resultAux = fprintf(fp, GAresources, DEFAULT_GA_RESOURCES);
         if (resultAux <= 0) result = 0;
 
-        resultAux = fprintf(fp, connectedLAbitfield, 0, 0, 0, 0);
+        
+        AZ::FlagField128 connectionField;
+        int connections = TST_NUMBER_LAS / TST_NUMBER_GAS;
+        //DEFAULT: each LA is connected to the next *connections* LAs after it
+        for (int j = 0; j < connections; j++) {
+            int laID = (i*connections + j) % TST_NUMBER_LAS; //which warps around if necessary   
+            connectionField.setBitOn(laID);
+        }
+
+        resultAux = fprintf(fp, connectedLAbitfield, connectionField.getField(0),
+                                                    connectionField.getField(1), 
+                                                    connectionField.getField(2), 
+                                                    connectionField.getField(3));
         if (resultAux <= 0) result = 0;
 
         //By default, all GAs are connected (except for the last, which is a dummy)
