@@ -26,6 +26,7 @@ and data sizes static.
 
 #include "core.hpp"
 #include "flagFields.hpp"
+#include "prng.hpp"
 
 //FIXED parameters:
 #define NAME_LENGHT 30
@@ -48,7 +49,6 @@ and data sizes static.
 #define GA_FIELDS_TO_DEDUCE_EXPECTED 10
 #define PRNS_PER_FIELD_DEDUCED 2
 #define PRNS_TO_CHOOSE_ACTION 1
-#define DRAW_WIDTH 4
 #define EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED (0.5)
 #define EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDER (1-EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED)
 #define TRADE_SATURATION_MULTIPLIER (1.0)
