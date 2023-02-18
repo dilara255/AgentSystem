@@ -114,7 +114,7 @@ void AS::PRNserver::drawPRNs(int chopIndex, int PRNsToDrawThisChop, int PRNsToDr
 	}
 
 	for (int i = draw1startIndex; i < chopIndexIsSmallerThan; i++) {
-		PRNs[i] = AZ::spcg32(&seeds[0])*invUint32max;
+		PRNs[i] = AZ::draw1spcg32(&seeds[0])*invUint32max;
 	}
 	/* }
 	//TODO-CRITICAL: MOVE TO TEST

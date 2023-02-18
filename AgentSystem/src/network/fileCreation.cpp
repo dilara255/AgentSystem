@@ -27,6 +27,7 @@ reevaluated once the actual format and save system needs are known.
 #include "network/fileFormat.hpp"
 
 #include "fileHelpers.h"
+#include "prng.hpp"
 
 int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int numberLAs,
     int numberGAs, int maxNeighbors, int maxActions, bool setDefaults, std::string filePath) {

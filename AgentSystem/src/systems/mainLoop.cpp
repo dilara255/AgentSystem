@@ -265,6 +265,7 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 
 	AS::g_currentNetworkParams_ptr->mainLoopTicks++;
 
+	//TODO-CRITICAL: TEST pausing
 	//Deals with pause (pause sleeps in cycles of targetStepTime until unpaused)
 	if(AS::g_shouldMainLoopBePaused){
 		auto pauseStartTime = std::chrono::steady_clock::now();
