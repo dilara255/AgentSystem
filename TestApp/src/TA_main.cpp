@@ -5,6 +5,7 @@
 #include "CL_ExternalAPI.hpp"
 
 #include "timeHelpers.hpp"
+#include "tests.hpp"
 
 void testSayHello(void);
 bool testMockData(void);
@@ -17,10 +18,11 @@ bool testSendingClientDataAndSaving(void);
 bool testClientDataHAndlerInitialization(void);
 
 #define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
+#define HELPER_FUNC_TESTS 2
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 7
 #define SPECIFIC_THREADED_LOOP_TESTS 7
-#define TOTAL_TESTS (BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
+#define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
@@ -28,6 +30,21 @@ uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK];
 CL::ClientData::Handler* cdHandler_ptr;
 
 int main(void) {
+
+	LOG_INFO("Will first test some helper functionality:"); GETCHAR_PAUSE;
+	LOG_TRACE("Drawing many PRNs, one at a time:");
+	int resultsBattery0 = (int)AZ::testDraw1spcg32(); GETCHAR_PAUSE;
+	LOG_TRACE("Drawing many PRNs, four at a time:");
+	resultsBattery0 += (int)AZ::testDraw4spcg32s(); GETCHAR_PAUSE;
+
+	if (resultsBattery0 != HELPER_FUNC_TESTS) {
+		LOG_CRITICAL("Not all of these tests passed:");
+		printf("%d out of %d failed", HELPER_FUNC_TESTS - resultsBattery0, HELPER_FUNC_TESTS);
+		GETCHAR_PAUSE;
+	}
+	else {
+		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
+	}
 
 	testSayHello();
 
