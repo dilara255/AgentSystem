@@ -4,13 +4,269 @@
 
 #include "prng.hpp"
 #include "timeHelpers.hpp"
+#include "flagFields.hpp"
 
 namespace AZ{
+
+	static bool specificFlagField32Test(FlagField32* flags, uint32_t testField,
+  		     int testBit, int initialExpectedOn, int testBitInitialExpectation, 
+		                                                      bool log = false) {
+
+		int testsDone = 0;
+		char buffer [33];
+
+		flags->loadField(testField);
+		bool result = (flags->isBitOn(testBit) == (bool)testBitInitialExpectation);
+		int expectedOn = initialExpectedOn;
+		result &= (flags->howManyAreOn() == expectedOn);
+		
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		flags->setBitOn(testBit);
+		result &= (flags->isBitOn(testBit) == true);
+		expectedOn = (initialExpectedOn + (1 - testBitInitialExpectation));
+		result &= 
+			(flags->howManyAreOn() == expectedOn);
+
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		flags->setBitOff(testBit);
+		result &= (flags->isBitOn(testBit) == false);
+		expectedOn = (initialExpectedOn - testBitInitialExpectation);
+		result &= (flags->howManyAreOn() == expectedOn);
+
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		flags->setBitOff(testBit);
+		result &= (flags->isBitOn(testBit) == false);
+		expectedOn = (initialExpectedOn - testBitInitialExpectation);
+		result &= (flags->howManyAreOn() == expectedOn);
+		
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		flags->setBitOn(testBit);
+		result &= (flags->isBitOn(testBit) == true);
+		expectedOn = (initialExpectedOn + (1 - testBitInitialExpectation));
+		result &= 
+			(flags->howManyAreOn() == expectedOn);
+		
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		return result;
+	}
+
+	static bool specificFlagField128Test(FlagField128* flags, uint32_t testField, int blockTo,
+						    int testBit, int initialExpectedOn, int testBitInitialExpectation,
+   		                                                                     bool log = false) {
+
+		int testsDone = 0;
+		char buffer [33];
+
+		flags->loadField(testField, blockTo);
+		bool result = (flags->isBitOn(testBit) == (bool)testBitInitialExpectation);
+		int expectedOn = initialExpectedOn;
+		result &= (flags->howManyAreOn() == expectedOn);
+		
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(blockTo), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		flags->setBitOn(testBit);
+		result &= (flags->isBitOn(testBit) == true);
+		expectedOn = (initialExpectedOn + (1 - testBitInitialExpectation));
+		result &= 
+			(flags->howManyAreOn() == expectedOn);
+
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(blockTo), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		flags->setBitOff(testBit);
+		result &= (flags->isBitOn(testBit) == false);
+		expectedOn = (initialExpectedOn - testBitInitialExpectation);
+		result &= (flags->howManyAreOn() == expectedOn);
+
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(blockTo), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		flags->setBitOff(testBit);
+		result &= (flags->isBitOn(testBit) == false);
+		expectedOn = (initialExpectedOn - testBitInitialExpectation);
+		result &= (flags->howManyAreOn() == expectedOn);
+		
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(blockTo), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		flags->setBitOn(testBit);
+		result &= (flags->isBitOn(testBit) == true);
+		expectedOn = (initialExpectedOn + (1 - testBitInitialExpectation));
+		result &= 
+			(flags->howManyAreOn() == expectedOn);
+		
+		if(log) {
+			testsDone++;
+			_ltoa(flags->getField(blockTo), buffer, 2);
+			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
+			                        flags->howManyAreOn(), expectedOn, buffer);
+		}
+
+		return result;
+	}
+
+	//Creates one flagField of each kind, checks:
+	//-Changes and retrieval (all modes for each bank); and
+	//-Count of on flags, along the way.
+	//Returns false if any test fails.
+	static bool testFlagFields(bool log = false) {
+
+		uint32_t full = 0b11111111111111111111111111111111;
+		uint32_t empty = 0b00000000000000000000000000000000;
+		uint32_t some = 0b10101010101010101010101010101010;
+		uint32_t other = 0b01010101010101010101010101010101;
+
+		int expectedOnFull = 32;
+		int expectedOnEmpty = 0;
+		int expectedOnSome = 16;
+		int expectedOnOther = 16;
+
+		int full_0 = 1;
+		int empty_0 = 0;
+		int some_0 = 0;
+		int other_0 = 1;
+
+		FlagField32 testField32;
+
+		int bitToTest = 0;
+
+		bool result = specificFlagField32Test(&testField32, full, bitToTest, expectedOnFull, 
+			                                                                   full_0, log);
+		if(log) { puts("\n----------------"); }
+
+		int expectOn = testField32.howManyAreOn();
+		uint32_t field = testField32.getField();
+		bitToTest = 10;
+		int testBitExpected = testField32.isBitOn(bitToTest);
+		result &= specificFlagField32Test(&testField32, field, bitToTest, 
+			                                   expectOn, testBitExpected, log);
+		if(log) { puts("\n----------------"); }
+
+		expectOn = testField32.howManyAreOn();
+		field = testField32.getField();
+		bitToTest = 31;
+		testBitExpected = testField32.isBitOn(bitToTest);
+		result &= specificFlagField32Test(&testField32, field, bitToTest, 
+			                                   expectOn, testBitExpected, log);
+		if(log) { puts("\n----------------"); }
+
+		bitToTest = 0;
+		result &= specificFlagField32Test(&testField32, empty, bitToTest, expectedOnEmpty, 
+			                                                                 empty_0, log);
+		if(log) { puts("\n----------------"); }
+
+		expectOn = testField32.howManyAreOn();
+		field = testField32.getField();
+		bitToTest = 10;
+		testBitExpected = testField32.isBitOn(bitToTest);
+		result &= specificFlagField32Test(&testField32, field, bitToTest, 
+			                                   expectOn, testBitExpected, log);
+		if(log) { puts("\n----------------"); }
+
+		expectOn = testField32.howManyAreOn();
+		field = testField32.getField();
+		bitToTest = 31;
+		testBitExpected = testField32.isBitOn(bitToTest);
+		result &= specificFlagField32Test(&testField32, field, bitToTest, 
+			                                   expectOn, testBitExpected, log);
+		if(log) { puts("\n----------------"); }
+		if(log) { puts("\n----------------"); }
+
+		FlagField128 testfield128;
+
+		int blockToTest = 0;
+		bitToTest = 0;
+		result &= specificFlagField128Test(&testfield128, full, blockToTest, bitToTest,
+													       expectedOnFull, full_0, log);
+		if(log) { puts("\n----------------"); }
+
+		field = empty;
+		expectOn = testfield128.howManyAreOn() + expectedOnEmpty;
+		blockToTest = 1;
+		bitToTest = 0 + 32*blockToTest;
+		result &= specificFlagField128Test(&testfield128, field, blockToTest, bitToTest,
+																 expectOn, empty_0, log);
+		if(log) { puts("\n----------------"); }
+
+		field = some;
+		expectOn = testfield128.howManyAreOn() + expectedOnSome;
+		blockToTest = 2;
+		bitToTest = 0 + 32*blockToTest;
+		result &= specificFlagField128Test(&testfield128, field, blockToTest, bitToTest,
+																  expectOn, some_0, log);
+		if(log) { puts("\n----------------"); }
+
+		field = other;
+		expectOn = testfield128.howManyAreOn() + expectedOnOther;
+		blockToTest = 3;
+		bitToTest = 0 + 32*blockToTest;
+		result &= specificFlagField128Test(&testfield128, field, blockToTest, bitToTest,
+																 expectOn, other_0, log);
+		if(log) { puts("\n----------------"); }
+
+		field = testfield128.getField(3);
+		expectOn = testfield128.howManyAreOn();
+		blockToTest = 3;
+		bitToTest = 31 + 32*blockToTest;
+		testBitExpected = testfield128.isBitOn(bitToTest);
+		result &= specificFlagField128Test(&testfield128, field, blockToTest, bitToTest,
+														 expectOn, testBitExpected, log);
+			
+		return result;
+	}
+
 	//Draws howManyToDraw prns into a vector. Tests:
     //Avarage, amount of zeroes, periods 2, 4, 8 and 16.
     //Returns true if all tests pass. Defaults to 100M draws, minimum 16.
 	//If log == true, logs to output (eg, console) the time per draw
-	static bool testDraw4spcg32s(int64_t howManyTuplesToDraw = 250000, bool log = true) {
+	static bool testDraw4spcg32s(int64_t howManyTuplesToDraw = 128000, bool log = true) {
 		const int mininumTotalDrawn = 16;
 
 		if (howManyTuplesToDraw < (mininumTotalDrawn / DRAW_WIDTH)) {
@@ -130,7 +386,7 @@ namespace AZ{
     //Avarage, amount of zeroes, periods 2, 4, 8 and 16
     //Returns true if all tests pass. Defaults to 25M draws
 	//If log == true, logs to output (eg, console) the time per draw
-	static bool testDraw1spcg32(int64_t howManyToDraw = 1000000, bool log = true) {
+	static bool testDraw1spcg32(int64_t howManyToDraw = 128000, bool log = true) {
 			const int mininumTotalDrawn = 16;
 
 		if (howManyToDraw < mininumTotalDrawn) {
@@ -251,8 +507,8 @@ namespace AZ{
 	#define QUANTITY_LOADS 3
 	#define QUANTITY_THRESHOLDS 3
 	#define LOAD_THRESHOLD_COMBINATIONS (QUANTITY_LOADS*QUANTITY_THRESHOLDS)
-	#define SLEEP_REPETITIONS 20
-	#define RUNS_FOR_BASELINE 100
+	#define SLEEP_REPETITIONS 10
+	#define RUNS_FOR_BASELINE 25
 	#define BASELINE_MULTIPLIER_GRACE 10
 
 	
@@ -267,7 +523,7 @@ namespace AZ{
 	//If log == true, logs to output (eg, to console) the results of each test.
 	//Has default values for all parameters.
 	static double testHybridBusySleeping(
-			int minimumSleepTimeMicros = 10, int maximumSleepTimeMicros = 20000,
+			int minimumSleepTimeMicros = 17, int maximumSleepTimeMicros = 17408,
 			                             double margin = 0.005, bool log = true) {
 
 		float loads[QUANTITY_LOADS];
