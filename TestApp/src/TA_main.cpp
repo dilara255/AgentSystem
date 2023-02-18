@@ -18,7 +18,9 @@ bool testSendingClientDataAndSaving(void);
 bool testClientDataHAndlerInitialization(void);
 
 #define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
-#define HELPER_FUNC_TESTS 2
+#define MINIMUM_PROPORTION_SLEEP_PASSES (0.99)
+
+#define HELPER_FUNC_TESTS 3
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 7
 #define SPECIFIC_THREADED_LOOP_TESTS 7
@@ -36,6 +38,9 @@ int main(void) {
 	int resultsBattery0 = (int)AZ::testDraw1spcg32(); GETCHAR_PAUSE;
 	LOG_TRACE("Drawing many PRNs, four at a time:");
 	resultsBattery0 += (int)AZ::testDraw4spcg32s(); GETCHAR_PAUSE;
+	LOG_TRACE("Will test sleeping and waking a few times...");
+	double result = AZ::testHybridBusySleeping(); GETCHAR_PAUSE;
+	resultsBattery0 += (result > MINIMUM_PROPORTION_SLEEP_PASSES);
 
 	if (resultsBattery0 != HELPER_FUNC_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
