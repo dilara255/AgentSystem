@@ -1,5 +1,7 @@
 #pragma once
 
+#include "miscStdHeaders.h"
+
 #include "prng.hpp"
 #include "timeHelpers.hpp"
 
@@ -237,22 +239,193 @@ namespace AZ{
 		return result;
 	}
 
+	//used of the following test
+	void makeParallelLoad(float loadLevel, std::chrono::microseconds testSleepTime);
+	bool g_stopParallelLoad = false;
+	inline bool sleepAndLog(std::chrono::microseconds sleepTestTime, int loadLevel, 
+		              int thresholdLevel, std::chrono::microseconds* longestSnooze, 
+                 std::chrono::microseconds accSnoozeTimes[], double baselineMicros,
+  						    int* longestSnoozeLoadAndThresholdIndex, double margin);
+						               
+	#define SLEEP_TIME_MULT 4
+	#define QUANTITY_LOADS 3
+	#define QUANTITY_THRESHOLDS 3
+	#define LOAD_THRESHOLD_COMBINATIONS (QUANTITY_LOADS*QUANTITY_THRESHOLDS)
+	#define SLEEP_REPETITIONS 20
+	#define RUNS_FOR_BASELINE 100
+	#define BASELINE_MULTIPLIER_GRACE 10
+
+	
+
     //Sleeps from minimumSleepTimeMicros to maximumSleepTimeMicros, increasing by
-	//multiplications of sleepTimeMultiplierPerStep. Always includes maximumSleepTimeMicros.
-	//For each sleep time, tests howManyThresholdSteps different thresholds and
-	//howManyParallelLoadSteps different parallel loads.
-	//Always tests *at least* no threshold, standard threshold and "full threshold" (just
-	//nusy waiting, as a baseline). Also always tests no parrallel load as well as moderate 
-	//(~35% cpu time, period a quarter of sleep time) and high (~90% cpu time, period 1/20
-	//sleep time). For each test, calculates how much time was slept over what was expected.
+	//multiplications of 4. Always includes maximumSleepTimeMicros.
+	//For each sleep time, tests 3 different thresholds and 3 different parallel loads:
+	//- No threshold, standard threshold and "full threshold" (busywaiting, as a baseline);
+	//- No parrallel load, moderate load (~35% cpu time), high load (~90% cpu time);
+	//For each test, calculates how much time was slept over what was expected.
 	//Returns the proportion of tests which had excess <= margin*(sleeptime + baseline).
-	//If log == true, logs to output (eg, console) the results of each test.
+	//If log == true, logs to output (eg, to console) the results of each test.
 	//Has default values for all parameters.
 	static double testHybridBusySleeping(
 			int minimumSleepTimeMicros = 10, int maximumSleepTimeMicros = 20000,
-			double sleepTimeMultiplierPerStep = 4, int howManyThresholdSteps = 3,
-			int howManyParallelLoadSteps = 3, double margin = 0.005, bool log = true) {
+			                             double margin = 0.005, bool log = true) {
 
-		return 0;
+		float loads[QUANTITY_LOADS];
+		loads[0] = 0;
+		loads[1] = 0.35;
+		loads[2] = 0.9;
+
+		double maxMinMultiplier = maximumSleepTimeMicros / minimumSleepTimeMicros;
+		int sleepSteps = (int)ceil(log2(maxMinMultiplier)/2);
+
+		std::thread* parallelLoad_ptr;
+		
+		std::chrono::microseconds minSleepTime = 
+				std::chrono::microseconds(minimumSleepTimeMicros);
+		std::chrono::microseconds maxSleepTime = 
+				std::chrono::microseconds(maximumSleepTimeMicros);
+		std::chrono::microseconds timeToSleep;
+
+		std::chrono::microseconds accSnoozeTimes[LOAD_THRESHOLD_COMBINATIONS];
+		for (int i = 0; i < LOAD_THRESHOLD_COMBINATIONS; i++) {
+			accSnoozeTimes[i] = std::chrono::microseconds(0);
+		}
+		std::chrono::microseconds longestSnooze = std::chrono::microseconds(0);
+		int longestSnoozeLoadAndThresholdIndex = -1;
+		int sleptMoreThanExpected = 0;
+
+		std::chrono::microseconds start;
+		std::chrono::microseconds end;
+		std::chrono::microseconds snooze;
+		double baselineMicros = 0;
+		for (int i = 0; i < RUNS_FOR_BASELINE; i++) {
+			start = nowMicros();
+			hybridBusySleepForMicros(minSleepTime, 2*minSleepTime);
+			end = nowMicros();
+			snooze = (end - start) - minSleepTime;
+			baselineMicros += (double)snooze.count()/RUNS_FOR_BASELINE;
+		}
+
+		int passed = 0;
+
+		for (int i = 0; i < sleepSteps; i++) {
+			for (int j = 0; j < QUANTITY_LOADS; j++) {
+
+				timeToSleep = minSleepTime*(int)round(pow(SLEEP_TIME_MULT, i));
+				if (timeToSleep > maxSleepTime) {
+					timeToSleep = maxSleepTime;
+				}
+
+				g_stopParallelLoad = false;
+				parallelLoad_ptr = new std::thread(makeParallelLoad, loads[j], timeToSleep);
+				
+				for(int k = 0; k < SLEEP_REPETITIONS; k++){
+
+					passed += (int)sleepAndLog(timeToSleep, j, 0, &longestSnooze, 
+						                          accSnoozeTimes, baselineMicros, 
+						             &longestSnoozeLoadAndThresholdIndex, margin);
+
+					passed += (int)sleepAndLog(timeToSleep, j, 1, &longestSnooze, 
+						                          accSnoozeTimes, baselineMicros, 
+						             &longestSnoozeLoadAndThresholdIndex, margin);
+
+					passed += (int)sleepAndLog(timeToSleep, j, 2, &longestSnooze, 
+						                          accSnoozeTimes, baselineMicros, 
+						             &longestSnoozeLoadAndThresholdIndex, margin);
+				}
+				
+				g_stopParallelLoad = true;
+				parallelLoad_ptr->join();
+			}
+		}
+
+		int totalCycles = QUANTITY_LOADS*QUANTITY_THRESHOLDS*SLEEP_REPETITIONS*sleepSteps;
+		double proportionPassed = (double)passed/totalCycles;
+		int longestSnoozeThresholdLvl = longestSnoozeLoadAndThresholdIndex % QUANTITY_THRESHOLDS;
+		int longestSnoozeParallelLoadLvl = longestSnoozeLoadAndThresholdIndex / QUANTITY_THRESHOLDS;
+		
+		double totalAvgSnooze = 0;
+		double avgSnoozeTimes[LOAD_THRESHOLD_COMBINATIONS];
+		for (int i = 0; i < LOAD_THRESHOLD_COMBINATIONS; i++) {
+			avgSnoozeTimes[i] = (double)accSnoozeTimes[i].count()/(SLEEP_REPETITIONS*sleepSteps);
+			totalAvgSnooze += avgSnoozeTimes[i]/LOAD_THRESHOLD_COMBINATIONS;
+		}		
+
+		if (log) {
+			printf("\nHybrid Sleep test completed. Ran %d total cycles (Passed %f%%), target sleep: from %d to %d microseconds\n",
+					totalCycles, proportionPassed*100, minimumSleepTimeMicros, maximumSleepTimeMicros);
+			printf("\tAvg snooze: %f microseconds (baseline: %f microseconds). Longest: %lld microseconds (thresh lvl %d, load lvl %d)\n",
+					totalAvgSnooze, baselineMicros, longestSnooze.count(),
+				    longestSnoozeThresholdLvl, longestSnoozeParallelLoadLvl);
+			for (int i = 0; i < QUANTITY_LOADS; i++) {
+				for (int j = 0; j < QUANTITY_THRESHOLDS; j++) {
+					printf("\t\tFor load lvl %d, threshold level %d: avg snooze: %f microseconds\n",
+							i, j, avgSnoozeTimes[QUANTITY_THRESHOLDS*i + j]);
+				}
+			}
+
+		}
+		
+		return proportionPassed;
+	}
+
+	void makeParallelLoad(float loadLevel, std::chrono::microseconds testSleepTime) {
+
+		float cyclesPerTestSleepTime = 1/loadLevel; //more load, more cycles
+
+		int sleepMicros = (int)round((1 - loadLevel)*testSleepTime.count()/cyclesPerTestSleepTime);
+		int spinMicros = (int)round(loadLevel*testSleepTime.count()/cyclesPerTestSleepTime);		
+
+		std::chrono::microseconds sleepTime = std::chrono::microseconds(sleepMicros);
+		std::chrono::microseconds spinTime = std::chrono::microseconds(spinMicros);
+
+		while (!g_stopParallelLoad) {
+			hybridBusySleepForMicros(sleepTime);
+			hybridBusySleepForMicros(spinTime, 2*spinTime); //busy spins from beggining
+		}
+	}
+
+	inline bool sleepAndLog(std::chrono::microseconds sleepTestTime, int loadLevel, 
+		              int thresholdLevel, std::chrono::microseconds* longestSnooze, 
+				 std::chrono::microseconds accSnoozeTimes[], double baselineMicros, 
+  						    int* longestSnoozeLoadAndThresholdIndex, double margin){
+
+		std::chrono::microseconds start;
+		std::chrono::microseconds end;
+
+		if(thresholdLevel == 0){
+			start = nowMicros();
+			hybridBusySleepForMicros(sleepTestTime, std::chrono::microseconds(0));
+			end = nowMicros();
+		}
+		else if(thresholdLevel == 1){
+			start = nowMicros();
+			hybridBusySleepForMicros(sleepTestTime);
+			end = nowMicros();
+		}
+		else if(thresholdLevel == 2){
+			start = nowMicros();
+			hybridBusySleepForMicros(sleepTestTime, 2*sleepTestTime); //busy spins from beggining
+			end = nowMicros();
+		}
+		else{
+			return false;
+		}
+		
+		auto snooze = (end - start) - sleepTestTime;
+		int loadAndThresholdIndex = QUANTITY_THRESHOLDS*loadLevel + thresholdLevel;
+		accSnoozeTimes[loadAndThresholdIndex] += (snooze);
+		if (snooze > *longestSnooze) {
+			*longestSnooze = snooze;
+			*longestSnoozeLoadAndThresholdIndex = loadAndThresholdIndex;
+		}
+
+		bool result = true;
+		if ((double)snooze.count() > (BASELINE_MULTIPLIER_GRACE * baselineMicros)) {
+			double effectiveSnoozeOverBaseline = (double)snooze.count() - baselineMicros;
+			result = effectiveSnoozeOverBaseline <= (margin*(double)sleepTestTime.count());
+		}
+
+		return result;
 	}
 }

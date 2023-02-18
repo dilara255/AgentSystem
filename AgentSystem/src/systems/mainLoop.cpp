@@ -420,7 +420,7 @@ bool AS::run() {
 	
 	if (*g_shouldMainLoopBeRunning_ptr) {
 		if (g_mainLoopThread_ptr->joinable()) {
-			LOG_CRITICAL("Main Loop Thread already be running!");
+			LOG_CRITICAL("Main Loop Thread is already running!");
 			return false;
 		}
 		LOG_WARN("Main Loop Thread state control variable was set wrong. Will try to fix and start thread");
