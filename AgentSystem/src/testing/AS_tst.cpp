@@ -169,7 +169,7 @@ namespace AS {
 		
 		found = 0;
 		neighbourIDsOk = true;
-		for (int i = 0; i < MAX_LA_NEIGHBOURS; i++) {
+		for (int i = 0; i < (sizeof(uint32_t)*BITS_IN_A_BYTE*blocks); i++) {
 			if (GAstate.localAgentsBelongingToThis.isBitOn(i)) {
 				neighbourIDsOk &= (GAstate.laIDs[found] == i);
 				found++;
@@ -181,6 +181,8 @@ namespace AS {
 		}
 		if (found != GAstate.localAgentsBelongingToThis.howManyAreOn()) {
 			LOG_ERROR("Didn't find as many connected LA as expected");
+			printf("\nexpected: %d, found: %d\n", 
+				GAstate.localAgentsBelongingToThis.howManyAreOn(), found);
 			result = false;
 		}
 
