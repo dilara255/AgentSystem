@@ -32,12 +32,85 @@ int initTestNumber;
 int* AStestArray_ptr;
 int* CLtestArray_ptr;
 
+bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int numberLAs);
+bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveGAs,
+                                                        int neighbourIDs[MAX_GA_QUANTITY],
+                                       AS::LAflagField_t* connectedLAs_ptr, int numberLAs,
+                                                               int laIDs[MAX_LA_QUANTITY]);
+
 //TODO: Add reasonable return values to all tests : )
 namespace AS {
 
 	extern ActionSystem actionSystem;
 	extern dataControllerPointers_t agentDataControllerPtrs;
 	extern networkParameters_t* currentNetworkParams_ptr;
+
+	bool testNeighbourIDsetting() {
+		LOG_WARN("Will test setting neighbour IDs for LAs and GAs based on connections");
+		
+		//First we will test the LA side: 
+		AS::LAlocationAndConnectionData_t connectionData;
+
+		const int blocks = (MAX_LA_QUANTITY / (sizeof(uint32_t)*BITS_IN_A_BYTE));
+		if (blocks != 4) {
+			LOG_ERROR("Expected a different block size: MAX_LA_QUANTITY not supported by this teste. Will fail)");
+			return false;
+		}
+
+		uint32_t connectedLAs[blocks];
+		connectedLAs[0] = 0b01001011011000011110111110011100;
+		connectedLAs[1] = 0b01010010011000101010110111010001;
+		connectedLAs[2] = 0b10100101101000011001100001110011;
+		connectedLAs[3] = 0b11100011001010011001011100100110;
+
+		for(int i = 0; i < blocks; i++){
+			connectionData.connectedNeighbors.loadField(connectedLAs[i],i);
+		}
+		int totalConnected = connectionData.connectedNeighbors.howManyAreOn();
+		int* totalConnected_ptr = &totalConnected;
+
+		bool result = setLAneighbourIDsAndFirst(&connectionData, MAX_LA_QUANTITY);
+		if (!result) {
+			LOG_ERROR("Failed setting neighbour IDs and first connected");
+		}
+
+		if (connectionData.numberConnectedNeighbors != totalConnected) {
+			LOG_ERROR("LA's total connected neighbours is not registered as expected");
+			return false;
+		}
+
+		int firstNeighbour = -1;
+		int i = 0;
+		while (firstNeighbour == -1) {
+			if (connectionData.connectedNeighbors.isBitOn(i)) {
+				firstNeighbour = i;
+			}
+			i++;
+		}
+		if (connectionData.firstConnectedNeighborId != firstNeighbour) {
+			LOG_ERROR("LA's First Neighbour ID not as expected");
+			result = false;
+		}
+
+		int found = 0;
+		bool neighbourIDsOk = true;
+		for (int i = 0; i < TST_NUMBER_LAS; i++) {
+			if (connectionData.connectedNeighbors.isBitOn(i)) {
+				neighbourIDsOk &= (connectionData.neighbourIDs[found] == i);
+				found++;
+			}
+			if(found == MAX_LA_NEIGHBOURS) { break; }
+		}
+		if (!neighbourIDsOk) {
+			LOG_ERROR("LA neighbours IDs don't match expected");
+			result = false;
+		}
+
+		//And then the GA side: 
+
+
+		return result;
+	}
 
 	bool testMainLoopStopAndRestart() {
 		if(!isMainLoopRunning()) {return false;}

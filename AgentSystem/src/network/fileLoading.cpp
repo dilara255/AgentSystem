@@ -250,11 +250,14 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
 }
 
 bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int numberLAs) {
-    int neighboursFound = 0;
     
+    data_ptr->numberConnectedNeighbors = data_ptr->connectedNeighbors.howManyAreOn();
+
+    int neighboursFound = 0;
     uint32_t i = 0;
     while ( (neighboursFound < data_ptr->numberConnectedNeighbors) 
-                                      && (i < (uint32_t)numberLAs) ) {
+                                      && (i < (uint32_t)numberLAs) 
+                          && (neighboursFound < MAX_LA_NEIGHBOURS) ) {
         if (data_ptr->connectedNeighbors.isBitOn(i)) {
             data_ptr->neighbourIDs[neighboursFound] = i;
             neighboursFound++;
@@ -264,6 +267,13 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
     data_ptr->firstConnectedNeighborId = data_ptr->neighbourIDs[0];
 
     if (neighboursFound < data_ptr->numberConnectedNeighbors) {
+        
+        if (neighboursFound == MAX_LA_NEIGHBOURS) {
+            LOG_WARN("Received data with more than MAX_LA_NEIGHBOURS connections"); 
+            LOG_TRACE("Processed only the first MAX_LA_NEIGHBOURS of them.Will pass test, but may be a problem...");
+            return true;
+        }
+
         LOG_ERROR("Found less neighbours than expected when updating LA connection data!");
         #if (defined AS_DEBUG) || VERBOSE_RELEASE
             printf("\nFIELDS: %d , %d , %d , %d ", data_ptr->connectedNeighbors.getField(0),

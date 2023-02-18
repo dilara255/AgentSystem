@@ -129,7 +129,7 @@ namespace AS {
 	typedef AZ::FlagField32 GAflagField_t;
 
 	//From these, we build:
-
+	//TODO: some of these would benefit from having built-in initialization logic and etc
 	typedef struct {
 		resources_t resources;
 		strenght_t strenght;
