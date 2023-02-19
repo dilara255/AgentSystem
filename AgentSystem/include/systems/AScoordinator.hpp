@@ -10,7 +10,7 @@ This includes:
 */
 
 #include "data/agentDataControllers.hpp"
-#include "systems/prnsServer.hpp"
+#include "systems/PRNserver.hpp"
 
 namespace AS {
 	extern const networkParameters_t* currentNetworkParams_cptr;
@@ -38,9 +38,9 @@ namespace AS {
 
 	struct chopControl_st {
 		int chopIndex = 0;
+		int totalChops = AS_TOTAL_CHOPS;
 
 		int totalPRNsNeeded = 0;
-		int PRNsToDrawThisChop = 0;
 
 		int LAdecisionsToMake = 0;
 		int GAdecisionsToMake = 0;

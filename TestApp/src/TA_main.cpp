@@ -1,4 +1,5 @@
 #include "miscStdHeaders.h"
+#include "miscDefines.hpp"
 #include "core.hpp"
 
 #include "AS_API.hpp"
@@ -17,7 +18,6 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void);
 bool testSendingClientDataAndSaving(void);
 bool testClientDataHAndlerInitialization(void);
 
-#define MS_DEBUG_MALLOC_INIT_VALUE (-842150451) //WARNING: not portable, but used only for testing
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
 #define HELPER_FUNC_TESTS 4
