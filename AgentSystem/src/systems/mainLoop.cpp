@@ -8,7 +8,7 @@
 #include "network/parameters.hpp" //exposes "currentNetworkParams"
 
 #include "systems/AScoordinator.hpp"
-#include "systems/prnsServer.hpp"
+#include "systems/PRNserver.hpp"
 
 #include "timeHelpers.hpp"
 
@@ -141,10 +141,6 @@ void prepareStep(AS::chopControl_st* chopControl_ptr) {
 	chopControl_ptr->quantityLAs = numLAs;
 	chopControl_ptr->quantityEffectiveGAs = numGAs;
 	chopControl_ptr->totalPRNsNeeded = getTotalPRNsToDraw(numLAs, numGAs);
-
-	//How many PRNs should be generated this tick?
-	chopControl_ptr->PRNsToDrawThisChop =
-	                howManyPRNsThisCHop(chopControl_ptr->chopIndex, numLAs, numGAs);
 
 	AS::g_prnServer_ptr->drawPRNs(chopControl_ptr->chopIndex, 
 			chopControl_ptr->PRNsToDrawThisChop, chopControl_ptr->totalPRNsNeeded);
@@ -349,20 +345,6 @@ int getTotalPRNsToDraw(int numberLAs, int numberGAs) {
 
 inline bool isLastChop(int chopIndex) {
 	return (chopIndex == (AS_TOTAL_CHOPS-1));
-}
-
-int howManyPRNsThisCHop(int chopIndex, int numberLAs, int numberGAs) {
-
-	int totalPrnsToDraw = getTotalPRNsToDraw(numberLAs, numberGAs);
-	int prnsToDrawPerRegularChop = totalPrnsToDraw / AS_TOTAL_CHOPS;
-	int remainderPRNs = totalPrnsToDraw % AS_TOTAL_CHOPS;
-
-	int toDrawThisChop = prnsToDrawPerRegularChop;
-	if (isLastChop(chopIndex)) {
-		toDrawThisChop += remainderPRNs;
-	}
-
-	return toDrawThisChop;
 }
 
 int howManyDecisionsThisChop(int chopIndex, int numberAgents) {
