@@ -13,7 +13,6 @@ namespace AZ{
 		                                                      bool log = false) {
 
 		int testsDone = 0;
-		char buffer [33];
 
 		flags->loadField(testField);
 		bool result = (flags->isBitOn(testBit) == (bool)testBitInitialExpectation);
@@ -22,9 +21,8 @@ namespace AZ{
 		
 		if(log) {
 			testsDone++;
-			_ltoa(flags->getField(), buffer, 2);
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+					flags->howManyAreOn(), expectedOn, flags->getFlagsAsString().c_str());
 		}
 
 		flags->setBitOn(testBit);
@@ -35,9 +33,8 @@ namespace AZ{
 
 		if(log) {
 			testsDone++;
-			_ltoa(flags->getField(), buffer, 2);
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+					flags->howManyAreOn(), expectedOn, flags->getFlagsAsString().c_str());
 		}
 
 		flags->setBitOff(testBit);
@@ -47,9 +44,8 @@ namespace AZ{
 
 		if(log) {
 			testsDone++;
-			_ltoa(flags->getField(), buffer, 2);
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+					flags->howManyAreOn(), expectedOn, flags->getFlagsAsString().c_str());
 		}
 
 		flags->setBitOff(testBit);
@@ -59,9 +55,8 @@ namespace AZ{
 		
 		if(log) {
 			testsDone++;
-			_ltoa(flags->getField(), buffer, 2);
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+					flags->howManyAreOn(), expectedOn, flags->getFlagsAsString().c_str());
 		}
 
 		flags->setBitOn(testBit);
@@ -72,9 +67,8 @@ namespace AZ{
 		
 		if(log) {
 			testsDone++;
-			_ltoa(flags->getField(), buffer, 2);
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+					flags->howManyAreOn(), expectedOn, flags->getFlagsAsString().c_str());
 		}
 
 		return result;
@@ -85,7 +79,6 @@ namespace AZ{
    		                                                                     bool log = false) {
 
 		int testsDone = 0;
-		char buffer [33];
 
 		flags->loadField(testField, blockTo);
 		bool result = (flags->isBitOn(testBit) == (bool)testBitInitialExpectation);
@@ -93,10 +86,9 @@ namespace AZ{
 		result &= (flags->howManyAreOn() == expectedOn);
 		
 		if(log) {
-			testsDone++;
-			_ltoa(flags->getField(blockTo), buffer, 2);
+			testsDone++;			
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+				flags->howManyAreOn(), expectedOn, flags->getFlagsAsString(blockTo).c_str());
 		}
 
 		flags->setBitOn(testBit);
@@ -107,9 +99,8 @@ namespace AZ{
 
 		if(log) {
 			testsDone++;
-			_ltoa(flags->getField(blockTo), buffer, 2);
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+				flags->howManyAreOn(), expectedOn, flags->getFlagsAsString(blockTo).c_str());
 		}
 
 		flags->setBitOff(testBit);
@@ -119,9 +110,8 @@ namespace AZ{
 
 		if(log) {
 			testsDone++;
-			_ltoa(flags->getField(blockTo), buffer, 2);
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+				flags->howManyAreOn(), expectedOn, flags->getFlagsAsString(blockTo).c_str());
 		}
 
 		flags->setBitOff(testBit);
@@ -131,9 +121,8 @@ namespace AZ{
 		
 		if(log) {
 			testsDone++;
-			_ltoa(flags->getField(blockTo), buffer, 2);
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+				flags->howManyAreOn(), expectedOn, flags->getFlagsAsString(blockTo).c_str());
 		}
 
 		flags->setBitOn(testBit);
@@ -144,9 +133,8 @@ namespace AZ{
 		
 		if(log) {
 			testsDone++;
-			_ltoa(flags->getField(blockTo), buffer, 2);
 			printf("\n %d: %d (on: %d, expected: %d, flags: %s)", testsDone, (int)result, 
-			                        flags->howManyAreOn(), expectedOn, buffer);
+				flags->howManyAreOn(), expectedOn, flags->getFlagsAsString(blockTo).c_str());
 		}
 
 		return result;
@@ -528,8 +516,8 @@ namespace AZ{
 
 		float loads[QUANTITY_LOADS];
 		loads[0] = 0;
-		loads[1] = 0.35;
-		loads[2] = 0.9;
+		loads[1] = 0.35f;
+		loads[2] = 0.9f;
 
 		double maxMinMultiplier = maximumSleepTimeMicros / minimumSleepTimeMicros;
 		int sleepSteps = (int)ceil(log2(maxMinMultiplier)/2);

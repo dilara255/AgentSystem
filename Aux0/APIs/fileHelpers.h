@@ -6,13 +6,14 @@
 
 #define AZ_MAX_FP_AQUISITION_TRIES 1000
 
+#pragma warning(push) //pop at end of file
+#pragma warning(disable : 4996) //TODO: change for safe functions
 namespace AZ {
 	
     //Opens a file for writting. If shouldOverwrite, will, no questions asked.
-    //Of not, will instead find the next integer which appended at the end of name
+    //If not, will instead find the next integer which appendeding at the end of name
     //makes it unique (tries at most AZ_MAX_FP_AQUISITION_TRIES times).
-    //NOTE: at end of name but before ".": searcbes for delimiter, will leave
-    //without extension if no "." found.
+    //NOTE: searches for delimiter ".", will leave without extension if not found.
 	static FILE* acquireFilePointerToSave(std::string name, bool shouldOverwrite, 
 		                                                   std::string filePath) {
 
@@ -62,5 +63,5 @@ namespace AZ {
         
         return fopen(newName.c_str(), "w");
 	}
-
 }
+#pragma warning(pop)

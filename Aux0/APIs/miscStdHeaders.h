@@ -18,3 +18,4 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <bitset>

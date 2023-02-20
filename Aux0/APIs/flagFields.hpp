@@ -4,9 +4,9 @@
 #include "miscDefines.hpp"
 #include "core.hpp"
 
-//TODO-CRITICAL: TESTS
 //TODO: template
-//TODO: Rethink counting method: 
+//TODO: why not use std::bitset instead?
+//TODO: if not, rethink counting method: 
 //-- https://en.cppreference.com/w/cpp/numeric/popcount
 //--- But Byte-At-A-Time Lookup Table seems to be within ~17% of native popcount
 //---- ( https://github.com/intvnut/bit_count )
@@ -59,6 +59,11 @@ namespace AZ {
 			areOn -= ((flags & BIT(bit)) > 0);
 
 			flags = flags & (~(BIT(bit)));
+		}
+
+		std::string getFlagsAsString() {
+			std::bitset bits = std::bitset<4*BITS_IN_A_BYTE>(flags);
+			return bits.to_string();
 		}
 
 		/*TODO: implement toggle
@@ -143,6 +148,11 @@ namespace AZ {
 
 		size_t sizeOfBlockInBytes() {
 			return sizeof(flags[0]);
+		}
+
+		std::string getFlagsAsString(int whichField) {
+			std::bitset bits = std::bitset<4*BITS_IN_A_BYTE>(flags[whichField]);
+			return bits.to_string();
 		}
 
 		/*TODO: implement toggle

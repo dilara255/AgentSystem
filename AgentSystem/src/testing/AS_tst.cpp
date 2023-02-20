@@ -45,6 +45,32 @@ namespace AS {
 	extern dataControllerPointers_t agentDataControllerPtrs;
 	extern networkParameters_t* currentNetworkParams_ptr;
 
+	bool testChoppedPRNdrawing(bool printResults, bool dump) {
+		LOG_WARN("Will test drawing PRNs in parts using the PRNserver class");
+
+		PRNserver* server = new PRNserver();
+		
+		bool result =
+			server->testAndBenchChoppedDrawing(MAX_PRNS, 1, printResults, dump);
+		if (!result) {
+			LOG_ERROR("Failed PRN draw test when drawing in a single chop!");
+		}
+
+		bool result2 =
+			server->testAndBenchChoppedDrawing(MAX_PRNS, TST_PRN_CHOPS, printResults, dump);
+		if (!result2) {
+			LOG_ERROR("Failed PRN draw test when drawing in multiple chops!");
+		}
+
+		delete server;
+		server = NULL;
+		
+		if (result && result2) {
+			LOG_INFO("Done, tests passed");
+		}
+		return (result && result2);
+	}
+
 	//TODO: some of the sub-tests can be extracted into FlagField functionality and tests
 	bool testNeighbourIDsetting() {
 		LOG_WARN("Will test setting neighbour IDs for LAs and GAs based on connections");
@@ -186,6 +212,9 @@ namespace AS {
 			result = false;
 		}
 
+		if (result) {
+			LOG_INFO("Done, tests passed");
+		}
 		return result;
 	}
 

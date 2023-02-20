@@ -23,7 +23,8 @@ TODO: should get the file name into the "network name" from the parameters file.
 
 #include "data/agentDataControllers.hpp"
 
-//BUT: invalidating param's tick information
+#pragma warning(push) //pop at end of file
+#pragma warning(disable : 4996) //TODO: change for safe functions
 bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     
     LOG_TRACE("Will load the information from file's header...");
@@ -35,13 +36,14 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     tokensRead = fscanf(fp, headerLine, &version, &pp->numberGAs, &pp->numberLAs,
                        &pp->maxLAneighbours, &pp->maxActions, &pp->mainLoopTicks,
                       &pp->seeds[0], &pp->seeds[1], &pp->seeds[2], &pp->seeds[3]);
-    result &= (tokensRead == 10); //TODO: maybe bundle the number of tokens with the format?
+    result &= (tokensRead == 10);
 
     LOG_TRACE("Will load the comment line...");
 
     char tempComment[COMMENT_LENGHT];
     fgets(tempComment, COMMENT_LENGHT, fp);
-    sscanf(tempComment, commentLine, pp->comment); //to get rid of the "initial #" in the format
+    tokensRead = sscanf(tempComment, commentLine, pp->comment); //to get rid of the "initial #" in the format
+    result &= (tokensRead == 1);
 
     char separatorRead[COMMENT_LENGHT]; //will store a separator used after the comment line
 
@@ -625,3 +627,4 @@ bool AS::fileIsCompatible(FILE* fp) {
     LOG_TRACE("File seems compatible, will procceed loading...");
     return true;
 }
+#pragma warning(pop)

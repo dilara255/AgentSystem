@@ -10,7 +10,7 @@ float LA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr) {
  
 	LA::stateData_t partner = agentDataPtrs_ptr->LAstate_ptr->getDirectDataPtr()->at(partnerID);
-	float totalPartnerTradeValue = partner.parameters.resources.current*TRADE_FACTOR_PER_SECOND;
+	float totalPartnerTradeValue = (float)(partner.parameters.resources.current*TRADE_FACTOR_PER_SECOND);
 
 	//calculates their total "trade saturation" (from trade, allies, allies with trade and war)
 	int tradeSaturation = 0;
@@ -22,7 +22,7 @@ float LA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 	}
 
 	//each neighbour gets a share depending on their diplomatic stance:
-	float agentsShare = AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
+	float agentsShare = (float)AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
 
 	return agentsShare*totalPartnerTradeValue;
 }
@@ -35,7 +35,7 @@ float LA::calculateAttritionLossesPerSecond(int agentId1, int agentId2,
 	float strenghtAgent1 = LAstates_cptr->at(agentId1).parameters.strenght.current;
 	float strenghtAgent2 = LAstates_cptr->at(agentId2).parameters.strenght.current;
 
-	return std::min(strenghtAgent1,strenghtAgent2)*ATTRITION_FACTOR_PER_SECOND;
+	return (float)(std::min(strenghtAgent1,strenghtAgent2)*ATTRITION_FACTOR_PER_SECOND);
 }
 
 
@@ -46,7 +46,7 @@ float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 		                                AS::dataControllerPointers_t* agentDataPtrs_ptr) { 
 
 	GA::stateData_t partner = agentDataPtrs_ptr->GAstate_ptr->getDirectDataPtr()->at(partnerID);
-	float totalPartnerTradeValue = partner.parameters.GAresources*TRADE_FACTOR_PER_SECOND;
+	float totalPartnerTradeValue = (float)(partner.parameters.GAresources*TRADE_FACTOR_PER_SECOND);
 
 	//calculates their total "trade saturation" (from trade, allies, allies with trade and war)
 	int tradeSaturation = 0;
@@ -59,7 +59,7 @@ float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 	}
 
 	//each neighbour gets a share depending on their diplomatic stance:
-	float agentsShare = AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
+	float agentsShare = (float)AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
 
 	return agentsShare*totalPartnerTradeValue;
 }

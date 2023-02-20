@@ -62,7 +62,6 @@ void timeAndSleep(AS::timing_st* timing_ptr);
 
 int getTotalPRNsToDraw(int numberLAs, int numberGAs);
 inline bool isLastChop(int chopIndex);
-int howManyPRNsThisCHop(int chopIndex, int numberLAs, int numberGAs);
 int howManyDecisionsThisChop(int chopIndex, int numberAgents);
 
 void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
@@ -136,14 +135,17 @@ void AS::mainLoop() {
 void prepareStep(AS::chopControl_st* chopControl_ptr) {
 	
 	int numLAs = AS::g_currentNetworkParams_ptr->numberLAs;
-	int numGAs = AS::g_currentNetworkParams_ptr->numberGAs - 1;//last doesn't count
+	int numGAs = AS::g_currentNetworkParams_ptr->numberGAs - 1; //last doesn't count
 
 	chopControl_ptr->quantityLAs = numLAs;
 	chopControl_ptr->quantityEffectiveGAs = numGAs;
 	chopControl_ptr->totalPRNsNeeded = getTotalPRNsToDraw(numLAs, numGAs);
-
-	AS::g_prnServer_ptr->drawPRNs(chopControl_ptr->chopIndex, 
-			chopControl_ptr->PRNsToDrawThisChop, chopControl_ptr->totalPRNsNeeded);
+	
+	bool error = AS::g_prnServer_ptr->drawPRNs(chopControl_ptr->chopIndex, 
+			chopControl_ptr->totalChops, chopControl_ptr->totalPRNsNeeded).error;
+	if (error) { //TODO-CRITICAL: SHOULD USE THE SAME SYSTEM AS SEND-AND-RECEIVE
+		LOG_ERROR("Failed to draw PRNs!");
+	}
 
 	for (int i = 0; i < DRAW_WIDTH; i++) {
 		AS::g_currentNetworkParams_ptr->seeds[i] = AS::g_prnServer_ptr->getSeed(i);
