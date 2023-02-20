@@ -13,6 +13,7 @@
 #define GA_CONNECTED_LA_FIELDS 4
 
 //TODO: Move all of this into some namespace!
+//TODO: bundle the number of tokens with the format (for use with fscanf_s)
 
 static const char* defaultGAnamePrefix = "GA_";
 static const char* defaultLAnamePrefix = "LA_";

@@ -59,8 +59,11 @@ namespace CL {
 
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				if (!silent) {
+					#pragma warning(push)
+					#pragma warning(disable : 4477) //string use is intended
 					printf("Change %d: %d, %s\n", i, m_changes[i].agentID,
 						                          m_changes[i].getNewData_fptr);
+					#pragma warning(pop)
 				}
 			#endif // AS_DEBUG
 			

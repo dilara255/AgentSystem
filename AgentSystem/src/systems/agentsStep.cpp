@@ -54,7 +54,7 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	auto str_ptr = &state_ptr->parameters.strenght;
 
 	//External guard costs a portion of upkeep for each agent:
-	float externalUpkeep = str_ptr->externalGuard*EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
+	float externalUpkeep = (float)(str_ptr->externalGuard*EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED);
 	//upkeep is linear with strenght above trheshold:
 	str_ptr->currentUpkeep = str_ptr->current + externalUpkeep - str_ptr->thresholdToCostUpkeep;
 	//and proportional to a factor:
@@ -83,7 +83,7 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	}
 
 	//finally, LAs pay tax to GA (and can cost the GA if in debt):
-	res_ptr->current -= GA_TAX_RATE_PER_SECOND*res_ptr->current;
+	res_ptr->current -= (float)GA_TAX_RATE_PER_SECOND*res_ptr->current;
 }
 
 void updateGA(GA::stateData_t* state_ptr, int agentId, 
@@ -113,7 +113,7 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	}
 	
 	//Get resoures:
-	float taxIncome = GA_TAX_RATE_PER_SECOND*state_ptr->parameters.LAesourceTotals.current;
+	float taxIncome = (float)GA_TAX_RATE_PER_SECOND*state_ptr->parameters.LAesourceTotals.current;
 	
 	param_ptr->GAresources += taxIncome*timeMultiplier;
 

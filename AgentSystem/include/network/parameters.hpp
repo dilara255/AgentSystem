@@ -27,6 +27,7 @@ and data sizes static.
 #include "core.hpp"
 #include "flagFields.hpp"
 #include "prng.hpp"
+#include "miscDefines.hpp"
 
 //FIXED parameters:
 #define NAME_LENGHT 30
@@ -114,6 +115,8 @@ and data sizes static.
 #define TST_TIMES_TO_QUERRY_TICK 25
 #define TST_TICK_COUNT_SAFETY_FACTOR (50.0)
 #define TST_RES_CHANGE (89134.4831)
+#define TST_PRNS_TO_DRAW MAX_PRNS
+#define TST_PRN_CHOPS 7
 
 namespace AS {
 

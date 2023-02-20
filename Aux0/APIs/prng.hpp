@@ -8,6 +8,8 @@
 #define DEFAULT_PRNG_SEED2 (0x2545f4914f6cdd1d*3)
 #define DEFAULT_PRNG_SEED3 1595721457336359713
 
+#pragma warning(push) //pop at end of file
+#pragma warning(disable : 4244) //uint64_t to uint32_t conversion is intended
 namespace AZ{
     //PERFORMANCE: on a phenon II x4 820, 2,8 Ghz, 8gb DDR2 1333Mhz ram (for large n):
     //x86 debug: ~29 - 39 (AZ test) nanos per PRN
@@ -16,6 +18,7 @@ namespace AZ{
     //x64 release: ~2,5 - 2,8 (with load) nanos per PRN
     //(times to draw numbers, multiply by a float and assign to an array)
     //(about 3-3,5 times then draw1spcg32 on release x64 for test system)
+
 	inline void draw4spcg32s(uint64_t* s0, uint64_t* s1, uint64_t* s2, uint64_t* s3,
                                                    uint32_t* dest0, uint32_t* dest1, 
                                                    uint32_t* dest2, uint32_t* dest3) { 
@@ -53,5 +56,6 @@ namespace AZ{
         return *s >> shift;
     }
 }
+#pragma warning(pop)
 
 

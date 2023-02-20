@@ -3,10 +3,13 @@
 #include "miscStdHeaders.h"
 
 #define AZ_MICROS_TO_BUSY_WAIT 25
-#define MICROS_IN_A_SECOND 1000000
-#define MILLIS_IN_A_SECOND 1000
 
 namespace AZ{
+
+	const static std::chrono::nanoseconds zeroNano = std::chrono::nanoseconds(0);
+	const static std::chrono::nanoseconds zeroMicro = std::chrono::microseconds(0);
+	const static std::chrono::nanoseconds zeroMilli = std::chrono::milliseconds(0);
+	const static std::chrono::nanoseconds zeroSeconds = std::chrono::seconds(0);
 
 	const static std::chrono::microseconds standardThreshold(AZ_MICROS_TO_BUSY_WAIT);
 
