@@ -15,7 +15,7 @@ Includes some related definitions.
 #define MAX_GA_PRNS (PRNS_PER_GA*MAX_GA_QUANTITY)
 #define MAX_ACT_PRNS (PRNS_PER_ACT*MAX_AGENTS)
 #define MAX_PRNS (MAX_LA_PRNS + MAX_GA_PRNS + MAX_ACT_PRNS)
-#define TOTAL_PRN_CHOPS AS_TOTAL_CHOPS
+#define TOTAL_PRN_CHOPS AS_TOTAL_CHOPS //note: total chops is function of timings
 
 namespace AS{
 

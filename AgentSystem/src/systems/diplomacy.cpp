@@ -5,7 +5,7 @@
 
 //Total trade value of an angent is a portion of it's current resources (not income)
 //That gets divided between partners and also goes down in case of war
-//WARNING: can be negative when partner is in debt!
+//NOTE: can be negative when partner is in debt!
 float LA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStance,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr) {
  
@@ -41,7 +41,7 @@ float LA::calculateAttritionLossesPerSecond(int agentId1, int agentId2,
 
 //Total trade value of an angent is a portion of it's current resources (not income)
 //That gets divided between partners and also goes down in case of war
-//WARNING: can be negative when partner is in debt!
+//NOTE: can be negative when partner is in debt!
 float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStance,
 		                                AS::dataControllerPointers_t* agentDataPtrs_ptr) { 
 

@@ -20,7 +20,8 @@ bool testClientDataHAndlerInitialization(void);
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
-#define HELPER_FUNC_TESTS 5
+//TODO: the names of the test categories do not make sense any more
+#define HELPER_FUNC_TESTS 6
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 9
 #define SPECIFIC_THREADED_LOOP_TESTS 7
@@ -51,6 +52,7 @@ int main(void) {
 	LOG_TRACE("Will test Flag Field functionality...");
 	resultsBattery0 += (int)AZ::testFlagFields(printSteps); GETCHAR_PAUSE;
 	resultsBattery0 += (int)AS::testActionVariationsInfo(printSteps); GETCHAR_PAUSE;
+	resultsBattery0 += (int)AS::testMultipleAgentChopCalculations(printSteps); GETCHAR_PAUSE;
 	
 	if (resultsBattery0 != HELPER_FUNC_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
