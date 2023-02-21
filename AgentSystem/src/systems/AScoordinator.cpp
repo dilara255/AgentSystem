@@ -108,15 +108,14 @@ bool AS::initializeASandCL() {
 	}
 
 	//Action System:
-	result = actionSystem.initialize(&actionSystem_cptr);
+	result = actionSystem.initialize(&actionSystem_cptr, &actionDataController_cptr,
+		                                                  currentNetworkParams_cptr);
 	result &= actionSystem_cptr->isInitialized();
 	if (!result) {
 		LOG_CRITICAL("Something went wrong initialing the Action System!");
 		return false;
 	}
-
-	result = actionSystem.initializeDataController(currentNetworkParams_cptr,
-		&actionDataController_cptr);
+	result &= actionDataController_cptr->isInitialized();
 	if (!result) {
 		LOG_CRITICAL("Something went wrong initialing the Action Data Controlers!");
 		return false;
@@ -169,7 +168,7 @@ namespace AS {
 		agentDataControllerPtrs.haveData = false;
 		currentNetworkParams.isNetworkInitialized = false;
 
-		actionSystem.data.clearData();
+		actionSystem.getDataDirectPointer()->clearData();
 
 		LOG_TRACE("Network Cleared");
 	}
@@ -233,7 +232,7 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 
 	result = loadNetworkFromFileToDataControllers(fp, agentDataControllerPtrs, 
 		                                          currentNetworkParams_ptr,
-		                                          &actionSystem.data);
+		                                          actionSystem.getDataDirectPointer());
 
 
 	fclose(fp);
@@ -327,7 +326,7 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite, bool willResu
 			//Make sure any dangling data issued by the Client is captured:
 			bool result = CL::getNewClientData(currentNetworkParams_ptr, 
 											   &agentDataControllerPtrs,
-						   					   &(actionSystem.data), 
+						   					   actionSystem.getDataDirectPointer(), 
 											   shouldMainLoopBeRunning);
 			if (!result) {
 				LOG_ERROR("Couldn't receive Client Changes. Will abort saving");

@@ -188,7 +188,7 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 
 		bool result = CL::getNewClientData(AS::g_currentNetworkParams_ptr, 
 			                               AS::g_agentDataControllerPtrs_ptr,
-						   			       &(AS::g_actionSystem_ptr->data), 
+						   			       AS::g_actionSystem_ptr->getDataDirectPointer(), 
 			                               *AS::g_shouldMainLoopBeRunning_ptr);
 		if (!result) { 
 			accumulateOrTrhowError(hasThrownErrorsRecently_ptr, errorsAccumulated_ptr,

@@ -28,7 +28,7 @@ namespace AS {
 	enum class scope { LOCAL, GLOBAL,
 		               TOTAL};
 
-	//Wether action variation (ie: strenght, immediate, local) exists for a given action.
+	//Wether action variation - ie: strenght, immediate, local - exists, and it's "kind":
     //NOT: "no". SPC: "yes, and is specific to this action". STD: "yes, and is the standard".
 	enum class actExists { NOT = 0, SPC = 1, STD = -1 };
 

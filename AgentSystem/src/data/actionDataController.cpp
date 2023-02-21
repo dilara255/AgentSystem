@@ -18,18 +18,18 @@ namespace AS {
 	bool ActionSystem::initializeDataController(const networkParameters_t* pp,
 								const ActionDataController** actionDataController_cptr_ptr) {
 
-	LOG_TRACE("Will create (empty) Action Data controllers for LAs and GAs");
+		LOG_TRACE("Will initialize Action Data controllers for LAs and GAs");
 
-	*actionDataController_cptr_ptr = (const ActionDataController*)&(this->data);
-	this->data.initialize(pp->maxActions, pp->numberLAs, pp->numberGAs);
+		*actionDataController_cptr_ptr = (const ActionDataController*)&(this->data);
+		this->data.initialize(pp->maxActions, pp->numberLAs, pp->numberGAs);
 
-	if (!(*actionDataController_cptr_ptr)->isInitialized()) {
-		LOG_CRITICAL("Couldn't initialize Action Data Controllers!");
-		return false;
-	}		
+		if (!(*actionDataController_cptr_ptr)->isInitialized()) {
+			LOG_CRITICAL("Couldn't initialize Action Data Controllers!");
+			return false;
+		}		
 
-	return true;
-}
+		return true;
+	}
 
 	bool ActionDataController::initialize(int maxActionsPerAgent, int numberLas, int numberGAs) {
 
