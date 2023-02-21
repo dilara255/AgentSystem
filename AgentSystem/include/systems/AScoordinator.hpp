@@ -44,6 +44,8 @@ namespace AS {
 
 		int LAdecisionsToMake = 0;
 		int GAdecisionsToMake = 0;
+		int LAdecisionsMade = 0;
+		int GAdecisionsMade = 0;
 
 		int quantityLAs = 0;
 		int quantityEffectiveGAs = 0;

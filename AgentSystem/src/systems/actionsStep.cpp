@@ -16,8 +16,8 @@ int AS::ActionSystem::stepActions(float timeMultiplier){
 	std::vector<AS::actionData_t>* laActs = data.getDirectLAdataPtr();
 	std::vector<AS::actionData_t>* gaActs = data.getDirectGAdataPtr();
 
-	int LAactions = laActs->size();
-	int GAactions = gaActs->size();
+	int LAactions = (int)laActs->size();
+	int GAactions = (int)gaActs->size();
 
 	int laActsIndex;
 	for (laActsIndex = 0; laActsIndex < LAactions; laActsIndex++) {
