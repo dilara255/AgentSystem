@@ -29,15 +29,17 @@ TODO: tests:
 #include "systems/AScoordinator.hpp"
 #include "testing/AS_tst.hpp"
 
+#define TST_ACTION_VARIATIONS 5
+
 int initTestNumber;
 int* AStestArray_ptr;
 int* CLtestArray_ptr;
 
 bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int numberLAs);
 bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveGAs,
-                                                        int neighbourIDs[MAX_GA_QUANTITY],
-                                       AS::LAflagField_t* connectedLAs_ptr, int numberLAs,
-                                                               int laIDs[MAX_LA_QUANTITY]);
+	int neighbourIDs[MAX_GA_QUANTITY],
+	AS::LAflagField_t* connectedLAs_ptr, int numberLAs,
+	int laIDs[MAX_LA_QUANTITY]);
 
 //TODO: Add reasonable return values to all tests : )
 namespace AS {
@@ -49,17 +51,86 @@ namespace AS {
 	//TODO: expand test
 	bool testActionVariationsInfo(bool printResults) {
 		LOG_WARN("Will test acquiring information about action variations");
-		int totalVariations = ActionVariations::totalVariations();
 
-		if (printResults) {
-			printf("\nTotal Action Variations found: %d", totalVariations);
+		//not + spc + std = cats x modes x scopes
+		//expected: 6 NOT + 20 STD + 22 SPC = 48 = 8 x 3 x 2
+
+		int expectedTotalTotal = ActionVariations::totalPossible();
+			
+		int totalValid = ActionVariations::totalValids();
+		int totalNots = ActionVariations::totalNots();
+		int totalTotal = totalValid + totalNots;
+		bool validPlusNotEqualsTotal = (totalTotal == expectedTotalTotal);
+		
+		int localVariations = ActionVariations::totalLocals();
+		int globalVariations = ActionVariations::totalGlobals();
+		int localPlusGlobal = localVariations + globalVariations;
+		bool localPlusGlobalEqualsValids = (totalValid == localPlusGlobal);
+		
+		int specifics = ActionVariations::totalSpecifics();
+		int standards = ActionVariations::totalStandards();
+		int specificsPlusStandards = specifics + standards;
+		bool specificPlusStandardEqualsValids = (totalValid == specificsPlusStandards);
+		
+		bool result = validPlusNotEqualsTotal && localPlusGlobalEqualsValids && specificPlusStandardEqualsValids;
+
+		bool validsSeemsRight = validPlusNotEqualsTotal;
+		validsSeemsRight |= localPlusGlobalEqualsValids;
+		validsSeemsRight |= specificPlusStandardEqualsValids;
+
+		bool notSeemsRight = validPlusNotEqualsTotal;
+		notSeemsRight |= ((totalNots + localPlusGlobal) == totalTotal);
+		notSeemsRight |= ((totalNots + specificsPlusStandards) == totalTotal);
+
+		if (!validPlusNotEqualsTotal) {
+			if (!validsSeemsRight) {
+				LOG_ERROR("Number of valid variations is not as expected");
+			}
+			if (!notSeemsRight) {
+				LOG_ERROR("Number of \"NOT\" variations is not as expected");
+			}
+		}
+		if (validsSeemsRight) {
+			if (!localPlusGlobalEqualsValids) {
+				LOG_ERROR("Number of local plus global variations is not as expected");
+			}
+			if (!specificPlusStandardEqualsValids) {
+				LOG_ERROR("Number of specific plus standard variations is not as expected");
+			}
 		}
 
-		bool result = (totalVariations > 0);
+		//compare once to ctrl-f count, but just report:
+		int kindsOfStandardActions = ActionVariations::kindsOfStandards();
+		
+		int categories[TST_ACTION_VARIATIONS] = {-1, 0, 1, (int)actCategories::TOTAL - 1, (int)actCategories::TOTAL};
+		int modes[TST_ACTION_VARIATIONS] = {-1, 0, 1, (int)actModes::TOTAL - 1, (int)actModes::TOTAL};
+		int scopes[TST_ACTION_VARIATIONS] = {-1, 0, 1, (int)scope::TOTAL - 1, (int)actCategories::TOTAL};
 
-		if (!result) {
-			LOG_ERROR("Total variations not as expected");
-		}		
+		bool isValidAndExistenceMatch = true;
+		for (int i = 0; i < TST_ACTION_VARIATIONS; i++) {
+			for (int j = 0; j < TST_ACTION_VARIATIONS; j++) {
+				for (int k = 0; k < TST_ACTION_VARIATIONS; k++) {
+					bool valid = ActionVariations::isValid(categories[i],modes[j], scopes[k]);
+					bool exists = 
+						(actExists::NOT != 
+							ActionVariations::getExistence(categories[i],modes[j], scopes[k]));
+					isValidAndExistenceMatch &= (valid == exists);
+				}
+			}
+		}
+		if (!isValidAndExistenceMatch) {
+			LOG_ERROR("Validity and Existence checking don't match");
+		}
+		result &= isValidAndExistenceMatch;
+
+		//; out of bounds, negative, not, spc, std)
+		//getVariationExistence: exact same, test that isVariationValid = (this != NOT)
+
+		if (printResults) {
+			printf("\nExpected Total: %d, Valid: %d, NOT: %d, LOCAL: %d, GLOBAL: %d, SPC: %d, STD: %d (%d kinds)\n", 
+					expectedTotalTotal, totalValid, totalNots, localVariations, 
+					globalVariations, specifics, standards, kindsOfStandardActions);
+		}
 
 		return result;
 	}
