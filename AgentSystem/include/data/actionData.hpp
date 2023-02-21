@@ -16,21 +16,21 @@ This file:
 
 namespace AS {
 
-	enum actionCategories { STRENGHT, RESOURCES, ATTACK, GUARD,
-						    SPY, SABOTAGE, DIPLOMACY, CONQUEST,
-							TOTAL_CATEGORIES };
+	enum class actCategories { STRENGHT, RESOURCES, ATTACK, GUARD,
+						          SPY, SABOTAGE, DIPLOMACY, CONQUEST,
+							      TOTAL };
 	//TODO: brief description of each
 
-	enum actionModes { IMMEDIATE, REQUEST, SELF,
-		               TOTAL_MODES };
+	enum class actModes { IMMEDIATE, REQUEST, SELF,
+		                     TOTAL };
 	//TODO: brief description of each
 
-	enum actionScopes { LOCAL, GLOBAL,
-		                TOTAL_SCOPES };
+	enum class scope { LOCAL, GLOBAL,
+		               TOTAL};
 
-	enum actionAvailability { NOT_AVAILABE, SPECIFIC = 1, STANDARD = -1 };
-	//WARNING: any updates to this should be reflected on the initialization of
-	//Actions::availableVariations
+	//Wether action variation (ie: strenght, immediate, local) exists for a given action.
+    //NOT: "no". SPC: "yes, and is specific to this action". STD: "yes, and is the standard".
+	enum class actExists { NOT = 0, SPC = 1, STD = -1 };
 
 	//TODO: WARNING: MAY NOT BE PORTABLE?
 	typedef struct {

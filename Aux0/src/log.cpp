@@ -19,7 +19,7 @@ namespace az {
 	}
 
 	void log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file, 
-		const int line, const char* message, unsigned trailingNewlines) {
+		const int line, const char* message, uint32_t trailingNewlines) {
 		
 		Log::log(logger, degree, file, line, message, trailingNewlines);
 	}
@@ -63,9 +63,9 @@ namespace az {
 	}
 
 	void Log::log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file,
-		          const int line, const char* message, unsigned trailingNewlines) {
+		          const int line, const char* message, uint32_t trailingNewlines) {
 		
-		for (unsigned i = 0; i < trailingNewlines; i++) {
+		for (uint32_t i = 0; i < trailingNewlines; i++) {
 			puts("\n");
 		}
 

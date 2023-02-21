@@ -497,8 +497,8 @@ namespace CL{
 		AS::LAdecisionOffsets_t* NewOffsets_ptr =
 	        &m_data_ptr->data[agentID].offsets.incentivesAndConstraintsFromGA;	
 
-		for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
-			for (int j = 0; j < AS::TOTAL_MODES; j++) {
+		for (int i = 0; i < (int)AS::actCategories::TOTAL; i++) {
+			for (int j = 0; j < (int)AS::actModes::TOTAL; j++) {
 				(*NewOffsets_ptr)[i][j] = (*newValue_ptr)[i][j];
 			}
 		}		

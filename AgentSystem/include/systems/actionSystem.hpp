@@ -26,9 +26,9 @@ namespace AS {
 		const std::vector <AS::actionData_t>* getActionsGAsCptr() const {
 			return (const std::vector <AS::actionData_t>*) & dataGAs; }
 
-		bool getAction(int localOrGlobal, uint32_t actionID, actionData_t* recepient) const;
-		bool getAgentData(int localOrGlobal, uint32_t agentID, int actionNumber, 
-			                                             actionData_t* recepient) const;
+		bool getAction(AS::scope localOrGlobal, uint32_t actionID, actionData_t* recepient) const;
+		bool getAgentData(AS::scope localOrGlobal, uint32_t agentID, int actionNumber, 
+			                                                  actionData_t* recepient) const;
 
 		void pushBackLAaction(actionData_t action) { dataLAs.push_back(action); }
 		void pushBackGAaction(actionData_t action) { dataGAs.push_back(action); }
@@ -68,39 +68,82 @@ namespace AS {
 		int m_maxActionsPerAgent = 0;
 	};
 
-	//TODO: singleton, initialize, test
-	class ActionVariations {
-	public:
+	
+	namespace ActionVariations {
+		
+		constexpr auto NOT = actExists::NOT;
+		constexpr auto STD = actExists::STD;
+		constexpr auto SPC = actExists::SPC;
+		constexpr auto TOTAL_CATEGORIES = ((int)actCategories::TOTAL);
+		constexpr auto TOTAL_MODES = ((int)actModes::TOTAL);
+		constexpr auto TOTAL_SCOPES = ((int)scope::TOTAL);
+		constexpr auto LOCAL = ((int)scope::LOCAL);
+		constexpr auto GLOBAL = ((int)scope::GLOBAL);
 
-		//see AS::actionAvailability enum in actionData.hpp
-		//(right now, it is: 0: not, 1: specific, -1: standard)
-		int isVariationValid(int category, int mode, int scope) {
-			return availableVariations[category][mode][scope];
+		//TODO: Review these when action system is implemented
+		static const actExists availableVariations[TOTAL_CATEGORIES][TOTAL_MODES][TOTAL_SCOPES] = {
+			
+			//KEY for the numbers: see AS::actionAvailability enum on actionData.hpp
+			//Innermost Order is: { LOCAL, GLOBAL }
+			
+			            //STRENGHT                            //RESOURCES                
+		      //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
+			{{SPC, SPC}, {SPC, STD}, {SPC, STD}},  {{SPC, SPC}, {SPC, STD}, {SPC, STD}}, 
+
+		 	              //ATTACK                               //GUARD
+			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
+			{{SPC, STD}, {STD, STD}, {NOT, STD}},  {{SPC, STD}, {SPC, STD}, {NOT, STD}}, 
+
+		 	               //SPY                               //SABOTAGE
+			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
+			{{SPC, SPC}, {SPC, SPC}, {NOT, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
+
+		 	            //DIPLOMACY                            //CONQUEST
+			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
+			{{SPC, SPC}, {SPC, SPC}, {NOT, SPC}},  {{SPC, STD}, {STD, STD}, {NOT, STD}},
+		};
+
+		static bool isVariationValid(int category, int mode, int scope) {
+			bool inBounds = (category < TOTAL_CATEGORIES);
+			inBounds &= (mode < TOTAL_MODES);
+			inBounds &= (scope < TOTAL_SCOPES);
+			if(!inBounds) {return false;}
+
+			return (availableVariations[category][mode][scope] != NOT);
 		}	
 
-		int localVariations() {
+		static actExists getVariationExistence(int category, int mode, int scope) {
+			bool inBounds = (category < TOTAL_CATEGORIES);
+			inBounds &= (mode < TOTAL_MODES);
+			inBounds &= (scope < TOTAL_SCOPES);
+			if(!inBounds) {return NOT;}
+
+			return availableVariations[category][mode][scope];
+		}
+
+		static int localVariations() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
 				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += abs(availableVariations[i][j][LOCAL]);
+					amount += (availableVariations[i][j][LOCAL] != NOT);
 				}
 			}
 			return amount;
 		}
 
-		int globalVariations() {
+		static int globalVariations() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
 				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += abs(availableVariations[i][j][GLOBAL]);
+					amount += (availableVariations[i][j][GLOBAL] != NOT);
 				}
 			}
 			return amount;
 		}
 
-		int kindsOftandardActions() {
+		static int kindsOfStandardActions() {
 			bool hasAppeard[TOTAL_MODES][TOTAL_SCOPES];
 
 			for (int i = 0; i < TOTAL_MODES; i++) {
@@ -112,8 +155,8 @@ namespace AS {
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
 				for (int j = 0; j < TOTAL_MODES; j++) {
 
-					hasAppeard[j][LOCAL] |= (availableVariations[i][j][LOCAL] == STANDARD);
-					hasAppeard[j][GLOBAL] |= (availableVariations[i][j][GLOBAL] == STANDARD);
+					hasAppeard[j][LOCAL] |= (availableVariations[i][j][LOCAL] == STD);
+					hasAppeard[j][GLOBAL] |= (availableVariations[i][j][GLOBAL] == STD);
 				}
 			}
 
@@ -126,78 +169,51 @@ namespace AS {
 			return amount;
 		}
 
-		int totalUniqueVariations() {
+		static int totalUniqueVariations() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
 				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += (availableVariations[i][j][LOCAL] == SPECIFIC);
+					amount += (availableVariations[i][j][LOCAL] == SPC);
 				}
 			}
 			return amount;
 		}
 
-		int totalStandardVariations() {
+		static int totalStandardVariations() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
 				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += (availableVariations[i][j][LOCAL] == STANDARD);
+					amount += (availableVariations[i][j][LOCAL] == STD);
 				}
 			}
 			return amount;
 		}
 
-		int totalVariations() {
+		static int totalVariations() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
 				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += abs(availableVariations[i][j][LOCAL]);
-					amount += abs(availableVariations[i][j][GLOBAL]);
+					amount += (availableVariations[i][j][LOCAL] != NOT);
+					amount += (availableVariations[i][j][GLOBAL] != NOT);
 				}
 			}
 			return amount;
 		}
-
-	private:
-		//TODO: Review these when action system is implemented
-		const int availableVariations[TOTAL_CATEGORIES][TOTAL_MODES][TOTAL_SCOPES] = {
-			
-			//KEY for the numbers: see AS::actionAvailability enum on actionData.hpp
-			//Innermost Order is: { LOCAL, GLOBAL }
-			
-			            //STRENGHT                            //RESOURCES                
-		      //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{  1,  1 }, {  1, -1 }, {  1, -1 }},  {{  1,  1 }, {  1, -1 }, {  1, -1 }},
-
-		 	              //ATTACK                               //GUARD
-			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{  1, -1 }, { -1, -1 }, {  0, -1 }},  {{  1, -1 }, {  1, -1 }, {  0, -1 }},
-
-		 	               //SPY                               //SABOTAGE
-			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{  1,  1 }, {  1,  1 }, {  0, -1 }},  {{  1, -1 }, { -1, -1 }, {  0, -1 }},
-
-		 	            //DIPLOMACY                            //CONQUEST
-			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{  1,  1 }, {  1,  1 }, {  0,  1 }},  {{  1, -1 }, { -1, -1 }, {  0, -1 }},
-		};
 	};
 
 	//TODO: singleton, initialize, test
 	class ActionSystem {
 	public:
 		ActionDataController data; //all action data is here!
-		ActionVariations variations; //which sorts of actions are possible
 
 		bool initializeDataController(const networkParameters_t* pp,
 			                     const ActionDataController** actionDataController_cptr_ptr);
 		
-		//TODO-CRITICAL: is the system done? Is this a "system"? Should rename? : p
-
 		bool initialize(const ActionSystem** actionSystem_cptr_ptr) {
-			LOG_TRACE("Initializing Action System (stub)");
+			LOG_TRACE("Initializing Action System");
 			m_isInitialized = true;
 			(*actionSystem_cptr_ptr) = (const ActionSystem*)this;
 			return true;

@@ -28,7 +28,7 @@ namespace az {
 		}
 		inline static void log(std::shared_ptr<spdlog::logger> logger, const int degree,
 			                   const char* file, const int line, 
-							   const char* message, unsigned trailingNewlines = 0);
+							   const char* message, uint32_t trailingNewlines = 0);
 
 	private:
 		static std::shared_ptr<spdlog::logger> s_AgentSystemLogger;

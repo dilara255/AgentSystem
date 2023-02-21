@@ -529,8 +529,8 @@ namespace CL {
 		AS::LAdecisionOffsets_t* ASoffsets_ptr =
 			&ASdecision_ptr->offsets.incentivesAndConstraintsFromGA;
 		
-		for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
-			for (int j = 0; j < AS::TOTAL_MODES; j++) {
+		for (int i = 0; i < (int)AS::actCategories::TOTAL; i++) {
+			for (int j = 0; j < (int)AS::actModes::TOTAL; j++) {
 				(*ASoffsets_ptr)[i][j] = (*ClientOffsets_ptr)[i][j];
 			}
 		}
