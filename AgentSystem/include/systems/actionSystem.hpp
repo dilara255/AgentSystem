@@ -104,7 +104,7 @@ namespace AS {
 			{{SPC, SPC}, {SPC, SPC}, {NOT, SPC}},  {{SPC, STD}, {STD, STD}, {NOT, STD}},
 		};
 
-		static bool isVariationValid(int category, int mode, int scope) {
+		static bool isValid(int category, int mode, int scope) {
 			bool inBounds = (category < TOTAL_CATEGORIES);
 			inBounds &= (mode < TOTAL_MODES);
 			inBounds &= (scope < TOTAL_SCOPES);
@@ -113,7 +113,7 @@ namespace AS {
 			return (availableVariations[category][mode][scope] != NOT);
 		}	
 
-		static actExists getVariationExistence(int category, int mode, int scope) {
+		static actExists getExistence(int category, int mode, int scope) {
 			bool inBounds = (category < TOTAL_CATEGORIES);
 			inBounds &= (mode < TOTAL_MODES);
 			inBounds &= (scope < TOTAL_SCOPES);
@@ -122,7 +122,7 @@ namespace AS {
 			return availableVariations[category][mode][scope];
 		}
 
-		static int localVariations() {
+		static int totalLocals() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
@@ -133,7 +133,7 @@ namespace AS {
 			return amount;
 		}
 
-		static int globalVariations() {
+		static int totalGlobals() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
@@ -144,7 +144,8 @@ namespace AS {
 			return amount;
 		}
 
-		static int kindsOfStandardActions() {
+		//Standard actions with different mode and/or scope, no matter what category
+		static int kindsOfStandards() {
 			bool hasAppeard[TOTAL_MODES][TOTAL_SCOPES];
 
 			for (int i = 0; i < TOTAL_MODES; i++) {
@@ -170,29 +171,43 @@ namespace AS {
 			return amount;
 		}
 
-		static int totalUniqueVariations() {
+		static int totalSpecifics() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
 				for (int j = 0; j < TOTAL_MODES; j++) {
 					amount += (availableVariations[i][j][LOCAL] == SPC);
+					amount += (availableVariations[i][j][GLOBAL] == SPC);
 				}
 			}
 			return amount;
 		}
 
-		static int totalStandardVariations() {
+		static int totalStandards() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
 				for (int j = 0; j < TOTAL_MODES; j++) {
 					amount += (availableVariations[i][j][LOCAL] == STD);
+					amount += (availableVariations[i][j][GLOBAL] == STD);
 				}
 			}
 			return amount;
 		}
 
-		static int totalVariations() {
+		static int totalNots() {
+			int amount = 0;
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					amount += (availableVariations[i][j][LOCAL] == NOT);
+					amount += (availableVariations[i][j][GLOBAL] == NOT);
+				}
+			}
+			return amount;
+		}
+
+		static int totalValids() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
@@ -202,6 +217,10 @@ namespace AS {
 				}
 			}
 			return amount;
+		}
+
+		static int totalPossible() {
+			return (int)AS::actCategories::TOTAL*(int)AS::actModes::TOTAL*(int)AS::scope::TOTAL;
 		}
 	};
 
