@@ -39,7 +39,7 @@ namespace AZ {
 			return areOn;
 		}
 
-		bool isBitOn(unsigned bit) {
+		bool isBitOn(uint32_t bit) {
 			if (bit > 31) return false; //doesn't exist: not active
 
 			return (flags & BIT(bit));
@@ -82,7 +82,7 @@ namespace AZ {
 	public:
 		FlagField128() { flags[0] = 0; flags[1] = 0; flags[2] = 0; flags[3] = 0; }
 
-		bool loadField(uint32_t flagsToLoad, unsigned toWhichField) {
+		bool loadField(uint32_t flagsToLoad, uint32_t toWhichField) {
 			if (toWhichField > 3) return false; //doesn't exist: not active
 
 			flags[toWhichField] = flagsToLoad;
@@ -92,7 +92,7 @@ namespace AZ {
 			return true;
 		}
 
-		uint32_t getField(unsigned whichField) {
+		uint32_t getField(uint32_t whichField) {
 			if (whichField > 3) return 0; //doesn't exist: not active
 
 			return flags[whichField];

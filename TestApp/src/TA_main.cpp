@@ -32,6 +32,12 @@ uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK];
 CL::ClientData::Handler* cdHandler_ptr;
 
 int main(void) {
+	
+	//TODO: review wich tests printo to console, and pass this (macro?)
+	bool printSteps = false;
+	#if ( (defined AS_DEBUG) || (defined VERBOSE_RELEASE) )
+		printSteps = true;
+	#endif
 
 	LOG_INFO("Will first test some helper functionality:"); GETCHAR_PAUSE;
 
@@ -43,7 +49,7 @@ int main(void) {
 	double result = AZ::testHybridBusySleeping(); GETCHAR_PAUSE;
 	resultsBattery0 += (result > MINIMUM_PROPORTION_SLEEP_PASSES);
 	LOG_TRACE("Will test Flag Field functionality...");
-	resultsBattery0 += (int)AZ::testFlagFields(); GETCHAR_PAUSE;
+	resultsBattery0 += (int)AZ::testFlagFields(printSteps); GETCHAR_PAUSE;
 
 	if (resultsBattery0 != HELPER_FUNC_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
@@ -101,7 +107,7 @@ int main(void) {
 
 	resultsBattery2 += (int)AS::testNeighbourIDsetting(); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::testChoppedPRNdrawing(true, true); GETCHAR_PAUSE;
+	resultsBattery2 += (int)AS::testChoppedPRNdrawing(printSteps, true); GETCHAR_PAUSE;
 
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
@@ -471,8 +477,8 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 	
 	LOG_TRACE("Will copy AS's current LA decision offset data...");
 
-	for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
-		for (int j = 0; j < AS::TOTAL_MODES; j++) {
+	for (int i = 0; i < (int)AS::actCategories::TOTAL; i++) {
+		for (int j = 0; j < (int)AS::actModes::TOTAL; j++) {
 
 			newOffsets[i][j] = currentData.offsets.incentivesAndConstraintsFromGA[i][j];
 		}

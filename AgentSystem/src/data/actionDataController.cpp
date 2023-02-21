@@ -50,7 +50,7 @@ namespace AS {
 
 	bool ActionDataController::addActionData(actionData_t actionData) {
 
-		if (actionData.ids.scope == LOCAL) {
+		if (actionData.ids.scope == (uint32_t)scope::LOCAL) {
 			if (dataLAs.size() >= (MAX_LA_QUANTITY*MAX_ACTIONS_PER_AGENT) ) {
 				LOG_ERROR("Couldn't add LA action: maximum reached");
 				return false;
@@ -59,7 +59,7 @@ namespace AS {
 			dataLAs.push_back(actionData);
 			return true;
 		}
-		else if (actionData.ids.scope == GLOBAL) {
+		else if (actionData.ids.scope == (uint32_t)scope::GLOBAL) {
 			if (dataGAs.size() >= (MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT)) {
 				LOG_ERROR("Couldn't add GA action: maximum reached");
 				return false;
@@ -74,9 +74,9 @@ namespace AS {
 		}
 	}
 
-	bool ActionDataController::getAction(int localOrGlobal, uint32_t actionID,
+	bool ActionDataController::getAction(AS::scope localOrGlobal, uint32_t actionID,
 												       actionData_t* recepient) const {
-		if (localOrGlobal == AS::LOCAL) {
+		if (localOrGlobal == scope::LOCAL) {
 			if (actionID < dataLAs.size()) {
 				*recepient = dataLAs[actionID];
 				return true;
@@ -92,7 +92,7 @@ namespace AS {
 			}
 		}
 
-		else if (localOrGlobal == AS::GLOBAL) {
+		else if (localOrGlobal == scope::GLOBAL) {
 			if (actionID < dataGAs.size()) {
 				*recepient = dataGAs[actionID];
 				return true;
@@ -114,14 +114,14 @@ namespace AS {
 		}
 	}
 
-	bool ActionDataController::getAgentData(int localOrGlobal, uint32_t agentID, 
-		                                    int actionNumber, actionData_t* recepient) const {
+	bool ActionDataController::getAgentData(AS::scope localOrGlobal, uint32_t agentID, 
+		                                     int actionNumber, actionData_t* recepient) const {
 		if (actionNumber > (m_maxActionsPerAgent - 1)) {
 			LOG_ERROR("Tried to get agent Action Data which is out of range. Aborting.");
 			return false;
 		}
 
-		if (localOrGlobal == LOCAL) {
+		if (localOrGlobal == scope::LOCAL) {
 			if (agentID >= (dataLAs.size()/m_maxActionsPerAgent) ) {
 				LOG_ERROR("Couldn't get LA action: id too large");
 				return false;
@@ -130,7 +130,7 @@ namespace AS {
 			*recepient = dataLAs[ (agentID*m_maxActionsPerAgent) + actionNumber];
 			return true;
 		}
-		else if (localOrGlobal == GLOBAL) {
+		else if (localOrGlobal == scope::GLOBAL) {
 			if (agentID >= (dataGAs.size() / m_maxActionsPerAgent) ) {
 			LOG_ERROR("Couldn't get GA action: id too large");
 			return false;

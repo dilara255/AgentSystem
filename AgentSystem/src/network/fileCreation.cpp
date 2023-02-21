@@ -252,7 +252,7 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
         resultAux = fputs(LAoffsetsTitle, fp);
         if (resultAux == EOF) result = 0;
      
-        for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+        for (int i = 0; i < (int)AS::actCategories::TOTAL; i++) {
 
             resultAux = fprintf(fp, LAcategoryOffsets, i,
                 DEFAULT_LA_OFFSET, DEFAULT_LA_OFFSET,
@@ -299,7 +299,7 @@ int insertLAsWithoutDefaults(int numberLAs, int maxNeighbors, FILE* fp) {
         resultAux = fputs(LAoffsetsTitle, fp);
         if (resultAux == EOF) result = 0;
 
-        for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+        for (int i = 0; i < (int)AS::actCategories::TOTAL; i++) {
 
             resultAux = fputs(LAcategoryOffsets, fp);
             if (resultAux == EOF) result = 0;
@@ -321,7 +321,7 @@ int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE
     AS::ids_t actionID; //this is a bitfield
     uint32_t* actionID_ptr = (uint32_t*)&actionID;
     *actionID_ptr = 0; //makes sure sampleID is all zeroes to start
-    actionID.scope = AS::GLOBAL; //turns the scope bit to global
+    actionID.scope = (int)AS::scope::GLOBAL; //turns the scope bit to global
     
     for (int i = 0; i < totalGlobalActions; i++) {
         resultAux = fprintf(fp, GAaction, i, i / (maxActions),
@@ -336,7 +336,7 @@ int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE
     int totalLocalActions = (numberLAs)*maxActions;
 
     *actionID_ptr = 0; //makes sure sampleID is all zeroes to start
-    actionID.scope = AS::LOCAL; //turns the scope bit to local
+    actionID.scope = (uint32_t)AS::scope::LOCAL; //turns the scope bit to local
 
     for (int i = 0; i < totalLocalActions; i++) {
         resultAux = fprintf(fp, LAaction, i, i / (maxActions),
@@ -509,7 +509,7 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         resultAux = fputs(LAoffsetsTitle, fp);
         if (resultAux == EOF) result = 0;
 
-        for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+        for (int i = 0; i < (int)AS::actCategories::TOTAL; i++) {
 
             resultAux = fprintf(fp, LAcategoryOffsets, i,
                             decision.offsets.personality[i][0], 
@@ -542,7 +542,7 @@ bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
     for (int i = 0; i < totalGlobalActions; i++) {
         
         AS::actionData_t action;
-        if (!ap->getAction(AS::GLOBAL, i, &action)) { return false; }
+        if (!ap->getAction(AS::scope::GLOBAL, i, &action)) { return false; }
 
         resultAux = fprintf(fp, GAaction, i, i / (pp->maxActions),
                                 action.ids, action.ticks.initial, action.ticks.lastProcessed,
@@ -557,7 +557,7 @@ bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
 
     for (int i = 0; i < totalLocalActions; i++) {
         AS::actionData_t action;
-        ap->getAction(AS::LOCAL, i, &action);
+        ap->getAction(AS::scope::LOCAL, i, &action);
 
         resultAux = fprintf(fp, LAaction, i, i / (pp->maxActions),
                                 action.ids, action.ticks.initial, action.ticks.lastProcessed,

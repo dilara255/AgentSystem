@@ -411,25 +411,25 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     fscanf(fp, LAoffsetsTitle);
 
     constexpr int localAndGlobal = 2;
-    float offsets[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES][localAndGlobal];
+    float offsets[(int)AS::actCategories::TOTAL][(int)AS::actModes::TOTAL][localAndGlobal];
 
-    for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
+    for (int i = 0; i < (int)AS::actCategories::TOTAL; i++) {
         int category;
         tokens = fscanf(fp, LAcategoryOffsets, &category,
                                                &offsets[i][0][0], &offsets[i][0][1],
                                                &offsets[i][1][0], &offsets[i][1][1],
                                                &offsets[i][2][0], &offsets[i][2][1]);
     }
-    if (tokens != (AS::TOTAL_MODES*localAndGlobal + 1) ) {
+    if (tokens != ((int)AS::actModes::TOTAL*localAndGlobal + 1) ) {
         LOG_ERROR("Error reading LA offset tokens. Will Abort loading.");
         return false;
     }
 
-    for (int i = 0; i < AS::TOTAL_CATEGORIES; i++) {
-        for (int j = 0; j < AS::TOTAL_MODES; j++) {
-            decision.offsets.personality[i][j] = offsets[i][j][AS::LOCAL];
+    for (int i = 0; i < (int)AS::actCategories::TOTAL; i++) {
+        for (int j = 0; j < (int)AS::actModes::TOTAL; j++) {
+            decision.offsets.personality[i][j] = offsets[i][j][(int)AS::scope::LOCAL];
             decision.offsets.incentivesAndConstraintsFromGA[i][j] 
-                                                          = offsets[i][j][AS::GLOBAL];
+                                                          = offsets[i][j][(int)AS::scope::GLOBAL];
         }
     }
 

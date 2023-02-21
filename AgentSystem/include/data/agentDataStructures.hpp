@@ -2,7 +2,7 @@
 
 /*
 * WARNING: THIS FILE WILL BE EXPOSED TO THE APPLICATION!
-* - TODO: MOVE TO API/AS_dataTypes
+* - TODO-CRITICAL: MOVE TO API/AS_dataTypes
 * 
 * This file declares the basic data structres of agents, as well as enum classes for each field.
 * These structures build up from primitives to "cold", "state" and "decision" data types,
@@ -10,39 +10,6 @@
 * 
 * NOTE: In order for the structures to have definite size in compilation, we assume:
 * MAX_LA_NEIGHBOURS, MAX_LA_QUANTITY and MAX_GA_QUANTITY.
-*/
-
-/*DATA OUTLINE:
-* 
-* LA::
-* - coldData_t
-*	- AS::agentName_t name
-*	- unsigned id
-* - stateData_t
-*	- bool onOff
-*	- AS::LAneighborRelations_t relations
-*	- AS::LAlocationAndConnectionData_t locationAndConnections
-*	- AS::LAparameters_t parameters
-*	- unsigned GAid
-* - decisionData_t;
-*	- AS::LAinfiltrationOnNeighbors_t infiltration
-*	- AS::LApersonalityAndGAinfluence_t offsets
-*	- TODO: the rest of the decision data for LAs
-* 
-* GA::
-* * - coldData_t
-*	- AS::agentName_t name
-*	- unsigned id
-* - stateData_t
-*	- bool onOff
-*	- AS::GAneighborRelations_t relations
-*	- AS::LAflagField_t localAgentsBelongingToThis
-*	- AS::GAparameterTotals_t parameters
-*	- AS::GAflagField_t connectedGAs
-* - decisionData_t;
-*	- AS::GAinfiltrationOnNeighbors_t infiltration
-*	- AS::GApersonality personality
-*   - TODO: the rest of the decision data for GAs
 */
 
 #include "../include/network/parameters.hpp"
@@ -98,7 +65,8 @@ namespace AS {
 	} AS_API pos_t;
 
 	//TODO: = operator PLEASE (and hunt down explicit loops)
-	typedef float AS_API LAdecisionOffsets_t[AS::TOTAL_CATEGORIES][AS::TOTAL_MODES];
+	typedef float AS_API 
+		LAdecisionOffsets_t[(int)AS::actCategories::TOTAL][(int)AS::actModes::TOTAL];
 
 	enum class diploStance: uint8_t {WAR, NEUTRAL, TRADE, ALLY, ALLY_WITH_TRADE, TOTAL_STANCES};
 

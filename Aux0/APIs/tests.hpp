@@ -6,6 +6,8 @@
 #include "timeHelpers.hpp"
 #include "flagFields.hpp"
 
+//TODO: create "AS_testsAPI", move declarations there (as well as those currently on AS_API)
+//move definitions to cpp file
 namespace AZ{
 
 	static bool specificFlagField32Test(FlagField32* flags, uint32_t testField,
@@ -254,7 +256,7 @@ namespace AZ{
     //Avarage, amount of zeroes, periods 2, 4, 8 and 16.
     //Returns true if all tests pass. Defaults to 100M draws, minimum 16.
 	//If log == true, logs to output (eg, console) the time per draw
-	static bool testDraw4spcg32s(int64_t howManyTuplesToDraw = 128000, bool log = true) {
+	static bool testDraw4spcg32s(bool log = true, int64_t howManyTuplesToDraw = 128000) {
 		const int mininumTotalDrawn = 16;
 
 		if (howManyTuplesToDraw < (mininumTotalDrawn / DRAW_WIDTH)) {
@@ -374,7 +376,7 @@ namespace AZ{
     //Avarage, amount of zeroes, periods 2, 4, 8 and 16
     //Returns true if all tests pass. Defaults to 25M draws
 	//If log == true, logs to output (eg, console) the time per draw
-	static bool testDraw1spcg32(int64_t howManyToDraw = 128000, bool log = true) {
+	static bool testDraw1spcg32(bool log = true, int64_t howManyToDraw = 128000) {
 			const int mininumTotalDrawn = 16;
 
 		if (howManyToDraw < mininumTotalDrawn) {
@@ -511,8 +513,8 @@ namespace AZ{
 	//If log == true, logs to output (eg, to console) the results of each test.
 	//Has default values for all parameters.
 	static double testHybridBusySleeping(
-			int minimumSleepTimeMicros = 17, int maximumSleepTimeMicros = 17408,
-			                             double margin = 0.005, bool log = true) {
+			bool log = true, int minimumSleepTimeMicros = 17, 
+		    int maximumSleepTimeMicros = 17408, double margin = 0.005) {
 
 		float loads[QUANTITY_LOADS];
 		loads[0] = 0;
