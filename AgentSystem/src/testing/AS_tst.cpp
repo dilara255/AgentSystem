@@ -24,6 +24,7 @@ TODO: tests:
 #include "data/agentDataStructures.hpp"
 #include "data/agentClasses.hpp"
 #include "network/fileManager.hpp"
+#include "systems/actionSystem.hpp"
 
 #include "systems/AScoordinator.hpp"
 #include "testing/AS_tst.hpp"
@@ -44,6 +45,24 @@ namespace AS {
 	extern ActionSystem actionSystem;
 	extern dataControllerPointers_t agentDataControllerPtrs;
 	extern networkParameters_t* currentNetworkParams_ptr;
+
+	//TODO: expand test
+	bool testActionVariationsInfo(bool printResults) {
+		LOG_WARN("Will test acquiring information about action variations");
+		int totalVariations = ActionVariations::totalVariations();
+
+		if (printResults) {
+			printf("\nTotal Action Variations found: %d", totalVariations);
+		}
+
+		bool result = (totalVariations > 0);
+
+		if (!result) {
+			LOG_ERROR("Total variations not as expected");
+		}		
+
+		return result;
+	}
 
 	bool testChoppedPRNdrawing(bool printResults, bool dump) {
 		LOG_WARN("Will test drawing PRNs in parts using the PRNserver class");
@@ -246,7 +265,7 @@ namespace AS {
 
 		bool result = CL::getNewClientData(currentNetworkParams_ptr,
 			                               &agentDataControllerPtrs, 
-			                               &(actionSystem.data),
+			                               actionSystem.getDataDirectPointer(),
 			                               false);
 		if (!result) {
 			LOG_ERROR("Test Failed to get Client Changes. Will abort");
@@ -315,7 +334,7 @@ namespace AS {
 		LOG_TRACE("Will read Last LA's las actions's AUX...");
 
 		int index = lastLA * pp->maxActions + pp->maxActions - 1;
-		float auxRead = actionSystem.data.getActionsLAsCptr()->at(index).details.processingAux;
+		float auxRead = actionSystem.getDataDirectPointer()->getActionsLAsCptr()->at(index).details.processingAux;
 		if (auxRead != TST_LAST_ACTION_AUX) { 
 			failed++; 
 			LOG_TRACE("Value read is not as expected"); 

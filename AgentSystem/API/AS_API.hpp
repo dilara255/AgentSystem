@@ -59,5 +59,6 @@ namespace AS {
 	AS_API bool testMainLoopStopAndRestart();
 	AS_API bool testNeighbourIDsetting();
 	AS_API bool testChoppedPRNdrawing(bool printResults, bool dump);
+	AS_API bool testActionVariationsInfo(bool printResults = false);
 	//*******************
 }

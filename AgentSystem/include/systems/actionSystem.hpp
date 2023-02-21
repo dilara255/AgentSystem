@@ -14,7 +14,8 @@ This file declares the classes:
 #include "../include/network/parameters.hpp"
 
 namespace AS {	
-	//TODO: singleton, initialize, test
+
+	//TODO: add description
 	class ActionDataController {
 	public:
 		bool initialize(int maxActionsPerAgent, int numberLas, int numberGAs);
@@ -68,7 +69,7 @@ namespace AS {
 		int m_maxActionsPerAgent = 0;
 	};
 
-	
+	//TODO: add description
 	namespace ActionVariations {
 		
 		constexpr auto NOT = actExists::NOT;
@@ -204,24 +205,34 @@ namespace AS {
 		}
 	};
 
-	//TODO: singleton, initialize, test
+	//Used to prepare and hold the ActionDataController
 	class ActionSystem {
-	public:
-		ActionDataController data; //all action data is here!
+	public:		
+		bool initialize(const ActionSystem** actionSystem_cptr_ptr, 
+						const ActionDataController** actionDataController_cptr_ptr,
+			            const networkParameters_t* networkParams_cptr) {
+			LOG_TRACE("Initializing Action System");
+			m_isInitialized = true;
+			bool result = initializeDataController(networkParams_cptr, actionDataController_cptr_ptr);
+			(*actionSystem_cptr_ptr) = (const ActionSystem*)this;
+			return result;
+		}
 
 		bool initializeDataController(const networkParameters_t* pp,
 			                     const ActionDataController** actionDataController_cptr_ptr);
-		
-		bool initialize(const ActionSystem** actionSystem_cptr_ptr) {
-			LOG_TRACE("Initializing Action System");
-			m_isInitialized = true;
-			(*actionSystem_cptr_ptr) = (const ActionSystem*)this;
-			return true;
+
+		int stepActions(float timeMultiplier);
+
+		ActionDataController* getDataDirectPointer() {
+			if(!data.isInitialized()){return NULL;}
+			return &data;
 		}
+
 		bool isInitialized() const { return m_isInitialized; }
 
 	private:
 		bool m_isInitialized = false;
+		ActionDataController data; //all action data is here!
 	};
 }
 

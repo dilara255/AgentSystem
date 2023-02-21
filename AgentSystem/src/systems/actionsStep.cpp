@@ -4,24 +4,32 @@
 
 void processAction(AS::actionData_t action);
 
-void AS::stepActions(ActionSystem* ap, int numberLAs, int numberGAs, float timeMultiplier) {
+void AS::stepActions(ActionSystem* ap, int numLAs, int numGAs, float timeMultiplier) {
 	
-	std::vector<AS::actionData_t>* laActs;
-	std::vector<AS::actionData_t>* gaActs;
-	laActs = ap->data.getDirectLAdataPtr();
-	gaActs = ap->data.getDirectGAdataPtr();
+	int totalProccessed = ap->stepActions(timeMultiplier);
+	int totalExpected = numLAs + numGAs;
+	bool result = (totalExpected == totalProccessed);
+}
 
-	int LAactions = ap->data.getMaxActionsPerAgent()*numberLAs;
-	int GAactions = ap->data.getMaxActionsPerAgent()*numberGAs;
+int AS::ActionSystem::stepActions(float timeMultiplier){
 
-	for (int i = 0; i < LAactions; i++) {
-		processAction(laActs->at(i));
+	std::vector<AS::actionData_t>* laActs = data.getDirectLAdataPtr();
+	std::vector<AS::actionData_t>* gaActs = data.getDirectGAdataPtr();
+
+	int LAactions = laActs->size();
+	int GAactions = gaActs->size();
+
+	int laActsIndex;
+	for (laActsIndex = 0; laActsIndex < LAactions; laActsIndex++) {
+		processAction(laActs->at(laActsIndex));
 	}
 
-	for (int i = 0; i < GAactions; i++) {
-		processAction(gaActs->at(i));
+	int gaActsIndex;
+	for (gaActsIndex = 0; gaActsIndex < GAactions; gaActsIndex++) {
+		processAction(gaActs->at(gaActsIndex));
 	}
 
+	return (laActsIndex + gaActsIndex);
 }
 
 void processAction(AS::actionData_t action) {
