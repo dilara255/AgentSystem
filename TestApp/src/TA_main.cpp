@@ -17,6 +17,7 @@ bool testReadingTickDataWhileASmainLoopRuns_start(void);
 bool testReadingTickDataWhileASmainLoopRuns_end(void);
 bool testSendingClientDataAndSaving(void);
 bool testClientDataHAndlerInitialization(void);
+bool testPause(bool printLog = false, int pauseUnpauseCycles = 5);
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
@@ -24,13 +25,11 @@ bool testClientDataHAndlerInitialization(void);
 #define HELPER_FUNC_TESTS 6
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 9
-#define SPECIFIC_THREADED_LOOP_TESTS 7
+#define SPECIFIC_THREADED_LOOP_TESTS 8
 #define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
-
-CL::ClientData::Handler* cdHandler_ptr;
 
 int main(void) {
 	
@@ -139,6 +138,8 @@ int main(void) {
 
 	resultsBattery3 += (int)testSendingClientDataAndSaving(); GETCHAR_PAUSE;
 
+	resultsBattery3 += (int)testPause(printSteps); GETCHAR_PAUSE;
+
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
 
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
@@ -179,12 +180,128 @@ int main(void) {
 	return (1 + (totalPassed - TOTAL_TESTS));
 }
 
+bool testPause(bool printLog, int pauseUnpauseCycles) {
+	LOG_WARN("Will test pausing and resuming the main loop");
+
+	for(int i = 0; i < pauseUnpauseCycles; i++){
+		const CL::mirror_t* mp = CL::ASmirrorData_cptr;
+		if (mp == NULL) {
+			LOG_ERROR("Failed to acquire const pointer to mirror Data");
+			return false;
+		}
+
+		uint64_t ticksBeforePause = mp->networkParams.mainLoopTicks;
+
+		AS::pauseMainLoop();
+		auto pauseIssued = std::chrono::steady_clock::now();
+		if (!AS::chekIfMainLoopShouldBePaused()) {
+			LOG_ERROR("Pause Command not issued to AS");
+			return false;
+		}
+
+		int pauseGraceFactor = 2; //give ample time to pause
+		bool timedOut = false;
+
+		while (!AS::checkIfMainLoopIsPaused() && !timedOut) {
+
+			std::chrono::nanoseconds waitedFor = std::chrono::steady_clock::now() - pauseIssued;
+			int millisWaited = (int)(((double)waitedFor.count()/NANOS_IN_A_SECOND)
+				                                              *MILLIS_IN_A_SECOND);
+
+			bool timedOut = (millisWaited > (pauseGraceFactor*AS_MILLISECONDS_PER_STEP));
+		}
+		if (timedOut) {
+			LOG_ERROR("Timed out waiting for AS to actually pause");
+			return false;
+		}
+
+		auto actualPause = std::chrono::steady_clock::now();
+	
+		uint64_t ticksAfterPause = mp->networkParams.mainLoopTicks;
+		if ((ticksAfterPause - ticksBeforePause) > 1) {
+			LOG_ERROR("Stepped more than one tick before pausing");
+			return false;
+		}
+
+		std::chrono::microseconds ASstepTime = 
+				std::chrono::duration_cast<std::chrono::microseconds>(
+						std::chrono::milliseconds(AS_MILLISECONDS_PER_STEP));
+
+		int periodsToWaitOnPause = 10;
+		AZ::hybridBusySleepForMicros(periodsToWaitOnPause*ASstepTime); 
+	
+		uint64_t ticksAfterWait =  mp->networkParams.mainLoopTicks;
+		if (ticksAfterWait != ticksAfterPause) {
+			LOG_ERROR("AS kept running while should be paused");
+			return false;
+		}
+
+		AS::unpauseMainLoop();
+		auto unpauseIssued = std::chrono::steady_clock::now();
+		if (AS::chekIfMainLoopShouldBePaused()) {
+			LOG_ERROR("Unpause Command not issued to AS");
+			return false;
+		}
+
+		while (AS::checkIfMainLoopIsPaused() && !timedOut) {
+
+			std::chrono::nanoseconds waitedFor = std::chrono::steady_clock::now() - unpauseIssued;
+			int millisWaited = (int)(((double)waitedFor.count()/NANOS_IN_A_SECOND)
+				                                              *MILLIS_IN_A_SECOND);
+
+			bool timedOut = (millisWaited > (pauseGraceFactor*AS_MILLISECONDS_PER_STEP));
+		}
+		if (timedOut) {
+			LOG_ERROR("Timed out waiting for AS to actually unpause");
+			return false;
+		}
+
+		auto actualUnpause = std::chrono::steady_clock::now();
+
+		int periodsToWaitAfterUnpause = 10;
+		AZ::hybridBusySleepForMicros(periodsToWaitAfterUnpause*ASstepTime); 
+
+		uint64_t ticksNow = mp->networkParams.mainLoopTicks;
+		if (ticksNow == ticksAfterPause) {
+			LOG_ERROR("AS isn't ticking after unpausing");
+			return false;
+		}
+		else if ((ticksNow - ticksAfterPause) < (periodsToWaitAfterUnpause/pauseGraceFactor)) {
+			LOG_ERROR("AS is ticking too slow after unpausing");
+			return false;
+		}
+
+		if (printLog) {
+			auto timeToPause = actualPause - pauseIssued;
+			auto timeToUnpause = actualUnpause - unpauseIssued;
+			float millisToPause = ((double)timeToPause.count()/NANOS_IN_A_SECOND)
+				                                                 *MILLIS_IN_A_SECOND;
+			float millisToUnpause = ((double)timeToUnpause.count()/NANOS_IN_A_SECOND)
+				                                                     *MILLIS_IN_A_SECOND;
+
+			float AScyclesToPause = millisToPause/AS_MILLISECONDS_PER_STEP;
+			float AScyclesToUnpause = millisToUnpause/AS_MILLISECONDS_PER_STEP;
+
+			float nanosPerMicro = NANOS_IN_A_SECOND/MICROS_IN_A_SECOND;
+			printf("AS cycles to pause: %f (%f micros), to unpause: %f (%f micros)\n", 
+					AScyclesToPause, timeToPause.count()/nanosPerMicro, AScyclesToUnpause,
+					timeToUnpause.count()/nanosPerMicro);
+		}
+	}
+
+	LOG_INFO("Pause test passed");
+
+	return true;
+}
+
 bool testSendingClientDataAndSaving(void) {
 	LOG_WARN("Will try to send data through CL's Client Data Handler");
 
-	uint32_t id = CL::ASmirrorData_ptr->networkParams.numberLAs - 1;
+	uint32_t id = CL::ASmirrorData_cptr->networkParams.numberLAs - 1;
 	
 	LOG_TRACE("Calculated last LA's ID from AS mirror data");
+
+	auto cdHandler_ptr = CL::getClientDataHandlerPtr();
 
 	if (cdHandler_ptr == NULL) {
 		LOG_ERROR("A pointer to the Client Data Handler has to be acquired before this test");
@@ -215,7 +332,7 @@ bool testSendingClientDataAndSaving(void) {
 bool testClientDataHAndlerInitialization(void) {
 	LOG_WARN("Will test ClientDataHandler acquisition");
 
-	cdHandler_ptr = CL::getClientDataHandlerPtr();
+	auto cdHandler_ptr = CL::getClientDataHandlerPtr();
 
 	if (cdHandler_ptr == NULL) {
 		LOG_ERROR("Test failed getting client data handler!");
@@ -235,14 +352,14 @@ bool testClientDataHAndlerInitialization(void) {
 
 void TAreadLoop(int numberTicks) {
 
-	g_ticksRead[0] = CL::ASmirrorData_ptr->networkParams.mainLoopTicks;
+	g_ticksRead[0] = CL::ASmirrorData_cptr->networkParams.mainLoopTicks;
 	
 	auto sleepTime = std::chrono::milliseconds(TST_TA_QUERY_FREQUENCY_MS);
 	for (int i = 1; i < numberTicks; i++) {
 		
 		AZ::hybridBusySleepForMicros(sleepTime);
 
-		g_ticksRead[i] = CL::ASmirrorData_ptr->networkParams.mainLoopTicks;
+		g_ticksRead[i] = CL::ASmirrorData_cptr->networkParams.mainLoopTicks;
 	}
 }
 
@@ -417,7 +534,7 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 	
 	LOG_TRACE("Will acquire pointers to the DATA on AS and CL");
 
-	const CL::mirror_t* mp = CL::ASmirrorData_ptr;
+	const CL::mirror_t* mp = CL::ASmirrorData_cptr;
 	if (mp == NULL) {
 		LOG_ERROR("const AS Data pointer returned null. Aborting test.");
 		return false;
@@ -512,32 +629,32 @@ bool testReadingCLdataFromTA(void) {
 
 	LOG_WARN("TA will try to read data from CL...");
 
-	bool result = CL::ASmirrorData_ptr->agentMirrorPtrs.haveData;
-	result &= CL::ASmirrorData_ptr->networkParams.isNetworkInitialized;
-	result &= CL::ASmirrorData_ptr->actionMirror.hasData();
+	bool result = CL::ASmirrorData_cptr->agentMirrorPtrs.haveData;
+	result &= CL::ASmirrorData_cptr->networkParams.isNetworkInitialized;
+	result &= CL::ASmirrorData_cptr->actionMirror.hasData();
 	if (!result) {
 		LOG_ERROR("CL Mirror data controllers say they have no data!");
 		return false;
 	}
 	LOG_TRACE("Data Flags ok. Will try to read data...");
 
-	result = (CL::ASmirrorData_ptr->networkParams.numberGAs == TST_NUMBER_GAS);
-	result &= (CL::ASmirrorData_ptr->networkParams.numberLAs == TST_NUMBER_LAS);
+	result = (CL::ASmirrorData_cptr->networkParams.numberGAs == TST_NUMBER_GAS);
+	result &= (CL::ASmirrorData_cptr->networkParams.numberLAs == TST_NUMBER_LAS);
 	if (!result) {
 		LOG_ERROR("Agent amounts were not as expected according to CL. Aborting test.");
 		return false;
 	}
 
 	//strcmp returns 0 on perfect match
-	if (strcmp(CL::ASmirrorData_ptr->networkParams.name, fileNameWithDefaults) != 0) {
+	if (strcmp(CL::ASmirrorData_cptr->networkParams.name, fileNameWithDefaults) != 0) {
 		LOG_ERROR("Network name doesn't match expected.");
 		result = false;
 	}
 	
 	AS::actionData_t firstGAaction =
-		CL::ASmirrorData_ptr->actionMirror.dataGAs[0];
+		CL::ASmirrorData_cptr->actionMirror.dataGAs[0];
 	AS::actionData_t lastLAaction =
-		CL::ASmirrorData_ptr->actionMirror.dataLAs[(TST_NUMBER_LAS * MAX_ACTIONS_PER_AGENT) - 1];
+		CL::ASmirrorData_cptr->actionMirror.dataLAs[(TST_NUMBER_LAS * MAX_ACTIONS_PER_AGENT) - 1];
 
 	bool resultAux = (firstGAaction.ticks.initial == DEFAULT_FIRST_TICK);
 	resultAux &= (lastLAaction.details.processingAux == DEFAULT_ACTION_AUX);
@@ -546,8 +663,8 @@ bool testReadingCLdataFromTA(void) {
 		result = false;
 	}
 
-	GA::coldData_t firstGAcold = CL::ASmirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data[0];
-	LA::decisionData_t lastLAdecision = CL::ASmirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data[TST_NUMBER_LAS-1];
+	GA::coldData_t firstGAcold = CL::ASmirrorData_cptr->agentMirrorPtrs.GAcoldData_ptr->data[0];
+	LA::decisionData_t lastLAdecision = CL::ASmirrorData_cptr->agentMirrorPtrs.LAdecision_ptr->data[TST_NUMBER_LAS-1];
 
 	resultAux = (firstGAcold.id == 0);
 	resultAux &= (lastLAdecision.offsets.personality[0][0] == (float)DEFAULT_LA_OFFSET);
@@ -569,8 +686,8 @@ bool testFromTAifCLhasInitialized(void) {
 
 	LOG_WARN("TA will querry wether CL's Data Controller are properly initialized...");
 
-	bool result = CL::ASmirrorData_ptr->actionMirror.isInitialized();
-	result &= CL::ASmirrorData_ptr->agentMirrorPtrs.haveBeenCreated;
+	bool result = CL::ASmirrorData_cptr->actionMirror.isInitialized();
+	result &= CL::ASmirrorData_cptr->agentMirrorPtrs.haveBeenCreated;
 	if (!result) {
 		LOG_ERROR("CL Mirror data controllers not initialized or bad pointer");
 		return false;
@@ -578,35 +695,35 @@ bool testFromTAifCLhasInitialized(void) {
 	LOG_TRACE("Initialization flags ok. Checking capacities...");
 	
 	//Dividing by sizeof to get back to quantity of items, which is easier to check expected
-	size_t capLAact = CL::ASmirrorData_ptr->actionMirror.capacityForDataInBytesLAs();
-	size_t sizeLAact = sizeof(CL::ASmirrorData_ptr->actionMirror.dataLAs[0]);
+	size_t capLAact = CL::ASmirrorData_cptr->actionMirror.capacityForDataInBytesLAs();
+	size_t sizeLAact = sizeof(CL::ASmirrorData_cptr->actionMirror.dataLAs[0]);
 
-	size_t capGAact = CL::ASmirrorData_ptr->actionMirror.capacityForDataInBytesGAs();
-	size_t sizeGAact = sizeof(CL::ASmirrorData_ptr->actionMirror.dataGAs[0]);
+	size_t capGAact = CL::ASmirrorData_cptr->actionMirror.capacityForDataInBytesGAs();
+	size_t sizeGAact = sizeof(CL::ASmirrorData_cptr->actionMirror.dataGAs[0]);
 
-	size_t capLAcold = CL::ASmirrorData_ptr->agentMirrorPtrs.LAcoldData_ptr->capacityForDataInBytes();
-	size_t sizeLAcold = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.LAcoldData_ptr->data[0]);
+	size_t capLAcold = CL::ASmirrorData_cptr->agentMirrorPtrs.LAcoldData_ptr->capacityForDataInBytes();
+	size_t sizeLAcold = sizeof(CL::ASmirrorData_cptr->agentMirrorPtrs.LAcoldData_ptr->data[0]);
 
-	size_t capGAcold = CL::ASmirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->capacityForDataInBytes();
-	size_t sizeGAcold = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.GAcoldData_ptr->data[0]);
+	size_t capGAcold = CL::ASmirrorData_cptr->agentMirrorPtrs.GAcoldData_ptr->capacityForDataInBytes();
+	size_t sizeGAcold = sizeof(CL::ASmirrorData_cptr->agentMirrorPtrs.GAcoldData_ptr->data[0]);
 
-	size_t capLAstate = CL::ASmirrorData_ptr->agentMirrorPtrs.LAstate_ptr->capacityForDataInBytes();
-	size_t sizeLAstate = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.LAstate_ptr->data[0]);
+	size_t capLAstate = CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->capacityForDataInBytes();
+	size_t sizeLAstate = sizeof(CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data[0]);
 
-	size_t capGAstate = CL::ASmirrorData_ptr->agentMirrorPtrs.GAstate_ptr->capacityForDataInBytes();
-	size_t sizeGAstate = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.GAstate_ptr->data[0]);
+	size_t capGAstate = CL::ASmirrorData_cptr->agentMirrorPtrs.GAstate_ptr->capacityForDataInBytes();
+	size_t sizeGAstate = sizeof(CL::ASmirrorData_cptr->agentMirrorPtrs.GAstate_ptr->data[0]);
 
-	size_t capLAdecs = CL::ASmirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->capacityForDataInBytes();
-	size_t sizeLAdecs = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.LAdecision_ptr->data[0]);
+	size_t capLAdecs = CL::ASmirrorData_cptr->agentMirrorPtrs.LAdecision_ptr->capacityForDataInBytes();
+	size_t sizeLAdecs = sizeof(CL::ASmirrorData_cptr->agentMirrorPtrs.LAdecision_ptr->data[0]);
 
-	size_t capGAdecs = CL::ASmirrorData_ptr->agentMirrorPtrs.GAdecision_ptr->capacityForDataInBytes();
-	size_t sizeGAdecs = sizeof(CL::ASmirrorData_ptr->agentMirrorPtrs.GAdecision_ptr->data[0]);
+	size_t capGAdecs = CL::ASmirrorData_cptr->agentMirrorPtrs.GAdecision_ptr->capacityForDataInBytes();
+	size_t sizeGAdecs = sizeof(CL::ASmirrorData_cptr->agentMirrorPtrs.GAdecision_ptr->data[0]);
 
 	int failed = 0;
 
-	int GAquantity = CL::ASmirrorData_ptr->networkParams.numberGAs; //already corrected
-	int LAquantity = CL::ASmirrorData_ptr->networkParams.numberLAs;
-	int maxActions = CL::ASmirrorData_ptr->networkParams.maxActions;
+	int GAquantity = CL::ASmirrorData_cptr->networkParams.numberGAs; //already corrected
+	int LAquantity = CL::ASmirrorData_cptr->networkParams.numberLAs;
+	int maxActions = CL::ASmirrorData_cptr->networkParams.maxActions;
 
 	failed += capLAact != (LAquantity * maxActions * sizeLAact);
 	failed += capGAact != (GAquantity * maxActions * sizeGAact);

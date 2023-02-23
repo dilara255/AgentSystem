@@ -19,6 +19,7 @@
 namespace AS{
 	bool* g_shouldMainLoopBeRunning_ptr;
 	bool g_shouldMainLoopBePaused = false;
+	bool g_isMainLoopBePaused = false;
 	std::thread::id* g_mainLoopId_ptr;
 	std::thread* g_mainLoopThread_ptr;
 	AS::PRNserver* g_prnServer_ptr;
@@ -247,6 +248,7 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 	//TODO-CRITICAL: TEST pausing
 	//Deals with pause (pause sleeps in cycles of half targetStepTime until unpaused)
 	if(AS::g_shouldMainLoopBePaused){
+		AS::g_isMainLoopBePaused = true;
 		auto pauseStartTime = std::chrono::steady_clock::now();
 		auto pauseStepStartTime = pauseStartTime;
 		auto targetWakeTimePause = pauseStepStartTime + (timing_ptr->targetStepTime/2);
@@ -261,6 +263,7 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 		timing_ptr->timeSpentPaused += timePaused;
 		timing_ptr->startThisStep = std::chrono::steady_clock::now();
 	}
+	AS::g_isMainLoopBePaused = false;
 }
 
 void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
@@ -542,6 +545,10 @@ bool AS::chekIfMainLoopShouldBeRunning() {
 
 bool AS::chekIfMainLoopShouldBePaused() {
 	return g_shouldMainLoopBePaused;
+}
+
+bool AS::checkIfMainLoopIsPaused() {
+	return g_isMainLoopBePaused;
 }
 
 void AS::pauseMainLoop() {
