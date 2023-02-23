@@ -12,7 +12,7 @@
 namespace CL {
 
 	DataMirrorSystem ASmirror;
-	const mirror_t* ASmirrorData_ptr = NULL;
+	const mirror_t* ASmirrorData_cptr = NULL;
 
 	CL::ClientData::Handler* clientData_ptr = NULL;
 
@@ -40,7 +40,7 @@ namespace CL {
 	}
 
 	bool isASdataPointerInitialized() {
-		bool mirroPtrIsNUll = (ASmirrorData_ptr == NULL);
+		bool mirroPtrIsNUll = (ASmirrorData_cptr == NULL);
 		bool ASmirroIsInitialized = (ASmirror.isInitialized());
 		if (mirroPtrIsNUll || !ASmirroIsInitialized) {
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
@@ -65,8 +65,8 @@ namespace CL {
 			return false;
 		}
 
-		ASmirrorData_ptr = (const mirror_t*)tempASmirrorData_ptr;
-		if (ASmirrorData_ptr == NULL) {
+		ASmirrorData_cptr = (const mirror_t*)tempASmirrorData_ptr;
+		if (ASmirrorData_cptr == NULL) {
 			LOG_CRITICAL("Failed to set pointer to AS mirror data. CL Initialization failed");
 			return false;
 		}
@@ -76,8 +76,8 @@ namespace CL {
 			return false;
 		}
 
-		if ((!ASmirrorData_ptr->agentMirrorPtrs.haveBeenCreated) ||
-			(!ASmirrorData_ptr->actionMirror.isInitialized())) {
+		if ((!ASmirrorData_cptr->agentMirrorPtrs.haveBeenCreated) ||
+			(!ASmirrorData_cptr->actionMirror.isInitialized())) {
 			LOG_CRITICAL("As Mirror pointer copy or container initialization failed - CL initialization failed");
 			return false;
 		}

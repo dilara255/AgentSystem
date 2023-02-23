@@ -12,9 +12,8 @@
 
 namespace CL {
 
-	//TODO: work on Client Data Handlers so the tests wich use this can use the Handlers.
 	//TODO: turn this into a cptr
-	CL_API extern const mirror_t* ASmirrorData_ptr;
+	CL_API extern const mirror_t* ASmirrorData_cptr;
 
 	//Returns NULL if not initialized
 	CL_API CL::ClientData::Handler* getClientDataHandlerPtr();

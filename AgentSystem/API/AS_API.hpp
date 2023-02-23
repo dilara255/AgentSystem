@@ -22,6 +22,7 @@ namespace AS {
 	AS_API bool isMainLoopRunning();
 	AS_API bool chekIfMainLoopShouldBeRunning();
 	AS_API bool chekIfMainLoopShouldBePaused();
+	AS_API bool checkIfMainLoopIsPaused();
 	//pausing already paused loop has no effect. Pause effective starts after mainLoop step
 	//pause sleeps in cycles of targetStepTime until unpaused
 	AS_API void pauseMainLoop();
