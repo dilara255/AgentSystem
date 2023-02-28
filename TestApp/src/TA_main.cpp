@@ -22,7 +22,7 @@ bool testPause(bool printLog = false, int pauseUnpauseCycles = 5);
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
 //TODO: the names of the test categories do not make sense any more
-#define HELPER_FUNC_TESTS 6
+#define HELPER_FUNC_TESTS 7
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 9
 #define SPECIFIC_THREADED_LOOP_TESTS 8
@@ -52,7 +52,8 @@ int main(void) {
 	resultsBattery0 += (int)AZ::testFlagFields(printSteps); GETCHAR_PAUSE;
 	resultsBattery0 += (int)AS::testActionVariationsInfo(printSteps); GETCHAR_PAUSE;
 	resultsBattery0 += (int)AS::testMultipleAgentChopCalculations(printSteps); GETCHAR_PAUSE;
-	
+	resultsBattery0 += (int)AS::testWarningAndErrorCountingAndDisplaying(printSteps); GETCHAR_PAUSE;
+
 	if (resultsBattery0 != HELPER_FUNC_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", HELPER_FUNC_TESTS - resultsBattery0, HELPER_FUNC_TESTS);
@@ -274,9 +275,9 @@ bool testPause(bool printLog, int pauseUnpauseCycles) {
 		if (printLog) {
 			auto timeToPause = actualPause - pauseIssued;
 			auto timeToUnpause = actualUnpause - unpauseIssued;
-			float millisToPause = ((double)timeToPause.count()/NANOS_IN_A_SECOND)
+			float millisToPause = ((float)timeToPause.count()/NANOS_IN_A_SECOND)
 				                                                 *MILLIS_IN_A_SECOND;
-			float millisToUnpause = ((double)timeToUnpause.count()/NANOS_IN_A_SECOND)
+			float millisToUnpause = ((float)timeToUnpause.count()/NANOS_IN_A_SECOND)
 				                                                     *MILLIS_IN_A_SECOND;
 
 			float AScyclesToPause = millisToPause/AS_MILLISECONDS_PER_STEP;

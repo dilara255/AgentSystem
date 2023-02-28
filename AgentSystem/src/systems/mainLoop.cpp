@@ -50,7 +50,7 @@ namespace AS{
 		std::chrono::steady_clock::time_point endPreparation;
 		std::chrono::steady_clock::time_point endStep;
 		std::chrono::steady_clock::time_point endDataTransfer;
-		std::chrono::steady_clock::time_point endTimmingAndSleep;
+		std::chrono::steady_clock::time_point endTimingAndSleep;
 		std::chrono::microseconds targetStepTime;
 		std::chrono::microseconds timeSpentPaused = zeroMicro;
 	};
@@ -95,12 +95,12 @@ void AS::mainLoop() {
 	timingMicros.startThisStep = std::chrono::steady_clock::now();
 	timingMicros.startLastStep = timingMicros.startThisStep;
 	timingMicros.startFirstStep = timingMicros.startThisStep;
-	timingMicros.endTimmingAndSleep =  timingMicros.startThisStep; //for first iteration
+	timingMicros.endTimingAndSleep =  timingMicros.startThisStep; //for first iteration
 
 	//Actual loop:
 	do {
 		prepareStep(&chopControl);
-		timeOperation(timingMicros.endTimmingAndSleep, &timingMicros.endPreparation,
+		timeOperation(timingMicros.endTimingAndSleep, &timingMicros.endPreparation,
 		                                       &timingMicros.totalMicrosPreparation);
 		
 		step(chopControl, timingMicros.timeMultiplier);
@@ -112,7 +112,7 @@ void AS::mainLoop() {
 			                        &timingMicros.totalMicrosDataTransfer);
 
 		timeAndSleep(&timingMicros);
-		timeOperation(timingMicros.endDataTransfer, &timingMicros.endTimmingAndSleep,
+		timeOperation(timingMicros.endDataTransfer, &timingMicros.endTimingAndSleep,
 			                                &timingMicros.totalMicrosTimmingAndSleep);
 
 	} while (*g_shouldMainLoopBeRunning_ptr);
