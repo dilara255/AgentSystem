@@ -23,12 +23,18 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 	//update LAs and GAs:
 	auto LAstateData_ptr = dp->LAstate_ptr->getDirectDataPtr();
+	if (LAstateData_ptr == NULL) {
+		g_errorsCounter_ptr->incrementError(errors::AS_LA_STATE_PTR_NULL);
+	}
 	
 	for (int i = 0; i < numberLAs; i++) {	
 		updateLA(&LAstateData_ptr->at(i), i, dp, timeMultiplier);
 	}
 
 	auto GAstateData_ptr = dp->GAstate_ptr->getDirectDataPtr();
+	if (GAstateData_ptr == NULL) {
+		g_errorsCounter_ptr->incrementError(errors::AS_GA_STATE_PTR_NULL);
+	}
 
 	for (int i = 0; i < numberGAs; i++) {	
 		updateGA(&GAstateData_ptr->at(i), i, dp, timeMultiplier);
@@ -36,9 +42,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	
 	//Make decisions:
 	static int nextDecisionLAindex = 0;	
-	if(nextDecisionLAindex >= numberLAs) {
-		nextDecisionLAindex = 0;
-	}
+	if(nextDecisionLAindex >= numberLAs) { nextDecisionLAindex = 0; }
 
 	int finalDecisionLAindex = nextDecisionLAindex + LAdecisionsToTakeThisChop - 1;
 	for (; nextDecisionLAindex <= finalDecisionLAindex; nextDecisionLAindex++) {	
@@ -46,9 +50,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	}
 		
 	static int nextDecisionGAindex = 0;	
-	if(nextDecisionGAindex >= numberGAs){
-		nextDecisionGAindex = 0;
-	}
+	if(nextDecisionGAindex >= numberGAs){ nextDecisionGAindex = 0; }
 
 	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
 	for (; nextDecisionGAindex <= finalDecisionGAindex; nextDecisionGAindex++) {	

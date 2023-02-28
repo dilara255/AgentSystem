@@ -47,5 +47,5 @@ int AS::ActionSystem::stepActions(float timeMultiplier){
 bool processAction(AS::actionData_t action) {
 	//Create classes with commom base to deal with actions, dispatch from here to them
 
-	return false; //placeholder
+	return true;
 }

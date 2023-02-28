@@ -18,6 +18,7 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void);
 bool testSendingClientDataAndSaving(void);
 bool testClientDataHAndlerInitialization(void);
 bool testPause(bool printLog = false, int pauseUnpauseCycles = 5);
+bool testMainLoopErrors(std::string filename);
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
@@ -25,7 +26,7 @@ bool testPause(bool printLog = false, int pauseUnpauseCycles = 5);
 #define HELPER_FUNC_TESTS 7
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 9
-#define SPECIFIC_THREADED_LOOP_TESTS 8
+#define SPECIFIC_THREADED_LOOP_TESTS 9
 #define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 std::thread reader;//to test realtime reading of data trough CL as AS runs
@@ -43,15 +44,21 @@ int main(void) {
 
 	LOG_TRACE("Drawing many PRNs, one at a time:");
 	int resultsBattery0 = (int)AZ::testDraw1spcg32(); GETCHAR_PAUSE;
+
 	LOG_TRACE("Drawing many PRNs, four at a time:");
 	resultsBattery0 += (int)AZ::testDraw4spcg32s(); GETCHAR_PAUSE;
+
 	LOG_TRACE("Will test sleeping and waking a few times...");
 	double result = AZ::testHybridBusySleeping(); GETCHAR_PAUSE;
 	resultsBattery0 += (result > MINIMUM_PROPORTION_SLEEP_PASSES);
+
 	LOG_TRACE("Will test Flag Field functionality...");
 	resultsBattery0 += (int)AZ::testFlagFields(printSteps); GETCHAR_PAUSE;
+
 	resultsBattery0 += (int)AS::testActionVariationsInfo(printSteps); GETCHAR_PAUSE;
+
 	resultsBattery0 += (int)AS::testMultipleAgentChopCalculations(printSteps); GETCHAR_PAUSE;
+
 	resultsBattery0 += (int)AS::testWarningAndErrorCountingAndDisplaying(printSteps); GETCHAR_PAUSE;
 
 	if (resultsBattery0 != HELPER_FUNC_TESTS) {
@@ -124,9 +131,10 @@ int main(void) {
 	
 	LOG_INFO("Specific functionality tests (with threaded LOOPs):\n",1); GETCHAR_PAUSE;
 
-	LOG_WARN("Will load the previously modified network");
-	int resultsBattery3 = (int)AS::loadNetworkFromFile(customFilename, true);
-	GETCHAR_PAUSE;
+	int resultsBattery3 = (int)testMainLoopErrors(customFilename); GETCHAR_PAUSE;
+
+	LOG_WARN("Will re-load the previously modified network for further testing");
+	resultsBattery3 += (int)AS::loadNetworkFromFile(customFilename, true); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_start(); GETCHAR_PAUSE;
 	
@@ -179,6 +187,17 @@ int main(void) {
 	LOG_INFO("Done! Enter to exit"); GETCHAR_FORCE_PAUSE;
 	
 	return (1 + (totalPassed - TOTAL_TESTS));
+}
+
+bool testMainLoopErrors(std::string filename) {
+	LOG_WARN("Will load a network, run for several ticks, stop it, and check for errors");
+	AS::loadNetworkFromFile(filename, true);
+
+	int ticks = 25;
+	std::chrono::microseconds microsToSleep(ticks*AS_MILLISECONDS_PER_STEP*MICROS_IN_A_MILLI);
+	AZ::hybridBusySleepForMicros(microsToSleep);
+
+	return AS::quit();
 }
 
 bool testPause(bool printLog, int pauseUnpauseCycles) {

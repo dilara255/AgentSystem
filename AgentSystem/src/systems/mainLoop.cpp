@@ -30,6 +30,8 @@ namespace AS{
 	networkParameters_t* g_currentNetworkParams_ptr;
 
 	static WarningsAndErrorsCounter* g_errorsCounter_ptr;
+	int g_warnings;
+	int g_errors;
 
 	std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
@@ -86,6 +88,8 @@ void AS::mainLoop() {
 		(SECONDS_PER_ERROR_DISPLAY*MILLIS_IN_A_SECOND)/AS_MILLISECONDS_PER_STEP;
 	WarningsAndErrorsCounter counter(0, minimumTicksPerErrorDisplay);
 	g_errorsCounter_ptr = &counter;
+	g_warnings = 0;
+	g_errors = 0;
 
 	timing_st timingMicros;
 	chopControl_st chopControl;
@@ -120,6 +124,12 @@ void AS::mainLoop() {
 	} while (*g_shouldMainLoopBeRunning_ptr);
 
 	calculateAndPrintMainTimingInfo(timingMicros);
+
+	g_warnings = counter.totalWarningsAlreadyDisplayed() + counter.totalWarnings();
+	g_errors = counter.totalErrorsAlreadyDisplayed() + counter.totalErrors();
+
+	int mockTick = timingMicros.ticks + 2*minimumTicksPerErrorDisplay;
+	counter.showPendingIfEnoughTicksPassedAndClear(mockTick);
 }
 
 void prepareStep(AS::chopControl_st* chopControl_ptr) {
@@ -453,6 +463,7 @@ bool AS::run() {
 }
 
 //Stops AS execution thread, marks it as stopped and clears the stored thread::id;
+//Returns false if this fails or if the Main Loop found errors while running.
 bool AS::stop() {
 	LOG_TRACE("Stopping Main Loop Thread...");
 		
@@ -463,22 +474,38 @@ bool AS::stop() {
 
 	*g_shouldMainLoopBeRunning_ptr = false;
 
-	if (isMainLoopRunning()) {
-		LOG_TRACE("Waiting for main loop to finish execution...");
-		g_mainLoopThread_ptr->join();
-		*g_mainLoopId_ptr = std::thread::id();
-		LOG_INFO("Done.");
-
-		#if (defined AS_DEBUG) || VERBOSE_RELEASE
-			printf("\nRan for %llu ticks\n", g_currentNetworkParams_ptr->mainLoopTicks - 
-								   g_currentNetworkParams_ptr->lastMainLoopStartingTick);
-		#endif // AS_DEBUG		
-		return true;
-	}
-	else {
+	if (!isMainLoopRunning()) {
 		LOG_ERROR("Main Loop Thread was supposed to be active, but was not!");
 		return false;
-	}	
+	}
+
+	LOG_TRACE("Waiting for main loop to finish execution...");
+	g_mainLoopThread_ptr->join();
+	*g_mainLoopId_ptr = std::thread::id();
+	LOG_INFO("Done.");
+
+	#if (defined AS_DEBUG) || VERBOSE_RELEASE
+		printf("\nRan for %llu ticks\n", g_currentNetworkParams_ptr->mainLoopTicks - 
+								g_currentNetworkParams_ptr->lastMainLoopStartingTick);
+	#endif
+		
+	if (g_warnings) {
+		LOG_WARN("Main Loop emitte warnings...");
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
+			printf("\t%d warnings\n", g_warnings);
+		#endif
+	}
+
+	if (g_errors) {
+		LOG_ERROR("Main Loop emitted errors");
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
+			printf("\t%d errors\n", g_errors);
+		#endif
+
+		return false;
+	}
+
+	return true;
 }
 
 bool AS::chekIfMainLoopShouldBeRunning() {

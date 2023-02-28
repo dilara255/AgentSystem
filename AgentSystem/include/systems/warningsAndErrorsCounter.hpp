@@ -12,9 +12,9 @@ namespace AS {
 	enum class errors {TEST, RS_FAILED_RECEIVING, RS_FAILED_SENDING, PS_FAILED_TO_DRAW_PRNS,
 					   DS_RECEIVED_BAD_CHOP_INDEX, DS_NEGATIVE_DECISIONS_MADE, 
 					   DS_NEGATIVE_NUMBER_OF_AGENTS, AC_FAILED_PROCESS_LA_ACT,
-		               AC_FAILED_PROCESS_GA_ACT,
+		               AC_FAILED_PROCESS_GA_ACT, AS_LA_STATE_PTR_NULL, AS_GA_STATE_PTR_NULL,
 		               TOTAL};
-	//PS: preparation step; RS: receive/send; DS: decision step; AC: Action;
+	//PS: preparation step; RS: receive/send; DS: decision step; AC: Action; AS: Agent Step;
 
 	class WarningsAndErrorsCounter {
 
