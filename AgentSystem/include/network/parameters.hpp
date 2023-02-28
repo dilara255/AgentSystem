@@ -43,7 +43,8 @@ and data sizes static.
 #define SLEEP_TIME_WAITING_MUTEX_MICROS 10
 #define MAX_MUTEX_TRY_LOCKS 500 //will try at least twice anyway
 #define AS_MILLISECONDS_PER_STEP (4)
-#define AS_MILLISECONDS_PER_DECISION_ROUND (40) //wil be floored to multiple of step time
+#define AS_MILLISECONDS_PER_DECISION_ROUND (40) //will be floored to multiple of step time
+#define SECONDS_PER_ERROR_DISPLAY (5) //will be floored to multiple of step time in ms
 #define AS_TOTAL_CHOPS (AS_MILLISECONDS_PER_DECISION_ROUND/AS_MILLISECONDS_PER_STEP)
 #define PRNS_PER_ACT 5
 #define LA_FIELDS_TO_DEDUCE_EXPECTED 10

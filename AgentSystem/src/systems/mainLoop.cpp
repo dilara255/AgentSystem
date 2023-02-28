@@ -9,6 +9,7 @@
 
 #include "systems/AScoordinator.hpp"
 #include "systems/PRNserver.hpp"
+#include "systems/warningsAndErrorsCounter.hpp"
 
 #include "timeHelpers.hpp"
 
@@ -27,6 +28,10 @@ namespace AS{
 	ActionSystem* g_actionSystem_ptr; 
 	dataControllerPointers_t* g_agentDataControllerPtrs_ptr;
 	networkParameters_t* g_currentNetworkParams_ptr;
+
+	static WarningsAndErrorsCounter* g_errorsCounter_ptr;
+	int g_warnings;
+	int g_errors;
 
 	std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
@@ -58,20 +63,16 @@ namespace AS{
 
 void prepareStep(AS::chopControl_st* chopControl_ptr);
 void step(AS::chopControl_st chopControl, float timeMultiplier);
-void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr);
+void receiveAndSendData();
 void timeAndSleep(AS::timing_st* timing_ptr);
 
 int getTotalPRNsToDraw(int numberLAs, int numberGAs);
-inline bool isLastChop(int chopIndex);
 int howManyDecisionsThisChop(int chopIndex, int* decisionsMade_ptr, int numberAgents);
 
 void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
 	               std::chrono::steady_clock::time_point* newReferenceTime,
 	                                           int64_t* counterToIncrement);
-void calculateAndprintMainTimingInfo(AS::timing_st timingMicros);
-
-void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
-							                                                char* message);
+void calculateAndPrintMainTimingInfo(AS::timing_st timingMicros);
 
 bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 							 std::thread::id* mainLoopId_ptr,
@@ -83,8 +84,12 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 
 void AS::mainLoop() {
 	//setup:
-	bool hasThrownErrorsRecently = false;
-	int errorsAccumulated = 0;
+	uint64_t minimumTicksPerErrorDisplay = 
+		(SECONDS_PER_ERROR_DISPLAY*MILLIS_IN_A_SECOND)/AS_MILLISECONDS_PER_STEP;
+	WarningsAndErrorsCounter counter(0, minimumTicksPerErrorDisplay);
+	g_errorsCounter_ptr = &counter;
+	g_warnings = 0;
+	g_errors = 0;
 
 	timing_st timingMicros;
 	chopControl_st chopControl;
@@ -107,7 +112,7 @@ void AS::mainLoop() {
 		timeOperation(timingMicros.endPreparation, &timingMicros.endStep,
 			                               &timingMicros.totalMicrosStep);
 
-		receiveAndSendData(&hasThrownErrorsRecently, &errorsAccumulated);
+		receiveAndSendData();
 		timeOperation(timingMicros.endStep, &timingMicros.endDataTransfer,
 			                        &timingMicros.totalMicrosDataTransfer);
 
@@ -115,9 +120,16 @@ void AS::mainLoop() {
 		timeOperation(timingMicros.endDataTransfer, &timingMicros.endTimingAndSleep,
 			                                &timingMicros.totalMicrosTimmingAndSleep);
 
+		counter.showPendingIfEnoughTicksPassedAndClear(timingMicros.ticks);
 	} while (*g_shouldMainLoopBeRunning_ptr);
 
-	calculateAndprintMainTimingInfo(timingMicros);
+	calculateAndPrintMainTimingInfo(timingMicros);
+
+	g_warnings = counter.totalWarningsAlreadyDisplayed() + counter.totalWarnings();
+	g_errors = counter.totalErrorsAlreadyDisplayed() + counter.totalErrors();
+
+	int mockTick = timingMicros.ticks + 2*minimumTicksPerErrorDisplay;
+	counter.showPendingIfEnoughTicksPassedAndClear(mockTick);
 }
 
 void prepareStep(AS::chopControl_st* chopControl_ptr) {
@@ -131,8 +143,8 @@ void prepareStep(AS::chopControl_st* chopControl_ptr) {
 	
 	bool error = AS::g_prnServer_ptr->drawPRNs(chopControl_ptr->chopIndex, 
 			chopControl_ptr->totalChops, chopControl_ptr->totalPRNsNeeded).error;
-	if (error) { //TODO-CRITICAL: SHOULD USE THE SAME SYSTEM AS SEND-AND-RECEIVE
-		LOG_ERROR("Failed to draw PRNs!");
+	if (error) {
+		AS::g_errorsCounter_ptr->incrementError(AS::errors::PS_FAILED_TO_DRAW_PRNS);
 	}
 
 	for (int i = 0; i < DRAW_WIDTH; i++) {
@@ -157,14 +169,16 @@ void step(AS::chopControl_st chopControl, float timeMultiplier) {
 	int numGAs = chopControl.quantityEffectiveGAs;
 
 
-	AS::stepActions(AS::g_actionSystem_ptr, numLAs, numGAs, timeMultiplier);
+	AS::stepActions(AS::g_actionSystem_ptr, numLAs, numGAs, timeMultiplier, 
+		                                           AS::g_errorsCounter_ptr);
 
 	AS::stepAgents(chopControl.LAdecisionsToMake, chopControl.GAdecisionsToMake, 
 		                                      AS::g_agentDataControllerPtrs_ptr, 
-		                                         timeMultiplier, numLAs, numGAs);
+											  timeMultiplier, numLAs, numGAs, 
+											  AS::g_errorsCounter_ptr);
 }
 
-void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr) {
+void receiveAndSendData() {
 	if (!*AS::g_shouldMainLoopBeRunning_ptr) 
 			{ LOG_TRACE("Main loop will get Client Data and send AS Data to CL"); }
 
@@ -173,14 +187,12 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 						   			       AS::g_actionSystem_ptr->getDataDirectPointer(), 
 			                               *AS::g_shouldMainLoopBeRunning_ptr);
 		if (!result) { 
-			accumulateOrTrhowError(hasThrownErrorsRecently_ptr, errorsAccumulated_ptr,
-									                     "Failed to get Client Data!");
+			AS::g_errorsCounter_ptr->incrementError(AS::errors::RS_FAILED_RECEIVING);
 		}
 
 		result = AS::sendReplacementDataToCL(true);
 		if (!result) { 
-				accumulateOrTrhowError(hasThrownErrorsRecently_ptr, errorsAccumulated_ptr,
-									                  "Failed to send AS Data to the CL!");
+			AS::g_errorsCounter_ptr->incrementError(AS::errors::RS_FAILED_SENDING);
 		}		
 }
 
@@ -199,6 +211,7 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 	timing_ptr->startThisStep = std::chrono::steady_clock::now();
 	timing_ptr->ticks++;
 
+	//update info on time slept:
 	auto actualSleepTime = timing_ptr->startThisStep - bedTime;
 	int64_t actualSleepTimeMicros =
 		    std::chrono::duration_cast<std::chrono::microseconds>(actualSleepTime).count();
@@ -207,6 +220,7 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 		timing_ptr->largestSleepMicros = actualSleepTimeMicros;
 	}
 	
+	//update info on time running:
 	auto hotTime = bedTime - timing_ptr->startLastStep;
 	int64_t hotTimeMicros = 
 		        std::chrono::duration_cast<std::chrono::microseconds>(hotTime).count();
@@ -215,6 +229,7 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 		timing_ptr->largestHotMicros = hotTimeMicros;
 	}
 
+	//update info on time "snoozed":
 	auto snoozed = timing_ptr->startThisStep - targetWakeTime;
 	if(hotTime > timing_ptr->targetStepTime){snoozed = AS::zeroMicro;}
 	int64_t snoozedMicros = 
@@ -245,22 +260,22 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 
 	AS::g_currentNetworkParams_ptr->mainLoopTicks++;
 
-	//TODO-CRITICAL: TEST pausing
-	//Deals with pause (pause sleeps in cycles of half targetStepTime until unpaused)
+	//Deals with pause (sleeps in cycles of half targetStepTime until unpaused)
 	if(AS::g_shouldMainLoopBePaused){
 		AS::g_isMainLoopBePaused = true;
+
 		auto pauseStartTime = std::chrono::steady_clock::now();
-		auto pauseStepStartTime = pauseStartTime;
-		auto targetWakeTimePause = pauseStepStartTime + (timing_ptr->targetStepTime/2);
 		while (AS::g_shouldMainLoopBePaused) {
+			auto pauseStepStartTime = std::chrono::steady_clock::now();
+			auto targetWakeTimePause = pauseStepStartTime + (timing_ptr->targetStepTime/2);
 			AZ::hybridBusySleep(targetWakeTimePause, threshold);
-			pauseStepStartTime = std::chrono::steady_clock::now();
-			targetWakeTimePause = pauseStepStartTime + (timing_ptr->targetStepTime/2);
 		}
 		auto pauseEndTime = std::chrono::steady_clock::now();
+
 		auto timePaused = 
 			std::chrono::duration_cast<std::chrono::microseconds>(pauseEndTime - pauseStartTime);
 		timing_ptr->timeSpentPaused += timePaused;
+
 		timing_ptr->startThisStep = std::chrono::steady_clock::now();
 	}
 	AS::g_isMainLoopBePaused = false;
@@ -269,12 +284,13 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
 	               std::chrono::steady_clock::time_point* newReferenceTime,
 	                                           int64_t* counterToIncrement) {
+	
 	*newReferenceTime = std::chrono::steady_clock::now();
 	auto delta = *newReferenceTime - lastReferenceTime;
 	*counterToIncrement += std::chrono::duration_cast<std::chrono::microseconds>(delta).count();
 }
 
-void calculateAndprintMainTimingInfo(AS::timing_st timingMicros) {
+void calculateAndPrintMainTimingInfo(AS::timing_st timingMicros) {
 	
 	auto duration = std::chrono::steady_clock::now() - timingMicros.startFirstStep;
 
@@ -329,34 +345,26 @@ int getTotalPRNsToDraw(int numberLAs, int numberGAs) {
 	return PRNS_PER_LA*numberLAs + PRNS_PER_GA*numberGAs + MAX_ACT_PRNS;
 }
 
-inline bool isLastChop(int chopIndex) {
-	return (chopIndex <= (AS_TOTAL_CHOPS-1));
-}
-
 int howManyDecisionsThisChop(int chopIndex, int* decisionsMade_ptr, int numberAgents) {
 	
 	if(chopIndex < 0){
-		//TODO-CRITICAL: USE MAIN_LOOP ERROR SYSTEM
-		//LOG_ERROR("Chop index < 0, will set to 0"); 
+		AS::g_errorsCounter_ptr->incrementError(AS::errors::DS_RECEIVED_BAD_CHOP_INDEX);
 		chopIndex = 0;
 	}
 
 	int chopsRemaining = AS_TOTAL_CHOPS - chopIndex;
 	if(chopsRemaining < 1){ 
-		//TODO-CRITICAL: Use error-handling for this (have warn-handler)
-		//LOG_WARN("Tried to finish decisions in zero or less chops, will set to 1");
+		AS::g_errorsCounter_ptr->incrementWarning(AS::warnings::DS_FINISH_IN_LESS_THAN_ONE_CHOP);
 		chopsRemaining = 1;
 	}
 
 	if(*decisionsMade_ptr < 0){ 
-		//TODO-CRITICAL: Use error-handling for this
-		//LOG_ERROR("Supposedly agents made a negative amount of decisions so far, will set to zero");
+		AS::g_errorsCounter_ptr->incrementError(AS::errors::DS_NEGATIVE_DECISIONS_MADE);
 		*decisionsMade_ptr = 0;
 	}
 
 	if(numberAgents <= 0){ 
-		//TODO-CRITICAL: Use error-handling for this
-		//LOG_ERROR("Trying to chop decisions for a negative number of agents, will set to zero agents");
+		AS::g_errorsCounter_ptr->incrementError(AS::errors::DS_NEGATIVE_NUMBER_OF_AGENTS);
 		numberAgents = 0;
 		*decisionsMade_ptr = 0; //there are no agents, so no decisions should remain either
 	}
@@ -374,62 +382,6 @@ int howManyDecisionsThisChop(int chopIndex, int* decisionsMade_ptr, int numberAg
 	*decisionsMade_ptr += decisionsToMake;
 
 	return decisionsToMake;
-}
-
-bool testAgentChopCalculation(int chopIndex, int decisionsMade, int numberAgents, bool log) {
-	int firstTestChop = chopIndex;
-	int chopIndexSmallerThen = AS_TOTAL_CHOPS;
-
-	if(chopIndex >= AS_TOTAL_CHOPS) {
-		chopIndexSmallerThen = (chopIndex + 1);//run once
-	} 
-
-	int newDecisionsMade = 0;
-	int decisionsSoFar = decisionsMade;
-	for (int i = firstTestChop; i < chopIndexSmallerThen; i++) {
-		newDecisionsMade += 
-			howManyDecisionsThisChop(i, &decisionsSoFar, numberAgents);
-	}
-
-	int correctedDecisionsMade = std::max(decisionsMade, 0);
-	int correctedNumberAgents = std::max(numberAgents, 0);
-	if(correctedNumberAgents != 0) { correctedDecisionsMade %= correctedNumberAgents; }
-	int expectedNewDecisions = std::max((correctedNumberAgents - correctedDecisionsMade), 0);
-
-	bool result = (newDecisionsMade == expectedNewDecisions);
-	result &= (decisionsSoFar == correctedNumberAgents);
-	if (log && !result) {
-		printf("\nError: Chop: %d, Made: %d, Agents: %d, Total: %d (expected: %d), New: %d (expected: %d)",
-			chopIndex, decisionsMade, numberAgents, decisionsSoFar, correctedNumberAgents, 
-			                                       newDecisionsMade, expectedNewDecisions);
-	}
-
-	return result;
-}
-
-#define TST_CHOP_CALC_TEST_CASES 5
-bool AS::testMultipleAgentChopCalculations(bool log) {
-	LOG_WARN("Will test calculation of how many decisions to make per chop");
-
-	int chopIndex[TST_CHOP_CALC_TEST_CASES] = {-1, 0, 1, 5, 99999};
-	int numberAgents[TST_CHOP_CALC_TEST_CASES] = {-1, 0, 1, 101, 99999};
-	int decisionsMade[TST_CHOP_CALC_TEST_CASES] = {-1, 0, 1, 101, 99999};
-
-	bool result = true;
-	for (int i = 0; i < TST_CHOP_CALC_TEST_CASES; i++) {
-		for (int j = 0; j < TST_CHOP_CALC_TEST_CASES; j++) {
-			for (int k = 0; k < TST_CHOP_CALC_TEST_CASES; k++) {
-				result &= testAgentChopCalculation(chopIndex[i],decisionsMade[j],
-					                                        numberAgents[k], log);
-			}
-		}
-	}
-
-	if (!result) {
-		LOG_ERROR("Expected a different number of decisions in some conditions");
-	}
-
-	return result;
 }
 
 bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
@@ -511,6 +463,7 @@ bool AS::run() {
 }
 
 //Stops AS execution thread, marks it as stopped and clears the stored thread::id;
+//Returns false if this fails or if the Main Loop found errors while running.
 bool AS::stop() {
 	LOG_TRACE("Stopping Main Loop Thread...");
 		
@@ -521,22 +474,38 @@ bool AS::stop() {
 
 	*g_shouldMainLoopBeRunning_ptr = false;
 
-	if (isMainLoopRunning()) {
-		LOG_TRACE("Waiting for main loop to finish execution...");
-		g_mainLoopThread_ptr->join();
-		*g_mainLoopId_ptr = std::thread::id();
-		LOG_INFO("Done.");
-
-		#if (defined AS_DEBUG) || VERBOSE_RELEASE
-			printf("\nRan for %llu ticks\n", g_currentNetworkParams_ptr->mainLoopTicks - 
-								   g_currentNetworkParams_ptr->lastMainLoopStartingTick);
-		#endif // AS_DEBUG		
-		return true;
-	}
-	else {
+	if (!isMainLoopRunning()) {
 		LOG_ERROR("Main Loop Thread was supposed to be active, but was not!");
 		return false;
-	}	
+	}
+
+	LOG_TRACE("Waiting for main loop to finish execution...");
+	g_mainLoopThread_ptr->join();
+	*g_mainLoopId_ptr = std::thread::id();
+	LOG_INFO("Done.");
+
+	#if (defined AS_DEBUG) || VERBOSE_RELEASE
+		printf("\nRan for %llu ticks\n", g_currentNetworkParams_ptr->mainLoopTicks - 
+								g_currentNetworkParams_ptr->lastMainLoopStartingTick);
+	#endif
+		
+	if (g_warnings) {
+		LOG_WARN("Main Loop emitte warnings...");
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
+			printf("\t%d warnings\n", g_warnings);
+		#endif
+	}
+
+	if (g_errors) {
+		LOG_ERROR("Main Loop emitted errors");
+		#if (defined AS_DEBUG) || VERBOSE_RELEASE
+			printf("\t%d errors\n", g_errors);
+		#endif
+
+		return false;
+	}
+
+	return true;
 }
 
 bool AS::chekIfMainLoopShouldBeRunning() {
@@ -563,18 +532,85 @@ bool AS::isMainLoopRunning() {
 	return g_mainLoopThread_ptr->joinable();
 }
 
-void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
-							                                                char* message) {
-	if (!(*hasThrownErrorsRecently_ptr)) {
-				LOG_ERROR(message); 
-				printf("(had accumulated %d errors before this)",*errorsAccumulated_ptr);
-				*hasThrownErrorsRecently_ptr = true;
-				*errorsAccumulated_ptr = 0;
+bool testAgentChopCalculation(int chopIndex, int decisionsMade, int numberAgents, bool log) {	
+	int firstTestChop = chopIndex;
+	int chopIndexSmallerThen = AS_TOTAL_CHOPS;
+
+	if(chopIndex >= AS_TOTAL_CHOPS) {
+		chopIndexSmallerThen = (chopIndex + 1);//run once
+	} 
+
+	int newDecisionsMade = 0;
+	int decisionsSoFar = decisionsMade;
+	for (int i = firstTestChop; i < chopIndexSmallerThen; i++) {
+		newDecisionsMade += 
+			howManyDecisionsThisChop(i, &decisionsSoFar, numberAgents);
 	}
-	else {
-		(*errorsAccumulated_ptr)++;
-		if (*errorsAccumulated_ptr > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
-			*hasThrownErrorsRecently_ptr = false;
+
+	int correctedDecisionsMade = std::max(decisionsMade, 0);
+	int correctedNumberAgents = std::max(numberAgents, 0);
+	if(correctedNumberAgents != 0) { correctedDecisionsMade %= correctedNumberAgents; }
+	int expectedNewDecisions = std::max((correctedNumberAgents - correctedDecisionsMade), 0);
+
+	bool result = (newDecisionsMade == expectedNewDecisions);
+	result &= (decisionsSoFar == correctedNumberAgents);
+	if (log && !result) {
+		printf("\nError: Chop: %d, Made: %d, Agents: %d, Total: %d (expected: %d), New: %d (expected: %d)",
+			chopIndex, decisionsMade, numberAgents, decisionsSoFar, correctedNumberAgents, 
+			                                       newDecisionsMade, expectedNewDecisions);
+	}
+
+	return result;
+}
+
+#define TST_CHOP_CALC_TEST_CASES 5
+bool AS::testMultipleAgentChopCalculations(bool log) {
+	LOG_WARN("Will test calculation of how many decisions to make per chop");
+
+	//Needs to initialize its own error counter for testing
+	WarningsAndErrorsCounter counter(0, 0);
+	g_errorsCounter_ptr = &counter;
+
+	int chopIndex[TST_CHOP_CALC_TEST_CASES] = {-1, 0, 1, 5, 99999};
+	int numberAgents[TST_CHOP_CALC_TEST_CASES] = {-1, 0, 1, 101, 99999};
+	int decisionsMade[TST_CHOP_CALC_TEST_CASES] = {-1, 0, 1, 101, 99999};
+	
+	//TODO: Veery brittle and magic-numbery: generalize : )
+	int expectedWarnings[(int)warnings::TOTAL] = {};
+	int expectedErrors[(int)errors::TOTAL] = {};
+	expectedWarnings[(int)warnings::DS_FINISH_IN_LESS_THAN_ONE_CHOP] = 25;
+	expectedErrors[(int)errors::DS_RECEIVED_BAD_CHOP_INDEX] = 25;
+	expectedErrors[(int)errors::DS_NEGATIVE_DECISIONS_MADE] = 25;
+	expectedErrors[(int)errors::DS_NEGATIVE_NUMBER_OF_AGENTS] = 360;	
+
+	bool result = true;
+	for (int i = 0; i < TST_CHOP_CALC_TEST_CASES; i++) {
+		for (int j = 0; j < TST_CHOP_CALC_TEST_CASES; j++) {
+			for (int k = 0; k < TST_CHOP_CALC_TEST_CASES; k++) {
+				result &= testAgentChopCalculation(chopIndex[i],decisionsMade[j],
+					                                        numberAgents[k], log);
+			}
 		}
 	}
+
+	if (!result) {
+		LOG_ERROR("Expected a different number of decisions in some conditions");
+	}
+
+	result = true;
+	for (int i = 0; i < (int)warnings::TOTAL; i++) {
+		result &= counter.getWarnings((warnings)i) == expectedWarnings[i];
+	}
+	for (int i = 0; i < (int)errors::TOTAL; i++) {
+		result &= counter.getErrors((errors)i) == expectedErrors[i];
+	}
+
+	if (!result) {
+		LOG_ERROR("Warnings and errors from howManyDecisionsThisChop not as expected");
+		if (log) {
+			counter.showPendingIfEnoughTicksPassedAndClear(10);
+		}
+	}
+
+	return result;
 }

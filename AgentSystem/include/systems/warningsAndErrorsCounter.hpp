@@ -8,8 +8,13 @@ namespace AS {
 	//TODO: collections of strings of the warnings and error messages, which can be shown on check
 	//(eventually could collect source info as well to display together)
 
-	enum class warnings {TEST, TOTAL};
-	enum class errors {TEST, TOTAL};
+	enum class warnings {TEST, DS_FINISH_IN_LESS_THAN_ONE_CHOP, TOTAL};
+	enum class errors {TEST, RS_FAILED_RECEIVING, RS_FAILED_SENDING, PS_FAILED_TO_DRAW_PRNS,
+					   DS_RECEIVED_BAD_CHOP_INDEX, DS_NEGATIVE_DECISIONS_MADE, 
+					   DS_NEGATIVE_NUMBER_OF_AGENTS, AC_FAILED_PROCESS_LA_ACT,
+		               AC_FAILED_PROCESS_GA_ACT, AS_LA_STATE_PTR_NULL, AS_GA_STATE_PTR_NULL,
+		               TOTAL};
+	//PS: preparation step; RS: receive/send; DS: decision step; AC: Action; AS: Agent Step;
 
 	class WarningsAndErrorsCounter {
 
@@ -68,6 +73,18 @@ namespace AS {
 			return (m_warnings.totalCount() + m_errors.totalCount());
 		}
 
+		int totalWarningsAlreadyDisplayed() {
+			return m_countWarningsDisplayed;
+		}
+
+		int totalErrorsAlreadyDisplayed() {
+			return m_countErrorsDisplayed;
+		}
+
+		int timesDisplayed() {
+			return m_timesDisplayed;
+		}
+
 		void printWarningCounts() {
 			m_warnings.printCounts();
 		}
@@ -81,13 +98,14 @@ namespace AS {
 			m_errors.clearAll();
 		}
 
-		//Returns wether there was something to display
+		//Returns wether there was something to display.
 		bool showPendingIfEnoughTicksPassedAndClear(uint64_t currentTick) {
 			if (currentTick < (m_lastTickDisplayed + m_ticksPerDisplay)) {return false;}
+			if (total() == 0) {return false;}
 			
+			m_timesDisplayed++;
 			m_lastTickDisplayed = currentTick;
-			bool result = false;
-
+			
 			int totalWarnings = m_warnings.totalCount();
 			if (totalWarnings > 0) {
 				LOG_WARN("Some warnings happened since last display");
@@ -96,7 +114,7 @@ namespace AS {
 					m_warnings.printCounts();
 				#endif
 
-				result = true;
+				m_countWarningsDisplayed += totalWarnings;
 			}
 
 			int totalErrors = m_errors.totalCount();
@@ -105,17 +123,20 @@ namespace AS {
 				printf("\t%d Errors (index: count): ", totalErrors);
 				m_errors.printCounts();
 
-				result = true;
+				m_countErrorsDisplayed += totalErrors;
 			}
 
 			clear();		
 
-			return result;
+			return true;
 		}
 
 	private:
 		uint64_t m_lastTickDisplayed;
 		uint64_t m_ticksPerDisplay;
+		int m_timesDisplayed = 0;
+		int m_countWarningsDisplayed = 0;
+		int m_countErrorsDisplayed = 0;
 		MultipleCategoryCounter m_warnings;
 		MultipleCategoryCounter m_errors;
 	};
