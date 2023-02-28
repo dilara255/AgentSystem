@@ -1,48 +1,62 @@
 #include "systems/AScoordinator.hpp"
+#include "systems/warningsAndErrorsCounter.hpp"
 #include "systems/diplomacy.hpp"
 
-void updateLA(LA::stateData_t* state_ptr, int agentId, 
-	          AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier);
-void updateGA(GA::stateData_t* state_ptr, int agentId, 
-	          AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier);
+namespace {
+	static AS::WarningsAndErrorsCounter* g_errorsCounter_ptr;
 
-void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
-void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
+	void updateLA(LA::stateData_t* state_ptr, int agentId, 
+				  AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier);
+	void updateGA(GA::stateData_t* state_ptr, int agentId, 
+				  AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier);
 
+	void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
+	void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
+}
 
 void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
 	                          dataControllerPointers_t* dp, float timeMultiplier,
-	                                                int numberLAs, int numberGAs) {
+	                                                int numberLAs, int numberGAs,
+		                             WarningsAndErrorsCounter* errorsCounter_ptr) {
 
+	g_errorsCounter_ptr = errorsCounter_ptr;
+
+	//update LAs and GAs:
 	auto LAstateData_ptr = dp->LAstate_ptr->getDirectDataPtr();
 	
 	for (int i = 0; i < numberLAs; i++) {	
 		updateLA(&LAstateData_ptr->at(i), i, dp, timeMultiplier);
 	}
-	
-	static int nextDecisionLAindex = 0;	
-	if(nextDecisionLAindex >= numberLAs) nextDecisionLAindex = 0;
-	int finalDecisionLAindex = nextDecisionLAindex + LAdecisionsToTakeThisChop - 1;
 
-	for (int i = nextDecisionLAindex; i <= finalDecisionLAindex; i++) {	
-		makeDecisionLA(i, dp);
-	}
-	
 	auto GAstateData_ptr = dp->GAstate_ptr->getDirectDataPtr();
 
 	for (int i = 0; i < numberGAs; i++) {	
 		updateGA(&GAstateData_ptr->at(i), i, dp, timeMultiplier);
 	}
 	
-	static int nextDecisionGAindex = 0;	
-	if(nextDecisionGAindex >= numberGAs) nextDecisionGAindex = 0;
-	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
+	//Make decisions:
+	static int nextDecisionLAindex = 0;	
+	if(nextDecisionLAindex >= numberLAs) {
+		nextDecisionLAindex = 0;
+	}
 
-	for (int i = nextDecisionGAindex; i <= finalDecisionGAindex; i++) {	
-		makeDecisionGA(i, dp);
+	int finalDecisionLAindex = nextDecisionLAindex + LAdecisionsToTakeThisChop - 1;
+	for (; nextDecisionLAindex <= finalDecisionLAindex; nextDecisionLAindex++) {	
+		makeDecisionLA(nextDecisionLAindex, dp);
+	}
+		
+	static int nextDecisionGAindex = 0;	
+	if(nextDecisionGAindex >= numberGAs){
+		nextDecisionGAindex = 0;
+	}
+
+	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
+	for (; nextDecisionGAindex <= finalDecisionGAindex; nextDecisionGAindex++) {	
+		makeDecisionGA(nextDecisionGAindex, dp);
 	}
 }
 
+namespace {
 void updateLA(LA::stateData_t* state_ptr, int agentId, 
 	          AS::dataControllerPointers_t* dp, float timeMultiplier) {
 	
@@ -186,4 +200,5 @@ void redistributeScoreDueToImpedimmentsGA(int agent, AS::dataControllerPointers_
 
 void chooseActionGA(int agent, AS::dataControllerPointers_t* dp) {
 
+}
 }

@@ -50,7 +50,8 @@ namespace AS {
 	extern networkParameters_t* currentNetworkParams_ptr;
 
 	bool testWarningAndErrorCountingAndDisplaying(bool printResults) {
-		LOG_WARN("Will test counting and displaying errors and warnings (messages are expected)");
+		LOG_WARN("Will test counting and displaying errors and warnings");
+		LOG_CRITICAL("Warning and Error messages are EXPECTED below this");
 
 		int testSpurtTicks = 4*5;
 		WarningsAndErrorsCounter counter(0, testSpurtTicks/4);
@@ -126,6 +127,7 @@ namespace AS {
 			return false;
 		}
 
+		LOG_CRITICAL("End of EXPECTED Warning and Error messages");
 		LOG_TRACE("Error and warning count ok");
 		return true;
 	}

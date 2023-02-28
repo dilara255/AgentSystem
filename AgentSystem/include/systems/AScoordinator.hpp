@@ -10,6 +10,7 @@ This includes:
 */
 
 #include "data/agentDataControllers.hpp"
+#include "systems/warningsAndErrorsCounter.hpp"
 #include "systems/PRNserver.hpp"
 
 namespace AS {
@@ -31,10 +32,12 @@ namespace AS {
 
 	class PRNserver;
 	void stepActions(ActionSystem* actionSystem_ptr, 
-		             int numberLAs, int numberGAs, float timeMultiplier);
+		             int numberLAs, int numberGAs, float timeMultiplier,
+		             WarningsAndErrorsCounter* errorsCounter_ptr);
 	void stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop,
 		                         dataControllerPointers_t* agentDataPointers_ptr,
-		                      float timeMultiplier, int numberLAs, int numberGAs);
+		                      float timeMultiplier, int numberLAs, int numberGAs,
+		                      WarningsAndErrorsCounter* errorsCounter_ptr);
 
 	struct chopControl_st {
 		int chopIndex = 0;

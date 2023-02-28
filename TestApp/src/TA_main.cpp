@@ -35,7 +35,7 @@ int main(void) {
 	
 	//TODO: review wich tests printo to console, and pass this (macro?)
 	bool printSteps = false;
-	#if ( (defined AS_DEBUG) || (defined VERBOSE_RELEASE) )
+	#if ( (defined AS_DEBUG) || VERBOSE_RELEASE )
 		printSteps = true;
 	#endif
 
