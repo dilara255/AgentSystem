@@ -9,6 +9,7 @@
 
 #include "systems/AScoordinator.hpp"
 #include "systems/PRNserver.hpp"
+#include "systems/warningsAndErrorsCounter.hpp"
 
 #include "timeHelpers.hpp"
 
@@ -27,6 +28,8 @@ namespace AS{
 	ActionSystem* g_actionSystem_ptr; 
 	dataControllerPointers_t* g_agentDataControllerPtrs_ptr;
 	networkParameters_t* g_currentNetworkParams_ptr;
+
+	static WarningsAndErrorsCounter* g_errorsCounter_ptr;
 
 	std::chrono::microseconds zeroMicro = std::chrono::microseconds(0);
 
@@ -58,7 +61,7 @@ namespace AS{
 
 void prepareStep(AS::chopControl_st* chopControl_ptr);
 void step(AS::chopControl_st chopControl, float timeMultiplier);
-void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr);
+void receiveAndSendData(bool* hasThrownErrorsRecently_ptr);
 void timeAndSleep(AS::timing_st* timing_ptr);
 
 int getTotalPRNsToDraw(int numberLAs, int numberGAs);
@@ -68,10 +71,7 @@ int howManyDecisionsThisChop(int chopIndex, int* decisionsMade_ptr, int numberAg
 void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
 	               std::chrono::steady_clock::time_point* newReferenceTime,
 	                                           int64_t* counterToIncrement);
-void calculateAndprintMainTimingInfo(AS::timing_st timingMicros);
-
-void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
-							                                                char* message);
+void calculateAndPrintMainTimingInfo(AS::timing_st timingMicros);
 
 bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 							 std::thread::id* mainLoopId_ptr,
@@ -84,7 +84,11 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 void AS::mainLoop() {
 	//setup:
 	bool hasThrownErrorsRecently = false;
-	int errorsAccumulated = 0;
+	uint64_t minimumTicksPerErrorDisplay = 
+		(SECONDS_PER_ERROR_DISPLAY*MILLIS_IN_A_SECOND)/AS_MILLISECONDS_PER_STEP;
+	WarningsAndErrorsCounter counter(g_currentNetworkParams_ptr->mainLoopTicks, 
+		                                             minimumTicksPerErrorDisplay);
+	g_errorsCounter_ptr = &counter;
 
 	timing_st timingMicros;
 	chopControl_st chopControl;
@@ -107,7 +111,7 @@ void AS::mainLoop() {
 		timeOperation(timingMicros.endPreparation, &timingMicros.endStep,
 			                               &timingMicros.totalMicrosStep);
 
-		receiveAndSendData(&hasThrownErrorsRecently, &errorsAccumulated);
+		receiveAndSendData(&hasThrownErrorsRecently);
 		timeOperation(timingMicros.endStep, &timingMicros.endDataTransfer,
 			                        &timingMicros.totalMicrosDataTransfer);
 
@@ -115,9 +119,10 @@ void AS::mainLoop() {
 		timeOperation(timingMicros.endDataTransfer, &timingMicros.endTimingAndSleep,
 			                                &timingMicros.totalMicrosTimmingAndSleep);
 
+		counter.showPendingIfEnoughTicksPassedAndClear(g_currentNetworkParams_ptr->mainLoopTicks);
 	} while (*g_shouldMainLoopBeRunning_ptr);
 
-	calculateAndprintMainTimingInfo(timingMicros);
+	calculateAndPrintMainTimingInfo(timingMicros);
 }
 
 void prepareStep(AS::chopControl_st* chopControl_ptr) {
@@ -131,8 +136,8 @@ void prepareStep(AS::chopControl_st* chopControl_ptr) {
 	
 	bool error = AS::g_prnServer_ptr->drawPRNs(chopControl_ptr->chopIndex, 
 			chopControl_ptr->totalChops, chopControl_ptr->totalPRNsNeeded).error;
-	if (error) { //TODO-CRITICAL: SHOULD USE THE SAME SYSTEM AS SEND-AND-RECEIVE
-		LOG_ERROR("Failed to draw PRNs!");
+	if (error) {
+		AS::g_errorsCounter_ptr->incrementError(AS::errors::PS_FAILED_TO_DRAW_PRNS);
 	}
 
 	for (int i = 0; i < DRAW_WIDTH; i++) {
@@ -164,7 +169,7 @@ void step(AS::chopControl_st chopControl, float timeMultiplier) {
 		                                         timeMultiplier, numLAs, numGAs);
 }
 
-void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr) {
+void receiveAndSendData(bool* hasThrownErrorsRecently_ptr) {
 	if (!*AS::g_shouldMainLoopBeRunning_ptr) 
 			{ LOG_TRACE("Main loop will get Client Data and send AS Data to CL"); }
 
@@ -173,14 +178,12 @@ void receiveAndSendData(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulate
 						   			       AS::g_actionSystem_ptr->getDataDirectPointer(), 
 			                               *AS::g_shouldMainLoopBeRunning_ptr);
 		if (!result) { 
-			accumulateOrTrhowError(hasThrownErrorsRecently_ptr, errorsAccumulated_ptr,
-									                     "Failed to get Client Data!");
+			AS::g_errorsCounter_ptr->incrementError(AS::errors::RS_FAILED_RECEIVING);
 		}
 
 		result = AS::sendReplacementDataToCL(true);
 		if (!result) { 
-				accumulateOrTrhowError(hasThrownErrorsRecently_ptr, errorsAccumulated_ptr,
-									                  "Failed to send AS Data to the CL!");
+			AS::g_errorsCounter_ptr->incrementError(AS::errors::RS_FAILED_SENDING);
 		}		
 }
 
@@ -274,7 +277,7 @@ void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
 	*counterToIncrement += std::chrono::duration_cast<std::chrono::microseconds>(delta).count();
 }
 
-void calculateAndprintMainTimingInfo(AS::timing_st timingMicros) {
+void calculateAndPrintMainTimingInfo(AS::timing_st timingMicros) {
 	
 	auto duration = std::chrono::steady_clock::now() - timingMicros.startFirstStep;
 
@@ -336,27 +339,23 @@ inline bool isLastChop(int chopIndex) {
 int howManyDecisionsThisChop(int chopIndex, int* decisionsMade_ptr, int numberAgents) {
 	
 	if(chopIndex < 0){
-		//TODO-CRITICAL: USE MAIN_LOOP ERROR SYSTEM
-		//LOG_ERROR("Chop index < 0, will set to 0"); 
+		AS::g_errorsCounter_ptr->incrementError(AS::errors::DS_RECEIVED_BAD_CHOP_INDEX);
 		chopIndex = 0;
 	}
 
 	int chopsRemaining = AS_TOTAL_CHOPS - chopIndex;
 	if(chopsRemaining < 1){ 
-		//TODO-CRITICAL: Use error-handling for this (have warn-handler)
-		//LOG_WARN("Tried to finish decisions in zero or less chops, will set to 1");
+		AS::g_errorsCounter_ptr->incrementWarning(AS::warnings::DS_FINISH_IN_LESS_THAN_ONE_CHOP);
 		chopsRemaining = 1;
 	}
 
 	if(*decisionsMade_ptr < 0){ 
-		//TODO-CRITICAL: Use error-handling for this
-		//LOG_ERROR("Supposedly agents made a negative amount of decisions so far, will set to zero");
+		AS::g_errorsCounter_ptr->incrementError(AS::errors::DS_NEGATIVE_DECISIONS_MADE);
 		*decisionsMade_ptr = 0;
 	}
 
 	if(numberAgents <= 0){ 
-		//TODO-CRITICAL: Use error-handling for this
-		//LOG_ERROR("Trying to chop decisions for a negative number of agents, will set to zero agents");
+		AS::g_errorsCounter_ptr->incrementError(AS::errors::DS_NEGATIVE_NUMBER_OF_AGENTS);
 		numberAgents = 0;
 		*decisionsMade_ptr = 0; //there are no agents, so no decisions should remain either
 	}
@@ -561,20 +560,4 @@ void AS::unpauseMainLoop() {
 
 bool AS::isMainLoopRunning() {
 	return g_mainLoopThread_ptr->joinable();
-}
-
-void accumulateOrTrhowError(bool* hasThrownErrorsRecently_ptr, int* errorsAccumulated_ptr,
-							                                                char* message) {
-	if (!(*hasThrownErrorsRecently_ptr)) {
-				LOG_ERROR(message); 
-				printf("(had accumulated %d errors before this)",*errorsAccumulated_ptr);
-				*hasThrownErrorsRecently_ptr = true;
-				*errorsAccumulated_ptr = 0;
-	}
-	else {
-		(*errorsAccumulated_ptr)++;
-		if (*errorsAccumulated_ptr > MAX_ERRORS_TO_ACCUMULATE_ON_MAIN) {
-			*hasThrownErrorsRecently_ptr = false;
-		}
-	}
 }
