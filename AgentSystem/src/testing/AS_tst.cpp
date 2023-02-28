@@ -25,6 +25,7 @@ TODO: tests:
 #include "data/agentClasses.hpp"
 #include "network/fileManager.hpp"
 #include "systems/actionSystem.hpp"
+#include "systems/warningsAndErrorsCounter.hpp"
 
 #include "systems/AScoordinator.hpp"
 #include "testing/AS_tst.hpp"
@@ -47,6 +48,87 @@ namespace AS {
 	extern ActionSystem actionSystem;
 	extern dataControllerPointers_t agentDataControllerPtrs;
 	extern networkParameters_t* currentNetworkParams_ptr;
+
+	bool testWarningAndErrorCountingAndDisplaying(bool printResults) {
+		LOG_WARN("Will test counting and displaying errors and warnings (messages are expected)");
+
+		int testSpurtTicks = 4*5;
+		WarningsAndErrorsCounter counter(0, testSpurtTicks/4);
+
+		uint64_t tick = 0;
+
+		int timesShown = 0;
+		int expected = 0;
+		for (int i = 0; i < testSpurtTicks; i++) {
+			timesShown += (int)counter.showPendingIfEnoughTicksPassedAndClear(tick);
+			tick++;
+		}
+		if(timesShown != expected) {
+			LOG_ERROR("No errors or warnings were expected");
+			return false;
+		}
+
+		counter.incrementError(AS::errors::TEST);
+		counter.incrementError(AS::errors::TEST);
+		counter.incrementWarning(AS::warnings::TEST);
+		int total = counter.total();
+		expected = 3;
+		if (total != expected) {
+			LOG_ERROR("Errors plus warnings count is not as expected");
+			if (printResults) {
+				printf("Found: %d, expected: %d\n", counter.total(), expected);
+			}
+			return false;
+		}
+		
+		counter.clear();
+		total = counter.total();
+		if (total != 0) {
+			LOG_ERROR("Counting wasn't cleared");
+			return false;
+		}
+
+		counter.incrementError(AS::errors::TEST);
+		counter.incrementError(AS::errors::TEST);
+		counter.incrementWarning(AS::warnings::TEST);
+		
+		tick = 0;
+		counter.setLastTickDisplayed(tick);
+		for (int i = 0; i < testSpurtTicks/2; i++) {
+			timesShown += (int)counter.showPendingIfEnoughTicksPassedAndClear(tick);
+			tick++;
+		}
+		counter.setTicksPerDisplay(testSpurtTicks/2);
+		for (int i = testSpurtTicks/2; i < testSpurtTicks; i++) {
+			counter.incrementError(AS::errors::TEST);
+			counter.incrementError(AS::errors::TEST);
+			counter.incrementWarning(AS::warnings::TEST);
+
+			timesShown += (int)counter.showPendingIfEnoughTicksPassedAndClear(tick);
+			tick++;
+		}
+
+		expected = 2; //eg: 5, 15 (for spurt = 20)
+		if(timesShown != expected) {
+			LOG_ERROR("Errors and warnings weren't shown as many times as expected");
+			if (printResults) {
+				printf("Shown: %d, expected: %d\n", timesShown, expected);
+			}
+			return false;
+		}
+
+		expected = 3*(testSpurtTicks - (testSpurtTicks/4) - (testSpurtTicks/2) - 1);
+		if (counter.total() != expected) {
+			LOG_ERROR("Errors plus warnings count is not as expected");
+			if (printResults) {
+				printf("Found: %d, expected: %d\n", counter.total(), expected);
+			}
+			return false;
+		}
+
+		LOG_TRACE("Error and warning count ok");
+		return true;
+	}
 
 	//TODO: expand test
 	bool testActionVariationsInfo(bool printResults) {
