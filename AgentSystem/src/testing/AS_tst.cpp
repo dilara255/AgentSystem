@@ -20,6 +20,8 @@ TODO: tests:
 #include "CL_internalAPI.hpp"
 #include "CL_externalAPI.hpp"
 
+#include "AS_testsAPI.hpp"
+
 #include "systems/AScoordinator.hpp"
 #include "data/agentDataStructures.hpp"
 #include "data/agentClasses.hpp"

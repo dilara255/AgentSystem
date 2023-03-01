@@ -1,35 +1,16 @@
+//This is supposed to be thin, for direct control from the application only:
+//- Initializing and quitting;
+//- Running, stopping, pausing and unpausing;
+//- Saving and loading. 
+//All other communication (ie, reading and sending data) through the CL_externalAPI;
+
 #pragma once
 
 #include "core.hpp"
 
-//This is supposed to be thin, for direct control from the application only:
-//initializing, saving, loading, quitting, pretty much. Other communication through CL
-
-
-//****For Testing****
-#define AS_TST_INIT_EXPECTED_NUMBER 5619419
-#define AS_TST_EXPECTED_ARR0 231879
-#define AS_TST_EXPECTED_ARR1 954263
-static const char* fileNameNoDefaults = "testNetworkNoDefaults.txt";
-static const char* fileNameWithDefaults = "testNetworkWithDefaults.txt";
-static const char* customFilename = "TestFileCustomName.txt";
-static const char* updateTestFilename = fileNameWithDefaults;
-//*******************
-
 namespace AS {
 	
 	AS_API bool initializeASandCL();
-	AS_API bool quit();	
-	AS_API bool run();
-	AS_API bool isMainLoopRunning();
-	AS_API bool chekIfMainLoopShouldBeRunning();
-	AS_API bool chekIfMainLoopShouldBePaused();
-	AS_API bool checkIfMainLoopIsPaused();
-	//pausing already paused loop has no effect. Pause effective starts after mainLoop step
-	//pause sleeps in cycles of targetStepTime until unpaused
-	AS_API void pauseMainLoop();
-	//unpausing already unpaused loop has no effect. Resumes after up to target step time
-	AS_API void unpauseMainLoop();
 
 	//Loads network and instantiates appropriate Client Data Handler.
 	//If active, stops AS's main loop before loading.
@@ -38,6 +19,28 @@ namespace AS {
 	//- WARNING: CLEARS active Network and Client Data Handler, no confirmation needed! 
 	//Any logic to save current network first and etc should be handled by the CLIENT.
 	AS_API bool loadNetworkFromFile(std::string name, bool runNetwork = false);
+
+	//Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id.
+	//Checks some conditions before initializing, and returns false if any are not met.
+	//AS has to be initialized and a network must have been loaded.
+	AS_API bool run();
+
+	//Stops AS execution thread, marks it as stopped and clears the stored thread::id;
+	//Returns false if this fails or if the Main Loop found errors while running.
+	AS_API bool stop();
+
+	AS_API bool isMainLoopRunning();
+	AS_API bool chekIfMainLoopShouldBeRunning();
+
+	//Pausing already paused loop has no effect. Effectively starts at the end of mainLoop.
+	//Pause sleeps in cycles of targetStepTime until unpaused
+	AS_API void pauseMainLoop();
+
+	//Unpausing already unpaused loop has no effect. Resumes after up to half target step time.
+	AS_API void unpauseMainLoop();
+
+	AS_API bool chekIfMainLoopShouldBePaused();
+	AS_API bool checkIfMainLoopIsPaused();
 
 	//Saves active network. If AS's main loop is running, saves AFTER step is done.
 	//Client changes issued BEFORE call will be consumed before saving.
@@ -52,18 +55,7 @@ namespace AS {
 	AS_API bool saveNetworkToFile(std::string fileName = "", bool shouldOverwrite = false,
 		                                                  bool willResumeAfterSave = true);
 
-	//****For Testing****
-	AS_API void CLsanityTest();
-	AS_API bool testContainersAndAgentObjectCreation();
-	AS_API void sayHello();
-	AS_API bool testFileCreation(std::string nameNoDefaults, std::string nameWithDefaults);
-	AS_API bool testDataTransferFromAStoCL(void);
-	AS_API bool testGotNewValuesFromASthroughCL();
-	AS_API bool testMainLoopStopAndRestart();
-	AS_API bool testNeighbourIDsetting();
-	AS_API bool testChoppedPRNdrawing(bool printResults, bool dump);
-	AS_API bool testActionVariationsInfo(bool printResults = false);
-	AS_API bool testMultipleAgentChopCalculations(bool log = false);
-	AS_API bool testWarningAndErrorCountingAndDisplaying(bool printResults = false);
-	//*******************
+	//For now, this is just an alias to stop().
+	//Future intended use is to also clean up mirror/client data and "unitialize" AS and CL.
+	AS_API bool quit();
 }

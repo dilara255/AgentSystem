@@ -5,6 +5,8 @@
 #include "AS_API.hpp"
 #include "CL_ExternalAPI.hpp"
 
+#include "AS_testsAPI.hpp"
+
 #include "timeHelpers.hpp"
 #include "tests.hpp"
 
@@ -51,7 +53,9 @@ int main(void) {
 
 	LOG_TRACE("Will test sleeping and waking a few times...");
 	double result = AZ::testHybridBusySleeping(); GETCHAR_PAUSE;
-	resultsBattery0 += (result > MINIMUM_PROPORTION_SLEEP_PASSES);
+	bool passed = result > MINIMUM_PROPORTION_SLEEP_PASSES;
+	if(!passed) { LOG_ERROR("Snoozed more than the maximum margin set"); }
+	resultsBattery0 += passed;
 
 	LOG_TRACE("Will test Flag Field functionality...");
 	resultsBattery0 += (int)AZ::testFlagFields(printSteps); GETCHAR_PAUSE;
@@ -206,17 +210,17 @@ bool testAgentsUpdating(bool print) {
 	int millisToRun = A_THOUSAND;
 	int targetTicksToRun = millisToRun/AS_MILLISECONDS_PER_STEP;
 	int microsToBusyWait = 50;
-	//Try to sleep target - 1 ticks since pausing progresses to the end of tick first
+	//Should try to sleep "target - 1" ticks, as the pause only happens at the end of the tick
 	int sleepMicros = (targetTicksToRun-1)*AS_MILLISECONDS_PER_STEP*MICROS_IN_A_MILLI;
 	
 	std::chrono::microseconds sleepTime(sleepMicros);
 	std::chrono::microseconds threshold(millisToRun);
 
-	//set some values for the test (update rates, diplomacy, garrison, 
+	//Let's change some values for the test. First and Last LA and GA will be tested
 
 	result = AS::run();
 
-	AZ::hybridBusySleepForMicros(sleepTime, threshold);
+	AZ::hybridBusySleepForMicros(sleepTime, threshold); //let it run
 
 	AS::pauseMainLoop();
 

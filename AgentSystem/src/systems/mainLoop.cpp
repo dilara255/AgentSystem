@@ -5,6 +5,8 @@
 #include "AS_API.hpp"
 #include "CL_internalAPI.hpp"
 
+#include "AS_testsAPI.hpp" //TODO: reorganize so this is not needed here
+
 #include "network/parameters.hpp" //exposes "currentNetworkParams"
 
 #include "systems/AScoordinator.hpp"
@@ -419,8 +421,6 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 	return true;
 }
 
-//Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id.
-//Checks some conditions before initializing, and returns false if any are not met.
 bool AS::run() {
 	LOG_TRACE("Starting Main Loop Thread...");
 	
@@ -462,8 +462,6 @@ bool AS::run() {
 	return true;
 }
 
-//Stops AS execution thread, marks it as stopped and clears the stored thread::id;
-//Returns false if this fails or if the Main Loop found errors while running.
 bool AS::stop() {
 	LOG_TRACE("Stopping Main Loop Thread...");
 		
