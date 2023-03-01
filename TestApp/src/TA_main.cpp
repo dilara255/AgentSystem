@@ -19,6 +19,7 @@ bool testSendingClientDataAndSaving(void);
 bool testClientDataHAndlerInitialization(void);
 bool testPause(bool printLog = false, int pauseUnpauseCycles = 5);
 bool testMainLoopErrors(std::string filename);
+bool testAgentsUpdating(bool printLog);
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
@@ -26,7 +27,7 @@ bool testMainLoopErrors(std::string filename);
 #define HELPER_FUNC_TESTS 7
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 9
-#define SPECIFIC_THREADED_LOOP_TESTS 9
+#define SPECIFIC_THREADED_LOOP_TESTS 10
 #define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 std::thread reader;//to test realtime reading of data trough CL as AS runs
@@ -151,6 +152,8 @@ int main(void) {
 
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
 
+	resultsBattery3 += (int)testAgentsUpdating(printSteps); GETCHAR_PAUSE;
+
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery3,
@@ -189,9 +192,66 @@ int main(void) {
 	return (1 + (totalPassed - TOTAL_TESTS));
 }
 
+//TODO-CRITICAL: this test needs to somehow guarantee no actions change the incomes and etc
+//UPDATE when actions are implemented
+bool testAgentsUpdating(bool print) {
+	LOG_WARN("Will load a network, run for several ticks, stop it, and check agent updating");
+	
+	bool result = AS::loadNetworkFromFile(updateTestFilename, false);
+	if (!result) {
+		LOG_ERROR("Failed to load network. Aborting test");
+		return false;
+	}
+
+	int millisToRun = A_THOUSAND;
+	int targetTicksToRun = millisToRun/AS_MILLISECONDS_PER_STEP;
+	int microsToBusyWait = 50;
+	//Try to sleep target - 1 ticks since pausing progresses to the end of tick first
+	int sleepMicros = (targetTicksToRun-1)*AS_MILLISECONDS_PER_STEP*MICROS_IN_A_MILLI;
+	
+	std::chrono::microseconds sleepTime(sleepMicros);
+	std::chrono::microseconds threshold(millisToRun);
+
+	//set some values for the test (update rates, diplomacy, garrison, 
+
+	result = AS::run();
+
+	AZ::hybridBusySleepForMicros(sleepTime, threshold);
+
+	AS::pauseMainLoop();
+
+	if (!result) {
+		LOG_ERROR("Failed to run test network. Aborting test");
+		return false;
+	}
+
+	uint64_t finalTick =  CL::ASmirrorData_cptr->networkParams.mainLoopTicks;
+	uint64_t initialTick =  CL::ASmirrorData_cptr->networkParams.lastMainLoopStartingTick;
+	uint64_t ticksRan = finalTick - initialTick;
+
+	//test stuff
+
+	if (print) {
+		printf("Ran for %llu ticks\n", ticksRan);
+	}
+	
+	result = AS::quit();
+	if (!result) {
+		LOG_ERROR("Failed to qut test network or main loop found errors. Aborting test");
+		return false;
+	}
+
+	return true;
+}
+
 bool testMainLoopErrors(std::string filename) {
 	LOG_WARN("Will load a network, run for several ticks, stop it, and check for errors");
-	AS::loadNetworkFromFile(filename, true);
+	
+	bool result = AS::loadNetworkFromFile(filename, true);
+	if (!result) {
+		LOG_ERROR("Failed to Load test network. Aborting test");
+		return false;
+	}
 
 	int ticks = 25;
 	std::chrono::microseconds microsToSleep(ticks*AS_MILLISECONDS_PER_STEP*MICROS_IN_A_MILLI);
