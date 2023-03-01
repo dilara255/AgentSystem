@@ -13,12 +13,14 @@
 static const char* fileNameNoDefaults = "testNetworkNoDefaults.txt";
 static const char* fileNameWithDefaults = "testNetworkWithDefaults.txt";
 static const char* customFilename = "TestFileCustomName.txt";
+static const char* updateTestFilename = fileNameWithDefaults;
 //*******************
 
 namespace AS {
 	
 	AS_API bool initializeASandCL();
 	AS_API bool quit();	
+	AS_API bool run();
 	AS_API bool isMainLoopRunning();
 	AS_API bool chekIfMainLoopShouldBeRunning();
 	AS_API bool chekIfMainLoopShouldBePaused();

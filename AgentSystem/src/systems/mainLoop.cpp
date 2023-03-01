@@ -128,7 +128,7 @@ void AS::mainLoop() {
 	g_warnings = counter.totalWarningsAlreadyDisplayed() + counter.totalWarnings();
 	g_errors = counter.totalErrorsAlreadyDisplayed() + counter.totalErrors();
 
-	int mockTick = timingMicros.ticks + 2*minimumTicksPerErrorDisplay;
+	uint64_t mockTick = timingMicros.ticks + 2*minimumTicksPerErrorDisplay;
 	counter.showPendingIfEnoughTicksPassedAndClear(mockTick);
 }
 
@@ -477,6 +477,11 @@ bool AS::stop() {
 	if (!isMainLoopRunning()) {
 		LOG_ERROR("Main Loop Thread was supposed to be active, but was not!");
 		return false;
+	}
+
+	if (chekIfMainLoopShouldBePaused()) {
+		//Needs to unpause to end step
+		unpauseMainLoop();
 	}
 
 	LOG_TRACE("Waiting for main loop to finish execution...");
