@@ -36,7 +36,7 @@ std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
 
 int main(void) {
-/*
+
 	//TODO: review wich tests printo to console, and pass this (macro?)
 	bool printSteps = false;
 	#if ( (defined AS_DEBUG) || VERBOSE_RELEASE )
@@ -155,9 +155,9 @@ int main(void) {
 	resultsBattery3 += (int)testPause(printSteps); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
-*/int resultsBattery3 = 0; bool printSteps = true; AS::initializeASandCL(); AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
+
 	resultsBattery3 += (int)testAgentsUpdating(printSteps); GETCHAR_PAUSE;
-/*
+
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery3,
@@ -194,7 +194,6 @@ int main(void) {
 	LOG_INFO("Done! Enter to exit"); GETCHAR_FORCE_PAUSE;
 
 	return (1 + (totalPassed - TOTAL_TESTS));
-	*/return 0;
 }
 
 //TODO-CRITICAL: this test needs to somehow guarantee no actions change the incomes and etc
@@ -256,10 +255,10 @@ bool testAgentsUpdating(bool print) {
 	}
 
 	float externalGuardFirstLA = 184;
-	float startingResourcesFirstLA = 10;
+	float startingResourcesFirstLA = 0.1f;
 	
 	clientData_ptr->LAstate.parameters.strenght.changeGuard(0, externalGuardFirstLA);
-	clientData_ptr->LAstate.parameters.resources.changeCurrentTo(0, 0);
+	clientData_ptr->LAstate.parameters.resources.changeCurrentTo(0, startingResourcesFirstLA);
 
 	auto laState_ptr = &CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data;
 	
@@ -350,51 +349,72 @@ bool testAgentsUpdating(bool print) {
 
 	//TODO: Check that diplomatic relations haven't changed either
 		
-	//Now we calculate the expected results:
-
-	//Since everyone is trading with the same number of neighbours:
+	//Now we calculate the expected results, first for the LAs:
 	float LAtradeCoeficient = 1.0f/(MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT); 
 
 	float defaultUpkeep = 0;
 	float defaultIncome = DEFAULT_LA_INCOME - defaultUpkeep;
 
-	float expectedTradeFirstLA = defaultIncome*TRADE_FACTOR_PER_SECOND*adjustedTotalMultiplier;
+	float expectedTradeFirstLA = defaultIncome*TRADE_FACTOR_PER_SECOND*(float)adjustedTotalMultiplier;
 
-	float effectiveArmyCostFirstLA = 
-		DEFAULT_LA_STRENGHT + EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED*externalGuardFirstLA;
-	float expectedUpkeepFirstLA = LA_UPKEEP_PER_EXCESS_STRENGHT *
-		(effectiveArmyCostFirstLA - DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
+	float effectiveArmyCostFirstLA = (float)(DEFAULT_LA_STRENGHT +
+						EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED*externalGuardFirstLA);
+	float expectedUpkeepFirstLA = (float)(LA_UPKEEP_PER_EXCESS_STRENGHT *
+					(effectiveArmyCostFirstLA - DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP));
 	expectedUpkeepFirstLA = std::max(0.0f, expectedUpkeepFirstLA);
 	float expectedLiquidFirstLA = defaultIncome - expectedUpkeepFirstLA;
-	float expectedTotalIncomeFirstLAMinusTrade = expectedLiquidFirstLA*adjustedTotalMultiplier;
+	float expectedTotalIncomeFirstLAMinusTrade = 
+							expectedLiquidFirstLA*(float)adjustedTotalMultiplier;
 
 	float expectedTotalResourcesFirstLA = startingResourcesFirstLA +
 						expectedTradeFirstLA + expectedTotalIncomeFirstLAMinusTrade;
-	float expectedTaxesFirstLA = GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
-		                  * (expectedTotalResourcesFirstLA + startingResourcesFirstLA)/2;
+	float expectedTaxesFirstLA = (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
+		                  * (expectedTotalResourcesFirstLA + startingResourcesFirstLA)/2);
 	expectedTotalResourcesFirstLA -= expectedTaxesFirstLA; 
 
-	float tradeFromFirstLA = TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
-		                     * LAtradeCoeficient * expectedLiquidFirstLA;
-	float tradeFromOtherLAs = TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
-		                     * LAtradeCoeficient * defaultIncome;
+	float tradeFromFirstLA = (float)(TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
+										* LAtradeCoeficient * expectedLiquidFirstLA);
+	float tradeFromOtherLAs = (float)(TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
+												* LAtradeCoeficient * defaultIncome);
 	int quantityOtherLAs = (MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT) - 1;
 
 	float expectedTradeLastLA = quantityOtherLAs*tradeFromOtherLAs + tradeFromFirstLA;
-	float expectedTotalIncomeLastLAMinusTrade = defaultIncome*adjustedTotalMultiplier;
+	float expectedTotalIncomeLastLAMinusTrade = (float)(defaultIncome*adjustedTotalMultiplier);
 	float expectedTotalResourcesLastLA = DEFAULT_LA_RESOURCES + 
 							expectedTotalIncomeLastLAMinusTrade + expectedTradeLastLA;
-	float expectedTaxesLastLA = GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
-		                  * (expectedTotalResourcesLastLA + DEFAULT_LA_RESOURCES)/2;
+	float expectedTaxesLastLA = (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
+								* (expectedTotalResourcesLastLA + DEFAULT_LA_RESOURCES)/2);
 	expectedTotalResourcesLastLA -= expectedTaxesLastLA; 
-	      
-	float incomeFirstGA = 0;
-	float incomeLastGA = 0;
-	float expectedTradeFirstGA = 0;
-	float expectedTradeLastGA = 0;
+	
+	//Then the GA expectations:
 
-	float expectedTotalResourcesFirstGA = 0;
-	float expectedTotalResourcesLastGA = 0;	
+	//GA income depends on connected LAs and GAs totals
+	//First GA by default has LA0 and the next few, which by default do not trade with LA0
+	//So we can calculate a standard LAs expected tax and add connectedLAs-1 of that to LA0s:
+	float expectedTradeDefaultLA = 
+			(float)(TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier * defaultIncome);
+	float expectedTotalIncomeDefaultLAMinusTrade =
+									(float)(defaultIncome * adjustedTotalMultiplier);
+	float expectedTotalResourcesDefaultLA =  DEFAULT_LA_RESOURCES + 
+			expectedTotalIncomeDefaultLAMinusTrade + expectedTradeDefaultLA;
+	float expectedTaxesDefaultLA = (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
+								* (expectedTotalResourcesDefaultLA + DEFAULT_LA_RESOURCES)/2);
+	
+	int connectedLAs = gaState_ptr->at(0).localAgentsBelongingToThis.howManyAreOn();
+	float firstGAtaxGain = (connectedLAs - 1)*expectedTaxesDefaultLA + expectedTaxesFirstLA;
+
+	//For trade, we consider full trade with a GA with all standard taxes;
+	//Note that by doing this we ignore second and higher order GA trade effects;
+	float defaultGAtaxGain = connectedLAs*expectedTaxesDefaultLA;
+	float firstGAtradeGainFirstOrder = (float)((defaultGAtaxGain/2) 
+							* TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier);
+
+	float expectedTotalResourcesFirstGA = 
+			startingResourcesFirstGA + firstGAtaxGain + firstGAtradeGainFirstOrder;
+
+	//For the last GA we do the same, but using the last LA, and there's no trade;
+	float lastGAtaxGain = (connectedLAs - 1)*expectedTaxesDefaultLA + expectedTaxesLastLA;;
+	float expectedTotalResourcesLastGA = DEFAULT_GA_RESOURCES + lastGAtaxGain;
 	
 	//And finally check them:
 	float epsLA = 0.1f;
@@ -458,14 +478,14 @@ bool testAgentsUpdating(bool print) {
 			laState_ptr->at(quantityLAs - 1).parameters.strenght.current, 
 			laState_ptr->at(quantityLAs - 1).parameters.strenght.externalGuard,
 			laState_ptr->at(quantityLAs - 1).parameters.strenght.thresholdToCostUpkeep);
-		printf("\nGA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f)\n",
+		printf("\nGA %d: curr: %f (starting: %f, diff: %f, expected taxes: %f, expected trade: %f)\n",
 			0, gaState_ptr->at(0).parameters.GAresources, startingResourcesFirstGA,
 			((double)gaState_ptr->at(0).parameters.GAresources - startingResourcesFirstGA),
-			incomeFirstGA, expectedTradeFirstGA);
-		printf("GA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f)\n",
+			firstGAtaxGain, firstGAtradeGainFirstOrder);
+		printf("GA %d: curr: %f (starting: %f, diff: %f, expected taxes: %f, expected trade: %f)\n",
 			(quantityGAs - 1), gaState_ptr->at(quantityGAs - 1).parameters.GAresources, startingResourcesLastGA,
 			((double)gaState_ptr->at(quantityGAs - 1).parameters.GAresources - startingResourcesLastGA),
-			incomeLastGA, expectedTradeLastGA);
+			lastGAtaxGain, 0.0f);
 	}
 
 	if (!result) {
