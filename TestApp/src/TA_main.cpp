@@ -300,7 +300,8 @@ bool testAgentsUpdating(bool print) {
 	ticksRan++;
 	double totalMultiplier = 
 				CL::ASmirrorData_cptr->networkParams.accumulatedMultiplier;
-	totalMultiplier *= ((double)ticksRan/(ticksRan - 1)); //for the same reason
+	//for the same reason:
+	double adjustedTotalMultiplier = totalMultiplier*((double)ticksRan/(ticksRan - 1)); 
 
 	//Did anything change which shouldn't have changed?
 	if (gaState_ptr->at(0).connectedGAs.getField() != neighboursFirstGA.getField()) {
@@ -356,7 +357,8 @@ bool testAgentsUpdating(bool print) {
 	bool couldSave = AS::saveNetworkToFile(updateTestOutputFilename, true, false, true);
 
 	if (print) {
-		printf("Ran for %llu ticks, total multiplier: %f\n", ticksRan, totalMultiplier);
+		printf("Ran for %llu ticks, total multiplier: %f (adj: %f)\n", 
+			       ticksRan, totalMultiplier, adjustedTotalMultiplier);
 		printf("LA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f);\n\tstr: %f (guard: %f, thresh: %f)\n",
 			0,  laState_ptr->at(0).parameters.resources.current, startingResourcesFirstLA,
 			((double)laState_ptr->at(0).parameters.resources.current - startingResourcesFirstLA),

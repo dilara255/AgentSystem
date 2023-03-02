@@ -20,10 +20,12 @@ namespace CL {
 		}
 
 		//TODO-CRITICAL: Extract. Note: CL doesn't link to AS stuff. Deal with that first
+		//WARNING: DISASTER WAITING TO HAPPEN: deeply burried repetition and coupling
 		strcpy(data.networkParams.comment, params_cptr->comment);
 		data.networkParams.isNetworkInitialized = params_cptr->isNetworkInitialized;
 		data.networkParams.lastMainLoopStartingTick = params_cptr->lastMainLoopStartingTick;
 		data.networkParams.mainLoopTicks = params_cptr->mainLoopTicks;
+		data.networkParams.accumulatedMultiplier = params_cptr->accumulatedMultiplier;
 		data.networkParams.maxActions = params_cptr->maxActions;
 		data.networkParams.maxLAneighbours = params_cptr->maxLAneighbours;
 		strcpy(data.networkParams.name, params_cptr->name);
@@ -182,6 +184,7 @@ namespace CL {
 		data.networkParams.numberGAs = params_cptr->numberGAs;
 		data.networkParams.numberLAs = params_cptr->numberLAs;
 		data.networkParams.mainLoopTicks = params_cptr->mainLoopTicks;
+		data.networkParams.accumulatedMultiplier = params_cptr->accumulatedMultiplier;
 		data.networkParams.lastMainLoopStartingTick = params_cptr->lastMainLoopStartingTick;
 		
 		size_t nameSize = NAME_LENGHT * sizeof(char);

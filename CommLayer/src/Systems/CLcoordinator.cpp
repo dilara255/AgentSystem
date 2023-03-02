@@ -184,7 +184,10 @@ namespace CL {
 		recepientPtrs.agentData_ptr = agentDataRecepient_ptr;
 		recepientPtrs.actions_ptr = actionsRecepient_ptr;
 
-		return clientData_ptr->sendNewClientData(recepientPtrs, silent);
+		bool result = clientData_ptr->sendNewClientData(recepientPtrs, silent);
+		clientData_ptr->clearChanges();
+
+		return result;
 	}
 
 	bool replaceMirrorData(const AS::networkParameters_t* params,
