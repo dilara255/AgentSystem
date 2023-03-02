@@ -32,12 +32,14 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
 
     bool result = true;
     int tokensRead;
+    float mult;
 
     tokensRead = fscanf(fp, headerLine, &version, &pp->numberGAs, &pp->numberLAs,
                        &pp->maxLAneighbours, &pp->maxActions, &pp->mainLoopTicks,
-                                                      &pp->accumulatedMultiplier,
+                       &mult, //TODO: WHY? Doesn't work if I use &pp->accumulatedMultiplier D:
                       &pp->seeds[0], &pp->seeds[1], &pp->seeds[2], &pp->seeds[3]);
     result &= (tokensRead == 11);
+    pp->accumulatedMultiplier = mult;
 
     LOG_TRACE("Will load the comment line...");
 
