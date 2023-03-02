@@ -32,8 +32,8 @@ namespace AS {
 	AS_API bool isMainLoopRunning();
 	AS_API bool chekIfMainLoopShouldBeRunning();
 
-	//Pausing already paused loop has no effect. Effectively starts at the end of mainLoop.
-	//Pause sleeps in cycles of targetStepTime until unpaused
+	//Pausing already paused loop has no effect. Effectively starts at the END of mainLoop.
+	//Pause sleeps in cycles of targetStepTime until unpaused.
 	AS_API void pauseMainLoop();
 
 	//Unpausing already unpaused loop has no effect. Resumes after up to half target step time.
@@ -53,9 +53,9 @@ namespace AS {
 	//makes these changes be absorbed one step before they would otherwise, in order to
 	//preserve issued changes.
 	AS_API bool saveNetworkToFile(std::string fileName = "", bool shouldOverwrite = false,
-		                                                  bool willResumeAfterSave = true);
+		                             bool willResumeAfterSave = true, bool silent = false);
 
-	//For now, this is just an alias to stop().
+	//For now, this is mostly an alias to stop(), but cheks if running before calling it.
 	//Future intended use is to also clean up mirror/client data and "unitialize" AS and CL.
 	AS_API bool quit();
 }

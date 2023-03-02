@@ -318,14 +318,14 @@ namespace CL{
 
 //STATE: PARAMS: 
 	
-	bool CL_API CL::ClientData::LAparametersHandler::changeAll(uint32_t agentID, AS::LAparameters_t * newValue_ptr)
+	bool CL_API CL::ClientData::LAparametersHandler::changeAll(uint32_t agentID, AS::LAparameters_t newValue)
 	{
 		return false;
 	}
 
 //PARAMS: RESOURCES
 
-	bool CL_API CL::ClientData::LAresourcesHandler::changeAll(uint32_t agentID, AS::resources_t * newValue_ptr)
+	bool CL_API CL::ClientData::LAresourcesHandler::changeAll(uint32_t agentID, AS::resources_t newValue)
 	{
 		return false;
 	}
@@ -382,7 +382,7 @@ namespace CL{
 //PARAMS: STRENGHT
 
 	
-	bool CL_API ClientData::LAstrenghtHandler::changeAll(uint32_t agentID, AS::strenght_t* newValue_ptr)
+	bool CL_API ClientData::LAstrenghtHandler::changeAll(uint32_t agentID, AS::strenght_t newValue)
 	{
 		return false;
 	}
@@ -663,7 +663,7 @@ namespace CL{
 
 //STATE: PARAMS
 
-	bool CL_API ClientData::GAparametersHandler::changeAll(uint32_t agentID, AS::GAparameterTotals_t* newValue_ptr)
+	bool CL_API ClientData::GAparametersHandler::changeAll(uint32_t agentID, AS::GAparameterTotals_t newValue)
 	{
 		return false;
 	}
@@ -683,7 +683,7 @@ namespace CL{
 
 //PARAMS: RESOURCES
 
-	bool CL_API ClientData::GAresourcesHandler::changeAll(uint32_t agentID, AS::resources_t* newValue_ptr)
+	bool CL_API ClientData::GAresourcesHandler::changeAll(uint32_t agentID, AS::resources_t newValue)
 	{
 		return false;
 	}

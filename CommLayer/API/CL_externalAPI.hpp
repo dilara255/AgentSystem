@@ -12,7 +12,6 @@
 
 namespace CL {
 
-	//TODO: turn this into a cptr
 	CL_API extern const mirror_t* ASmirrorData_cptr;
 
 	//Returns NULL if not initialized

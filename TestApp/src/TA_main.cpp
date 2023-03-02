@@ -36,7 +36,7 @@ std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
 
 int main(void) {
-	
+
 	//TODO: review wich tests printo to console, and pass this (macro?)
 	bool printSteps = false;
 	#if ( (defined AS_DEBUG) || VERBOSE_RELEASE )
@@ -192,21 +192,24 @@ int main(void) {
 	GETCHAR_FORCE_PAUSE;
 
 	LOG_INFO("Done! Enter to exit"); GETCHAR_FORCE_PAUSE;
-	
+
 	return (1 + (totalPassed - TOTAL_TESTS));
 }
 
 //TODO-CRITICAL: this test needs to somehow guarantee no actions change the incomes and etc
 //UPDATE when actions are implemented
+//TODO: make a more interesting test-case using clientDataHandler (include war/attrition)
 bool testAgentsUpdating(bool print) {
 	LOG_WARN("Will load a network, run for several ticks, stop it, and check agent updating");
 	
+	//Load, but don't start, so we can calculate and set test conditions:
 	bool result = AS::loadNetworkFromFile(updateTestFilename, false);
 	if (!result) {
 		LOG_ERROR("Failed to load network. Aborting test");
 		return false;
 	}
 
+	//How long to wait for test to run?
 	int millisToRun = A_THOUSAND;
 	int targetTicksToRun = millisToRun/AS_MILLISECONDS_PER_STEP;
 	int microsToBusyWait = 50;
@@ -216,36 +219,185 @@ bool testAgentsUpdating(bool print) {
 	std::chrono::microseconds sleepTime(sleepMicros);
 	std::chrono::microseconds threshold(millisToRun);
 
-	//Let's change some values for the test. First and Last LA and GA will be tested
+	//Let's change some values for the test. First and Last LA and GA will be tested.
 
+	int quantityGAs = CL::ASmirrorData_cptr->networkParams.numberGAs;
+	quantityGAs--; //last doesn't count
+	if (quantityGAs < 2) {
+		LOG_ERROR("Too few GAs for this test. Will abort");
+		return false;
+	}
+
+	int quantityLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
+	if (quantityLAs < 2) {
+		LOG_ERROR("Too few LAs for this test. Will abort");
+		return false;
+	}
+
+	auto clientData_ptr = CL::getClientDataHandlerPtr();
+	if (clientData_ptr == NULL) {
+		LOG_ERROR("Couldn't get client data handler. Will abort test");
+		return false;
+	}
+
+	AS::GAflagField_t neighboursFirstGA;
+	uint32_t flagField = (uint32_t)pow(2,quantityGAs) - 1; //All on
+	flagField--; //turn off first, since this will be used for the first GA
+	neighboursFirstGA.loadField(flagField);
+
+	AS::GAflagField_t neighboursLastGA; //empty
+
+	clientData_ptr->GAstate.changeConnectedGAs(0, &neighboursFirstGA);
+	clientData_ptr->GAstate.changeConnectedGAs(quantityGAs-1, &neighboursLastGA);
+
+	float externalGuardFirstLA = 182;
+	float externalGuardLastLA = 179;
+	float startingResourcesFirstLA = 0;
+	float startingResourcesLastLA = -10;
+
+	clientData_ptr->LAstate.parameters.strenght.changeGuard(0, 182);
+	clientData_ptr->LAstate.parameters.resources.changeCurrentTo(0, 0);
+
+	clientData_ptr->LAstate.parameters.strenght.changeGuard(quantityLAs - 1, 179);
+	clientData_ptr->LAstate.parameters.resources.changeCurrentTo(quantityLAs - 1, -10);
+
+	auto laState_ptr = &CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data;
+	
+	float incomeFirstLA = laState_ptr->at(0).parameters.resources.updateRate;
+	float incomeLastLA = laState_ptr->at(quantityLAs - 1).parameters.resources.updateRate;
+	float strenghtFirstLA = laState_ptr->at(0).parameters.strenght.current;
+	float strenghtLastLA = laState_ptr->at(quantityLAs - 1).parameters.strenght.current;
+	float thresholdFirstLA = laState_ptr->at(0).parameters.strenght.thresholdToCostUpkeep;
+	float thresholdLastLA = laState_ptr->at(quantityLAs - 1).parameters.strenght.thresholdToCostUpkeep;
+
+	auto gaState_ptr = &CL::ASmirrorData_cptr->agentMirrorPtrs.GAstate_ptr->data;
+	
+	float startingResourcesFirstGA = gaState_ptr->at(0).parameters.GAresources;
+	float startingResourcesLastGA = gaState_ptr->at(quantityGAs - 1).parameters.GAresources;
+	
+	//And then run the test:
 	result = AS::run();
 
-	AZ::hybridBusySleepForMicros(sleepTime, threshold); //let it run
+	AZ::hybridBusySleepForMicros(sleepTime, threshold);
 
-	AS::pauseMainLoop();
+	AS::pauseMainLoop(); //we don't stop/quit, so the info is still available
+	bool paused = false; //pause is NOT instantaneous
+	while(!paused){
+		paused = AS::checkIfMainLoopIsPaused();
+	}
 
-	if (!result) {
+	if (!result) { //we didn't check earlier to try and keep things in synch
 		LOG_ERROR("Failed to run test network. Aborting test");
 		return false;
 	}
-
-	uint64_t finalTick =  CL::ASmirrorData_cptr->networkParams.mainLoopTicks;
+	
+	//How long did it actually run?
 	uint64_t initialTick =  CL::ASmirrorData_cptr->networkParams.lastMainLoopStartingTick;
+	uint64_t finalTick =  CL::ASmirrorData_cptr->networkParams.mainLoopTicks;							
 	uint64_t ticksRan = finalTick - initialTick;
 
-	//test stuff
+	//When you pause, timing info from the last step is not yet sent, although step is, so:
+	ticksRan++;
+	double totalMultiplier = 
+				CL::ASmirrorData_cptr->networkParams.accumulatedMultiplier;
+	totalMultiplier *= ((double)ticksRan/(ticksRan - 1)); //for the same reason
 
-	if (print) {
-		printf("Ran for %llu ticks\n", ticksRan);
-	}
-	
-	result = AS::quit();
-	if (!result) {
-		LOG_ERROR("Failed to qut test network or main loop found errors. Aborting test");
+	//Did anything change which shouldn't have changed?
+	if (gaState_ptr->at(0).connectedGAs.getField() != neighboursFirstGA.getField()) {
+		LOG_ERROR("Unexpected changes happened, maybe through actions or decisions. Will fail.");
 		return false;
 	}
 
-	return true;
+	if (gaState_ptr->at(quantityGAs - 1).connectedGAs.getField() != neighboursLastGA.getField()) {
+		LOG_ERROR("Unexpected changes happened, maybe through actions or decisions. Will fail.");
+		return false;
+	}
+
+	bool changed = laState_ptr->at(0).parameters.strenght.externalGuard != externalGuardFirstLA;
+	changed |= laState_ptr->at(quantityLAs - 1).parameters.strenght.externalGuard != externalGuardLastLA;
+	changed |= incomeFirstLA !=  laState_ptr->at(0).parameters.resources.updateRate;
+	changed |= incomeLastLA != laState_ptr->at(quantityLAs - 1).parameters.resources.updateRate;
+	changed |= strenghtFirstLA !=  laState_ptr->at(0).parameters.strenght.current;
+	changed |= strenghtLastLA != laState_ptr->at(quantityLAs - 1).parameters.strenght.current;
+	changed |= thresholdFirstLA !=  laState_ptr->at(0).parameters.strenght.thresholdToCostUpkeep;
+	changed |= thresholdLastLA != laState_ptr->at(quantityLAs - 1).parameters.strenght.thresholdToCostUpkeep;
+
+	if (changed) {
+		LOG_ERROR("Unexpected changes happened, maybe through actions or decisions. Will fail.");
+		return false;
+	}
+
+	//TODO: Check that diplomatic relations haven't changed either
+		
+	//Finally, we check the results:	
+	float incomeFirstGA = 0;
+	float incomeLastGA = 0;
+	float expectedTradeLastGA = 0;
+	float expectedTradeFirstGA = 0;
+	float expectedTotalResourcesFirstGA = 0;
+	float expectedTotalResourcesLastGA = 0;
+	
+	float epsGA = 0;
+
+	result &= (fabs(expectedTotalResourcesFirstGA -  gaState_ptr->at(0).parameters.GAresources) <= epsGA);
+	result &= (fabs(expectedTotalResourcesLastGA - gaState_ptr->at(quantityGAs - 1).parameters.GAresources) <= epsGA);
+
+	float expectedTradeFirstLA = 0;
+	float expectedTradeLastLA = 0;
+	float expectedTotalResourcesFirstLA = 0;
+	float expectedTotalResourcesLastLA = 0;
+
+	float epsLA = 0;
+	
+	result &= (fabs(expectedTotalResourcesFirstLA - laState_ptr->at(0).parameters.resources.current) <= epsLA);
+	result &= (fabs(expectedTotalResourcesLastLA - laState_ptr->at(quantityLAs - 1).parameters.resources.current) <= epsLA);
+	
+	//And then save and show reults and wrap things up:
+	bool couldSave = AS::saveNetworkToFile(updateTestOutputFilename, true, false, true);
+
+	if (print) {
+		printf("Ran for %llu ticks, total multiplier: %f\n", ticksRan, totalMultiplier);
+		printf("LA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f);\n\tstr: %f (guard: %f, thresh: %f)\n",
+			0,  laState_ptr->at(0).parameters.resources.current, startingResourcesFirstLA,
+			((double)laState_ptr->at(0).parameters.resources.current - startingResourcesFirstLA),
+			laState_ptr->at(0).parameters.resources.updateRate, expectedTradeFirstLA,
+			laState_ptr->at(0).parameters.strenght.current, 
+			laState_ptr->at(0).parameters.strenght.externalGuard,
+			laState_ptr->at(0).parameters.strenght.thresholdToCostUpkeep);
+		printf("LA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f);\n\tstr: %f (guard: %f, thresh: %f)\n",
+			(quantityLAs - 1),  laState_ptr->at(quantityLAs - 1).parameters.resources.current, startingResourcesLastLA,
+			((double)laState_ptr->at(quantityLAs - 1).parameters.resources.current - startingResourcesLastLA),
+			laState_ptr->at(quantityLAs - 1).parameters.resources.updateRate, expectedTradeLastLA,
+			laState_ptr->at(quantityLAs - 1).parameters.strenght.current, 
+			laState_ptr->at(quantityLAs - 1).parameters.strenght.externalGuard,
+			laState_ptr->at(quantityLAs - 1).parameters.strenght.thresholdToCostUpkeep);
+		printf("\nGA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f)\n",
+			0, gaState_ptr->at(0).parameters.GAresources, startingResourcesFirstGA,
+			((double)gaState_ptr->at(0).parameters.GAresources - startingResourcesFirstGA),
+			incomeFirstGA, expectedTradeFirstGA);
+		printf("GA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f)\n",
+			(quantityGAs - 1), gaState_ptr->at(quantityGAs - 1).parameters.GAresources, startingResourcesLastGA,
+			((double)gaState_ptr->at(quantityGAs - 1).parameters.GAresources - startingResourcesLastGA),
+			incomeLastGA, expectedTradeLastGA);
+	}
+
+	if (!result) {
+		LOG_ERROR("Final results don't match expected. Test failed");
+	}
+
+	bool aux = AS::quit();
+	if (!aux) {
+		LOG_ERROR("Failed to quit test network or main loop found errors. Aborting test");
+		return false;
+	}
+
+	if (!couldSave) {
+		LOG_ERROR("Saving of updated network failed. Test will fail.");
+		return false;
+	}
+
+	if(result) { LOG_TRACE("Test passed!"); }
+	return result;
 }
 
 bool testMainLoopErrors(std::string filename) {

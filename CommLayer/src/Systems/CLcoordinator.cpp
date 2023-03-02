@@ -187,16 +187,16 @@ namespace CL {
 		return clientData_ptr->sendNewClientData(recepientPtrs, silent);
 	}
 
-	bool acceptReplacementData(const AS::networkParameters_t* params,
-					   const std::vector <AS::actionData_t>* actionsLAs_cptr,
-					   const std::vector <AS::actionData_t>* actionsGAs_cptr,
-					   const std::vector <LA::coldData_t>* coldDataLAs_cptr,
-					   const std::vector <LA::stateData_t>* stateLAs_cptr,
-					   const std::vector <LA::decisionData_t>* decisionLAs_cptr,
-					   const std::vector <GA::coldData_t>* coldDataGAs_cptr,
-					   const std::vector <GA::stateData_t>* stateGAs_cptr,
-					   const std::vector <GA::decisionData_t>* decisionGAs_cptr,
-					   bool silent) {
+	bool replaceMirrorData(const AS::networkParameters_t* params,
+						   const std::vector <AS::actionData_t>* actionsLAs_cptr,
+						   const std::vector <AS::actionData_t>* actionsGAs_cptr,
+						   const std::vector <LA::coldData_t>* coldDataLAs_cptr,
+						   const std::vector <LA::stateData_t>* stateLAs_cptr,
+						   const std::vector <LA::decisionData_t>* decisionLAs_cptr,
+						   const std::vector <GA::coldData_t>* coldDataGAs_cptr,
+						   const std::vector <GA::stateData_t>* stateGAs_cptr,
+						   const std::vector <GA::decisionData_t>* decisionGAs_cptr,
+						   bool silent) {
 
 		if (!isASdataPointerInitialized()) {
 			if(!silent){
@@ -205,8 +205,7 @@ namespace CL {
 			return false;
 		}
 
-		//LOG_TRACE("Will accept replacement data from the AS");
-
+		//Create data bundles:
 		CL::agentToMirrorVectorPtrs_t agentDataPtrs;
 
 		agentDataPtrs.coldDataLAs_cptr = coldDataLAs_cptr;
@@ -222,9 +221,11 @@ namespace CL {
 		actionPtrs.actionsLAs_cptr = actionsLAs_cptr;
 		actionPtrs.actionsGAs_cptr = actionsGAs_cptr;
 
-		//LOG_TRACE("Created Data bundles. Will clear current mirror data and transfer new...");
-		bool result = ASmirror.clearAllData();
+		//Clear old data: TODO: review wether this was actually necessary
+		//bool result = ASmirror.clearAllData();
 		
+		//Actually send the data:
+		bool result = true;
 		result &= ASmirror.receiveReplacementParams(params);
 		result &= ASmirror.receiveReplacementAgentData(agentDataPtrs);
 		result &= ASmirror.receiveReplacementActionData(actionPtrs);
