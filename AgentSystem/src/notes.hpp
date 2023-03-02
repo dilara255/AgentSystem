@@ -129,11 +129,11 @@
 * 3. Updates:
 * 
 * -Implement state self-updating (ie, from income and upkeep, no actions involved);
-* > -Add tests;
+* -Add tests;
 * 
 * 4. Information and Expected Values:
 * 
-* -Update information and expected values;
+* > -Update information and expected values;
 * --Add data structure for expected values;
 * --WILL HAVE TO SOLVE HOW TO SAVE THIS (at the bottom of the file seems good);
 * 
