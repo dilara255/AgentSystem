@@ -3,15 +3,17 @@
 #include "systems/AScoordinator.hpp"
 #include "systems/diplomacy.hpp"
 
-//Total trade value of an angent is a portion of it's current resources (not income)
+//Total trade value of a LA is a portion of it's liquid income (income minus upkeep)
 //That gets divided between partners and also goes down in case of war
-//NOTE: can be negative when partner is in debt!
+//NOTE: can be negative if partners income minus upkeep gets negative!
 float LA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStance,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr,
 	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
  
 	LA::stateData_t partner = agentDataPtrs_ptr->LAstate_ptr->getDirectDataPtr()->at(partnerID);
-	float totalPartnerTradeValue = (float)(partner.parameters.resources.current*TRADE_FACTOR_PER_SECOND);
+
+	float totalPartnerTradeValue = TRADE_FACTOR_PER_SECOND*
+		(partner.parameters.resources.updateRate - partner.parameters.strenght.currentUpkeep);
 
 	//calculates their total "trade saturation" (from trade, allies, allies with trade and war)
 	int tradeSaturation = 0;
@@ -44,9 +46,9 @@ float LA::calculateAttritionLossesPerSecond(int agentId1, int agentId2,
 }
 
 
-//Total trade value of an angent is a portion of it's current resources (not income)
+//Total trade value of a GA is a portion of it's current resources (not income)
 //That gets divided between partners and also goes down in case of war
-//NOTE: can be negative when partner is in debt!
+//NOTE: can be negative so long as GAs can get in debt!
 float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStance,
 		                                AS::dataControllerPointers_t* agentDataPtrs_ptr,
 	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) { 

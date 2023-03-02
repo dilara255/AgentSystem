@@ -79,7 +79,7 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	//and proportional to a factor:
 	str_ptr->currentUpkeep *= LA_UPKEEP_PER_EXCESS_STRENGHT;
 	//and never smaller then zero : )
-	if(str_ptr->currentUpkeep < 0) {str_ptr->currentUpkeep = 0;}
+	str_ptr->currentUpkeep = std::max(0.0f, str_ptr->currentUpkeep);
 
 	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep)*timeMultiplier;
 	
@@ -102,7 +102,7 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	}
 
 	//finally, LAs pay tax to GA (and can cost the GA if in debt):
-	res_ptr->current -= (float)GA_TAX_RATE_PER_SECOND*res_ptr->current;
+	res_ptr->current -= (float)GA_TAX_RATE_PER_SECOND*res_ptr->current*timeMultiplier;
 }
 
 void updateGA(GA::stateData_t* state_ptr, int agentId, 
