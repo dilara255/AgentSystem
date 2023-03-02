@@ -302,7 +302,10 @@ bool testAgentsUpdating(bool print) {
 	//for the same reason:
 	double adjustedTotalMultiplier = totalMultiplier*((double)ticksRan/(ticksRan - 1)); 
 
-	if (millisToRun != ticksRan * AS_MILLISECONDS_PER_STEP) {
+	float absoluteDifference = fabs(millisToRun - (ticksRan * AS_MILLISECONDS_PER_STEP));
+	float propotionalAbsoluteDifference = absoluteDifference/millisToRun;
+	float graceFactor = 0.015;
+	if (propotionalAbsoluteDifference > graceFactor) {
 		LOG_WARN("Didn't run the expected time/ticks. Will proceed, but may fail");
 	}
 

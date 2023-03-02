@@ -235,7 +235,6 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 		                                          currentNetworkParams_ptr,
 		                                          actionSystem.getDataDirectPointer());
 
-
 	fclose(fp);
 	LOG_TRACE("File closed");
 
