@@ -597,7 +597,6 @@ namespace CL{
 			return false;
 		}
 
-		//
 		changedDataInfo_t change;
 		change.agentID = agentID;
 

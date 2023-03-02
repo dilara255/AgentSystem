@@ -312,8 +312,11 @@ void calculateAndPrintMainTimingInfo(AS::timing_st timingMicros) {
 		std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
 	double durationSeconds = (double)durationMicro/MICROS_IN_A_SECOND;
 	
+	double secondsPaused = (double)timingMicros.timeSpentPaused.count()/MICROS_IN_A_SECOND;
+	double secondsUnpaused = durationSeconds - secondsPaused;
+
 	double averagaTimeMultiplier = timingMicros.accumulatedMultiplier*inverseOfTicks;
-	double msPerTick = (durationSeconds*inverseOfTicks)*MILLIS_IN_A_SECOND;
+	double msPerTick = (secondsUnpaused*inverseOfTicks)*MILLIS_IN_A_SECOND;
 	int64_t targetMicrosPerTick = timingMicros.targetStepTime.count();
 	double averageSnoozeMicros = timingMicros.totalSnoozedMicros*inverseOfTicks;
 	double hotMicrosPerTick = timingMicros.totalHotMicros*inverseOfTicks;
@@ -325,11 +328,14 @@ void calculateAndPrintMainTimingInfo(AS::timing_st timingMicros) {
 	double avgMicrosStep = timingMicros.totalMicrosStep*inverseOfTicks;
 	double avgMicrosDataTransfer = timingMicros.totalMicrosDataTransfer*inverseOfTicks;
 	double avglMicrosTimming = totalMicrosTimming*inverseOfTicks;
+	
 
 	LOG_INFO("MainLoop Timings:");
 
-	printf("Main Loop Ended: %llu ticks in %f seconds (%f ms/tick, target: %lld micros)\n", 
-		   timingMicros.ticks, durationSeconds, msPerTick, targetMicrosPerTick);
+	printf("Main Loop Ended: %llu ticks in %f seconds\n", 
+		   timingMicros.ticks, durationSeconds);
+	printf("Spent %f seconds paused (%f seconds unpaused): %f ms/tick (target: %lld micros)\n", 
+		                        secondsPaused, secondsUnpaused, msPerTick, targetMicrosPerTick);
 	printf("Averages (micro): sleep: %f (soozed: %f), time multiplier: %f, hot micros/tick: %f\n(%f %% target)\n",
 		   averageSleepMicros, averageSnoozeMicros, averagaTimeMultiplier, 
 		   hotMicrosPerTick, percentHot);
