@@ -6,8 +6,7 @@
 
 #include "data/mirrorDataControllers.hpp"
 
-//TODO: Copy the definitions here - and then take a shower :'(
-//(also, eventually understand how to export stuff with std containers)
+//TODO-CRITICAL: gets here are broken (not just not implemented, they cause LINK2019 errors)
 
 namespace CL {
 
@@ -46,6 +45,7 @@ namespace CL {
         return m_isInitialized;
     }
 
+    //TODO: BUG: NOT IMPLEMENTED AND BROKEN
     bool ActionMirrorController::getAction(int localOrGlobal, uint32_t actionID,
                                                         actionData_t* recepient) const {
         
@@ -53,6 +53,7 @@ namespace CL {
         return false;
     }
 
+    //TODO: BUG: NOT IMPLEMENTED AND BROKEN
     bool ActionMirrorController::getAgentData(int localOrGlobal, uint32_t agentID,
                                         int actionNumber, actionData_t* recepient) const {
 
@@ -60,6 +61,7 @@ namespace CL {
         return false;
     }
 
+    //TODO: BUG: NOT IMPLEMENTED AND BROKEN
     bool ColdDataControllerLA::getAgentData(uint32_t agentID, 
                                             LA::coldData_t* recepient) const {
         
@@ -67,6 +69,7 @@ namespace CL {
         return false;
     }
 
+    //TODO: BUG: NOT IMPLEMENTED AND BROKEN
     bool StateControllerLA::getAgentData(uint32_t agentID,
         LA::stateData_t* recepient) const {
 
@@ -74,6 +77,7 @@ namespace CL {
         return false;
     }
 
+    //TODO: BUG: NOT IMPLEMENTED AND BROKEN
     bool DecisionSystemLA::getAgentData(uint32_t agentID,
         LA::decisionData_t* recepient) const {
 
@@ -81,6 +85,7 @@ namespace CL {
         return false;
     }
 
+    //TODO: BUG: NOT IMPLEMENTED AND BROKEN
     bool ColdDataControllerGA::getAgentData(uint32_t agentID,
         GA::coldData_t* recepient) const {
 
@@ -88,6 +93,7 @@ namespace CL {
         return false;
     }
 
+    //TODO: BUG: NOT IMPLEMENTED AND BROKEN
     bool StateControllerGA::getAgentData(uint32_t agentID,
         GA::stateData_t* recepient) const {
 
@@ -95,6 +101,7 @@ namespace CL {
         return false;
     }
 
+    //TODO: BUG: NOT IMPLEMENTED AND BROKEN
     bool DecisionSystemGA::getAgentData(uint32_t agentID,
         GA::decisionData_t* recepient) const {
 

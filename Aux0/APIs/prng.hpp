@@ -7,6 +7,8 @@
 #define DEFAULT_PRNG_SEED1 (0x2545f4914f6cdd1d + 1595721457336359713)
 #define DEFAULT_PRNG_SEED2 (0x2545f4914f6cdd1d*3)
 #define DEFAULT_PRNG_SEED3 1595721457336359713
+#define DEFAULT_TICK_COUNT 0
+#define DEFAULT_TOTAL_MULTIPLIER 0
 
 #pragma warning(push) //pop at end of file
 #pragma warning(disable : 4244) //uint64_t to uint32_t conversion is intended

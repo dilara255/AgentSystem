@@ -9,6 +9,7 @@ static const char* fileNameNoDefaults = "testNetworkNoDefaults.txt";
 static const char* fileNameWithDefaults = "testNetworkWithDefaults.txt";
 static const char* customFilename = "TestFileCustomName.txt";
 static const char* updateTestFilename = fileNameWithDefaults;
+static const char* updateTestOutputFilename = "updateTestOut.txt";
 
 namespace AS {
 	AS_API void CLsanityTest();

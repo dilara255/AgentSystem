@@ -103,6 +103,7 @@ void AS::mainLoop() {
 	timingMicros.startLastStep = timingMicros.startThisStep;
 	timingMicros.startFirstStep = timingMicros.startThisStep;
 	timingMicros.endTimingAndSleep =  timingMicros.startThisStep; //for first iteration
+	timingMicros.accumulatedMultiplier = g_currentNetworkParams_ptr->accumulatedMultiplier;
 
 	//Actual loop:
 	do {
@@ -258,8 +259,9 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 
 	//update externally available step counting and timing information:
 	AS::g_currentNetworkParams_ptr->lastStepTimeMicros = 
-		       std::chrono::duration_cast<std::chrono::microseconds>(timing_ptr->startThisStep - timing_ptr->startLastStep);
-
+		       std::chrono::duration_cast<std::chrono::microseconds>(
+									timing_ptr->startThisStep - timing_ptr->startLastStep);
+	AS::g_currentNetworkParams_ptr->accumulatedMultiplier += timing_ptr->timeMultiplier;
 	AS::g_currentNetworkParams_ptr->mainLoopTicks++;
 
 	//Deals with pause (sleeps in cycles of half targetStepTime until unpaused)
@@ -485,7 +487,7 @@ bool AS::stop() {
 	LOG_TRACE("Waiting for main loop to finish execution...");
 	g_mainLoopThread_ptr->join();
 	*g_mainLoopId_ptr = std::thread::id();
-	LOG_INFO("Done.");
+	LOG_INFO("Main loop stopped.");
 
 	#if (defined AS_DEBUG) || VERBOSE_RELEASE
 		printf("\nRan for %llu ticks\n", g_currentNetworkParams_ptr->mainLoopTicks - 

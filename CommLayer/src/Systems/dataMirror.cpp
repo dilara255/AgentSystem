@@ -173,8 +173,6 @@ namespace CL {
 
 	bool DataMirrorSystem::receiveReplacementParams(const AS::networkParameters_t* params_cptr) {
 
-		//LOG_TRACE("Receiving new parameters");
-
 		data.networkParams.isNetworkInitialized = params_cptr->isNetworkInitialized;
 		if (!data.networkParams.isNetworkInitialized) {
 			LOG_WARN("Network being read says it wasnt initialized! Will proceed, but errors are to be expected");
@@ -213,8 +211,6 @@ namespace CL {
 
 	bool DataMirrorSystem::receiveReplacementAgentData(const CL::agentToMirrorVectorPtrs_t dataPtrs) {
 
-		//LOG_TRACE("Receiving new agent data...");
-
 		if (!data.agentMirrorPtrs.haveBeenCreated) {
 			LOG_ERROR("Can't receive agent Data before controllers are created!");
 			return false;
@@ -234,8 +230,6 @@ namespace CL {
 	}
 
 	bool DataMirrorSystem::receiveReplacementActionData(actionToMirrorVectorPtrs_t actionPtrs) {
-
-		//LOG_TRACE("Receiving new action data...");
 
 		if (!data.actionMirror.isInitialized()) {
 			LOG_ERROR("Can't receive action Data before controllers are initialized!");

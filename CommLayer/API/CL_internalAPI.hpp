@@ -22,8 +22,8 @@ namespace CL {
 		                         AS::ActionDataController* actionsRecepient_ptr,
 								 bool silent);
 
-	//TODO: rename, name should be from the perspective of the caller.
-	CL_API bool acceptReplacementData(const AS::networkParameters_t* params,
+	//Clears the old data and receives 
+	CL_API bool replaceMirrorData(const AS::networkParameters_t* params,
 							  const std::vector <AS::actionData_t>* actionsLAs_cptr,
 							  const std::vector <AS::actionData_t>* actionsGAs_cptr,
 							  const std::vector <LA::coldData_t>* coldDataLAs_cptr,

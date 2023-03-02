@@ -374,7 +374,7 @@ namespace CL::ClientData {
 			class LAresourcesHandler: public BaseSubHandler {
 			public:
 				//Blocks Client Data.
-				bool CL_API changeAll(uint32_t agentID, AS::resources_t* newValue_ptr);
+				bool CL_API changeAll(uint32_t agentID, AS::resources_t newValue);
 				
 				//Blocks Client Data.
 				bool CL_API changeCurrentTo(uint32_t agentID, float newValue);
@@ -402,7 +402,7 @@ namespace CL::ClientData {
 			class LAstrenghtHandler: public BaseSubHandler {
 			public:
 		
-				bool CL_API changeAll(uint32_t agentID, AS::strenght_t* newValue_ptr);
+				bool CL_API changeAll(uint32_t agentID, AS::strenght_t newValue);
 
 				bool CL_API changeCurrent(uint32_t agentID, float newValue);
 				bool CL_API changeCurrentUpkeep(uint32_t agentID, float newValue);
@@ -429,7 +429,7 @@ namespace CL::ClientData {
 
 		class LAparametersHandler: public BaseSubHandler {
 		public:
-			bool CL_API changeAll(uint32_t agentID, AS::LAparameters_t* newValue_ptr);
+			bool CL_API changeAll(uint32_t agentID, AS::LAparameters_t newValue);
 
 			LAresourcesHandler resources;
 			LAstrenghtHandler strenght;
@@ -587,7 +587,7 @@ namespace CL::ClientData {
 			class GAresourcesHandler: public BaseSubHandler {
 			public:
 
-				bool CL_API changeAll(uint32_t agentID, AS::resources_t* newValue_ptr);
+				bool CL_API changeAll(uint32_t agentID, AS::resources_t newValue);
 				
 				bool CL_API changeCurrent(uint32_t agentID, float newValue);
 				bool CL_API changeIncome(uint32_t agentID, float newValue);
@@ -610,7 +610,7 @@ namespace CL::ClientData {
 		class GAparametersHandler: public BaseSubHandler {
 		public:
 		
-			bool CL_API changeAll(uint32_t agentID, AS::GAparameterTotals_t* newValue_ptr);
+			bool CL_API changeAll(uint32_t agentID, AS::GAparameterTotals_t newValue);
 				
 			bool CL_API changeGAresources(uint32_t agentID, float newValue);
 			bool CL_API changeLAstrenghtTotal(uint32_t agentID, float newValue);
