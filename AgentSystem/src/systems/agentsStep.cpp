@@ -38,7 +38,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 		g_errorsCounter_ptr->incrementError(errors::AS_GA_STATE_PTR_NULL);
 	}
 
-	for (int i = 0; i < numberGAs; i++) {	
+	for (int i = 0; i < numberGAs; i++) {
 		updateGA(&GAstateData_ptr->at(i), i, dp, timeMultiplier, errorsCounter_ptr);
 	}
 	
@@ -139,6 +139,7 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 
 	//... and from trade:
 	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
+
 	for (int i = 0; i < quantityNeighbours; i++) {
 		int idOther = state_ptr->neighbourIDs[i];
 		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[idOther];
