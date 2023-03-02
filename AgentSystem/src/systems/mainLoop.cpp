@@ -265,8 +265,12 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 	AS::g_currentNetworkParams_ptr->mainLoopTicks++;
 
 	//Deals with pause (sleeps in cycles of half targetStepTime until unpaused)
+	bool hasPaused = false;
+	auto possiblePauseStartTime = std::chrono::steady_clock::now();
+
 	if(AS::g_shouldMainLoopBePaused){
 		AS::g_isMainLoopBePaused = true;
+		hasPaused = true;
 
 		auto pauseStartTime = std::chrono::steady_clock::now();
 		while (AS::g_shouldMainLoopBePaused) {
@@ -276,13 +280,17 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 		}
 		auto pauseEndTime = std::chrono::steady_clock::now();
 
-		auto timePaused = 
+		timing_ptr->timeSpentPaused +=
 			std::chrono::duration_cast<std::chrono::microseconds>(pauseEndTime - pauseStartTime);
-		timing_ptr->timeSpentPaused += timePaused;
-
-		timing_ptr->startThisStep = std::chrono::steady_clock::now();
 	}
 	AS::g_isMainLoopBePaused = false;
+
+	if (hasPaused) {
+		auto timeThisTickBeforePauseStarted = 
+										possiblePauseStartTime - timing_ptr->startThisStep;
+		timing_ptr->startThisStep = 
+						std::chrono::steady_clock::now() - timeThisTickBeforePauseStarted;
+	}
 }
 
 void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,

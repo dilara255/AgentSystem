@@ -121,6 +121,9 @@ and data sizes static.
 
 namespace AS {
 
+	//TODO-CRITICAL: WARNING: REFACTOR: this will be part of a DATA project
+	//Should then be a class, with copy/assignment constructor and etc
+	//FOR NOW: NOTE: any change here has to be reflected on dataMisc and dataMirror!
 	typedef struct {
 		bool isNetworkInitialized;
 		uint64_t mainLoopTicks;

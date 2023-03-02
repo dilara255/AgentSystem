@@ -702,6 +702,8 @@ namespace CL::ClientData {
 
 		bool hasInitialized() const { return m_initialized; }
 
+		void clearChanges() { m_changes.clear(); }
+
 		NetworkParameterDataHandler networkParameters;
 
 		LAcoldDataHandler LAcold;

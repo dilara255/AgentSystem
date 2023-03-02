@@ -209,18 +209,7 @@ bool testAgentsUpdating(bool print) {
 		return false;
 	}
 
-	//How long to wait for test to run?
-	int millisToRun = A_THOUSAND;
-	int targetTicksToRun = millisToRun/AS_MILLISECONDS_PER_STEP;
-	int microsToBusyWait = 50;
-	//Should try to sleep "target - 1" ticks, as the pause only happens at the end of the tick
-	int sleepMicros = (targetTicksToRun-1)*AS_MILLISECONDS_PER_STEP*MICROS_IN_A_MILLI;
-	
-	std::chrono::microseconds sleepTime(sleepMicros);
-	std::chrono::microseconds threshold(millisToRun);
-
 	//Let's change some values for the test. First and Last LA and GA will be tested.
-
 	int quantityGAs = CL::ASmirrorData_cptr->networkParams.numberGAs;
 	quantityGAs--; //last doesn't count
 	if (quantityGAs < 2) {
@@ -275,7 +264,17 @@ bool testAgentsUpdating(bool print) {
 	float startingResourcesFirstGA = gaState_ptr->at(0).parameters.GAresources;
 	float startingResourcesLastGA = gaState_ptr->at(quantityGAs - 1).parameters.GAresources;
 	
-	//And then run the test:
+	//How long to wait for test to run?
+	int millisToRun = A_THOUSAND;
+	int targetTicksToRun = millisToRun/AS_MILLISECONDS_PER_STEP;
+	int microsToBusyWait = 50;
+	//Should try to sleep "target - 1" ticks, as the pause only happens at the end of the tick
+	int sleepMicros = (targetTicksToRun-1)*AS_MILLISECONDS_PER_STEP*MICROS_IN_A_MILLI;
+	
+	std::chrono::microseconds sleepTime(sleepMicros);
+	std::chrono::microseconds threshold(A_THOUSAND);
+
+	//Now we can run the test:
 	result = AS::run();
 
 	AZ::hybridBusySleepForMicros(sleepTime, threshold);
@@ -300,7 +299,12 @@ bool testAgentsUpdating(bool print) {
 	ticksRan++;
 	double totalMultiplier = 
 				CL::ASmirrorData_cptr->networkParams.accumulatedMultiplier;
-	totalMultiplier *= ((double)ticksRan/(ticksRan - 1)); //for the same reason
+	//for the same reason:
+	double adjustedTotalMultiplier = totalMultiplier*((double)ticksRan/(ticksRan - 1)); 
+
+	if (millisToRun != ticksRan * AS_MILLISECONDS_PER_STEP) {
+		LOG_WARN("Didn't run the expected time/ticks. Will proceed, but may fail");
+	}
 
 	//Did anything change which shouldn't have changed?
 	if (gaState_ptr->at(0).connectedGAs.getField() != neighboursFirstGA.getField()) {
@@ -356,7 +360,8 @@ bool testAgentsUpdating(bool print) {
 	bool couldSave = AS::saveNetworkToFile(updateTestOutputFilename, true, false, true);
 
 	if (print) {
-		printf("Ran for %llu ticks, total multiplier: %f\n", ticksRan, totalMultiplier);
+		printf("Ran for %llu ticks, total multiplier: %f (adj: %f)\n", 
+			       ticksRan, totalMultiplier, adjustedTotalMultiplier);
 		printf("LA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f);\n\tstr: %f (guard: %f, thresh: %f)\n",
 			0,  laState_ptr->at(0).parameters.resources.current, startingResourcesFirstLA,
 			((double)laState_ptr->at(0).parameters.resources.current - startingResourcesFirstLA),
