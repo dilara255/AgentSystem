@@ -215,18 +215,21 @@ bool testAgentsUpdating(bool print) {
 	quantityGAs--; //last doesn't count
 	if (quantityGAs < 2) {
 		LOG_ERROR("Too few GAs for this test. Will abort");
+		AS::quit();
 		return false;
 	}
 
 	int quantityLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
 	if (quantityLAs < 2) {
 		LOG_ERROR("Too few LAs for this test. Will abort");
+		AS::quit();
 		return false;
 	}
 
 	auto clientData_ptr = CL::getClientDataHandlerPtr();
 	if (clientData_ptr == NULL) {
 		LOG_ERROR("Couldn't get client data handler. Will abort test");
+		AS::quit();
 		return false;
 	}
 
@@ -252,18 +255,11 @@ bool testAgentsUpdating(bool print) {
 		clientData_ptr->GAstate.changeConnectedGAs(i, &connectedGAs);
 	}
 
-
-
-	float externalGuardFirstLA = 182;
-	float externalGuardLastLA = 179;
-	float startingResourcesFirstLA = 0;
-	float startingResourcesLastLA = -10;
-
-	clientData_ptr->LAstate.parameters.strenght.changeGuard(0, 182);
+	float externalGuardFirstLA = 184;
+	float startingResourcesFirstLA = 10;
+	
+	clientData_ptr->LAstate.parameters.strenght.changeGuard(0, externalGuardFirstLA);
 	clientData_ptr->LAstate.parameters.resources.changeCurrentTo(0, 0);
-
-	clientData_ptr->LAstate.parameters.strenght.changeGuard(quantityLAs - 1, 179);
-	clientData_ptr->LAstate.parameters.resources.changeCurrentTo(quantityLAs - 1, -10);
 
 	auto laState_ptr = &CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data;
 	
@@ -302,6 +298,7 @@ bool testAgentsUpdating(bool print) {
 
 	if (!result) { //we didn't check earlier to try and keep things in synch
 		LOG_ERROR("Failed to run test network. Aborting test");
+		AS::quit();
 		return false;
 	}
 	
@@ -326,17 +323,18 @@ bool testAgentsUpdating(bool print) {
 
 	//Did anything change which shouldn't have changed?
 	if (gaState_ptr->at(0).connectedGAs.getField() != neighboursFirstGA.getField()) {
-		LOG_ERROR("Unexpected changes happened, maybe through actions or decisions. Will fail.");
+		LOG_ERROR("Unexpected changes happened TO GA0, maybe through actions or decisions. Will fail.");
+		AS::quit();
 		return false;
 	}
 
 	if (gaState_ptr->at(quantityGAs - 1).connectedGAs.getField() != neighboursLastGA.getField()) {
-		LOG_ERROR("Unexpected changes happened, maybe through actions or decisions. Will fail.");
+		LOG_ERROR("Unexpected changes happened to last GA, maybe through actions or decisions. Will fail.");
+		AS::quit();
 		return false;
 	}
 
 	bool changed = laState_ptr->at(0).parameters.strenght.externalGuard != externalGuardFirstLA;
-	changed |= laState_ptr->at(quantityLAs - 1).parameters.strenght.externalGuard != externalGuardLastLA;
 	changed |= incomeFirstLA !=  laState_ptr->at(0).parameters.resources.updateRate;
 	changed |= incomeLastLA != laState_ptr->at(quantityLAs - 1).parameters.resources.updateRate;
 	changed |= strenghtFirstLA !=  laState_ptr->at(0).parameters.strenght.current;
@@ -345,52 +343,118 @@ bool testAgentsUpdating(bool print) {
 	changed |= thresholdLastLA != laState_ptr->at(quantityLAs - 1).parameters.strenght.thresholdToCostUpkeep;
 
 	if (changed) {
-		LOG_ERROR("Unexpected changes happened, maybe through actions or decisions. Will fail.");
+		LOG_ERROR("Unexpected changes happened to LAs, maybe through actions or decisions. Will fail.");
+		AS::quit();
 		return false;
 	}
 
 	//TODO: Check that diplomatic relations haven't changed either
 		
-	//Finally, we check the results:	
+	//Now we calculate the expected results:
+
+	//Since everyone is trading with the same number of neighbours:
+	float LAtradeCoeficient = 1.0f/(MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT); 
+
+	float defaultUpkeep = 0;
+	float defaultIncome = DEFAULT_LA_INCOME - defaultUpkeep;
+
+	float expectedTradeFirstLA = defaultIncome*TRADE_FACTOR_PER_SECOND*adjustedTotalMultiplier;
+
+	float effectiveArmyCostFirstLA = 
+		DEFAULT_LA_STRENGHT + EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED*externalGuardFirstLA;
+	float expectedUpkeepFirstLA = LA_UPKEEP_PER_EXCESS_STRENGHT *
+		(effectiveArmyCostFirstLA - DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
+	expectedUpkeepFirstLA = std::max(0.0f, expectedUpkeepFirstLA);
+	float expectedLiquidFirstLA = defaultIncome - expectedUpkeepFirstLA;
+	float expectedTotalIncomeFirstLAMinusTrade = expectedLiquidFirstLA*adjustedTotalMultiplier;
+
+	float expectedTotalResourcesFirstLA = startingResourcesFirstLA +
+						expectedTradeFirstLA + expectedTotalIncomeFirstLAMinusTrade;
+	float expectedTaxesFirstLA = GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
+		                  * (expectedTotalResourcesFirstLA + startingResourcesFirstLA)/2;
+	expectedTotalResourcesFirstLA -= expectedTaxesFirstLA; 
+
+	float tradeFromFirstLA = TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
+		                     * LAtradeCoeficient * expectedLiquidFirstLA;
+	float tradeFromOtherLAs = TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
+		                     * LAtradeCoeficient * defaultIncome;
+	int quantityOtherLAs = (MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT) - 1;
+
+	float expectedTradeLastLA = quantityOtherLAs*tradeFromOtherLAs + tradeFromFirstLA;
+	float expectedTotalIncomeLastLAMinusTrade = defaultIncome*adjustedTotalMultiplier;
+	float expectedTotalResourcesLastLA = DEFAULT_LA_RESOURCES + 
+							expectedTotalIncomeLastLAMinusTrade + expectedTradeLastLA;
+	float expectedTaxesLastLA = GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
+		                  * (expectedTotalResourcesLastLA + DEFAULT_LA_RESOURCES)/2;
+	expectedTotalResourcesLastLA -= expectedTaxesLastLA; 
+	      
 	float incomeFirstGA = 0;
 	float incomeLastGA = 0;
-	float expectedTradeLastGA = 0;
 	float expectedTradeFirstGA = 0;
+	float expectedTradeLastGA = 0;
+
 	float expectedTotalResourcesFirstGA = 0;
-	float expectedTotalResourcesLastGA = 0;
+	float expectedTotalResourcesLastGA = 0;	
 	
-	float epsGA = 0;
+	//And finally check them:
+	float epsLA = 0.1f;
+	bool aux;
+	aux = (fabs(expectedTotalResourcesFirstLA - laState_ptr->at(0).parameters.resources.current) <= epsLA);
+	if(!aux){ 
+		LOG_ERROR("First LA doesn't match expected"); 
+		if (print) {
+			printf("Expected: %f, Read: %f\n", expectedTotalResourcesFirstLA,
+				laState_ptr->at(0).parameters.resources.current);
+		}
+	}
+	result &= aux;
+	aux = (fabs(expectedTotalResourcesLastLA - laState_ptr->at(quantityLAs - 1).parameters.resources.current) <= epsLA);	
+	if(!aux){ 
+		LOG_ERROR("Last LA doesn't match expected"); 
+		if (print) {
+			printf("Expected: %f, Read: %f\n", expectedTotalResourcesLastLA,
+				laState_ptr->at(quantityLAs - 1).parameters.resources.current);
+		}
+	}
+	result &= aux;
 
-	result &= (fabs(expectedTotalResourcesFirstGA -  gaState_ptr->at(0).parameters.GAresources) <= epsGA);
-	result &= (fabs(expectedTotalResourcesLastGA - gaState_ptr->at(quantityGAs - 1).parameters.GAresources) <= epsGA);
-
-	float expectedTradeFirstLA = 0;
-	float expectedTradeLastLA = 0;
-	float expectedTotalResourcesFirstLA = 0;
-	float expectedTotalResourcesLastLA = 0;
-
-	float epsLA = 0;
+	float epsGA = 0.1f;
+	aux = (fabs(expectedTotalResourcesFirstGA -  gaState_ptr->at(0).parameters.GAresources) <= epsGA);
+	if(!aux){ 
+		LOG_ERROR("First GA doesn't match expected"); 
+		if (print) {
+			printf("Expected: %f, Read: %f\n", expectedTotalResourcesFirstGA,
+				gaState_ptr->at(0).parameters.GAresources);
+		}
+	}
+	result &= aux;
+	aux = (fabs(expectedTotalResourcesLastGA - gaState_ptr->at(quantityGAs - 1).parameters.GAresources) <= epsGA);	
+	if(!aux){ 
+		LOG_ERROR("Last GA doesn't match expected"); 
+		if (print) {
+			printf("Expected: %f, Read: %f\n", expectedTotalResourcesLastGA,
+				gaState_ptr->at(quantityGAs - 1).parameters.GAresources);
+		}
+	}
+	result &= aux;
 	
-	result &= (fabs(expectedTotalResourcesFirstLA - laState_ptr->at(0).parameters.resources.current) <= epsLA);
-	result &= (fabs(expectedTotalResourcesLastLA - laState_ptr->at(quantityLAs - 1).parameters.resources.current) <= epsLA);
-	
-	//And then save and show reults and wrap things up:
+	//And then save and show the results and wrap things up:
 	bool couldSave = AS::saveNetworkToFile(updateTestOutputFilename, true, false, true);
 
 	if (print) {
 		printf("Ran for %llu ticks, total multiplier: %f (adj: %f)\n", 
 			       ticksRan, totalMultiplier, adjustedTotalMultiplier);
-		printf("LA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f);\n\tstr: %f (guard: %f, thresh: %f)\n",
+		printf("LA %d: curr: %f (starting: %f, diff: %f);\nExpected: total liquid income: %f, total trade: %f, total taxes: %f;\n\tstr: %f (guard: %f, thresh: %f)\n",
 			0,  laState_ptr->at(0).parameters.resources.current, startingResourcesFirstLA,
 			((double)laState_ptr->at(0).parameters.resources.current - startingResourcesFirstLA),
-			laState_ptr->at(0).parameters.resources.updateRate, expectedTradeFirstLA,
+			expectedTotalIncomeFirstLAMinusTrade, expectedTradeFirstLA, expectedTaxesFirstLA,
 			laState_ptr->at(0).parameters.strenght.current, 
 			laState_ptr->at(0).parameters.strenght.externalGuard,
 			laState_ptr->at(0).parameters.strenght.thresholdToCostUpkeep);
-		printf("LA %d: curr: %f (starting: %f, diff: %f, income: %f, expected trade: %f);\n\tstr: %f (guard: %f, thresh: %f)\n",
-			(quantityLAs - 1),  laState_ptr->at(quantityLAs - 1).parameters.resources.current, startingResourcesLastLA,
-			((double)laState_ptr->at(quantityLAs - 1).parameters.resources.current - startingResourcesLastLA),
-			laState_ptr->at(quantityLAs - 1).parameters.resources.updateRate, expectedTradeLastLA,
+		printf("LA %d: curr: %f (starting: %f, diff: %f);\nExpected: total liquid income: %f, total trade: %f, total taxes: %f;\n\tstr: %f (guard: %f, thresh: %f)\n",
+			(quantityLAs - 1),  laState_ptr->at(quantityLAs - 1).parameters.resources.current, DEFAULT_LA_RESOURCES,
+			((double)laState_ptr->at(quantityLAs - 1).parameters.resources.current - DEFAULT_LA_RESOURCES),
+			expectedTotalIncomeLastLAMinusTrade, expectedTradeLastLA, expectedTaxesLastLA,
 			laState_ptr->at(quantityLAs - 1).parameters.strenght.current, 
 			laState_ptr->at(quantityLAs - 1).parameters.strenght.externalGuard,
 			laState_ptr->at(quantityLAs - 1).parameters.strenght.thresholdToCostUpkeep);
@@ -408,7 +472,7 @@ bool testAgentsUpdating(bool print) {
 		LOG_ERROR("Final results don't match expected. Test failed");
 	}
 
-	bool aux = AS::quit();
+	aux = AS::quit();
 	if (!aux) {
 		LOG_ERROR("Failed to quit test network or main loop found errors. Aborting test");
 		return false;
