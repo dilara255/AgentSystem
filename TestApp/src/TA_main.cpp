@@ -246,6 +246,13 @@ bool testAgentsUpdating(bool print) {
 		data_ptr->connectedGAs.setBitOff(quantityGAs - 1);
 		data_ptr->connectedGAs.setBitOn(0);
 	}
+	for (int i = 1; i < (quantityGAs - 1); i++) {
+		auto data_ptr = &CL::ASmirrorData_cptr->agentMirrorPtrs.GAstate_ptr->data.at(i);
+		auto connectedGAs = data_ptr->connectedGAs;
+		clientData_ptr->GAstate.changeConnectedGAs(i, &connectedGAs);
+	}
+
+
 
 	float externalGuardFirstLA = 182;
 	float externalGuardLastLA = 179;

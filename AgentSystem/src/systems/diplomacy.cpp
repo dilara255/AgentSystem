@@ -68,8 +68,7 @@ float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 	float agentsShare = (float)AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
 	if(tradeSaturation == 0) {
 		errorsCounter_ptr->incrementWarning(AS::warnings::DP_GA_TRADE_PARTNER_HAS_ZERO_SAT);
-		//printf("PARTNER: %d\n", partnerID);
-		//agentsShare = 0; 
+		agentsShare = 0; 
 	}
 
 	return agentsShare*totalPartnerTradeValue;
