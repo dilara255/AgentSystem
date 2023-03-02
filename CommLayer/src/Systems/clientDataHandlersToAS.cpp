@@ -607,7 +607,36 @@ namespace CL {
 
 		uint32_t newConnections = m_data_ptr->data.at(agentID).connectedGAs.getField();
 
+		int connected = m_data_ptr->data.at(agentID).connectedGAs.howManyAreOn();
+		if (connected > MAX_GA_QUANTITY) {
+			LOG_ERROR("GA receiving data with too many connections: will ignore");
+			return false;
+		}
+
+		//stuff seems ok:
 		agentData_ptr->connectedGAs.loadField(newConnections);
+		
+		//Make sure the neighbours IDs are updated as well
+		//TODO (refactor): have a function to load field and update this as part of the DATA
+		int idToTry = 0;
+		for (int i = 0; i < agentData_ptr->connectedGAs.howManyAreOn(); i++) {
+			bool foundConnection = agentData_ptr->connectedGAs.isBitOn(idToTry);
+			while (!foundConnection) {
+				idToTry++;
+				if (idToTry > MAX_GA_QUANTITY) {
+					LOG_ERROR("Couldn't find all neighbors: strange stuff may happen");
+					return false;
+				}
+				foundConnection = agentData_ptr->connectedGAs.isBitOn(idToTry);
+			}
+
+			agentData_ptr->neighbourIDs[i] = idToTry;
+			idToTry++;
+			if (idToTry > MAX_GA_QUANTITY) {
+				LOG_ERROR("Couldn't find all neighbors: strange stuff may happen");
+				return false;
+			}
+		}		
 
 		return true;
 	}

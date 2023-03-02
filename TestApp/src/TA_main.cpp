@@ -230,15 +230,22 @@ bool testAgentsUpdating(bool print) {
 		return false;
 	}
 
+	AS::GAflagField_t neighboursLastGA; //none will be on: no trade
 	AS::GAflagField_t neighboursFirstGA;
-	uint32_t flagField = (uint32_t)pow(2,quantityGAs) - 1; //All on
+	uint32_t flagField = (uint32_t)pow(2,(quantityGAs - 1)) - 1; //All on, but last
 	flagField--; //turn off first, since this will be used for the first GA
 	neighboursFirstGA.loadField(flagField);
 
-	AS::GAflagField_t neighboursLastGA; //empty
-
 	clientData_ptr->GAstate.changeConnectedGAs(0, &neighboursFirstGA);
 	clientData_ptr->GAstate.changeConnectedGAs(quantityGAs-1, &neighboursLastGA);
+
+	//Other GAs can't be neighbour of last either (no need to change IDs since it's the last),
+	//but must be of first (nieghbor IDs are set when data is sent):
+	for (int i = 1; i < (quantityGAs - 1); i++) {
+		auto data_ptr = &CL::ASmirrorData_cptr->agentMirrorPtrs.GAstate_ptr->data.at(i);
+		data_ptr->connectedGAs.setBitOff(quantityGAs - 1);
+		data_ptr->connectedGAs.setBitOn(0);
+	}
 
 	float externalGuardFirstLA = 182;
 	float externalGuardLastLA = 179;

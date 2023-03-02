@@ -143,23 +143,10 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 		int idOther = state_ptr->neighbourIDs[i];
 		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[idOther];
 
-		if (param_ptr->GAresources > 99999999) {
-			LOG_CRITICAL("AAAAAAAAAAAAARGHH");
-			printf("GA: %d. Curr: %f, neigh: %d, stance: %d\n", 
-				agentId, param_ptr->GAresources, idOther, stance);
-			getchar();
-		}
-
 		if ((stance == AS::diploStance::TRADE) ||
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 			param_ptr->GAresources += 
 				GA::calculateTradeIncomePerSecond(idOther, stance, dp, errorsCounter_ptr)*timeMultiplier;
-		}
-		if (param_ptr->GAresources > 99999999) {
-			LOG_CRITICAL("AAAAAAAAAAAAAR");
-			printf("GA: %d. Curr: %f, neigh: %d, stance: %d\n", 
-				agentId, param_ptr->GAresources, idOther, stance);
-			getchar();
 		}
 	}
 }
