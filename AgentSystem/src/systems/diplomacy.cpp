@@ -7,7 +7,8 @@
 //That gets divided between partners and also goes down in case of war
 //NOTE: can be negative when partner is in debt!
 float LA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStance,
-				                        AS::dataControllerPointers_t* agentDataPtrs_ptr) {
+				                        AS::dataControllerPointers_t* agentDataPtrs_ptr,
+	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
  
 	LA::stateData_t partner = agentDataPtrs_ptr->LAstate_ptr->getDirectDataPtr()->at(partnerID);
 	float totalPartnerTradeValue = (float)(partner.parameters.resources.current*TRADE_FACTOR_PER_SECOND);
@@ -23,6 +24,10 @@ float LA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 
 	//each neighbour gets a share depending on their diplomatic stance:
 	float agentsShare = (float)AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
+	if(tradeSaturation == 0) {
+		errorsCounter_ptr->incrementWarning(AS::warnings::DP_LA_TRADE_PARTNER_HAS_ZERO_SAT);
+		agentsShare = 0; 
+	}
 
 	return agentsShare*totalPartnerTradeValue;
 }
@@ -43,7 +48,8 @@ float LA::calculateAttritionLossesPerSecond(int agentId1, int agentId2,
 //That gets divided between partners and also goes down in case of war
 //NOTE: can be negative when partner is in debt!
 float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStance,
-		                                AS::dataControllerPointers_t* agentDataPtrs_ptr) { 
+		                                AS::dataControllerPointers_t* agentDataPtrs_ptr,
+	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) { 
 
 	GA::stateData_t partner = agentDataPtrs_ptr->GAstate_ptr->getDirectDataPtr()->at(partnerID);
 	float totalPartnerTradeValue = (float)(partner.parameters.GAresources*TRADE_FACTOR_PER_SECOND);
@@ -60,6 +66,17 @@ float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 
 	//each neighbour gets a share depending on their diplomatic stance:
 	float agentsShare = (float)AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
+	if(tradeSaturation == 0) {
+		errorsCounter_ptr->incrementWarning(AS::warnings::DP_GA_TRADE_PARTNER_HAS_ZERO_SAT);
+		agentsShare = 0; 
+	}
+
+	if (agentsShare*totalPartnerTradeValue > 99999999) {
+		LOG_CRITICAL("AAAAAAAAAAAAARFFADGA");
+		printf("tradeSaturation: %d. agentsShare: %f. totalPartnerTradeValue: %f\n", 
+			tradeSaturation, agentsShare, totalPartnerTradeValue);
+		getchar();
+	}
 
 	return agentsShare*totalPartnerTradeValue;
 }

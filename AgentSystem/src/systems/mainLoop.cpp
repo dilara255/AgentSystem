@@ -503,7 +503,7 @@ bool AS::stop() {
 	#endif
 		
 	if (g_warnings) {
-		LOG_WARN("Main Loop emitte warnings...");
+		LOG_WARN("Main Loop emitted warnings...");
 		#if (defined AS_DEBUG) || VERBOSE_RELEASE
 			printf("\t%d warnings\n", g_warnings);
 		#endif
