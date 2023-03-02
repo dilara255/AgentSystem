@@ -6,9 +6,11 @@ namespace {
 	static AS::WarningsAndErrorsCounter* g_errorsCounter_ptr;
 
 	void updateLA(LA::stateData_t* state_ptr, int agentId, 
-				  AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier);
+				  AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier,
+		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 	void updateGA(GA::stateData_t* state_ptr, int agentId, 
-				  AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier);
+				  AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier,
+		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
 	void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 	void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
@@ -28,7 +30,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	}
 	
 	for (int i = 0; i < numberLAs; i++) {	
-		updateLA(&LAstateData_ptr->at(i), i, dp, timeMultiplier);
+		updateLA(&LAstateData_ptr->at(i), i, dp, timeMultiplier, errorsCounter_ptr);
 	}
 
 	auto GAstateData_ptr = dp->GAstate_ptr->getDirectDataPtr();
@@ -37,7 +39,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	}
 
 	for (int i = 0; i < numberGAs; i++) {	
-		updateGA(&GAstateData_ptr->at(i), i, dp, timeMultiplier);
+		updateGA(&GAstateData_ptr->at(i), i, dp, timeMultiplier, errorsCounter_ptr);
 	}
 	
 	//Make decisions:
@@ -60,7 +62,8 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 namespace {
 void updateLA(LA::stateData_t* state_ptr, int agentId, 
-	          AS::dataControllerPointers_t* dp, float timeMultiplier) {
+	          AS::dataControllerPointers_t* dp, float timeMultiplier,
+	                 AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
 	if (state_ptr->onOff == false) {
 		return;
@@ -88,7 +91,7 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
 			res_ptr->current += 
-				LA::calculateTradeIncomePerSecond(partnerID, stance, dp)*timeMultiplier;
+				LA::calculateTradeIncomePerSecond(partnerID, stance, dp, errorsCounter_ptr)*timeMultiplier;
 		}
 
 		if ((stance == AS::diploStance::WAR)) {
@@ -103,13 +106,14 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 }
 
 void updateGA(GA::stateData_t* state_ptr, int agentId, 
-	          AS::dataControllerPointers_t* dp, float timeMultiplier) {
+	          AS::dataControllerPointers_t* dp, float timeMultiplier,
+	                 AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 	if (state_ptr->onOff == false) {
 		return;
 	}
 
-	//Update totals
+	//Update LA totals
 	int connectedLAs = state_ptr->localAgentsBelongingToThis.howManyAreOn();
 	auto param_ptr = &state_ptr->parameters;
 	param_ptr->LAesourceTotals.current = 0;
@@ -128,21 +132,34 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 			LAstates_cptr->at(id).parameters.strenght.current;
 	}
 	
-	//Get resoures:
+	//Get resoures from tax...
 	float taxIncome = (float)GA_TAX_RATE_PER_SECOND*state_ptr->parameters.LAesourceTotals.current;
 	
 	param_ptr->GAresources += taxIncome*timeMultiplier;
 
-	//from trade:
+	//... and from trade:
 	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
 	for (int i = 0; i < quantityNeighbours; i++) {
 		int idOther = state_ptr->neighbourIDs[i];
 		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[idOther];
 
+		if (param_ptr->GAresources > 99999999) {
+			LOG_CRITICAL("AAAAAAAAAAAAARGHH");
+			printf("GA: %d. Curr: %f, neigh: %d, stance: %d\n", 
+				agentId, param_ptr->GAresources, idOther, stance);
+			getchar();
+		}
+
 		if ((stance == AS::diploStance::TRADE) ||
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 			param_ptr->GAresources += 
-				GA::calculateTradeIncomePerSecond(idOther, stance, dp)*timeMultiplier;
+				GA::calculateTradeIncomePerSecond(idOther, stance, dp, errorsCounter_ptr)*timeMultiplier;
+		}
+		if (param_ptr->GAresources > 99999999) {
+			LOG_CRITICAL("AAAAAAAAAAAAAR");
+			printf("GA: %d. Curr: %f, neigh: %d, stance: %d\n", 
+				agentId, param_ptr->GAresources, idOther, stance);
+			getchar();
 		}
 	}
 }

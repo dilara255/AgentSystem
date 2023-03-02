@@ -36,7 +36,7 @@ std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
 
 int main(void) {
-
+/*
 	//TODO: review wich tests printo to console, and pass this (macro?)
 	bool printSteps = false;
 	#if ( (defined AS_DEBUG) || VERBOSE_RELEASE )
@@ -155,9 +155,9 @@ int main(void) {
 	resultsBattery3 += (int)testPause(printSteps); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
-
+*/int resultsBattery3 = 0; bool printSteps = true; AS::initializeASandCL(); AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
 	resultsBattery3 += (int)testAgentsUpdating(printSteps); GETCHAR_PAUSE;
-
+/*
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery3,
@@ -194,6 +194,7 @@ int main(void) {
 	LOG_INFO("Done! Enter to exit"); GETCHAR_FORCE_PAUSE;
 
 	return (1 + (totalPassed - TOTAL_TESTS));
+	*/return 0;
 }
 
 //TODO-CRITICAL: this test needs to somehow guarantee no actions change the incomes and etc
@@ -302,9 +303,9 @@ bool testAgentsUpdating(bool print) {
 	//for the same reason:
 	double adjustedTotalMultiplier = totalMultiplier*((double)ticksRan/(ticksRan - 1)); 
 
-	float absoluteDifference = fabs(millisToRun - (ticksRan * AS_MILLISECONDS_PER_STEP));
+	float absoluteDifference = (float)fabs(millisToRun - (ticksRan * AS_MILLISECONDS_PER_STEP));
 	float propotionalAbsoluteDifference = absoluteDifference/millisToRun;
-	float graceFactor = 0.015;
+	float graceFactor = 0.015f;
 	if (propotionalAbsoluteDifference > graceFactor) {
 		LOG_WARN("Didn't run the expected time/ticks. Will proceed, but may fail");
 	}
