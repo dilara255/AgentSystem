@@ -26,9 +26,7 @@ namespace AS {
 							 networkParameters_t* currentNetworkParams_ptr,
 	                         AS::PRNserver* prnServer_ptr);
 	bool sendReplacementDataToCL(bool silent);
-	bool run();
-	bool stop();
-	void mainLoop();
+	void mainLoop(bool fixedTimeStep = false);
 
 	class PRNserver;
 	void stepActions(ActionSystem* actionSystem_ptr, 

@@ -5,7 +5,7 @@
 //- TODO: Deal with minor 4 and then get back;
 //- TODO-CRITICAL: Test pointer-math transfer idea;
 //- TODO-CRITICAL: All Methods which are already stubbed or equivalent (depending on test above);
-//- TO DO LATER:
+//- TODO LATER:
 //-- Relative methods were they'd make sense (addition and multiplication);
 //-- Methods for "all agents" (including for  "entire structure");
 */

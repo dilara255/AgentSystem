@@ -164,9 +164,11 @@ namespace LA {
 		AS::LApersonalityAndGAinfluence_t offsets;
 
 		//TODO: -A list of the expected values, for each neighbor, of:
-		//resources, income, strenght, diplomacyand relations to this LA.
+		//resources, income, strenght and relation to this LA.
 			
-		//TO DO : -Desires, Impediments and Potential Actions Data;
+		//TODO : -Desires, Impediments and Potential Actions Data;
+		//TODO: Substitute for the concept of Notions;
+		//Maybe on notions use abs(infiltration) as "low"/"high": -1 believes is 1;
 
 		enum class fields { INFILTRATION, OFFSETS,
 			                TOTAL_GA_DECISION_FIELDS };
@@ -201,9 +203,11 @@ namespace GA {
 		AS::GApersonality personality;
 
 		//TODO: -A list of the expected values, for each neighbor, of:
-		//GA resources, totals, diplomacy and relations.
+		//GA resources, totals and relation to this AI.
 
-		//TO DO : -Desires, Impediments and Potential Actions Data;
+		//TODO: -Desires, Impediments and Potential Actions Data;
+		//TODO: Substitute for the concept of Notions;
+		//Maybe on notions use abs(infiltration) as "low"/"high": -1 believes is 1;
 
 		enum class fields { INFILTRATION, PERSONALITY,
 			                TOTAL_LA_DECISION_FIELDS };
