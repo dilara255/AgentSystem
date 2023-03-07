@@ -154,6 +154,7 @@
 * ***** Minor 5. Tooling: inspection *****
 *
 * Implement some tooling to inspect the system.
+* Client inuput limit by whats already implemented (focus on reading/output)
 *
 * Cleanup, documentation, and fresh pull+compile test
 *
@@ -165,6 +166,7 @@
 * 
 * - Any groundwork still necessary before focusing on behaviour;
 * --Especially action-related;
+* -- Also complete 3.2.c-e for a few more of the most relevant fields and update tooling;
 *
 * ***** Minor 7. Basic decision making and actions *****
 *

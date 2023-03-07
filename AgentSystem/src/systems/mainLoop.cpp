@@ -66,7 +66,7 @@ namespace AS{
 void prepareStep(AS::chopControl_st* chopControl_ptr);
 void step(AS::chopControl_st chopControl, float timeMultiplier);
 void receiveAndSendData();
-void timeAndSleep(AS::timing_st* timing_ptr);
+void timeAndSleep(AS::timing_st* timing_ptr, bool fixedTimeStep);
 
 int getTotalPRNsToDraw(int numberLAs, int numberGAs);
 int howManyDecisionsThisChop(int chopIndex, int* decisionsMade_ptr, int numberAgents);
@@ -84,7 +84,7 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 							 networkParameters_t* currentNetworkParams_ptr,
 	                         AS::PRNserver* prnServer_ptr);
 
-void AS::mainLoop() {
+void AS::mainLoop(bool fixedTimeStep) {
 	//setup:
 	uint64_t minimumTicksPerErrorDisplay = 
 		(SECONDS_PER_ERROR_DISPLAY*MILLIS_IN_A_SECOND)/AS_MILLISECONDS_PER_STEP;
@@ -119,7 +119,7 @@ void AS::mainLoop() {
 		timeOperation(timingMicros.endStep, &timingMicros.endDataTransfer,
 			                        &timingMicros.totalMicrosDataTransfer);
 
-		timeAndSleep(&timingMicros);
+		timeAndSleep(&timingMicros, fixedTimeStep);
 		timeOperation(timingMicros.endDataTransfer, &timingMicros.endTimingAndSleep,
 			                                &timingMicros.totalMicrosTimmingAndSleep);
 
@@ -199,7 +199,7 @@ void receiveAndSendData() {
 		}		
 }
 
-void timeAndSleep(AS::timing_st* timing_ptr) {
+void timeAndSleep(AS::timing_st* timing_ptr, bool fixedTimeStep) {
 	
 	timing_ptr->startLastStep = timing_ptr->startThisStep;
 
@@ -247,14 +247,19 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 	double lastStepDurationMicros =
 			  (double)(std::chrono::duration_cast<std::chrono::microseconds>(lastStepDuration).count());
 	
-	double targetStepTimeMicros = (double)timing_ptr->targetStepTime.count();
-	double proportionalDurationError = lastStepDurationMicros/targetStepTimeMicros;
-
-	if (proportionalDurationError > MAX_PROPORTIONAL_STEP_DURATION_ERROR) {
-		lastStepDurationMicros = targetStepTimeMicros*MAX_PROPORTIONAL_STEP_DURATION_ERROR;
+	//NOTE: the multiplier is bounded to a maximum proportion of the expected multiplier,
+	//but the step duration is not changed: 
+	//in case of severe lag, total duration and total multiplier can diverge
+	float targetMultiplier = (float)timing_ptr->targetStepTime.count();
+	if(fixedTimeStep){
+		timing_ptr->timeMultiplier = targetMultiplier;
+	}
+	else {
+		timing_ptr->timeMultiplier = (float)lastStepDurationMicros/MICROS_IN_A_SECOND;
+		float maxMultiplier = targetMultiplier * MAX_PROPORTIONAL_STEP_DURATION_ERROR;
+		timing_ptr->timeMultiplier = std::min(timing_ptr->timeMultiplier, maxMultiplier);
 	}
 
-	timing_ptr->timeMultiplier = (float)lastStepDurationMicros/MICROS_IN_A_SECOND;
 	timing_ptr->accumulatedMultiplier += timing_ptr->timeMultiplier;
 
 	//update externally available step counting and timing information:
@@ -285,6 +290,9 @@ void timeAndSleep(AS::timing_st* timing_ptr) {
 	}
 	AS::g_isMainLoopBePaused = false;
 
+	//If a pause happened, we should reset the step start timem so it doesn't run long.
+	//Some time will have actually passed between the current start time and the pause.
+	//So we set the new start time to that much time before now.
 	if (hasPaused) {
 		auto timeThisTickBeforePauseStarted = 
 										possiblePauseStartTime - timing_ptr->startThisStep;
@@ -437,7 +445,7 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 	return true;
 }
 
-bool AS::run() {
+bool AS::run(bool fixedTimeStep) {
 	LOG_TRACE("Starting Main Loop Thread...");
 	
 	if (*g_shouldMainLoopBeRunning_ptr) {
@@ -470,7 +478,7 @@ bool AS::run() {
 	g_shouldMainLoopBePaused = false;
 	g_currentNetworkParams_ptr->lastMainLoopStartingTick = 
 												g_currentNetworkParams_ptr->mainLoopTicks;
-	*g_mainLoopThread_ptr = std::thread(mainLoop);
+	*g_mainLoopThread_ptr = std::thread(mainLoop, fixedTimeStep);
 	*g_mainLoopId_ptr = g_mainLoopThread_ptr->get_id();
 
 	LOG_INFO("Started main loop on new thread");
