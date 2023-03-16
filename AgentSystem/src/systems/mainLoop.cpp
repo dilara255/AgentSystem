@@ -22,7 +22,9 @@
 namespace AS{
 	bool* g_shouldMainLoopBeRunning_ptr;
 	bool g_shouldMainLoopBePaused = false;
-	bool g_isMainLoopBePaused = false;
+	bool g_isMainLoopPaused = false;
+	bool g_isStepping = false;
+	int g_stepsRemaining = 0;
 	std::thread::id* g_mainLoopId_ptr;
 	std::thread* g_mainLoopThread_ptr;
 	AS::PRNserver* g_prnServer_ptr;
@@ -199,6 +201,7 @@ void receiveAndSendData() {
 		}		
 }
 
+//TODO: should rename? This times and sleeps but also deals with pausing and stepping
 void timeAndSleep(AS::timing_st* timing_ptr, bool fixedTimeStep) {
 	
 	timing_ptr->startLastStep = timing_ptr->startThisStep;
@@ -269,12 +272,22 @@ void timeAndSleep(AS::timing_st* timing_ptr, bool fixedTimeStep) {
 	AS::g_currentNetworkParams_ptr->accumulatedMultiplier += timing_ptr->timeMultiplier;
 	AS::g_currentNetworkParams_ptr->mainLoopTicks++;
 
+	//Deals with cycle stepping:
+	if(AS::g_isStepping){
+		AS::g_stepsRemaining--;
+
+		if(AS::g_stepsRemaining <= 0) {
+			AS::g_isStepping = false; 
+			AS::pauseMainLoop(); 
+		}
+	}
+
 	//Deals with pause (sleeps in cycles of half targetStepTime until unpaused)
 	bool hasPaused = false;
 	auto possiblePauseStartTime = std::chrono::steady_clock::now();
 
 	if(AS::g_shouldMainLoopBePaused){
-		AS::g_isMainLoopBePaused = true;
+		AS::g_isMainLoopPaused = true;
 		hasPaused = true;
 
 		auto pauseStartTime = std::chrono::steady_clock::now();
@@ -288,7 +301,7 @@ void timeAndSleep(AS::timing_st* timing_ptr, bool fixedTimeStep) {
 		timing_ptr->timeSpentPaused +=
 			std::chrono::duration_cast<std::chrono::microseconds>(pauseEndTime - pauseStartTime);
 	}
-	AS::g_isMainLoopBePaused = false;
+	AS::g_isMainLoopPaused = false;
 
 	//If a pause happened, we should reset the step start timem so it doesn't run long.
 	//Some time will have actually passed between the current start time and the pause.
@@ -544,7 +557,7 @@ bool AS::chekIfMainLoopShouldBePaused() {
 }
 
 bool AS::checkIfMainLoopIsPaused() {
-	return g_isMainLoopBePaused;
+	return g_isMainLoopPaused;
 }
 
 void AS::pauseMainLoop() {
@@ -553,6 +566,12 @@ void AS::pauseMainLoop() {
 
 void AS::unpauseMainLoop() {
 	g_shouldMainLoopBePaused = false;
+}
+
+void AS::stepMainLoopFor(int steps) {
+	g_isStepping = true;
+	g_stepsRemaining = std::max(1, steps);
+	AS::unpauseMainLoop();
 }
 
 bool AS::isMainLoopRunning() {

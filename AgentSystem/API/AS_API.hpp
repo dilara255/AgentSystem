@@ -39,6 +39,10 @@ namespace AS {
 	//Unpausing already unpaused loop has no effect. Resumes after up to half target step time.
 	AS_API void unpauseMainLoop();
 
+	//Steps the mainLoop for "steps" steps and then pauses. If steps < 1, will treat as 1.
+	//Steps are checked right before pausing: a single step is the same as unpause + pause.
+	AS_API void stepMainLoopFor(int steps = 1);
+
 	AS_API bool chekIfMainLoopShouldBePaused();
 	AS_API bool checkIfMainLoopIsPaused();
 
