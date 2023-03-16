@@ -23,7 +23,10 @@ namespace AS {
 	//Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id.
 	//Checks some conditions before initializing, and returns false if any are not met.
 	//AS has to be initialized and a network must have been loaded.
-	AS_API bool run(bool fixedTimeStep = false);
+	//If fixedTimestep, treats each step as having taken the target time, always.
+	//If stepsToRun < 1, will run until stopped by another command.
+	//If stepsToRun >= 1, will give this many steps and then pause.
+	AS_API bool run(bool fixedTimeStep = false, int stepsToRun = -1);
 
 	//Stops AS execution thread, marks it as stopped and clears the stored thread::id;
 	//Returns false if this fails or if the Main Loop found errors while running.
@@ -41,6 +44,7 @@ namespace AS {
 
 	//Steps the mainLoop for "steps" steps and then pauses. If steps < 1, will treat as 1.
 	//Steps are checked right before pausing: a single step is the same as unpause + pause.
+	//Sequential calling of this will overwrite the effects of the previous calls.
 	AS_API void stepMainLoopFor(int steps = 1);
 
 	AS_API bool chekIfMainLoopShouldBePaused();
