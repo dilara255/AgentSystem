@@ -458,7 +458,8 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 	return true;
 }
 
-bool AS::run(bool fixedTimeStep) {
+//TODO: maybe rename? This is creating the thread, not just "making it run"
+bool AS::run(bool fixedTimeStep, int stepsToRun) {
 	LOG_TRACE("Starting Main Loop Thread...");
 	
 	if (*g_shouldMainLoopBeRunning_ptr) {
@@ -491,6 +492,7 @@ bool AS::run(bool fixedTimeStep) {
 	g_shouldMainLoopBePaused = false;
 	g_currentNetworkParams_ptr->lastMainLoopStartingTick = 
 												g_currentNetworkParams_ptr->mainLoopTicks;
+	if (stepsToRun > 0) { stepMainLoopFor(stepsToRun); }
 	*g_mainLoopThread_ptr = std::thread(mainLoop, fixedTimeStep);
 	*g_mainLoopId_ptr = g_mainLoopThread_ptr->get_id();
 
