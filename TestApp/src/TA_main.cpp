@@ -21,7 +21,7 @@ bool testSendingClientDataAndSaving(void);
 bool testClientDataHAndlerInitialization(void);
 bool testPause(bool printLog = false, int pauseUnpauseCycles = 5);
 bool testMainLoopErrors(std::string filename);
-bool testAgentsUpdating(bool printLog);
+bool testAgentsUpdating(bool printLog, bool fixedAndStepped = false);
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
@@ -29,7 +29,7 @@ bool testAgentsUpdating(bool printLog);
 #define HELPER_FUNC_TESTS 7
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 9
-#define SPECIFIC_THREADED_LOOP_TESTS 10
+#define SPECIFIC_THREADED_LOOP_TESTS 11
 #define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 std::thread reader;//to test realtime reading of data trough CL as AS runs
@@ -158,6 +158,8 @@ int main(void) {
 
 	resultsBattery3 += (int)testAgentsUpdating(printSteps); GETCHAR_PAUSE;
 
+	resultsBattery3 += (int)testAgentsUpdating(printSteps, true); GETCHAR_PAUSE;
+
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery3,
@@ -199,7 +201,7 @@ int main(void) {
 //TODO-CRITICAL: this test needs to somehow guarantee no actions change the incomes and etc
 //UPDATE when actions are implemented
 //TODO: make a more interesting test-case using clientDataHandler (include war/attrition)
-bool testAgentsUpdating(bool print) {
+bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	LOG_WARN("Will load a network, run for several ticks, stop it, and check agent updating");
 	
 	//Load, but don't start, so we can calculate and set test conditions:
@@ -285,14 +287,26 @@ bool testAgentsUpdating(bool print) {
 	std::chrono::microseconds threshold(A_THOUSAND);
 
 	//Now we can run the test:
-	result = AS::run();
+	if (fixedAndStepped) {
+		result = AS::run(true, targetTicksToRun);
 
-	AZ::hybridBusySleepForMicros(sleepTime, threshold);
+		//wait for it to be done and pause:
+		bool paused = false; //pause is NOT instantaneous
+		while(!paused){
+			paused = AS::checkIfMainLoopIsPaused();
+		}
+	}
+	else {
+		result = AS::run();
 
-	AS::pauseMainLoop(); //we don't stop/quit, so the info is still available
-	bool paused = false; //pause is NOT instantaneous
-	while(!paused){
-		paused = AS::checkIfMainLoopIsPaused();
+		//stepped pauses when done. Since we're not stepping, we have to control that:
+		AZ::hybridBusySleepForMicros(sleepTime, threshold);
+
+		AS::pauseMainLoop(); //we don't stop/quit, so the info is still available
+		bool paused = false; //pause is NOT instantaneous
+		while(!paused){
+			paused = AS::checkIfMainLoopIsPaused();
+		}
 	}
 
 	if (!result) { //we didn't check earlier to try and keep things in synch
