@@ -327,9 +327,6 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	//for the same reason:
 	double adjustedTotalMultiplier = totalMultiplier*((double)ticksRan/(ticksRan - 1)); 
 
-	printf("ticks: %llu, mult: %f, adjMult: %f\n", ticksRan, totalMultiplier, adjustedTotalMultiplier);
-	GETCHAR_PAUSE;
-
 	float absoluteDifference = (float)fabs(millisToRun - (ticksRan * AS_MILLISECONDS_PER_STEP));
 	float propotionalAbsoluteDifference = absoluteDifference/millisToRun;
 	float graceFactor = 0.015f;
@@ -389,11 +386,6 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 		                  * (expectedTotalResourcesFirstLA + startingResourcesFirstLA)/2);
 	expectedTotalResourcesFirstLA -= expectedTaxesFirstLA; 
 	
-	printf("expcTotal: %f, starting: %f, expcTrade: %f, expcIncome: %f, expcTax: %f, mult: %f\n",
-		expectedTotalResourcesFirstLA, startingResourcesFirstLA, expectedTradeFirstLA,
-		expectedTotalIncomeFirstLAMinusTrade, expectedTaxesFirstLA, adjustedTotalMultiplier);
-	GETCHAR_PAUSE;
-
 	float tradeFromFirstLA = (float)(TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
 										* LAtradeCoeficient * expectedLiquidFirstLA);
 	float tradeFromOtherLAs = (float)(TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
