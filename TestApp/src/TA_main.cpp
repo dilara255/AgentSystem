@@ -36,7 +36,7 @@ std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
 
 int main(void) {
-
+	
 	//TODO: review wich tests printo to console, and pass this (macro?)
 	bool printSteps = false;
 	#if ( (defined AS_DEBUG) || VERBOSE_RELEASE )
@@ -107,7 +107,7 @@ int main(void) {
 
 	LOG_WARN("Will test loading network from a File and then saving it back with network name");
 	resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults); GETCHAR_PAUSE;
-
+	
 	resultsBattery2 += (int)AS::saveNetworkToFile(); GETCHAR_PAUSE;
 
 	resultsBattery2 += (int)AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE;
@@ -155,11 +155,11 @@ int main(void) {
 	resultsBattery3 += (int)testPause(printSteps); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
-
+	
 	resultsBattery3 += (int)testAgentsUpdating(printSteps); GETCHAR_PAUSE;
-
+	
 	resultsBattery3 += (int)testAgentsUpdating(printSteps, true); GETCHAR_PAUSE;
-
+	
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery3,
@@ -327,6 +327,9 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	//for the same reason:
 	double adjustedTotalMultiplier = totalMultiplier*((double)ticksRan/(ticksRan - 1)); 
 
+	printf("ticks: %llu, mult: %f, adjMult: %f\n", ticksRan, totalMultiplier, adjustedTotalMultiplier);
+	GETCHAR_PAUSE;
+
 	float absoluteDifference = (float)fabs(millisToRun - (ticksRan * AS_MILLISECONDS_PER_STEP));
 	float propotionalAbsoluteDifference = absoluteDifference/millisToRun;
 	float graceFactor = 0.015f;
@@ -385,6 +388,11 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	float expectedTaxesFirstLA = (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
 		                  * (expectedTotalResourcesFirstLA + startingResourcesFirstLA)/2);
 	expectedTotalResourcesFirstLA -= expectedTaxesFirstLA; 
+	
+	printf("expcTotal: %f, starting: %f, expcTrade: %f, expcIncome: %f, expcTax: %f, mult: %f\n",
+		expectedTotalResourcesFirstLA, startingResourcesFirstLA, expectedTradeFirstLA,
+		expectedTotalIncomeFirstLAMinusTrade, expectedTaxesFirstLA, adjustedTotalMultiplier);
+	GETCHAR_PAUSE;
 
 	float tradeFromFirstLA = (float)(TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
 										* LAtradeCoeficient * expectedLiquidFirstLA);

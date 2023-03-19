@@ -253,7 +253,7 @@ void timeAndSleep(AS::timing_st* timing_ptr, bool fixedTimeStep) {
 	//NOTE: the multiplier is bounded to a maximum proportion of the expected multiplier,
 	//but the step duration is not changed: 
 	//in case of severe lag, total duration and total multiplier can diverge
-	float targetMultiplier = (float)timing_ptr->targetStepTime.count();
+	float targetMultiplier = (float)timing_ptr->targetStepTime.count()/MICROS_IN_A_SECOND;
 	if(fixedTimeStep){
 		timing_ptr->timeMultiplier = targetMultiplier;
 	}
