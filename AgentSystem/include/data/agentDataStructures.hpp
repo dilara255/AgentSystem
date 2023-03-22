@@ -170,9 +170,8 @@ namespace LA {
 		float income;
 		float strength;
 		float guard;
-		float infiltrationOnThis;
 
-		enum class fields { RESOURCES, INCOME, STRENGHT, GUARD, INFILTRATION,
+		enum class fields { RESOURCES, INCOME, STRENGHT, GUARD,
 			                TOTAL_LA_READ_FIELDS };
 	} AS_API readOnNeighbor_t;
 
@@ -229,10 +228,9 @@ namespace GA {
 		float GAresources;
 		float lastTaxIncome;
 		float lastTradeIncome;
-		float infiltrationOnThis;
 
 		enum class fields { STRENGHT_LAS, GUARD_LAS,
-							GA_RESOURCES, TAX_INCOME, TRADE_INCOME, INFILTRATION,
+							GA_RESOURCES, TAX_INCOME, TRADE_INCOME,
 			                TOTAL_GA_READ_FIELDS };
 	} AS_API readOnNeighbor_t;
 

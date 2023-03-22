@@ -14,6 +14,10 @@ namespace {
 
 	void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 	void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
+
+	LA::readOnNeighbor_t calculateLAreferences(LA::stateData_t* state_ptr, int agentId);
+	GA::readOnNeighbor_t calculateGAreferences(GA::stateData_t* state_ptr, int agentId);
+	void updateRead(float* read, float real, float reference, float infiltration);
 }
 
 void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
