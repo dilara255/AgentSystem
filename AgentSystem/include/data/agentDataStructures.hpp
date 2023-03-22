@@ -165,33 +165,29 @@ namespace LA {
 			                TOTAL_LA_STATE_FIELDS };
 	} AS_API stateData_t;
 
+	//for use in decisionData_t:
 	typedef struct {
-		float resources;
-		float income;
-		float strength;
-		float guard;
-
 		enum class fields { RESOURCES, INCOME, STRENGHT, GUARD,
-			                TOTAL_LA_READ_FIELDS };
-	} AS_API readOnNeighbor_t;
+			                TOTAL};
+
+		float readOf[(int)fields::TOTAL];
+	}  AS_API readsOnNeighbor_t;
 
 	typedef struct {
-		float resources;
-		float strength;
-		float guard;
-
 		enum class fields { RESOURCES, STRENGHT, GUARD,
-			                TOTAL_LA_REQUEST_EXPECTATIONS_FIELDS };
-	} AS_API expectationsFromRequests_t;
+			                TOTAL};
+
+		float expected[(int)fields::TOTAL];
+	}  AS_API requestExpectations_t;
 
 	typedef struct decisionData_st{
 		bool shouldMakeDecisions = true;//TODO: CRITICAL: handling
 
 		AS::LAinfiltrationOnNeighbors_t infiltration;
 		AS::LApersonalityAndGAinfluence_t offsets;
-		readOnNeighbor_t reads[MAX_LA_NEIGHBOURS];
-		expectationsFromRequests_t requestsForSelf;
-		expectationsFromRequests_t requestsForNeighbors[MAX_LA_NEIGHBOURS];
+		readsOnNeighbor_t reads[MAX_LA_NEIGHBOURS];
+		requestExpectations_t requestsForSelf;
+		requestExpectations_t requestsForNeighbors[MAX_LA_NEIGHBOURS];
 
 		enum class fields { SHOULD_DECIDE, INFILTRATION, OFFSETS, 
 							READS, REQUEST_EXPECTATIONS_SELF, REQUEST_EXPECTATIONS_NEIGHBORS,
@@ -222,38 +218,31 @@ namespace GA {
 			                TOTAL_GA_STATE_FIELDS };
 	} AS_API stateData_t;
 
+	//for use in decisionData_t:
 	typedef struct {
-		float LAstrenghtTotal;
-		float LAguardTotal;
-		float GAresources;
-		float lastTaxIncome;
-		float lastTradeIncome;
-
 		enum class fields { STRENGHT_LAS, GUARD_LAS,
 							GA_RESOURCES, TAX_INCOME, TRADE_INCOME,
-			                TOTAL_GA_READ_FIELDS };
-	} AS_API readOnNeighbor_t;
+			                TOTAL};
+
+		float readOf[(int)fields::TOTAL];
+	}  AS_API readsOnNeighbor_t;
 
 	typedef struct {
-		float LAstrenghtTotal;
-		float LAguardTotal;
-		float GAresources;
-		float lastTaxIncome;
-		float lastTradeIncome;
-
 		enum class fields { STRENGHT_LAS, GUARD_LAS,
 							GA_RESOURCES, TAX_INCOME, TRADE_INCOME,
-			                TOTAL_GA_REQUEST_EXPECTATIONS_FIELDS };
-	} AS_API expectationsFromRequests_t;
+			                TOTAL};
+
+		float expected[(int)fields::TOTAL];
+	}  AS_API requestExpectations_t;	
 
 	typedef struct decisionData_st{
 		bool shouldMakeDecisions = true;//TODO: CRITICAL: handling
 
 		AS::GAinfiltrationOnNeighbors_t infiltration;
 		AS::GApersonality personality;
-		readOnNeighbor_t reads[MAX_LA_NEIGHBOURS];
-		expectationsFromRequests_t requestsForSelf;
-		expectationsFromRequests_t requestsForNeighbors[MAX_LA_NEIGHBOURS];
+		readsOnNeighbor_t reads[MAX_LA_NEIGHBOURS];
+		requestExpectations_t requestsForSelf;
+		requestExpectations_t requestsForNeighbors[MAX_LA_NEIGHBOURS];
 
 		enum class fields { SHOULD_DECIDE, INFILTRATION, PERSONALITY, 
 							READS, REQUEST_EXPECTATIONS_SELF, REQUEST_EXPECTATIONS_NEIGHBORS,
