@@ -15,8 +15,8 @@ namespace {
 	void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 	void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
-	LA::readOnNeighbor_t calculateLAreferences(LA::stateData_t* state_ptr, int agentId);
-	GA::readOnNeighbor_t calculateGAreferences(GA::stateData_t* state_ptr, int agentId);
+	LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp);
+	GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPointers_t* dp);
 	void updateRead(float* read, float real, float reference, float infiltration);
 }
 
@@ -158,31 +158,47 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	param_ptr->GAresources += param_ptr->lastTradeIncome;
 }
 
-
+void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr);
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void preScoreActionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void redistributeScoreDueToImpedimmentsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void chooseActionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
+
 void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp) {
+
+	LA::stateData_t* state_ptr = &(dp->LAstate_ptr->getDirectDataPtr()->at(agent));
+	
+	updateReadsLA(agent, dp, state_ptr);
+	
 	calculateNotionsLA(agent, dp);
 	preScoreActionsLA(agent, dp);
 	redistributeScoreDueToImpedimmentsLA(agent, dp);
 	chooseActionLA(agent, dp);
 }
 
+
+void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr);
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void preScoreActionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void redistributeScoreDueToImpedimmentsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void chooseActionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
+
 void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp) {
+
+	GA::stateData_t* state_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(agent));
+
+	updateReadsGA(agent, dp, state_ptr);
+
 	calculateNotionsGA(agent, dp);
 	preScoreActionsGA(agent, dp);
 	redistributeScoreDueToImpedimmentsGA(agent, dp);
 	chooseActionGA(agent, dp);
 }
 
+
+//LA:
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp) {
 
 }
@@ -199,6 +215,7 @@ void chooseActionLA(int agent, AS::dataControllerPointers_t* dp) {
 
 }
 
+//GA:
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp) {
 
 }
@@ -213,5 +230,119 @@ void redistributeScoreDueToImpedimmentsGA(int agent, AS::dataControllerPointers_
 
 void chooseActionGA(int agent, AS::dataControllerPointers_t* dp) {
 
+}
+
+
+
+//READS AND EXPECTATIONS:
+
+LA::readsOnNeighbor_t getRealValuesLA(int agent, AS::dataControllerPointers_t* dp, int neighbor);
+GA::readsOnNeighbor_t getRealValuesGA(int agent, AS::dataControllerPointers_t* dp, int neighbor);
+
+void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr) {
+
+	LA::readsOnNeighbor_t referenceReads =  calculateLAreferences(agent, dp);
+
+	auto decisionData_ptr = &(dp->LAdecision_ptr->getDirectDataPtr()->at(agent));
+	LA::readsOnNeighbor_t* reads_ptr = &(decisionData_ptr->reads[0]);
+
+	int totalNeighbors = state_ptr->locationAndConnections.numberConnectedNeighbors;
+
+	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+
+		LA::readsOnNeighbor_t realValues = getRealValuesLA(agent, dp, neighbor);
+		float infiltration = decisionData_ptr->infiltration[neighbor];
+
+		for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
+
+			//this is the payload:
+			updateRead(&reads_ptr->readOf[field], realValues.readOf[field], 
+		                        referenceReads.readOf[field], infiltration);
+		}
+	}	
+}
+
+void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr) {
+
+	GA::readsOnNeighbor_t referenceReads =  calculateGAreferences(agent, dp);
+
+	auto decisionData_ptr = &(dp->GAdecision_ptr->getDirectDataPtr()->at(agent));
+	GA::readsOnNeighbor_t* reads_ptr = &(decisionData_ptr->reads[0]);
+
+	int totalNeighbors = state_ptr->connectedGAs.howManyAreOn();
+
+	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+
+		GA::readsOnNeighbor_t realValues = getRealValuesGA(agent, dp, neighbor);
+		float infiltration = decisionData_ptr->infiltration[neighbor];
+
+		for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
+
+			//this is the payload:
+			updateRead(&reads_ptr->readOf[field], realValues.readOf[field], 
+		                        referenceReads.readOf[field], infiltration);
+		}
+	}	
+}
+
+//TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
+LA::readsOnNeighbor_t getRealValuesLA(int agent, AS::dataControllerPointers_t* dp, int neighbor) {
+	LA::readsOnNeighbor_t real;
+
+	auto agentState_ptr = &(dp->LAstate_ptr->getDirectDataPtr()->at(agent));
+	int neighborID = agentState_ptr->locationAndConnections.neighbourIDs[neighbor];
+	auto neighborState_ptr = &(dp->LAstate_ptr->getDirectDataPtr()->at(neighborID));
+
+	real.readOf[(int)LA::readsOnNeighbor_t::fields::GUARD] = 
+						neighborState_ptr->parameters.strenght.externalGuard;
+	real.readOf[(int)LA::readsOnNeighbor_t::fields::INCOME] = 
+						neighborState_ptr->parameters.resources.updateRate;
+	real.readOf[(int)LA::readsOnNeighbor_t::fields::RESOURCES] = 
+						neighborState_ptr->parameters.resources.current;
+	real.readOf[(int)LA::readsOnNeighbor_t::fields::STRENGHT] = 
+						neighborState_ptr->parameters.strenght.current;
+	
+	return real;
+}
+
+//TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
+GA::readsOnNeighbor_t getRealValuesGA(int agent, AS::dataControllerPointers_t* dp, int neighbor) {
+	GA::readsOnNeighbor_t real;
+
+	auto agentState_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(agent));
+	int neighborID = agentState_ptr->neighbourIDs[neighbor];
+	auto neighborState_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(neighborID));
+
+	real.readOf[(int)GA::readsOnNeighbor_t::fields::GA_RESOURCES] = 
+						neighborState_ptr->parameters.GAresources;
+	real.readOf[(int)GA::readsOnNeighbor_t::fields::GUARD_LAS] = 
+						neighborState_ptr->parameters.LAguardTotal;
+	real.readOf[(int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS] = 
+						neighborState_ptr->parameters.LAstrenghtTotal;
+	real.readOf[(int)GA::readsOnNeighbor_t::fields::TAX_INCOME] = 
+						neighborState_ptr->parameters.lastTaxIncome;
+	real.readOf[(int)GA::readsOnNeighbor_t::fields::TRADE_INCOME] = 
+						neighborState_ptr->parameters.lastTradeIncome;
+	
+	return real;
+}
+
+
+//TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
+LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp) {
+	LA::readsOnNeighbor_t references = getRealValuesLA(agentId, dp, 0);
+
+	return references;
+}
+
+//TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
+GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPointers_t* dp) {
+	GA::readsOnNeighbor_t references = getRealValuesGA(agentId, dp, 0);
+
+	return references;
+}
+
+void updateRead(float* read, float real, float reference, float infiltration) {
+	
 }
 }
