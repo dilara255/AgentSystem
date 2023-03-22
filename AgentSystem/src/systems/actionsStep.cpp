@@ -8,7 +8,7 @@ static AS::WarningsAndErrorsCounter* g_errorsCounter_ptr;
 bool processAction(AS::actionData_t action);
 
 void AS::stepActions(ActionSystem* ap, int numLAs, int numGAs, float timeMultiplier,
-		             WarningsAndErrorsCounter* errorsCounter_ptr) {
+		  WarningsAndErrorsCounter* errorsCounter_ptr, AS::PRNserver* prnServer_ptr) {
 	
 	g_errorsCounter_ptr = errorsCounter_ptr;
 

@@ -31,11 +31,13 @@ namespace AS {
 	class PRNserver;
 	void stepActions(ActionSystem* actionSystem_ptr, 
 		             int numberLAs, int numberGAs, float timeMultiplier,
-		             WarningsAndErrorsCounter* errorsCounter_ptr);
+		             WarningsAndErrorsCounter* errorsCounter_ptr, AS::PRNserver* prnServer_ptr);
 	void stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop,
 		                         dataControllerPointers_t* agentDataPointers_ptr,
 		                      float timeMultiplier, int numberLAs, int numberGAs,
-		                      WarningsAndErrorsCounter* errorsCounter_ptr);
+		                             WarningsAndErrorsCounter* errorsCounter_ptr, 
+							                        AS::PRNserver* prnServer_ptr,
+		                                      float secondsSinceLastDecisionStep);
 
 	struct chopControl_st {
 		int chopIndex = 0;
