@@ -93,11 +93,11 @@ namespace AS {
 
 		 	              //ATTACK                               //GUARD
 			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, STD}, {STD, STD}, {NOT, STD}},  {{SPC, STD}, {SPC, STD}, {NOT, STD}}, 
+			{{SPC, STD}, {STD, STD}, {NOT, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
 
 		 	               //SPY                               //SABOTAGE
 			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, SPC}, {SPC, SPC}, {NOT, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
+			{{SPC, SPC}, {SPC, SPC}, {SPC, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
 
 		 	            //DIPLOMACY                            //CONQUEST
 			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
