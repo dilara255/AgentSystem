@@ -36,7 +36,7 @@ std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
 
 int main(void) {
-	
+
 	//TODO: review wich tests printo to console, and pass this (macro?)
 	bool printSteps = false;
 	#if ( (defined AS_DEBUG) || VERBOSE_RELEASE )
@@ -136,7 +136,7 @@ int main(void) {
 		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
 	}
 	
-	LOG_INFO("Specific functionality tests (with threaded LOOPs):\n",1); GETCHAR_PAUSE;
+	LOG_INFO("Specific functionality tests involving main loop thread:\n",1); GETCHAR_PAUSE;
 
 	int resultsBattery3 = (int)testMainLoopErrors(customFilename); GETCHAR_PAUSE;
 
@@ -523,6 +523,7 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	return result;
 }
 
+#define TST_TICKS_MAINLOOP_ERRORS (AS_TOTAL_CHOPS*25)
 bool testMainLoopErrors(std::string filename) {
 	LOG_WARN("Will load a network, run for several ticks, stop it, and check for errors");
 	
@@ -532,11 +533,16 @@ bool testMainLoopErrors(std::string filename) {
 		return false;
 	}
 
-	int ticks = 25;
+	int ticks = TST_TICKS_MAINLOOP_ERRORS;
 	std::chrono::microseconds microsToSleep(ticks*AS_MILLISECONDS_PER_STEP*MICROS_IN_A_MILLI);
 	AZ::hybridBusySleepForMicros(microsToSleep);
 
-	return AS::quit();
+	result = AS::quit();
+
+	if(!result){ LOG_ERROR("Main Loop raised errors or failed while quitting"); }
+	else { LOG_INFO("Main Loop ran and quit without raising any errors"); }
+
+	return result;
 }
 
 bool testPause(bool printLog, int pauseUnpauseCycles) {

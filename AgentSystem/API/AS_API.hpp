@@ -65,5 +65,6 @@ namespace AS {
 
 	//For now, this is mostly an alias to stop(), but cheks if running before calling it.
 	//Future intended use is to also clean up mirror/client data and "unitialize" AS and CL.
+	//TODO: BUG: if called right after AS::run(1) with no wait, may hang;
 	AS_API bool quit();
 }
