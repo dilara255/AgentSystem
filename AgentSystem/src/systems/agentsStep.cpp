@@ -15,9 +15,10 @@ namespace {
 	void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 	void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
+	inline float calculateMaxDisparityFactor();
 	LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp);
 	GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPointers_t* dp);
-	void updateRead(float* read, float real, float reference, float infiltration);
+	void updateRead(float* read, float real, float reference, float infiltration, float maxDisparityFactor);
 }
 
 void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
@@ -167,7 +168,7 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	param_ptr->GAresources += param_ptr->lastTradeIncome;
 }
 
-void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr);
+void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr, float maxDisparityFactor);
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void preScoreActionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void redistributeScoreDueToImpedimmentsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
@@ -178,7 +179,7 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp) {
 
 	LA::stateData_t* state_ptr = &(dp->LAstate_ptr->getDirectDataPtr()->at(agent));
 	
-	updateReadsLA(agent, dp, state_ptr);
+	updateReadsLA(agent, dp, state_ptr, calculateMaxDisparityFactor());
 	
 	calculateNotionsLA(agent, dp);
 	preScoreActionsLA(agent, dp);
@@ -187,7 +188,7 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp) {
 }
 
 
-void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr);
+void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr, float maxDisparityFactor);
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void preScoreActionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void redistributeScoreDueToImpedimmentsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
@@ -198,7 +199,7 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp) {
 
 	GA::stateData_t* state_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(agent));
 
-	updateReadsGA(agent, dp, state_ptr);
+	updateReadsGA(agent, dp, state_ptr, calculateMaxDisparityFactor());
 
 	calculateNotionsGA(agent, dp);
 	preScoreActionsGA(agent, dp);
@@ -248,7 +249,7 @@ void chooseActionGA(int agent, AS::dataControllerPointers_t* dp) {
 LA::readsOnNeighbor_t getRealValuesLA(int agent, AS::dataControllerPointers_t* dp, int neighbor);
 GA::readsOnNeighbor_t getRealValuesGA(int agent, AS::dataControllerPointers_t* dp, int neighbor);
 
-void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr) {
+void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr, float maxDisparityFactor) {
 
 	LA::readsOnNeighbor_t referenceReads =  calculateLAreferences(agent, dp);
 
@@ -266,12 +267,12 @@ void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t*
 
 			//this is the payload:
 			updateRead(&reads_ptr->readOf[field], realValues.readOf[field], 
-		                        referenceReads.readOf[field], infiltration);
+		                        referenceReads.readOf[field], infiltration, maxDisparityFactor);
 		}
 	}	
 }
 
-void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr) {
+void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr, float maxDisparityFactor) {
 
 	GA::readsOnNeighbor_t referenceReads =  calculateGAreferences(agent, dp);
 
@@ -289,7 +290,7 @@ void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t*
 
 			//this is the payload:
 			updateRead(&reads_ptr->readOf[field], realValues.readOf[field], 
-		                        referenceReads.readOf[field], infiltration);
+		                        referenceReads.readOf[field], infiltration, maxDisparityFactor);
 		}
 	}	
 }
@@ -336,9 +337,6 @@ GA::readsOnNeighbor_t getRealValuesGA(int agent, AS::dataControllerPointers_t* d
 	return real;
 }
 
-
-#define NEIGHBORS_RELATIVE_WEIGHT_FOR_REF_EXPECTATIONS (1)
-#define TOTAL_WEIGHT_FOR_REF_EXPECTATIONS (1 + NEIGHBORS_RELATIVE_WEIGHT_FOR_REF_EXPECTATIONS)
 #define D (1/TOTAL_WEIGHT_FOR_REF_EXPECTATIONS)
 #define E (1 - D)
 
@@ -444,7 +442,22 @@ GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPoint
 	return references;
 }
 
-void updateRead(float* read, float real, float reference, float infiltration) {
+#define FAC_A EXPC_MAX_PROPORTIONAL_CHANGE_PER_SECOND; //A + B
+#define FAC_B EXPC_INFILTRATION_EQUIVALENT_TO_MAXIMUM_NOISE; //sqrt(B/A)
+#define A (FAC_A / ((FAC_B*FAC_B) + 1))
+#define B (EXPC_MAX_PROPORTIONAL_CHANGE_PER_SECOND - A)
+#define FAC_F (EXPC_ERROR_CORRECTION_WEIGHT_RELATIVE_TO_INFO * A)
+#define C (EXPC_PROPORTIONAL_ERROR_OVER_MINIMUM_FOR_MAX_CORRECTION * FAC_F)
+#define BIAS EXPC_MIN_PROPORTIONAL_ERROR_TO_CORRECT
+#define S EXPC_ERROR_CORRECTION_SHARPNESS
+
+inline float calculateMaxDisparityFactor() {
+	return (powf((1.0f/EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION),(1.0f/S)) + BIAS);
+}
+
+void updateRead(float* read, float real, float reference, float infiltration, float maxDisparityFactor) {
 	
+
+
 }
 }
