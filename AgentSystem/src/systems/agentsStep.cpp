@@ -133,12 +133,12 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	}
 	
 	//Get resoures from tax...
-	float taxIncome = (float)GA_TAX_RATE_PER_SECOND*state_ptr->parameters.LAesourceTotals.current;
-	
-	param_ptr->GAresources += taxIncome*timeMultiplier;
+	param_ptr->lastTaxIncome = (float)GA_TAX_RATE_PER_SECOND*state_ptr->parameters.LAesourceTotals.current;
+	param_ptr->GAresources += param_ptr->lastTaxIncome*timeMultiplier;
 
 	//... and from trade:
 	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
+	param_ptr->lastTradeIncome = 0;
 
 	for (int i = 0; i < quantityNeighbours; i++) {
 		int idOther = state_ptr->neighbourIDs[i];
@@ -146,10 +146,12 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 
 		if ((stance == AS::diploStance::TRADE) ||
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
-			param_ptr->GAresources += 
+			param_ptr->lastTradeIncome +=
 				GA::calculateTradeIncomePerSecond(idOther, stance, dp, errorsCounter_ptr)*timeMultiplier;
 		}
 	}
+
+	param_ptr->GAresources += param_ptr->lastTradeIncome;
 }
 
 

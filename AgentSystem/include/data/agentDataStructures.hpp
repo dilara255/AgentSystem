@@ -1,5 +1,7 @@
 #pragma once
 
+//TODO: CRITICAL: handling: add new data to save/load, ASmirror and ClientDataHandler
+
 /*
 * WARNING: THIS FILE WILL BE EXPOSED TO THE APPLICATION!
 * - TODO-CRITICAL: MOVE TO API/AS_dataTypes
@@ -130,6 +132,8 @@ namespace AS {
 		resources_t LAesourceTotals;
 		float LAstrenghtTotal;
 		float GAresources;
+		float lastTaxIncome; //TODO: CRITICAL: handling
+		float lastTradeIncome; //TODO: CRITICAL: handling
 
 		enum class fields { RESOURCES_LAS, STRENGHT_LAS, GA_RESOURCES,
 			                TOTAL_GA_PARAMETER_FIELDS };
