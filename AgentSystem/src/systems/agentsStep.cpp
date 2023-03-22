@@ -337,16 +337,109 @@ GA::readsOnNeighbor_t getRealValuesGA(int agent, AS::dataControllerPointers_t* d
 }
 
 
+#define NEIGHBORS_RELATIVE_WEIGHT_FOR_REF_EXPECTATIONS (1)
+#define TOTAL_WEIGHT_FOR_REF_EXPECTATIONS (1 + NEIGHBORS_RELATIVE_WEIGHT_FOR_REF_EXPECTATIONS)
+#define D (1/TOTAL_WEIGHT_FOR_REF_EXPECTATIONS)
+#define E (1 - D)
+
 //TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
 LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp) {
-	LA::readsOnNeighbor_t references = getRealValuesLA(agentId, dp, 0);
+	
+	/*ref[i] = D * (SUM_viz(expec[viz][i] * abs(inf[viz]) / SUM_viz(abs(inf[viz])
+	         + E * GA[i]/#LAs
+	*/
+	
+	auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentId));
+	auto decision_ptr = &(dp->LAdecision_ptr->getDataCptr()->at(agentId));
+
+	LA::readsOnNeighbor_t GAreferences;
+	auto GAstate_ptr = &(dp->GAstate_ptr->getDataCptr()->at(state_ptr->GAid));
+	auto GAparams_ptr = &(GAstate_ptr->parameters);
+
+	//TODO: extract this
+	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::GUARD] =
+										GAparams_ptr->LAguardTotal;
+	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::INCOME] =
+										GAparams_ptr->LAesourceTotals.updateRate;
+	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::RESOURCES] =
+										GAparams_ptr->LAesourceTotals.current;
+	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::STRENGHT] =
+										GAparams_ptr->LAstrenghtTotal;
+
+	int totalNeighbors = state_ptr->locationAndConnections.numberConnectedNeighbors;
+	float totalInfiltration = 0;
+
+	LA::readsOnNeighbor_t references; 
+	for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
+			references.readOf[field] = 0;
+	}
+	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+
+		float iniltration =  decision_ptr->infiltration[neighbor];
+		totalInfiltration += iniltration;
+		for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
+
+			references.readOf[field] += 
+				(decision_ptr->reads[neighbor].readOf[field] * abs(iniltration));
+		}
+	}
+	int totalLAs = GAstate_ptr->localAgentsBelongingToThis.howManyAreOn();
+	for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
+			references.readOf[field] = 
+								(D * references.readOf[field] / totalInfiltration)
+								+ (E * GAreferences.readOf[field] / totalLAs);
+	}
 
 	return references;
 }
 
 //TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
 GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPointers_t* dp) {
-	GA::readsOnNeighbor_t references = getRealValuesGA(agentId, dp, 0);
+	
+	/*ref[i] = D * (SUM_viz(expec[viz][i] * abs(inf[viz]) / SUM_viz(abs(inf[viz])
+	         + E * GA[i]
+	*/
+
+	auto state_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agentId));
+	auto decision_ptr = &(dp->GAdecision_ptr->getDataCptr()->at(agentId));
+	
+	GA::readsOnNeighbor_t GAreferences;
+	auto GAparams_ptr = &(state_ptr->parameters);
+
+	//TODO: extract this
+	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::GA_RESOURCES] =
+										GAparams_ptr->GAresources;
+	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::GUARD_LAS] =
+										GAparams_ptr->LAguardTotal;
+	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS] =
+										GAparams_ptr->LAstrenghtTotal;
+	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::TAX_INCOME] =
+										GAparams_ptr->lastTaxIncome;
+	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::TRADE_INCOME] =
+										GAparams_ptr->lastTradeIncome;
+
+	int totalNeighbors = state_ptr->connectedGAs.howManyAreOn();
+	float totalInfiltration = 0;
+
+	GA::readsOnNeighbor_t references; 
+	for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
+			references.readOf[field] = 0;
+	}
+	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+
+		float iniltration =  decision_ptr->infiltration[neighbor];
+		totalInfiltration += iniltration;
+		for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
+
+			references.readOf[field] += 
+				(decision_ptr->reads[neighbor].readOf[field] * abs(iniltration));
+		}
+	}
+	for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
+			references.readOf[field] = 
+								(D * references.readOf[field] / totalInfiltration)
+								+ (E * GAreferences.readOf[field]);
+	}
 
 	return references;
 }

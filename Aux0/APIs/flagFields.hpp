@@ -35,7 +35,7 @@ namespace AZ {
 			}
 		}
 		
-		int howManyAreOn() {
+		int howManyAreOn() const {
 			return areOn;
 		}
 
@@ -107,7 +107,7 @@ namespace AZ {
 			}
 		}
 
-		int howManyAreOn() {
+		int howManyAreOn() const {
 			return areOn;
 		}
 

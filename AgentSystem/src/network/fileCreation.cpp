@@ -201,7 +201,9 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
     for (int i = 0; i < numberLAs; i++) {
         
-        resultAux = fprintf(fp, LAidentity, i, numberGAs - 1, DEFAULT_ONOFF);
+        //NOTE: last GA doesn't count, so numberGAs - 2 is the index of the last one
+        //TODO: REFACTOR: CHANGE numberGAs TO BE THE NUMBER OF EFFECTIVE GAs
+        resultAux = fprintf(fp, LAidentity, i, numberGAs - 2, DEFAULT_ONOFF);
         if (resultAux <= 0) result = 0;
 
         std::string name = defaultLAnamePrefix;
