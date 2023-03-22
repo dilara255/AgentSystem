@@ -12,19 +12,26 @@ namespace {
 				  AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier,
 		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
-	void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
-	void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
+	void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
+													  AS::PRNserver* prnServer_ptr);
+	void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
+													  AS::PRNserver* prnServer_ptr);
 
 	inline float calculateMaxDisparityFactor();
 	LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp);
 	GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPointers_t* dp);
-	void updateRead(float* read, float real, float reference, float infiltration, float maxDisparityFactor);
+	void updateRead(float* read, float real, float reference, float infiltration, 
+		                  float maxDisparityFactor, AS::PRNserver* prnServer_ptr);
+
+	static float g_secondsSinceLastDecisionStep = 0;
 }
 
 void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
 	                          dataControllerPointers_t* dp, float timeMultiplier,
 	                                                int numberLAs, int numberGAs,
-		                             WarningsAndErrorsCounter* errorsCounter_ptr) {
+		                             WarningsAndErrorsCounter* errorsCounter_ptr,
+	                                                AS::PRNserver* prnServer_ptr,
+	                                          float secondsSinceLastDecisionStep) {
 
 	g_errorsCounter_ptr = errorsCounter_ptr;
 
@@ -48,6 +55,8 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	}
 	
 	//Make decisions:
+	g_secondsSinceLastDecisionStep = secondsSinceLastDecisionStep;
+
 	static int nextDecisionLAindex = 0;	
 
 	int finalDecisionLAindex = nextDecisionLAindex + LAdecisionsToTakeThisChop - 1;
@@ -58,7 +67,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 		//Since we need to draw "high" and "low" indexes, we can't modulo them before the loop
 		//(and if we do in the loop, then we loop forever),
 		//so we modulo the nextDecisionLAindex just in the call:
-		makeDecisionLA(nextDecisionLAindex % numberLAs, dp);
+		makeDecisionLA(nextDecisionLAindex % numberLAs, dp, prnServer_ptr);
 		nextDecisionLAindex++;
 	}
 	nextDecisionLAindex %= numberLAs; //and then once outside the loop we modulo the static value
@@ -68,7 +77,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
 	while (nextDecisionGAindex <= finalDecisionGAindex) {	
 		//See comments above about the modulo
-		makeDecisionGA(nextDecisionGAindex % numberGAs, dp);
+		makeDecisionGA(nextDecisionGAindex % numberGAs, dp, prnServer_ptr);
 		nextDecisionGAindex++;
 	}
 	nextDecisionGAindex %= numberGAs;
@@ -168,18 +177,20 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	param_ptr->GAresources += param_ptr->lastTradeIncome;
 }
 
-void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr, float maxDisparityFactor);
+void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr, 
+	                                float maxDisparityFactor, AS::PRNserver* prnServer_ptr);
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void preScoreActionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void redistributeScoreDueToImpedimmentsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void chooseActionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
 
-void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp) {
+void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
+								    AS::PRNserver* prnServer_ptr) {
 
 	LA::stateData_t* state_ptr = &(dp->LAstate_ptr->getDirectDataPtr()->at(agent));
 	
-	updateReadsLA(agent, dp, state_ptr, calculateMaxDisparityFactor());
+	updateReadsLA(agent, dp, state_ptr, calculateMaxDisparityFactor(), prnServer_ptr);
 	
 	calculateNotionsLA(agent, dp);
 	preScoreActionsLA(agent, dp);
@@ -188,18 +199,20 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp) {
 }
 
 
-void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr, float maxDisparityFactor);
+void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr, 
+	                                float maxDisparityFactor, AS::PRNserver* prnServer_ptr);
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void preScoreActionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void redistributeScoreDueToImpedimmentsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 void chooseActionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr);
 
 
-void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp) {
+void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp, 
+	                                AS::PRNserver* prnServer_ptr) {
 
 	GA::stateData_t* state_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(agent));
 
-	updateReadsGA(agent, dp, state_ptr, calculateMaxDisparityFactor());
+	updateReadsGA(agent, dp, state_ptr, calculateMaxDisparityFactor(), prnServer_ptr);
 
 	calculateNotionsGA(agent, dp);
 	preScoreActionsGA(agent, dp);
@@ -242,14 +255,14 @@ void chooseActionGA(int agent, AS::dataControllerPointers_t* dp) {
 
 }
 
-
-
 //READS AND EXPECTATIONS:
+//TODO: EXTRACT STUFF AND ADD WARNING AND ERROR HANDLING (REFACTOR: PULL SOME INTO CLASSES)
 
 LA::readsOnNeighbor_t getRealValuesLA(int agent, AS::dataControllerPointers_t* dp, int neighbor);
 GA::readsOnNeighbor_t getRealValuesGA(int agent, AS::dataControllerPointers_t* dp, int neighbor);
 
-void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr, float maxDisparityFactor) {
+void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr, 
+	                                float maxDisparityFactor, AS::PRNserver* prnServer_ptr) {
 
 	LA::readsOnNeighbor_t referenceReads =  calculateLAreferences(agent, dp);
 
@@ -267,12 +280,14 @@ void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t*
 
 			//this is the payload:
 			updateRead(&reads_ptr->readOf[field], realValues.readOf[field], 
-		                        referenceReads.readOf[field], infiltration, maxDisparityFactor);
+		                        referenceReads.readOf[field], infiltration, 
+								maxDisparityFactor, prnServer_ptr);
 		}
 	}	
 }
 
-void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr, float maxDisparityFactor) {
+void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t* state_ptr, 
+	                                float maxDisparityFactor, AS::PRNserver* prnServer_ptr) {
 
 	GA::readsOnNeighbor_t referenceReads =  calculateGAreferences(agent, dp);
 
@@ -290,12 +305,12 @@ void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t*
 
 			//this is the payload:
 			updateRead(&reads_ptr->readOf[field], realValues.readOf[field], 
-		                        referenceReads.readOf[field], infiltration, maxDisparityFactor);
+		                        referenceReads.readOf[field], infiltration, 
+				                         maxDisparityFactor, prnServer_ptr);
 		}
 	}	
 }
 
-//TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
 LA::readsOnNeighbor_t getRealValuesLA(int agent, AS::dataControllerPointers_t* dp, int neighbor) {
 	LA::readsOnNeighbor_t real;
 
@@ -315,7 +330,6 @@ LA::readsOnNeighbor_t getRealValuesLA(int agent, AS::dataControllerPointers_t* d
 	return real;
 }
 
-//TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
 GA::readsOnNeighbor_t getRealValuesGA(int agent, AS::dataControllerPointers_t* dp, int neighbor) {
 	GA::readsOnNeighbor_t real;
 
@@ -340,7 +354,6 @@ GA::readsOnNeighbor_t getRealValuesGA(int agent, AS::dataControllerPointers_t* d
 #define D (1/TOTAL_WEIGHT_FOR_REF_EXPECTATIONS)
 #define E (1 - D)
 
-//TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
 LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp) {
 	
 	/*ref[i] = D * (SUM_viz(expec[viz][i] * abs(inf[viz]) / SUM_viz(abs(inf[viz])
@@ -391,7 +404,6 @@ LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPoint
 	return references;
 }
 
-//TODO: REFACTOR: this should be inside some class? Or at least in another more sensible file
 GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPointers_t* dp) {
 	
 	/*ref[i] = D * (SUM_viz(expec[viz][i] * abs(inf[viz]) / SUM_viz(abs(inf[viz])
@@ -442,8 +454,8 @@ GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPoint
 	return references;
 }
 
-#define FAC_A EXPC_MAX_PROPORTIONAL_CHANGE_PER_SECOND; //A + B
-#define FAC_B EXPC_INFILTRATION_EQUIVALENT_TO_MAXIMUM_NOISE; //sqrt(B/A)
+#define FAC_A EXPC_MAX_PROPORTIONAL_CHANGE_PER_SECOND //A + B
+#define FAC_B EXPC_INFILTRATION_EQUIVALENT_TO_MAXIMUM_NOISE //sqrt(B/A)
 #define A (FAC_A / ((FAC_B*FAC_B) + 1))
 #define B (EXPC_MAX_PROPORTIONAL_CHANGE_PER_SECOND - A)
 #define FAC_F (EXPC_ERROR_CORRECTION_WEIGHT_RELATIVE_TO_INFO * A)
@@ -455,9 +467,25 @@ inline float calculateMaxDisparityFactor() {
 	return (powf((1.0f/EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION),(1.0f/S)) + BIAS);
 }
 
-void updateRead(float* read, float real, float reference, float infiltration, float maxDisparityFactor) {
+void updateRead(float* read, float real, float reference, float infiltration, 
+	                  float maxDisparityFactor, AS::PRNserver* prnServer_ptr) {
 	
+	float difference = real - (*read);
+	float effectiveReference = std::max(abs(reference), abs(real));
+	if (effectiveReference == 0) {
+		effectiveReference = 1; //"neutral" to multiplication and division
+	}
+	if(difference == 0) {
+		difference = EXPC_EFFECTIVE_MIN_PROPORTIONAL_DIFF * effectiveReference;
+	}
 
-
+	float correctionFactor = std::min(maxDisparityFactor, abs(difference)/effectiveReference);
+	float multiplier = 
+		std::min(2.0f, ( 
+						A*infiltration*fabs(infiltration) 
+						+ B*( (prnServer_ptr->getNext()*2.0f) - 1) 
+						+ C*(powf(correctionFactor, S)) 
+					) );
+	*read += difference * multiplier * g_secondsSinceLastDecisionStep;
 }
 }

@@ -87,7 +87,7 @@ namespace AS{
 }
 
 void prepareStep(AS::chopControl_st* chopControl_ptr);
-void step(AS::chopControl_st chopControl, float timeMultiplier);
+void step(AS::chopControl_st chopControl, float timeMultiplier, float decisionTimeMultiplier);
 void receiveAndSendData();
 void timeAndSleep(AS::timing_st* timing_ptr, int chopIndex, bool fixedTimeStep);
 
@@ -128,7 +128,8 @@ void AS::mainLoop(bool fixedTimeStep) {
 		timeOperation(timingMicros.endTimingAndSleep, &timingMicros.endPreparation,
 		                                       &timingMicros.totalMicrosPreparation);
 		
-		step(chopControl, timingMicros.timeMultiplier);
+		step(chopControl, timingMicros.timeMultiplier, 
+				timingMicros.decisionStepTimeMultipliers[chopControl.chopIndex]);
 		timeOperation(timingMicros.endPreparation, &timingMicros.endStep,
 			                               &timingMicros.totalMicrosStep);
 
@@ -183,19 +184,20 @@ void prepareStep(AS::chopControl_st* chopControl_ptr) {
 	chopControl_ptr->chopIndex %= AS_TOTAL_CHOPS;
 }
 
-void step(AS::chopControl_st chopControl, float timeMultiplier) {
+void step(AS::chopControl_st chopControl, float timeMultiplier, float decisionTimeMultiplier) {
 	
 	int numLAs = chopControl.quantityLAs;
 	int numGAs = chopControl.quantityEffectiveGAs;
 
 
 	AS::stepActions(AS::g_actionSystem_ptr, numLAs, numGAs, timeMultiplier, 
-		                                           AS::g_errorsCounter_ptr);
+		                      AS::g_errorsCounter_ptr, AS::g_prnServer_ptr);
 
 	AS::stepAgents(chopControl.LAdecisionsToMake, chopControl.GAdecisionsToMake, 
 		                                      AS::g_agentDataControllerPtrs_ptr, 
-											  timeMultiplier, numLAs, numGAs, 
-											  AS::g_errorsCounter_ptr);
+									    		 timeMultiplier, numLAs, numGAs, 
+		                           AS::g_errorsCounter_ptr, AS::g_prnServer_ptr,
+		                                                 decisionTimeMultiplier);
 }
 
 void receiveAndSendData() {
