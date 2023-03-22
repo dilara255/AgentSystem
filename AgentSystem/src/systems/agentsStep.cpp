@@ -48,20 +48,29 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	
 	//Make decisions:
 	static int nextDecisionLAindex = 0;	
-	if(nextDecisionLAindex >= numberLAs) { nextDecisionLAindex = 0; }
 
 	int finalDecisionLAindex = nextDecisionLAindex + LAdecisionsToTakeThisChop - 1;
-	for (; nextDecisionLAindex <= finalDecisionLAindex; nextDecisionLAindex++) {	
-		makeDecisionLA(nextDecisionLAindex, dp);
+	while (nextDecisionLAindex <= finalDecisionLAindex) {
+		//Say we have to deal with 4 agents this chop, 
+		//but the first one is the second to last agent.
+		//In this case finalDecisionLAindex will be greater than the last LA's index,
+		//Since we need to draw "high" and "low" indexes, we can't modulo them before the loop
+		//(and if we do in the loop, then we loop forever),
+		//so we modulo the nextDecisionLAindex just in the call:
+		makeDecisionLA(nextDecisionLAindex % numberLAs, dp);
+		nextDecisionLAindex++;
 	}
+	nextDecisionLAindex %= numberLAs; //and then once outside the loop we modulo the static value
 		
 	static int nextDecisionGAindex = 0;	
-	if(nextDecisionGAindex >= numberGAs){ nextDecisionGAindex = 0; }
 
 	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
-	for (; nextDecisionGAindex <= finalDecisionGAindex; nextDecisionGAindex++) {	
-		makeDecisionGA(nextDecisionGAindex, dp);
+	while (nextDecisionGAindex <= finalDecisionGAindex) {	
+		//See comments above about the modulo
+		makeDecisionGA(nextDecisionGAindex % numberGAs, dp);
+		nextDecisionGAindex++;
 	}
+	nextDecisionGAindex %= numberGAs;
 }
 
 namespace {

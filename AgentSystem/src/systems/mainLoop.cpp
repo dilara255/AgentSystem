@@ -546,6 +546,11 @@ bool AS::stop() {
 	*g_mainLoopId_ptr = std::thread::id();
 	LOG_INFO("Main loop stopped.");
 
+	g_stepsRemaining = 0;
+	g_isStepping = false;
+	g_shouldMainLoopBePaused = false;
+	g_isMainLoopPaused = false;
+
 	#if (defined AS_DEBUG) || VERBOSE_RELEASE
 		printf("\nRan for %llu ticks\n", g_currentNetworkParams_ptr->mainLoopTicks - 
 								g_currentNetworkParams_ptr->lastMainLoopStartingTick);
