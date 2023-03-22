@@ -24,4 +24,5 @@ namespace AS {
 	AS_API bool testActionVariationsInfo(bool printResults = false);
 	AS_API bool testMultipleAgentChopCalculations(bool log = false);
 	AS_API bool testWarningAndErrorCountingAndDisplaying(bool printResults = false);
+	AS_API bool testDecisionStepTiming(bool printResults = false);
 }

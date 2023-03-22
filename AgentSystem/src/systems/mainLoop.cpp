@@ -41,34 +41,55 @@ namespace AS{
 
 	struct timing_st {
 		uint64_t ticks = 0;
+
 		float timeMultiplier;
 		double accumulatedMultiplier = 0;
-		int64_t totalSnoozedMicros = 0; //time spent sleeping more then expected (or less)
-		int64_t largestSnoozeMicros = 0;
+		float decisionStepTimeMultipliers[AS_TOTAL_CHOPS];
+				
 		int64_t totalHotMicros = 0; //time spent actually doing work (except busy-waiting)
-		int64_t largestHotMicros = 0;
-		int64_t totalSleepMicros = 0;
-		int64_t largestSleepMicros = 0;
 		int64_t totalMicrosPreparation = 0;
 		int64_t totalMicrosStep = 0;
 		int64_t totalMicrosDataTransfer = 0;
 		int64_t totalMicrosTimmingAndSleep = 0;
+		int64_t largestHotMicros = 0;
+		int64_t totalSleepMicros = 0;
+		int64_t largestSleepMicros = 0;
+		int64_t totalSnoozedMicros = 0; //time spent sleeping more then expected (or less)
+		int64_t largestSnoozeMicros = 0;
+		
 		std::chrono::steady_clock::time_point startFirstStep;
 		std::chrono::steady_clock::time_point startLastStep;
 		std::chrono::steady_clock::time_point startThisStep;
+
 		std::chrono::steady_clock::time_point endPreparation;
 		std::chrono::steady_clock::time_point endStep;
 		std::chrono::steady_clock::time_point endDataTransfer;
 		std::chrono::steady_clock::time_point endTimingAndSleep;
+
 		std::chrono::microseconds targetStepTime;
 		std::chrono::microseconds timeSpentPaused = zeroMicro;
 	};
+
+	void initializeTiming(timing_st* timingMicros_ptr){
+	timingMicros_ptr->targetStepTime = 
+		            std::chrono::milliseconds(AS_MILLISECONDS_PER_STEP);
+	timingMicros_ptr->timeMultiplier = (float)AS_MILLISECONDS_PER_STEP/MILLIS_IN_A_SECOND;
+	timingMicros_ptr->startThisStep = std::chrono::steady_clock::now();
+	timingMicros_ptr->startLastStep = timingMicros_ptr->startThisStep;
+	timingMicros_ptr->startFirstStep = timingMicros_ptr->startThisStep;
+	timingMicros_ptr->endTimingAndSleep =  timingMicros_ptr->startThisStep; //for first iteration
+	timingMicros_ptr->accumulatedMultiplier = g_currentNetworkParams_ptr->accumulatedMultiplier;
+
+	for (int i = 0; i < AS_TOTAL_CHOPS; i++) {
+		timingMicros_ptr->decisionStepTimeMultipliers[i] = 0;
+	}	
+}
 }
 
 void prepareStep(AS::chopControl_st* chopControl_ptr);
 void step(AS::chopControl_st chopControl, float timeMultiplier);
 void receiveAndSendData();
-void timeAndSleep(AS::timing_st* timing_ptr, bool fixedTimeStep);
+void timeAndSleep(AS::timing_st* timing_ptr, int chopIndex, bool fixedTimeStep);
 
 int getTotalPRNsToDraw(int numberLAs, int numberGAs);
 int howManyDecisionsThisChop(int chopIndex, int* decisionsMade_ptr, int numberAgents);
@@ -84,7 +105,8 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 						     ActionSystem* actionSystem_ptr, 
 							 dataControllerPointers_t* agentDataControllerPtrs_ptr,
 							 networkParameters_t* currentNetworkParams_ptr,
-	                         AS::PRNserver* prnServer_ptr);
+	                         AS::PRNserver* prnServer_ptr);	
+	
 
 void AS::mainLoop(bool fixedTimeStep) {
 	//setup:
@@ -98,14 +120,7 @@ void AS::mainLoop(bool fixedTimeStep) {
 	timing_st timingMicros;
 	chopControl_st chopControl;
 		
-	timingMicros.targetStepTime = 
-		            std::chrono::milliseconds(AS_MILLISECONDS_PER_STEP);
-	timingMicros.timeMultiplier = (float)AS_MILLISECONDS_PER_STEP/MILLIS_IN_A_SECOND;
-	timingMicros.startThisStep = std::chrono::steady_clock::now();
-	timingMicros.startLastStep = timingMicros.startThisStep;
-	timingMicros.startFirstStep = timingMicros.startThisStep;
-	timingMicros.endTimingAndSleep =  timingMicros.startThisStep; //for first iteration
-	timingMicros.accumulatedMultiplier = g_currentNetworkParams_ptr->accumulatedMultiplier;
+	initializeTiming(&timingMicros);
 
 	//Actual loop:
 	do {
@@ -121,7 +136,7 @@ void AS::mainLoop(bool fixedTimeStep) {
 		timeOperation(timingMicros.endStep, &timingMicros.endDataTransfer,
 			                        &timingMicros.totalMicrosDataTransfer);
 
-		timeAndSleep(&timingMicros, fixedTimeStep);
+		timeAndSleep(&timingMicros, chopControl.chopIndex, fixedTimeStep);
 		timeOperation(timingMicros.endDataTransfer, &timingMicros.endTimingAndSleep,
 			                                &timingMicros.totalMicrosTimmingAndSleep);
 
@@ -202,7 +217,7 @@ void receiveAndSendData() {
 }
 
 //TODO: should rename? This times and sleeps but also deals with pausing and stepping
-void timeAndSleep(AS::timing_st* timing_ptr, bool fixedTimeStep) {
+void timeAndSleep(AS::timing_st* timing_ptr, int chopIndex, bool fixedTimeStep) {
 	
 	timing_ptr->startLastStep = timing_ptr->startThisStep;
 
@@ -263,7 +278,12 @@ void timeAndSleep(AS::timing_st* timing_ptr, bool fixedTimeStep) {
 		timing_ptr->timeMultiplier = std::min(timing_ptr->timeMultiplier, maxMultiplier);
 	}
 
-	timing_ptr->accumulatedMultiplier += timing_ptr->timeMultiplier;
+	timing_ptr->decisionStepTimeMultipliers[chopIndex] = 0;
+	for (int i = 0; i < AS_TOTAL_CHOPS; i++) {
+		timing_ptr->decisionStepTimeMultipliers[i] += timing_ptr->timeMultiplier;
+	}
+	
+	timing_ptr->accumulatedMultiplier += timing_ptr->timeMultiplier;	
 
 	//update externally available step counting and timing information:
 	AS::g_currentNetworkParams_ptr->lastStepTimeMicros = 
@@ -661,4 +681,71 @@ bool AS::testMultipleAgentChopCalculations(bool log) {
 	}
 
 	return result;
+}
+
+#define TST_DECISION_TIMING_FULL_LOOPS 5
+bool AS::testDecisionStepTiming(bool log) {
+	LOG_WARN("Will test timing of decision steps");
+
+	timing_st timingMicros;
+	chopControl_st chopControl;
+		
+	initializeTiming(&timingMicros); //just so timeAndSleep doesn't do anything funny
+
+	//we'll use fixed timesteps, so:
+	float targetStepMultiplier = (float)timingMicros.targetStepTime.count()/MICROS_IN_A_SECOND;
+	float targetDecisionMultiplier = targetStepMultiplier*chopControl.totalChops;
+	
+	//First pass has different expected times for each step 
+	//(first is zero, last is targetDecisionMultiplier - targetStepMultiplier)
+	bool result1 = true;
+	float expectedMultiplier = 0;
+
+	for (int i = 0; i < chopControl.totalChops; i++) {
+		result1 &= (timingMicros.decisionStepTimeMultipliers[i] == expectedMultiplier);
+
+		timeAndSleep(&timingMicros, chopControl.chopIndex, true);
+		chopControl.chopIndex++;
+		chopControl.chopIndex %= AS_TOTAL_CHOPS;		
+
+		expectedMultiplier += targetStepMultiplier;
+	}
+	if (!result1) {
+		LOG_ERROR("Decision step timing failed on the first loop");
+		if(log){
+			puts("multipliers: ");
+			for (int i = 0; i < chopControl.totalChops; i++) {
+				printf("%f ", timingMicros.decisionStepTimeMultipliers[i]);
+			}
+			puts("\n");
+		}
+	}
+
+	//On later passes all decision steps should have the targetDecisionMultiplier
+	bool result2 = true;
+	for(int i = 0; i < TST_DECISION_TIMING_FULL_LOOPS; i++){
+		for (int j = 0; j < chopControl.totalChops; j++) {
+			result2 &= (timingMicros.decisionStepTimeMultipliers[j] == targetDecisionMultiplier);
+
+			timeAndSleep(&timingMicros, chopControl.chopIndex, true);
+			chopControl.chopIndex++;
+			chopControl.chopIndex %= AS_TOTAL_CHOPS;
+		}
+	}	
+	if (!result2) {
+		LOG_ERROR("Decision step timing failed after the first loop");
+		if(log){
+			puts("multipliers: ");
+			for (int i = 0; i < chopControl.totalChops; i++) {
+				printf("%f ", timingMicros.decisionStepTimeMultipliers[i]);
+			}
+			puts("\n");
+		}
+	}
+
+	if (result1 & result2) {
+		LOG_INFO("Passed: decision step multipliers were as expected");
+	}
+	
+	return result1 & result2;
 }

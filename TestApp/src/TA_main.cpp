@@ -28,7 +28,7 @@ bool testAgentsUpdating(bool printLog, bool fixedAndStepped = false);
 //TODO: the names of the test categories do not make sense any more
 #define HELPER_FUNC_TESTS 7
 #define BASIC_INIT_COMM_TESTS 4
-#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 9
+#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 10
 #define SPECIFIC_THREADED_LOOP_TESTS 11
 #define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
@@ -123,6 +123,8 @@ int main(void) {
 	resultsBattery2 += (int)AS::testNeighbourIDsetting(); GETCHAR_PAUSE;
 
 	resultsBattery2 += (int)AS::testChoppedPRNdrawing(printSteps, true); GETCHAR_PAUSE;
+
+	resultsBattery2 += (int)AS::testDecisionStepTiming(printSteps); GETCHAR_PAUSE;
 
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
