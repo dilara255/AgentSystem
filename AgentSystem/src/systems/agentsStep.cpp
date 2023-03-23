@@ -1,4 +1,5 @@
 #include "systems/AScoordinator.hpp"
+#include "AS_testsAPI.hpp"
 #include "systems/warningsAndErrorsCounter.hpp"
 #include "systems/diplomacy.hpp"
 
@@ -488,4 +489,61 @@ void updateRead(float* read, float real, float reference, float infiltration,
 					) );
 	*read += difference * multiplier * g_secondsSinceLastDecisionStep;
 }
+}
+
+//Tests ballpark functionality and outputs data for different scenarios, which can be graphed
+//True if positive info keeps read close to expected and negative far, but within bounds
+bool AS::testUpdateRead(bool printResults) {
+
+	//definitions:
+	enum testScenarios {INFO_VARIATIONS = 5, STARTING_GUESS_VARIATIONS = 4, 
+		                TOTAL_SCENARIOS = (INFO_VARIATIONS*INFO_VARIATIONS) };
+	
+	//setup:
+	float infoLevels[INFO_VARIATIONS];
+	int index = 0;
+	infoLevels[index++] = -1;
+	infoLevels[index++] = -0.5;
+	infoLevels[index++] = 0;
+	infoLevels[index++] = 0.5;
+	infoLevels[index++] = 1;
+	assert (index == INFO_VARIATIONS);
+
+	float initialReads[STARTING_GUESS_VARIATIONS];
+	float real = DEFAULT_LA_RESOURCES;
+	float absurdProportion = 10;
+	float goodPropotion = 0.9f;
+	float badPropotion = EXPC_MIN_PROPORTIONAL_ERROR_TO_CORRECT*goodPropotion;
+	index = 0;
+	infoLevels[index++] = real*EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION*absurdProportion;
+	infoLevels[index++] = real*badPropotion;
+	infoLevels[index++] = real*goodPropotion;
+	infoLevels[index++] = real;
+	assert (index == STARTING_GUESS_VARIATIONS);
+
+	typedef struct scen_st {
+		float real = DEFAULT_LA_RESOURCES;
+		float reference = real;
+		float read, infiltration;
+		uint64_t seed = DEFAULT_PRNG_SEED0;
+		uint64_t* seed_ptr = &seed;
+	} scenario_t;
+
+	scenario_t scenarios[STARTING_GUESS_VARIATIONS][INFO_VARIATIONS];
+
+	for(int guessVariation = 0; guessVariation < STARTING_GUESS_VARIATIONS; guessVariation++) {
+		for (int infoVariation = 0; infoVariation < INFO_VARIATIONS; infoVariation++) {
+			
+			scenarios[guessVariation][infoVariation].read = initialReads[guessVariation];
+			scenarios[guessVariation][infoVariation].infiltration = infoLevels[infoVariation];
+		}
+	}
+
+	float maxDisparityFactor = calculateMaxDisparityFactor();
+
+	//tests:
+
+	AZ::draw1spcg32(scenarios[0][0].seed_ptr);
+
+	return false;
 }
