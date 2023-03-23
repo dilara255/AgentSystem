@@ -50,12 +50,12 @@ namespace AZ{
     //release x86: ~53 nanos per prn
     //debug x86: ~16,5 nanos per prn
     //release x64: ~9 nanos per prn
-	inline uint32_t draw1spcg32(uint64_t* s) {
+	inline uint32_t draw1spcg32(uint64_t* seed) {
         uint64_t m = 0x9b60933458e17d7d;
         uint64_t a = 0xd737232eeccdf7ed;
-        *s = *s * m + a;
-        int shift = 29 - (*s >> 61);
-        return *s >> shift;
+        *seed = *seed * m + a;
+        int shift = 29 - (*seed >> 61);
+        return *seed >> shift;
     }
 }
 #pragma warning(pop)
