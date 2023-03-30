@@ -25,5 +25,6 @@ namespace AS {
 	AS_API bool testMultipleAgentChopCalculations(bool log = false);
 	AS_API bool testWarningAndErrorCountingAndDisplaying(bool printResults = false);
 	AS_API bool testDecisionStepTiming(bool printResults = false);
-	AS_API bool testUpdateRead(bool printResults = false);
+	AS_API bool testUpdateRead(bool printResults = false, bool dumpInfo = false, 
+		                                              bool overwriteDump = true);
 }

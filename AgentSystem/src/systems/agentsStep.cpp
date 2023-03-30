@@ -500,7 +500,8 @@ namespace AS_TST {
 	} readTestOutputPoint_t;
 
 	typedef struct scen_st {
-		float real = DEFAULT_LA_RESOURCES;
+		float initialReal = DEFAULT_LA_RESOURCES;
+		float real = initialReal;
 		float reference = real;
 		float read, infiltration, changeSize;
 		uint64_t seed = DEFAULT_PRNG_SEED0;
@@ -509,23 +510,21 @@ namespace AS_TST {
 		double diffStdDev = 0;
 
 		int changeSteps, interpolationSteps;
-		readTestOutputPoint_t* out_ptr;
+		std::vector<readTestOutputPoint_t> out;
 	} scenario_t;
 
 	typedef;
 
-	//runs a test scenario of the updateRead method. Stores read results on out[]
-	//updates the avg and stdDev of the difference between read and real on the scenario data
-	//Also updates the scenarios out_ptr and change and interpolation steps
-	void runReadTestScenario(scenario_t scn, int changeSteps, int interpolationSteps,
-													     readTestOutputPoint_t out[]) {
+	//Runs a test scenario of the updateRead method. 
+	//Stores read results on the scenarios out vector. 
+	//Stores on the scenario the avg and std dev of the difference of real and read values.
+	scenario_t runReadTestScenario(scenario_t scn, bool saveSteps, bool zeroReadPrn) {
 		
 		float maxDisparityFactor = calculateMaxDisparityFactor();
 		float invUint32max = 1.0f/UINT32_MAX;
 
-		scn.out_ptr = out;
-		scn.changeSteps = changeSteps;
-		scn.interpolationSteps = interpolationSteps;
+		int changeSteps = scn.changeSteps;
+		int interpolationSteps = scn.interpolationSteps;
 
 		for (int i = 0; i < changeSteps; i++) {
 			float drawn = 2*(AZ::draw1spcg32(scn.seed_ptr)*invUint32max) - 1;
@@ -536,43 +535,53 @@ namespace AS_TST {
 			for (int j = 0; j < interpolationSteps; j++) {
 				scn.real += changePerInterpolationStep;
 
-				float readPrn = AZ::draw1spcg32(scn.seed_ptr)*invUint32max;
+				float readPrn = 0;
+				if(!zeroReadPrn) {
+					readPrn = AZ::draw1spcg32(scn.seed_ptr)*invUint32max;
+				}
 				updateRead(&scn.read, scn.real, scn.reference, scn.infiltration,
 					                                maxDisparityFactor, readPrn);
 
-				int outIndex = (i*interpolationSteps) + j;
-				out[outIndex].real = scn.real;
-				out[outIndex].read = scn.read;
+				if(saveSteps){
+					readTestOutputPoint_t out;
+					out.read = scn.read;
+					out.real = scn.real;
+					scn.out.push_back(out);
+				}
 				
-				int totalSteps = changeSteps*interpolationSteps;
-				scn.avgDiff += (scn.read - scn.real)/totalSteps;
+				float invTotalSteps = 1.f/(changeSteps * interpolationSteps);
+				float diff = scn.read - scn.real;
+				scn.avgDiff += ((double)scn.read - scn.real) * invTotalSteps;
+				scn.diffStdDev += (double)diff * diff * invTotalSteps;
 			}
 		}
 
-		for (int i = 0; i < changeSteps; i++) {
-			for (int j = 0; j < interpolationSteps; j++) {
-				int outIndex = (i*interpolationSteps) + j;
-				float real = out[outIndex].real;
-				float read = out[outIndex].read;
-				float diff = read - real;
-				float diffDeviation = diff - scn.avgDiff;
+		//actually calculate the std deviation from the avg and the avg of the squares:
+		scn.diffStdDev -= scn.avgDiff * scn.avgDiff;
+		scn.diffStdDev = sqrt(scn.diffStdDev);
 
-				int totalSteps = changeSteps*interpolationSteps;
-				scn.diffStdDev += sqrt((double)diffDeviation*diffDeviation/totalSteps);
-			}
-		}
+		return scn;
 	}
 }
+
 //Tests ballpark functionality and outputs data for different scenarios, which can be graphed
 //True if positive info keeps read close to expected and negative far, but within bounds
-bool AS::testUpdateRead(bool printResults) {
+//TODO: better automatic tests (and more robust to parameter changes)
+//TODO: GRAPH the files. Look at them plus results. Adjust CHANGES if needed.
+bool AS::testUpdateRead(bool printResults, bool dumpInfo, bool overwriteDump) {
 
-	//definitions:
-	enum testScenarios {INFO_VARS = 5, FIRST_GUESS_VARS = 4, CHANGE_SPEED_VARS = 3,
+	//some definitions:
+	enum testSteps {CHANGES = 20, INTERPOLATIONS = AS_TOTAL_CHOPS,
+							 TOTAL_STEPS = CHANGES*INTERPOLATIONS};
+
+	enum testScenarios {INFO_VARS = 5, FIRST_GUESS_VARS = 4, CHANGE_SPEED_VARS = 4,
 		                TOTAL_SCENARIOS = 
 							(INFO_VARS*FIRST_GUESS_VARS*CHANGE_SPEED_VARS) };
 
-	//setup:
+	//setup test parameters:
+	g_secondsSinceLastDecisionStep = 
+		(float)AS_TOTAL_CHOPS * AS_MILLISECONDS_PER_STEP / MILLIS_IN_A_SECOND;
+
 	float infoLevels[INFO_VARS];
 	int index = 0;
 	infoLevels[index++] = -1;
@@ -582,70 +591,114 @@ bool AS::testUpdateRead(bool printResults) {
 	infoLevels[index++] = 1;
 	assert (index == INFO_VARS);
 
+	float initialReads[FIRST_GUESS_VARS];
 	float real = DEFAULT_LA_RESOURCES;
-	float absurdProportion = 10;
 	float goodPropotion = 0.9f;
 	float badPropotion = EXPC_MIN_PROPORTIONAL_ERROR_TO_CORRECT*goodPropotion;
-	float initialReads[FIRST_GUESS_VARS];
+	float awfulFirstGuess = real*EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION;
 	index = 0;
-	initialReads[index++] = real*EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION*absurdProportion;
+	initialReads[index++] = awfulFirstGuess;
 	initialReads[index++] = real*badPropotion;
 	initialReads[index++] = real*goodPropotion;
 	initialReads[index++] = real;
 	assert (index == FIRST_GUESS_VARS);
 
 	float realChangeVariations[CHANGE_SPEED_VARS];
+	float absurdProportion = 10;
 	index = 0;
-	realChangeVariations[index++] = DEFAULT_LA_RESOURCES/absurdProportion;
-	realChangeVariations[index++] = DEFAULT_LA_RESOURCES;
-	realChangeVariations[index++] = DEFAULT_LA_RESOURCES*absurdProportion;
+	realChangeVariations[index++] = 0;
+	realChangeVariations[index++] = real/absurdProportion;
+	realChangeVariations[index++] = real;
+	realChangeVariations[index++] = real*absurdProportion;
 	assert (index == CHANGE_SPEED_VARS);
 
+	//these will hold the actual test data:
 	AS_TST::scenario_t scenarios[INFO_VARS][FIRST_GUESS_VARS][CHANGE_SPEED_VARS];
 
-	enum testSteps {CHANGES = 20, INTERPOLATIONS = AS_TOTAL_CHOPS,
-							 TOTAL_STEPS = CHANGES*INTERPOLATIONS};
+	typedef struct {
+		double avgDiff, diffStdDev;
+		float infiltration;
+	} statisticalResults_t;
 
-	int* arr = new int[20];
+	//the results of the automatically checked tests will be here:
+	std::vector<statisticalResults_t> autoTestResults;
 
-	AS_TST::readTestOutputPoint_t out[TOTAL_STEPS];
-	int passes = 0;
-
-	//for each scenario:
+	//Now, for the tests. For each scenario:
 	for(int guessVar = 0; guessVar < FIRST_GUESS_VARS; guessVar++) {
 		for (int infoVar = 0; infoVar < INFO_VARS; infoVar++) {
 			for (int changeVar = 0; changeVar < CHANGE_SPEED_VARS; changeVar++) {
 				
-				//set values:
+				//we set the scenario-specific values:
 				AS_TST::scenario_t* scn_ptr = &scenarios[guessVar][infoVar][changeVar];
 				scn_ptr->read = initialReads[guessVar];
 				scn_ptr->infiltration = infoLevels[infoVar];
 				scn_ptr->changeSize = realChangeVariations[changeVar];
+				scn_ptr->changeSteps = CHANGES;
+				scn_ptr->interpolationSteps = INTERPOLATIONS;
 				
-				//and then test:
-				runReadTestScenario(scenarios[guessVar][infoVar][changeVar],
-									          CHANGES, INTERPOLATIONS, out);
+				//and, if needed, we run the manually checked tests:
+				if (dumpInfo || printResults) {
 
-				//test and update passes;
-				//if we should, save to file;
+					runReadTestScenario(scenarios[guessVar][infoVar][changeVar], dumpInfo, false);
+					//(false -> we don't want to zero the updateRead prn on these tests)
+				
+					//possibly logging the aggregate results:
+					if (printResults) {
+						printf("\nSCN: %d-%d-%d (%d steps): avg: %f, dev: %f",
+							guessVar, infoVar, changeVar, scn_ptr->changeSteps * scn_ptr->interpolationSteps,
+							scn_ptr->avgDiff, scn_ptr->diffStdDev);
+						printf("\n\t(initial diff: %f, info: %f, changeSize: %f)",
+							initialReads[guessVar] - DEFAULT_LA_RESOURCES, scn_ptr->infiltration,
+							scn_ptr->changeSize);
+					}
+				}
 
-				printf("\nSCN: %d-%d-%d: avg: %f, dev: %f",
-					guessVar, infoVar, changeVar, scn_ptr->avgDiff, scn_ptr->diffStdDev);
+				//we then check if we're in an automatically checked case:
+				bool shouldCouple = (scn_ptr->infiltration == 1) 
+									&& (initialReads[guessVar] == scn_ptr->initialReal);
+				bool shouldOrbit = (scn_ptr->infiltration == 0) 
+									&& (initialReads[guessVar] == scn_ptr->initialReal);
+				bool shouldExplode = (scn_ptr->infiltration == -1) 
+									&& (initialReads[guessVar] == awfulFirstGuess);
+
+				//and if so we run the test:
+				if (shouldCouple || shouldOrbit || shouldExplode) {
+					
+					statisticalResults_t results;
+
+					AS_TST::scenario_t returnedScn = 
+						runReadTestScenario(scenarios[guessVar][infoVar][changeVar], false, true);
+					//(true -> killing the random element of updateRead to assure determinism)
+
+					//and gather the results:
+					results.avgDiff = returnedScn.avgDiff;
+					results.diffStdDev = returnedScn.diffStdDev;
+					results.infiltration = returnedScn.infiltration;
+
+					autoTestResults.push_back(results);
+				}
 			}
 		}
 	}
 
-	//actual test:
-	
-	//check if avg and stdDev are within the expected bounds
-		//maybe actually check a few and compare? Like, "worse info should have worse fit"
-	//results
-		//info 1: for each interp step, dif after <= diff before, ALWAYS
-			//avg abs(diff of diff) >= ab(diff)*A/2
-		//info -1: if given enough time, should stay between min and max error for correction
-		//info 0: dif after interpolation steps should on avg be the same as before
-			//(provided before was bellow correction level);
-		//other info: don't try to test automatically for now : )
+	//We dump the info, if calculated:
 
-	return false;
+	//if(dumpInfo){
+	//	create file;
+	//	for test scenarios scenarios[guessVar][infoVar][changeVar]:
+	//		{check outs capacity and add their info to the file};
+	//	closeFile
+
+	//And finally check the statistical results:
+	bool result = true;
+	
+	//for autoTestResults:
+	// 	if (inf = 1 && initialReads[guessVar] == real)
+	//		result &= avg very close to zero, stdev too
+	//	if (inf = 0 && initialReads[guessVar] == real)
+	//		result &= avg close to zero, stdev a little higher
+	// 	if (inf == -1 && initialReads[guessVar] == awfulFirstGuess)
+	//		result &= avg close to initial, not too sure about stdev
+
+	return result;
 }
