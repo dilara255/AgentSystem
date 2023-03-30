@@ -136,6 +136,7 @@
 * > -Update information and expected values;
 * --Add data structure for expected values;
 * --WILL HAVE TO SOLVE HOW TO SAVE THIS (at the bottom of the file seems good);
+* -add shouldMakeDecisions flag;
 * 
 * 5. Notions:
 * 
@@ -146,23 +147,24 @@
 * -Couple of simplified decisions and actions (and watever is necessary for that);
 * --Data structure to hold action-decision scores, zero for all other actions;
 * --Should just run their course and have a simple resolution;
-* -Complete 3.2.c-e for a few more of the most relevant fields;
+* -Complete 3.2.c-e for any necessary fields;
 * --Check that we have at least one of each data type and add to testing;
 * 
-* Cleanup, some (in-code) documentation, and fresh pull+compile test
+* Some cleanup
 *
 * ***** Minor 5. Tooling: inspection *****
 *
 * Implement some tooling to inspect the system.
-* Client inuput limit by whats already implemented (focus on reading/output)
+* Client inuput limited by whats already implemented (focus on reading/output)
 *
-* Cleanup, documentation, and fresh pull+compile test
+* General testing
 *
-* * ***** Minor 6. More groundwork and Technical Debt *****
+* * ***** Minor 6. More groundwork, Technical Debt/future refactor organization*****
 *
-* - Technical debt pass;
+* - Technical debt organization pass and refactor planning;
 * -- Take a look at technical debt and TODOs (especially CRITICALs);
-* -- Prioritize what to deal with now, document the rest;
+* -- Prioritize what to deal with now, only if really necessary document the rest;
+* -- Plan a proposed first refactor around that, as well as the following steps to delivery;
 * 
 * - Any groundwork still necessary before focusing on behaviour;
 * --Especially action-related;

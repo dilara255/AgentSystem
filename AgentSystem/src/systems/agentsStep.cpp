@@ -22,7 +22,7 @@ namespace {
 	LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp);
 	GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPointers_t* dp);
 	void updateRead(float* read, float real, float reference, float infiltration, 
-		                  float maxDisparityFactor, AS::PRNserver* prnServer_ptr);
+		                  float maxDisparityFactor, float prnFrom0to1);
 
 	static float g_secondsSinceLastDecisionStep = 0;
 }
@@ -282,7 +282,7 @@ void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t*
 			//this is the payload:
 			updateRead(&reads_ptr->readOf[field], realValues.readOf[field], 
 		                        referenceReads.readOf[field], infiltration, 
-								maxDisparityFactor, prnServer_ptr);
+								maxDisparityFactor, prnServer_ptr->getNext());
 		}
 	}	
 }
@@ -307,7 +307,7 @@ void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t*
 			//this is the payload:
 			updateRead(&reads_ptr->readOf[field], realValues.readOf[field], 
 		                        referenceReads.readOf[field], infiltration, 
-				                         maxDisparityFactor, prnServer_ptr);
+				                         maxDisparityFactor, prnServer_ptr->getNext());
 		}
 	}	
 }
@@ -469,8 +469,10 @@ inline float calculateMaxDisparityFactor() {
 }
 
 void updateRead(float* read, float real, float reference, float infiltration, 
-	                  float maxDisparityFactor, AS::PRNserver* prnServer_ptr) {
+	                  float maxDisparityFactor, float prnFrom0to1) {
 	
+	assert( (prnFrom0to1 >= 0.f) && (prnFrom0to1 <= 1.f) );
+
 	float difference = real - (*read);
 	float effectiveReference = std::max(abs(reference), abs(real));
 	if (effectiveReference == 0) {
@@ -484,66 +486,166 @@ void updateRead(float* read, float real, float reference, float infiltration,
 	float multiplier = 
 		std::min(2.0f, ( 
 						A*infiltration*fabs(infiltration) 
-						+ B*( (prnServer_ptr->getNext()*2.0f) - 1) 
+						+ B*( (2*prnFrom0to1) - 1) 
 						+ C*(powf(correctionFactor, S)) 
 					) );
 	*read += difference * multiplier * g_secondsSinceLastDecisionStep;
 }
 }
 
+namespace AS_TST {
+	
+	typedef struct {
+		float real, read;
+	} readTestOutputPoint_t;
+
+	typedef struct scen_st {
+		float real = DEFAULT_LA_RESOURCES;
+		float reference = real;
+		float read, infiltration, changeSize;
+		uint64_t seed = DEFAULT_PRNG_SEED0;
+		uint64_t* seed_ptr = &seed;
+		double avgDiff = 0;
+		double diffStdDev = 0;
+
+		int changeSteps, interpolationSteps;
+		readTestOutputPoint_t* out_ptr;
+	} scenario_t;
+
+	typedef;
+
+	//runs a test scenario of the updateRead method. Stores read results on out[]
+	//updates the avg and stdDev of the difference between read and real on the scenario data
+	//Also updates the scenarios out_ptr and change and interpolation steps
+	void runReadTestScenario(scenario_t scn, int changeSteps, int interpolationSteps,
+													     readTestOutputPoint_t out[]) {
+		
+		float maxDisparityFactor = calculateMaxDisparityFactor();
+		float invUint32max = 1.0f/UINT32_MAX;
+
+		scn.out_ptr = out;
+		scn.changeSteps = changeSteps;
+		scn.interpolationSteps = interpolationSteps;
+
+		for (int i = 0; i < changeSteps; i++) {
+			float drawn = 2*(AZ::draw1spcg32(scn.seed_ptr)*invUint32max) - 1;
+			assert((drawn <= 1.f) && (drawn >= -1.f));
+
+			float changePerInterpolationStep = drawn*scn.changeSize/interpolationSteps;
+
+			for (int j = 0; j < interpolationSteps; j++) {
+				scn.real += changePerInterpolationStep;
+
+				float readPrn = AZ::draw1spcg32(scn.seed_ptr)*invUint32max;
+				updateRead(&scn.read, scn.real, scn.reference, scn.infiltration,
+					                                maxDisparityFactor, readPrn);
+
+				int outIndex = (i*interpolationSteps) + j;
+				out[outIndex].real = scn.real;
+				out[outIndex].read = scn.read;
+				
+				int totalSteps = changeSteps*interpolationSteps;
+				scn.avgDiff += (scn.read - scn.real)/totalSteps;
+			}
+		}
+
+		for (int i = 0; i < changeSteps; i++) {
+			for (int j = 0; j < interpolationSteps; j++) {
+				int outIndex = (i*interpolationSteps) + j;
+				float real = out[outIndex].real;
+				float read = out[outIndex].read;
+				float diff = read - real;
+				float diffDeviation = diff - scn.avgDiff;
+
+				int totalSteps = changeSteps*interpolationSteps;
+				scn.diffStdDev += sqrt((double)diffDeviation*diffDeviation/totalSteps);
+			}
+		}
+	}
+}
 //Tests ballpark functionality and outputs data for different scenarios, which can be graphed
 //True if positive info keeps read close to expected and negative far, but within bounds
 bool AS::testUpdateRead(bool printResults) {
 
 	//definitions:
-	enum testScenarios {INFO_VARIATIONS = 5, STARTING_GUESS_VARIATIONS = 4, 
-		                TOTAL_SCENARIOS = (INFO_VARIATIONS*INFO_VARIATIONS) };
-	
+	enum testScenarios {INFO_VARS = 5, FIRST_GUESS_VARS = 4, CHANGE_SPEED_VARS = 3,
+		                TOTAL_SCENARIOS = 
+							(INFO_VARS*FIRST_GUESS_VARS*CHANGE_SPEED_VARS) };
+
 	//setup:
-	float infoLevels[INFO_VARIATIONS];
+	float infoLevels[INFO_VARS];
 	int index = 0;
 	infoLevels[index++] = -1;
 	infoLevels[index++] = -0.5;
 	infoLevels[index++] = 0;
 	infoLevels[index++] = 0.5;
 	infoLevels[index++] = 1;
-	assert (index == INFO_VARIATIONS);
+	assert (index == INFO_VARS);
 
-	float initialReads[STARTING_GUESS_VARIATIONS];
 	float real = DEFAULT_LA_RESOURCES;
 	float absurdProportion = 10;
 	float goodPropotion = 0.9f;
 	float badPropotion = EXPC_MIN_PROPORTIONAL_ERROR_TO_CORRECT*goodPropotion;
+	float initialReads[FIRST_GUESS_VARS];
 	index = 0;
-	infoLevels[index++] = real*EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION*absurdProportion;
-	infoLevels[index++] = real*badPropotion;
-	infoLevels[index++] = real*goodPropotion;
-	infoLevels[index++] = real;
-	assert (index == STARTING_GUESS_VARIATIONS);
+	initialReads[index++] = real*EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION*absurdProportion;
+	initialReads[index++] = real*badPropotion;
+	initialReads[index++] = real*goodPropotion;
+	initialReads[index++] = real;
+	assert (index == FIRST_GUESS_VARS);
 
-	typedef struct scen_st {
-		float real = DEFAULT_LA_RESOURCES;
-		float reference = real;
-		float read, infiltration;
-		uint64_t seed = DEFAULT_PRNG_SEED0;
-		uint64_t* seed_ptr = &seed;
-	} scenario_t;
+	float realChangeVariations[CHANGE_SPEED_VARS];
+	index = 0;
+	realChangeVariations[index++] = DEFAULT_LA_RESOURCES/absurdProportion;
+	realChangeVariations[index++] = DEFAULT_LA_RESOURCES;
+	realChangeVariations[index++] = DEFAULT_LA_RESOURCES*absurdProportion;
+	assert (index == CHANGE_SPEED_VARS);
 
-	scenario_t scenarios[STARTING_GUESS_VARIATIONS][INFO_VARIATIONS];
+	AS_TST::scenario_t scenarios[INFO_VARS][FIRST_GUESS_VARS][CHANGE_SPEED_VARS];
 
-	for(int guessVariation = 0; guessVariation < STARTING_GUESS_VARIATIONS; guessVariation++) {
-		for (int infoVariation = 0; infoVariation < INFO_VARIATIONS; infoVariation++) {
-			
-			scenarios[guessVariation][infoVariation].read = initialReads[guessVariation];
-			scenarios[guessVariation][infoVariation].infiltration = infoLevels[infoVariation];
+	enum testSteps {CHANGES = 20, INTERPOLATIONS = AS_TOTAL_CHOPS,
+							 TOTAL_STEPS = CHANGES*INTERPOLATIONS};
+
+	int* arr = new int[20];
+
+	AS_TST::readTestOutputPoint_t out[TOTAL_STEPS];
+	int passes = 0;
+
+	//for each scenario:
+	for(int guessVar = 0; guessVar < FIRST_GUESS_VARS; guessVar++) {
+		for (int infoVar = 0; infoVar < INFO_VARS; infoVar++) {
+			for (int changeVar = 0; changeVar < CHANGE_SPEED_VARS; changeVar++) {
+				
+				//set values:
+				AS_TST::scenario_t* scn_ptr = &scenarios[guessVar][infoVar][changeVar];
+				scn_ptr->read = initialReads[guessVar];
+				scn_ptr->infiltration = infoLevels[infoVar];
+				scn_ptr->changeSize = realChangeVariations[changeVar];
+				
+				//and then test:
+				runReadTestScenario(scenarios[guessVar][infoVar][changeVar],
+									          CHANGES, INTERPOLATIONS, out);
+
+				//test and update passes;
+				//if we should, save to file;
+
+				printf("\nSCN: %d-%d-%d: avg: %f, dev: %f",
+					guessVar, infoVar, changeVar, scn_ptr->avgDiff, scn_ptr->diffStdDev);
+			}
 		}
 	}
 
-	float maxDisparityFactor = calculateMaxDisparityFactor();
-
-	//tests:
-
-	AZ::draw1spcg32(scenarios[0][0].seed_ptr);
+	//actual test:
+	
+	//check if avg and stdDev are within the expected bounds
+		//maybe actually check a few and compare? Like, "worse info should have worse fit"
+	//results
+		//info 1: for each interp step, dif after <= diff before, ALWAYS
+			//avg abs(diff of diff) >= ab(diff)*A/2
+		//info -1: if given enough time, should stay between min and max error for correction
+		//info 0: dif after interpolation steps should on avg be the same as before
+			//(provided before was bellow correction level);
+		//other info: don't try to test automatically for now : )
 
 	return false;
 }
