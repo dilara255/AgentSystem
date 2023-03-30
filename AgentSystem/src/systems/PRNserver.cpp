@@ -67,7 +67,7 @@ AS::drawInfo_t AS::PRNserver::drawPRNs(int chopIndex, int totalChops, int PRNsTo
 		return m_drawInfo;
 	}
 	           
-	//The generator gives us numbers in uint32_t, but want [0,1] floats, so we'll use:
+	//The generator gives us numbers in uint32_t, but we want [0,1] floats, so we'll use:
 	uint32_t dest[DRAW_WIDTH];
 	float invUint32max = 1.0f/UINT32_MAX;
 		
