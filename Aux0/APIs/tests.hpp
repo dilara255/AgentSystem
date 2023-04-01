@@ -253,7 +253,7 @@ namespace AZ{
 	}
 
 	//Draws howManyToDraw prns into a vector. Tests:
-    //Avarage, amount of zeroes, periods 2, 4, 8 and 16.
+    //Average, amount of zeroes, periods 2, 4, 8 and 16.
     //Returns true if all tests pass. Defaults to 100M draws, minimum 16.
 	//If log == true, logs to output (eg, console) the time per draw
 	static bool testDraw4spcg32s(bool log = true, int64_t howManyTuplesToDraw = 128000) {
@@ -373,7 +373,7 @@ namespace AZ{
 	}
 
     //Draws howManyToDraw prns into a vector. Tests:
-    //Avarage, amount of zeroes, periods 2, 4, 8 and 16
+    //Average, amount of zeroes, periods 2, 4, 8 and 16
     //Returns true if all tests pass. Defaults to 25M draws
 	//If log == true, logs to output (eg, console) the time per draw
 	static bool testDraw1spcg32(bool log = true, int64_t howManyToDraw = 128000) {

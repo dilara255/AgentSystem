@@ -10,6 +10,7 @@ static const char* fileNameWithDefaults = "testNetworkWithDefaults.txt";
 static const char* customFilename = "TestFileCustomName.txt";
 static const char* updateTestFilename = fileNameWithDefaults;
 static const char* updateTestOutputFilename = "updateTestOut.txt";
+static const char* readUpdatingTestFilename = "readInfoDump.txt";
 
 namespace AS {
 	AS_API void CLsanityTest();
@@ -25,5 +26,7 @@ namespace AS {
 	AS_API bool testMultipleAgentChopCalculations(bool log = false);
 	AS_API bool testWarningAndErrorCountingAndDisplaying(bool printResults = false);
 	AS_API bool testDecisionStepTiming(bool printResults = false);
-	AS_API bool testUpdateRead(bool printResults = false);
+	AS_API bool testUpdateRead(bool printResults = false, bool dumpInfo = false,
+		                                              std::string filename = "",
+					  bool zeroReadPrnOnDump = false, bool overwriteDump = true);
 }
