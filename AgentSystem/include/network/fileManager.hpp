@@ -3,6 +3,7 @@
 #include "miscStdHeaders.h"
 #include "data/agentDataControllers.hpp"
 #include "network/parameters.hpp"
+#include "AS_internal.hpp" //TODO: remove and fix on other files
 
 namespace AS{
     int createEmptyNetworkFile(std::string fileName, std::string comment, int numberLAs,
@@ -20,8 +21,4 @@ namespace AS{
                                            ActionDataController* actionDataController_ptr);
 
     bool fileIsCompatible(FILE* fp);
-
-    FILE* acquireFilePointerToLoad(std::string name, std::string filePath = "");
-    FILE* acquireFilePointerToSave(std::string name, bool shouldOverwrite = false, 
-                                                        std::string filePath = "");
 }
