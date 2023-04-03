@@ -1,16 +1,8 @@
 /*
 TODO: tests:
 
-- Test clearing a network (sizes should equal zero);
-
-- Test AS::Action class methods;
-
-- Load default values network it, test some values (and data objects);
-- Change those values, save new network with them, run prevous tests again for this file;
-
-- Full test from loaded against defaults/expected and between files;
-
-- Add all of these to the test sequence;
+- clearing a network (sizes should equal zero);
+- AS::Action class methods;
 */
 
 #include "miscStdHeaders.h"
@@ -29,7 +21,6 @@ TODO: tests:
 #include "systems/actionSystem.hpp"
 #include "systems/warningsAndErrorsCounter.hpp"
 
-#include "systems/AScoordinator.hpp"
 #include "testing/AS_tst.hpp"
 
 #define TST_ACTION_VARIATIONS 5
@@ -680,4 +671,363 @@ void AS::sayHello() {
 	CL::sayHelloInternal();
 	
 	return;
+}
+
+#include "AS_testsAPI.hpp"
+#include "AS_internal.hpp"
+
+namespace AS_TST {
+	
+	typedef struct {
+		float real, read;
+	} readTestOutputPoint_t;
+	
+	typedef struct scen_st {
+		float initialReal = DEFAULT_LA_RESOURCES;
+		float real = initialReal;
+		float reference = real;
+		float read, infiltration, changeSize;
+		uint64_t seed = DEFAULT_PRNG_SEED0;
+		uint64_t* seed_ptr = &seed;
+		uint64_t initialSeed = seed;
+		double avgDiff = 0;
+		double diffStdDev = 0;
+
+		int changeSteps, interpolationSteps;
+		std::vector<readTestOutputPoint_t> out;
+	} scenario_t;
+
+	//Runs a test scenario of the updateRead method. 
+	//Stores read results on the scenarios out vector. 
+	//Stores on the scenario the avg and std dev of the difference of real and read values.
+	scenario_t runReadTestScenario(scenario_t scn, bool saveSteps, bool zeroReadPrn, 
+		                                                       float timeMultiplier) {
+		
+		float invUint32max = 1.0f/UINT32_MAX;
+
+		int changeSteps = scn.changeSteps;
+		int interpolationSteps = scn.interpolationSteps;
+
+		for (int i = 0; i < changeSteps; i++) {
+			float drawn = 2*(AZ::draw1spcg32(scn.seed_ptr)*invUint32max) - 1;
+			assert((drawn <= 1.f) && (drawn >= -1.f));
+
+			float changePerInterpolationStep = drawn*scn.changeSize/interpolationSteps;
+
+			for (int j = 0; j < interpolationSteps; j++) {
+				scn.real += changePerInterpolationStep;
+
+				float readPrn = 0.5f; //will be stretched from [0,1] to [-1,1]
+				if(!zeroReadPrn) {
+					readPrn = AZ::draw1spcg32(scn.seed_ptr)*invUint32max;
+				}
+				updateReadTest(&scn.read, scn.real, scn.reference, scn.infiltration,
+									                    readPrn, timeMultiplier);
+
+				if(saveSteps){
+					readTestOutputPoint_t out;
+					out.read = scn.read;
+					out.real = scn.real;
+					scn.out.push_back(out);
+				}
+				
+				float invTotalSteps = 1.f/(changeSteps * interpolationSteps);
+				float diff = scn.read - scn.real;
+				scn.avgDiff += ((double)scn.read - scn.real) * invTotalSteps;
+				scn.diffStdDev += (double)diff * diff * invTotalSteps;
+			}
+		}
+
+		//actually calculate the std deviation from the avg and the avg of the squares:
+		scn.diffStdDev -= scn.avgDiff * scn.avgDiff;
+		scn.diffStdDev = sqrt(scn.diffStdDev);
+
+		return scn;
+	}
+}
+
+//Tests ballpark functionality and outputs data for different scenarios, which can be graphed
+//True if positive info keeps read close to expected and negative far, but within bounds
+//TODO: better automatic tests (and more robust to parameter changes)
+//TODO: GRAPH the files. Look at them plus results. Adjust CHANGES if needed.
+bool AS::testUpdateRead(bool printResults, bool dumpInfo, std::string filename, 
+	                                bool zeroReadPrnOnDump, bool overwriteDump) {
+	//some definitions:
+	enum testSteps {CHANGES = 2000, INTERPOLATIONS = AS_TOTAL_CHOPS,
+							 TOTAL_STEPS = CHANGES*INTERPOLATIONS};
+
+	enum testScenarios {INFO_VARS = 5, FIRST_GUESS_VARS = 4, CHANGE_SPEED_VARS = 4,
+		                TOTAL_SCENARIOS = 
+							(INFO_VARS*FIRST_GUESS_VARS*CHANGE_SPEED_VARS) };
+
+	float timeMultiplier = 
+		(float)AS_TOTAL_CHOPS * AS_MILLISECONDS_PER_STEP / MILLIS_IN_A_SECOND;
+
+	//setup test parameters:
+	float infoLevels[INFO_VARS];
+	int index = 0;
+	infoLevels[index++] = -1;
+	infoLevels[index++] = -0.5;
+	infoLevels[index++] = 0;
+	infoLevels[index++] = 0.5;
+	infoLevels[index++] = 1;
+	assert (index == INFO_VARS);
+
+	float initialReads[FIRST_GUESS_VARS];
+	float real = DEFAULT_LA_RESOURCES;
+	float goodPropotion = 0.9f;
+	float badPropotion = EXPC_MIN_PROPORTIONAL_ERROR_TO_CORRECT*goodPropotion;
+	float awfulFirstGuess = real*(EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION + 1);
+	index = 0;
+	initialReads[index++] = awfulFirstGuess;
+	initialReads[index++] = real*badPropotion;
+	initialReads[index++] = real*goodPropotion;
+	initialReads[index++] = real;
+	assert (index == FIRST_GUESS_VARS);
+
+	float realChangeVariations[CHANGE_SPEED_VARS];
+	float absurdProportion = 10;
+	index = 0;
+	realChangeVariations[index++] = 0;
+	realChangeVariations[index++] = real/absurdProportion;
+	realChangeVariations[index++] = real;
+	realChangeVariations[index++] = real*absurdProportion;
+	assert (index == CHANGE_SPEED_VARS);
+
+	//these will hold the actual test data:
+	AS_TST::scenario_t scenarios[INFO_VARS][FIRST_GUESS_VARS][CHANGE_SPEED_VARS];
+
+	typedef struct {
+		double avgDiff, diffStdDev;
+		float infiltration;
+	} statisticalResults_t;
+
+	//the results of the automatically checked tests will be here:
+	std::vector<statisticalResults_t> autoTestResults;
+
+	//Now, for the tests. For each scenario:
+	for(int guessVar = 0; guessVar < FIRST_GUESS_VARS; guessVar++) {
+		for (int infoVar = 0; infoVar < INFO_VARS; infoVar++) {
+			for (int changeVar = 0; changeVar < CHANGE_SPEED_VARS; changeVar++) {
+				
+				//we set the scenario-specific values:
+				AS_TST::scenario_t* scn_ptr = &scenarios[guessVar][infoVar][changeVar];
+				scn_ptr->read = initialReads[guessVar];
+				scn_ptr->infiltration = infoLevels[infoVar];
+				scn_ptr->changeSize = realChangeVariations[changeVar];
+				scn_ptr->changeSteps = CHANGES;
+				scn_ptr->interpolationSteps = INTERPOLATIONS;
+				
+				//we first check if we're in an automatically checked case:
+				bool shouldOrbit = (scn_ptr->infiltration == 1) 
+									&& (initialReads[guessVar] == scn_ptr->initialReal);
+				bool shouldFreeze = (scn_ptr->infiltration == 0) 
+									&& (initialReads[guessVar] == scn_ptr->initialReal);
+				bool shouldStayAway = (scn_ptr->infiltration == -1) 
+									&& (initialReads[guessVar] == awfulFirstGuess);
+
+				//and if so we run the test:
+				if ((shouldOrbit || shouldFreeze || shouldStayAway) 
+					 && (scn_ptr->changeSize == 0)) {
+					
+					statisticalResults_t results;
+
+					AS_TST::scenario_t returnedScn = 
+						runReadTestScenario(scenarios[guessVar][infoVar][changeVar], 
+													    false, true, timeMultiplier);
+					//(true -> killing the random element of updateRead to assure determinism)
+
+					//and gather the results:
+					results.avgDiff = returnedScn.avgDiff;
+					results.diffStdDev = returnedScn.diffStdDev;
+					results.infiltration = returnedScn.infiltration;
+
+					autoTestResults.push_back(results);
+
+					//and log the results, if necessary:
+					if (printResults) {
+						int lastIndex = (int)(autoTestResults.size() - 1);
+						assert(lastIndex >= 0);
+
+						printf("SCN: %d-%d-%d (%d steps): avg: %f, dev: %f\n",
+							guessVar, infoVar, changeVar, scn_ptr->changeSteps * scn_ptr->interpolationSteps,
+							autoTestResults.at(lastIndex).avgDiff, autoTestResults.at(lastIndex).diffStdDev);
+						printf("\t(initial diff : % f, info : % f, changeSize : % f, seed0 : % llu\n",
+							initialReads[guessVar] - DEFAULT_LA_RESOURCES, scn_ptr->infiltration,
+							scn_ptr->changeSize, scn_ptr->initialSeed);
+					}
+				}
+
+				//then, if needed, we run the manually checked tests:
+				if (dumpInfo) {
+					*scn_ptr = runReadTestScenario(scenarios[guessVar][infoVar][changeVar], 
+											   dumpInfo, zeroReadPrnOnDump, timeMultiplier);
+				}
+			}
+		}
+	}
+
+	//We dump the info:
+	bool dumpInfoError = false;
+	FILE* fp;
+	if(dumpInfo){ //TODO: too much nesting
+		fp = AS::acquireFilePointerToSave(filename, overwriteDump);
+		if (fp == NULL) {
+			dumpInfoError = true;
+			goto dumpError;
+		}
+		else {
+
+			//add a header to the file:
+			int aux = fprintf(fp, "GuessVars: %d InfoVars: %d ChangeVars: %d\n",
+								FIRST_GUESS_VARS, INFO_VARS, CHANGE_SPEED_VARS);
+			if (aux < 0) {
+				dumpInfoError = true;
+				goto dumpError;
+			}
+
+			//for test scenarios scenarios[guessVar][infoVar][changeVar]:
+			for(int guessVar = 0; guessVar < FIRST_GUESS_VARS; guessVar++) {
+				for (int infoVar = 0; infoVar < INFO_VARS; infoVar++) {
+					for (int changeVar = 0; changeVar < CHANGE_SPEED_VARS; changeVar++) {
+
+						auto scn_ptr = &scenarios[guessVar][infoVar][changeVar];
+
+						//write to the file the general scenario data:
+
+						aux = fprintf(fp, "\n=> SCN: %d-%d-%d (%d steps)\n",
+														  guessVar, infoVar, changeVar, 
+									scn_ptr->changeSteps * scn_ptr->interpolationSteps);
+						if (aux < 0) {
+							dumpInfoError = true;
+							goto dumpError;
+						}
+						
+						aux = fprintf(fp, "real0 %f guess0 %f inf %f ref %f\n",
+							scn_ptr->initialReal, initialReads[guessVar],scn_ptr->infiltration,
+							scn_ptr->reference);
+						if (aux < 0) {
+							dumpInfoError = true;
+							goto dumpError;
+						}
+
+						aux = fprintf(fp, "changeSize %f changes %d interpolSteps %d seed0 %llu\n",
+							scn_ptr->changeSize, scn_ptr->changeSteps, scn_ptr->interpolationSteps,
+							scn_ptr->initialSeed);
+						if (aux < 0) {
+							dumpInfoError = true;
+							goto dumpError;
+						}
+
+						aux = fprintf(fp, "avgDiff %f diffStdDev %f\n\n",
+										scn_ptr->avgDiff, scn_ptr->diffStdDev);
+						if (aux < 0) {
+							dumpInfoError = true;
+							goto dumpError;
+						}
+
+						//and then the actual test data:
+						aux = fprintf(fp, "real\tread\n");
+						if (aux < 0) {
+							dumpInfoError = true;
+							goto dumpError;
+						}
+
+						int elements = (int)scn_ptr->out.size();
+						for (int i = 0; i < elements; i++) {
+							aux = fprintf(fp, "%f\t%f\n",
+								scn_ptr->out.at(i).real,
+								scn_ptr->out.at(i).read);
+							if (aux < 0) {
+								dumpInfoError = true;
+								goto dumpError;
+							}
+						}						
+					}
+				}
+			}
+
+			//done:
+			if(printResults){
+				LOG_TRACE("Test file saved (probably on default path)");
+			}
+			fclose(fp);
+		}
+	}
+
+	dumpError: //in case the file data saving went wrong, we cleanup here:
+	if (dumpInfoError) {
+		if (fp == NULL) {
+			LOG_ERROR("Couldn't create file to save test data. Will still do the automated checking");
+			
+		}
+		else {
+			LOG_ERROR("Something went wrong writing test data to file. Will still do the automated checking");
+			fclose(fp);
+		}
+	}
+
+	//finally, we check the statistical results:
+	bool result = true;
+	
+	int elements = (int)autoTestResults.size();
+	for (int i = 0; i < elements; i++) {
+		const auto& stats = autoTestResults.at(i);
+		//TODO: extracted case-matching and expectations
+		if (stats.infiltration == -1) {
+			float eqProportion = EXPC_PROPORTIONAL_ERROR_OVER_MINIMUM_FOR_EQUILIBRIUM
+				                 + EXPC_MIN_PROPORTIONAL_ERROR_TO_CORRECT;
+			float equilibrium = real * eqProportion;
+			float small = 0.2f * real; //TODO: extract magic number
+
+			float errorOnAverage = abs(equilibrium - (float)stats.avgDiff);
+
+			bool aux = errorOnAverage <= small;
+			aux &= abs((float)stats.diffStdDev) <= small;
+
+			if (!aux && printResults) {
+				LOG_ERROR("Statistical results not as expect (case: bad info, awful start)");
+			}
+
+			result &= aux;
+		}
+		else if (stats.infiltration == 0) {
+			bool aux = stats.avgDiff == 0;
+			aux &= stats.diffStdDev == 0;
+
+			if (!aux && printResults) {
+				LOG_ERROR("Statistical results not as expect (case: neutral info, perfect start)");
+			}
+
+			result &= aux;
+		}
+		else if (stats.infiltration == 1) {
+			#define FAC_A EXPC_MAX_PROPORTIONAL_CHANGE_PER_SECOND //A + B
+			#define FAC_B EXPC_INFILTRATION_EQUIVALENT_TO_MAXIMUM_NOISE //sqrt(B/A)
+			float infoWeight =  (FAC_A / ((FAC_B*FAC_B) + 1));
+
+			float multiplierAmplitude = 
+				real * EXPC_EFFECTIVE_MIN_PROPORTIONAL_DIFF * infoWeight;
+			double expected = (multiplierAmplitude * timeMultiplier) / 2;
+
+			double avgError = abs(expected - stats.avgDiff);
+			double stdDevError = abs(expected - stats.diffStdDev);
+			double small = abs(expected/10); //TODO: extract magic number
+
+			bool aux = avgError <= small;
+			aux &= stdDevError  <= small;
+
+			if (!aux && printResults) {
+				LOG_ERROR("Statistical results not as expect (case: good info, perfect start)");
+			}
+
+			result &= aux;
+		}
+	}
+	
+	if(result && printResults){
+		LOG_INFO("Automatic tests passed!");
+	}
+
+	return result;
 }
