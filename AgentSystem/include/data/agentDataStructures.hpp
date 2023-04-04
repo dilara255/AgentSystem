@@ -193,40 +193,6 @@ namespace LA {
 							READS, REQUEST_EXPECTATIONS_SELF, REQUEST_EXPECTATIONS_NEIGHBORS,
 			                TOTAL_GA_DECISION_FIELDS };
 	} AS_API decisionData_t;
-
-	//TODO: CRITICAL: PASS THE ENUMS SOMEWHERE ELSE, TO LEAVE THE "PARAMETERS" separated
-	enum class notionsSelf { S0, S1, S2, S3, S4, S5, S6, S7,
-													 TOTAL };
-	typedef	float AS_API notionsSelf_t[(int)notionsSelf::TOTAL];
-
-	enum class notionsNeighbor { N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11,
-		                                                                   TOTAL };
-	typedef	float AS_API notionsNeighbor_t[(int)notionsNeighbor::TOTAL];
-
-	typedef struct notions_st {
-
-		notionsSelf_t self;
-		notionsNeighbor_t neighbors[MAX_LA_NEIGHBOURS];
-
-		enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
-	} AS_API notions_t;
-	
-	enum class scoresSelf { S0, S1, S2, 
-		                         TOTAL};
-	typedef	float AS_API scoresSelf_t[(int)scoresSelf::TOTAL];
-
-	enum class scoresNeighbors { LI0, LI1, LI2, LI3, LI4, LI5, LI6,
-		                                   LR0, LR1, LR2, LR3, LR4,
-															 TOTAL};
-	typedef	float AS_API scoresNeighbors_t[(int)scoresNeighbors::TOTAL];
-
-	typedef struct actionScores_st {
-
-		scoresSelf self;
-		scoresSelf_t neighbors[MAX_LA_NEIGHBOURS];
-
-		enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
-	} AS_API actionScores_t;
 }
 
 namespace GA {
@@ -282,39 +248,4 @@ namespace GA {
 							READS, REQUEST_EXPECTATIONS_SELF, REQUEST_EXPECTATIONS_NEIGHBORS,
 			                TOTAL_GA_DECISION_FIELDS };
 	} AS_API decisionData_t;	
-
-	//NOW: figure out the numbers for GAs
-	//TODO: CRITICAL: PASS THE ENUMS SOMEWHERE ELSE, TO LEAVE THE "PARAMETERS" separated
-	enum class notionsSelf { S0, S1, S2, S3, S4, S5, S6, S7,
-													 TOTAL };
-	typedef	float AS_API notionsSelf_t[(int)notionsSelf::TOTAL];
-
-	enum class notionsNeighbor { N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11,
-		                                                                   TOTAL };
-	typedef	float AS_API notionsNeighbor_t[(int)notionsNeighbor::TOTAL];
-
-	typedef struct notions_st {
-
-		notionsSelf_t self;
-		notionsNeighbor_t neighbors[MAX_LA_NEIGHBOURS];
-
-		enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
-	} AS_API notions_t;
-	
-	enum class scoresSelf { S0, S1, S2, 
-		                         TOTAL};
-	typedef	float AS_API scoresSelf_t[(int)scoresSelf::TOTAL];
-
-	enum class scoresNeighbors { LI0, LI1, LI2, LI3, LI4, LI5, LI6,
-		                                   LR0, LR1, LR2, LR3, LR4,
-															 TOTAL};
-	typedef	float AS_API scoresNeighbors_t[(int)scoresNeighbors::TOTAL];
-
-	typedef struct actionScores_st {
-
-		scoresSelf self;
-		scoresSelf_t neighbors[MAX_LA_NEIGHBOURS];
-
-		enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
-	} AS_API actionScores_t;
 }
