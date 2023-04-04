@@ -2,14 +2,19 @@
 
 /*
 This file holds:
-- Data structure to hold parameters of a network (networkParameters_t);
-- Some enums and typedefs of agent data;
+- Defines for:
+-- Fixed parameters which ALL networks will have to follow;
+--- Most can easily be refactored to be received as inputs, except for the Network size ones;
+-- Defaults for agent and action data, used when creating new files and tests;
+-- Test-related defines.
 
-- Fixed parameters which ALL networks will have to follow;
-- Defaults for agent and action data, used when creating new files and tests;
-- Test-related defines.
+- And also some stuff which TODO: SHOULDN'T BE HERE ANYMORE:
+-- Data structure to hold parameters of a network (networkParameters_t);
+--- But which ended up also holding other, dynamic stuff;
+---> TODO: move this out of here and rename this to "fixedParameters";
+----> Try to actually contain all of those in here, to help future refactors.
 
-//TODO: this should be split in a couple to a few different files
+//TODO: review the description below an update all of this when networkParameters_t is moved.
 
 networkParameters_t includes:
 - number of local and global agents;
@@ -29,28 +34,27 @@ and data sizes static.
 #include "prng.hpp"
 #include "miscDefines.hpp"
 
-//FIXED parameters:
-#define NAME_LENGHT 30
-#define COMMENT_LENGHT 250
-#define DIPLOMATIC_STANCES 5 //TODO: this would be better left to the enum class diploStances
+//--> FIXED parameters, relating to:
+
+//Network size (these will change array sizes):
 #define MAX_LA_NEIGHBOURS 10
 #define MAX_GA_QUANTITY 16 //NOTE: last one is reserved to "belongs to no GA"
 #define MAX_LA_QUANTITY 128
 #define MAX_AGENTS (MAX_GA_QUANTITY + MAX_LA_QUANTITY)
 #define MAX_ACTIONS_PER_AGENT 10
-#define NUMBER_LA_OFFSETS (MAX_ACTIONS_PER_AGENT + (DIPLOMATIC_STANCES - 1))
-#define GA_PERSONALITY_TRAITS 4
+#define NAME_LENGHT 30
+#define COMMENT_LENGHT 250
+
+//System flow:
+#define AS_MILLISECONDS_PER_STEP (4)
+#define MAX_PROPORTIONAL_STEP_DURATION_ERROR (5) 
+#define AS_MILLISECONDS_PER_DECISION_ROUND (40) //will be floored to multiple of step time
+#define AS_TOTAL_CHOPS (AS_MILLISECONDS_PER_DECISION_ROUND/AS_MILLISECONDS_PER_STEP)
 #define SLEEP_TIME_WAITING_MUTEX_MICROS 10
 #define MAX_MUTEX_TRY_LOCKS 500 //will try at least twice anyway
-#define AS_MILLISECONDS_PER_STEP (4)
-#define AS_MILLISECONDS_PER_DECISION_ROUND (40) //will be floored to multiple of step time
 #define SECONDS_PER_ERROR_DISPLAY (5) //will be floored to multiple of step time in ms
-#define AS_TOTAL_CHOPS (AS_MILLISECONDS_PER_DECISION_ROUND/AS_MILLISECONDS_PER_STEP)
-#define PRNS_PER_ACT 5
-#define LA_FIELDS_TO_DEDUCE_EXPECTED 10
-#define GA_FIELDS_TO_DEDUCE_EXPECTED 10
-#define PRNS_PER_FIELD_DEDUCED 2
-#define PRNS_TO_CHOOSE_ACTION 1
+
+//Economy:
 #define EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED (0.5)
 #define EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDER (1-EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED)
 #define TRADE_SATURATION_MULTIPLIER (1.0)
@@ -60,12 +64,17 @@ and data sizes static.
 #define TRADE_SATURATION_FROM_ALLY 1
 #define TRADE_SATURATION_FROM_ALLY_WITH_TRADE 2
 #define LA_UPKEEP_PER_EXCESS_STRENGHT (0.5)
-#define MAX_PROPORTIONAL_STEP_DURATION_ERROR (5) 
 #define TRADE_FACTOR_PER_SECOND (0.5f)
 #define ATTRITION_FACTOR_PER_SECOND (0.001)
 #define GA_TAX_RATE_PER_SECOND (0.001f)
 
+//Diplomacy:
+#define DIPLOMATIC_STANCES 5 //TODO: would this be better left to the enum class diploStances?
+
 //Expected-value reading parameters:
+#define LA_FIELDS_TO_DEDUCE_EXPECTED 10
+#define GA_FIELDS_TO_DEDUCE_EXPECTED 10
+#define PRNS_PER_FIELD_DEDUCED 2
 #define NEIGHBORS_RELATIVE_WEIGHT_FOR_REF_EXPECTATIONS (1.0f)
 #define TOTAL_WEIGHT_FOR_REF_EXPECTATIONS (1.0f + NEIGHBORS_RELATIVE_WEIGHT_FOR_REF_EXPECTATIONS)
 #define EXPC_MAX_PROPORTIONAL_CHANGE_PER_SECOND (0.1f)
@@ -78,12 +87,19 @@ and data sizes static.
 #define EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION (EXPC_PROPORTIONAL_ERROR_OVER_MINIMUM_FOR_MAX_CORRECTION + EXPC_MIN_PROPORTIONAL_ERROR_TO_CORRECT)
 #define EXPC_ERROR_CORRECTION_SHARPNESS (4.0f)
 
-//Decision parameters:
+//Decision-making parameters:
+#define PRNS_TO_CHOOSE_ACTION 1
 #define CONSTRAINT_CHECK_ROUNDS 1
 #define NOTIONS_ABOUT_SELF 8
 #define NOTIONS_ABOUT_NEIGHBOR 12
+#define NUMBER_LA_OFFSETS (MAX_ACTIONS_PER_AGENT + (DIPLOMATIC_STANCES - 1))
+#define GA_PERSONALITY_TRAITS 4
 
-//DEFAULT values for new network creation:
+//Actions:
+#define PRNS_PER_ACT 5
+
+//--> DEFAULT values for new network creation:
+
 #define DEFAULT_ONOFF (true)
 #define DEFAULT_GA_RESOURCES (0.0f)
 #define DEFAULT_GA_STANCE 2
@@ -110,8 +126,9 @@ and data sizes static.
 #define DEFAULT_LAST_TICK 1
 #define DEFAULT_INTENSITY (-3.0f)
 #define DEFAULT_ACTION_AUX (99.0f)
+#define DEFAULT_REQUESTS (0.0f)
 
-//TEST-related defines:
+//--> TEST-related defines:
 #define TST_NUMBER_LAS 15
 #define TST_NUMBER_GAS 5
 #define TST_GA_ID 2
@@ -137,10 +154,11 @@ and data sizes static.
 #define TST_PRNS_TO_DRAW MAX_PRNS
 #define TST_PRN_CHOPS 7
 
+//TODO-CRITICAL: None of the following should be here : )
 namespace AS {
 
 	//TODO-CRITICAL: WARNING: REFACTOR: this will be part of a DATA project
-	//Should then be a class, with copy/assignment constructor and etc
+	//Should then have copy/assignment constructor
 	//FOR NOW: NOTE: any change here has to be reflected on dataMisc and dataMirror!
 	typedef struct {
 		bool isNetworkInitialized;
@@ -156,10 +174,5 @@ namespace AS {
 		char comment[COMMENT_LENGHT];
 		uint64_t seeds[DRAW_WIDTH];
 	} AS_API networkParameters_t;
-
-	enum gaPersonalityTraits {
-		GA_PERS_0, GA_PERS_1, GA_PERS_2, GA_PERS_3,
-		GA_PERS_4, GA_PERS_5, GA_PERS_6, GA_PERS_7,
-		TOTAL_GA_PERS};
 }
 
