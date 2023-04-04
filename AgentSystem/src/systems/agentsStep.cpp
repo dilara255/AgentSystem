@@ -3,6 +3,8 @@
 #include "systems/warningsAndErrorsCounter.hpp"
 #include "systems/diplomacy.hpp"
 
+#include "systems/actionSystem.hpp"
+
 namespace {
 	static AS::WarningsAndErrorsCounter* g_errorsCounter_ptr;
 
@@ -181,17 +183,20 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	param_ptr->GAresources += param_ptr->lastTradeIncome;
 }
 
+
 void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr, 
 															  AS::PRNserver* prnServer_ptr);
+
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-	                                                    LA::notions_t* notions_ptr);
+	                                         AS::Decisions::notions_t* notions_ptr);
 void preScoreActionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-	                   LA::notions_t* notions_ptr, LA::actionScores_t* scores_ptr);
+										    AS::Decisions::notions_t* notions_ptr, 
+	AS::Decisions::LA::actionScores_t* scores_ptr);
 void redistributeScoreDueToImpedimmentsLA(int agent, 
-	AS::dataControllerPointers_t* agentDataPtrs_ptr, LA::notions_t* notions_ptr,
-	                                             LA::actionScores_t* scores_ptr);
+	AS::dataControllerPointers_t* agentDataPtrs_ptr, AS::Decisions::notions_t* notions_ptr,
+	                                         AS::Decisions::LA::actionScores_t* scores_ptr);
 void chooseActionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-	                                            LA::actionScores_t* scores_ptr);
+	                             AS::Decisions::LA::actionScores_t* scores_ptr);
 
 void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
 								    AS::PRNserver* prnServer_ptr) {
@@ -204,10 +209,10 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	
 	updateReadsLA(agent, dp, state_ptr, prnServer_ptr);
 	
-	LA::notions_t notions;
+	AS::Decisions::notions_t notions;
 	calculateNotionsLA(agent, dp, &notions);
 
-	LA::actionScores_t scores;
+	AS::Decisions::LA::actionScores_t scores;
 	preScoreActionsLA(agent, dp, &notions, &scores);
 
 	for(int i = 0; i < CONSTRAINT_CHECK_ROUNDS; i++){
@@ -223,14 +228,15 @@ void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t*
 void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t* state_ptr, 
 															  AS::PRNserver* prnServer_ptr);
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-	                                                    GA::notions_t* notions_ptr);
+	                                                   AS::Decisions::notions_t* notions_ptr);
 void preScoreActionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-	                   GA::notions_t* notions_ptr, GA::actionScores_t* scores_ptr);
+									        AS::Decisions::notions_t* notions_ptr, 
+									AS::Decisions::GA::actionScores_t* scores_ptr);
 void redistributeScoreDueToImpedimmentsGA(int agent, 
-	AS::dataControllerPointers_t* agentDataPtrs_ptr, GA::notions_t* notions_ptr,
-	                                             GA::actionScores_t* scores_ptr);
+	AS::dataControllerPointers_t* agentDataPtrs_ptr, AS::Decisions::notions_t* notions_ptr,
+	                                         AS::Decisions::GA::actionScores_t* scores_ptr);
 void chooseActionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-	                                            GA::actionScores_t* scores_ptr);
+	                             AS::Decisions::GA::actionScores_t* scores_ptr);
 
 void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp, 
 	                                AS::PRNserver* prnServer_ptr) {
@@ -243,10 +249,10 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 
 	updateReadsGA(agent, dp, state_ptr, prnServer_ptr);
 
-	GA::notions_t notions;
+	AS::Decisions::notions_t notions;
 	calculateNotionsGA(agent, dp, &notions);
 
-	GA::actionScores_t scores;
+	AS::Decisions::GA::actionScores_t scores;
 	preScoreActionsGA(agent, dp, &notions, &scores);
 
 	for(int i = 0; i < CONSTRAINT_CHECK_ROUNDS; i++){
@@ -258,40 +264,43 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 
 
 //LA:
-void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, LA::notions_t* np) {
+void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AS::Decisions::notions_t* np) {
 
 }
 
-void preScoreActionsLA(int agent, AS::dataControllerPointers_t* dp, LA::notions_t* np,
-	                                                           LA::actionScores_t* sp) {
+void preScoreActionsLA(int agent, AS::dataControllerPointers_t* dp, AS::Decisions::notions_t* np,
+	                                                       AS::Decisions::LA::actionScores_t* sp) {
 
 }
 
 void redistributeScoreDueToImpedimmentsLA(int agent, AS::dataControllerPointers_t* dp,
-										    LA::notions_t* np, LA::actionScores_t* sp) {
+			      AS::Decisions::notions_t* np, AS::Decisions::LA::actionScores_t* sp) {
 
 }
 
-void chooseActionLA(int agent, AS::dataControllerPointers_t* dp, LA::actionScores_t* sp) {
+void chooseActionLA(int agent, AS::dataControllerPointers_t* dp, 
+	                      AS::Decisions::LA::actionScores_t* sp) {
 
 }
 
 //GA:
-void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, GA::notions_t* np) {
+void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AS::Decisions::notions_t* np) {
 
 }
 
-void preScoreActionsGA(int agent, AS::dataControllerPointers_t* dp, GA::notions_t* np,
-	                                                           GA::actionScores_t* sp) {
+void preScoreActionsGA(int agent, AS::dataControllerPointers_t* dp, AS::Decisions::notions_t* np, 
+														   AS::Decisions::GA::actionScores_t* sp) {
 
 }
 
 void redistributeScoreDueToImpedimmentsGA(int agent, AS::dataControllerPointers_t* dp,
-										    GA::notions_t* np, GA::actionScores_t* sp) {
+													     AS::Decisions::notions_t* np, 
+											    AS::Decisions::GA::actionScores_t* sp) {
 
 }
 
-void chooseActionGA(int agent, AS::dataControllerPointers_t* dp, GA::actionScores_t* sp) {
+void chooseActionGA(int agent, AS::dataControllerPointers_t* dp, 
+						  AS::Decisions::GA::actionScores_t* sp) {
 
 }
 

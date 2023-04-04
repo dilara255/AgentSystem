@@ -69,161 +69,6 @@ namespace AS {
 		int m_maxActionsPerAgent = 0;
 	};
 
-	//TODO: add description
-	namespace ActionVariations {
-		
-		constexpr auto NOT = actExists::NOT;
-		constexpr auto STD = actExists::STD;
-		constexpr auto SPC = actExists::SPC;
-		constexpr auto TOTAL_CATEGORIES = ((int)actCategories::TOTAL);
-		constexpr auto TOTAL_MODES = ((int)actModes::TOTAL);
-		constexpr auto TOTAL_SCOPES = ((int)scope::TOTAL);
-		constexpr auto LOCAL = ((int)scope::LOCAL);
-		constexpr auto GLOBAL = ((int)scope::GLOBAL);
-
-		//TODO: Review these when action system is implemented
-		static const actExists availableVariations[TOTAL_CATEGORIES][TOTAL_MODES][TOTAL_SCOPES] = {
-			
-			//KEY for the numbers: see AS::actionAvailability enum on actionData.hpp
-			//Innermost Order is: { LOCAL, GLOBAL }
-			
-			            //STRENGHT                            //RESOURCES                
-		      //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, SPC}, {SPC, STD}, {SPC, STD}},  {{SPC, SPC}, {SPC, STD}, {SPC, STD}}, 
-
-		 	              //ATTACK                               //GUARD
-			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, STD}, {STD, STD}, {NOT, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
-
-		 	               //SPY                               //SABOTAGE
-			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, SPC}, {SPC, SPC}, {SPC, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
-
-		 	            //DIPLOMACY                            //CONQUEST
-			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, SPC}, {SPC, SPC}, {NOT, SPC}},  {{SPC, STD}, {STD, STD}, {NOT, STD}},
-		};
-
-		static bool isValid(int category, int mode, int scope) {
-			bool inBounds = (category < TOTAL_CATEGORIES);
-			inBounds &= (mode < TOTAL_MODES);
-			inBounds &= (scope < TOTAL_SCOPES);
-			if(!inBounds) {return false;}
-
-			return (availableVariations[category][mode][scope] != NOT);
-		}	
-
-		static actExists getExistence(int category, int mode, int scope) {
-			bool inBounds = (category < TOTAL_CATEGORIES);
-			inBounds &= (mode < TOTAL_MODES);
-			inBounds &= (scope < TOTAL_SCOPES);
-			if(!inBounds) {return NOT;}
-
-			return availableVariations[category][mode][scope];
-		}
-
-		static int totalLocals() {
-			int amount = 0;
-
-			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
-				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += (availableVariations[i][j][LOCAL] != NOT);
-				}
-			}
-			return amount;
-		}
-
-		static int totalGlobals() {
-			int amount = 0;
-
-			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
-				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += (availableVariations[i][j][GLOBAL] != NOT);
-				}
-			}
-			return amount;
-		}
-
-		//Standard actions with different mode and/or scope, no matter what category
-		static int kindsOfStandards() {
-			bool hasAppeard[TOTAL_MODES][TOTAL_SCOPES];
-
-			for (int i = 0; i < TOTAL_MODES; i++) {
-				for (int j = 0; j < TOTAL_SCOPES; j++) {
-					hasAppeard[i][j] = false;
-				}
-			}
-
-			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
-				for (int j = 0; j < TOTAL_MODES; j++) {
-
-					hasAppeard[j][LOCAL] |= (availableVariations[i][j][LOCAL] == STD);
-					hasAppeard[j][GLOBAL] |= (availableVariations[i][j][GLOBAL] == STD);
-				}
-			}
-
-			int amount = 0;
-			for (int i = 0; i < TOTAL_MODES; i++) {
-				for (int j = 0; j < TOTAL_SCOPES; j++) {
-					amount += (int)hasAppeard[i][j];
-				}
-			}
-			return amount;
-		}
-
-		static int totalSpecifics() {
-			int amount = 0;
-
-			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
-				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += (availableVariations[i][j][LOCAL] == SPC);
-					amount += (availableVariations[i][j][GLOBAL] == SPC);
-				}
-			}
-			return amount;
-		}
-
-		static int totalStandards() {
-			int amount = 0;
-
-			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
-				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += (availableVariations[i][j][LOCAL] == STD);
-					amount += (availableVariations[i][j][GLOBAL] == STD);
-				}
-			}
-			return amount;
-		}
-
-		static int totalNots() {
-			int amount = 0;
-
-			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
-				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += (availableVariations[i][j][LOCAL] == NOT);
-					amount += (availableVariations[i][j][GLOBAL] == NOT);
-				}
-			}
-			return amount;
-		}
-
-		static int totalValids() {
-			int amount = 0;
-
-			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
-				for (int j = 0; j < TOTAL_MODES; j++) {
-					amount += (availableVariations[i][j][LOCAL] != NOT);
-					amount += (availableVariations[i][j][GLOBAL] != NOT);
-				}
-			}
-			return amount;
-		}
-
-		static int totalPossible() {
-			return (int)AS::actCategories::TOTAL*(int)AS::actModes::TOTAL*(int)AS::scope::TOTAL;
-		}
-	};
-
 	//Used to prepare and hold the ActionDataController
 	class ActionSystem {
 	public:		
@@ -253,5 +98,237 @@ namespace AS {
 		bool m_isInitialized = false;
 		ActionDataController data; //all action data is here!
 	};
+
+	//TODO: add description
+	namespace ActionVariations {
+		
+		constexpr auto NOT = actExists::NOT;
+		constexpr auto STD = actExists::STD;
+		constexpr auto SPC = actExists::SPC;
+		constexpr auto TOTAL_CATEGORIES = ((int)actCategories::TOTAL);
+		constexpr auto TOTAL_MODES = ((int)actModes::TOTAL);
+		constexpr auto TOTAL_SCOPES = ((int)scope::TOTAL);
+		constexpr auto LOCAL = ((int)scope::LOCAL);
+		constexpr auto GLOBAL = ((int)scope::GLOBAL);
+
+		//TODO: Review these when action system is implemented
+		static constexpr actExists availableVariations[TOTAL_CATEGORIES][TOTAL_MODES][TOTAL_SCOPES] = {
+			
+			//KEY for the numbers: see AS::actionAvailability enum on actionData.hpp
+			//Innermost Order is: { LOCAL, GLOBAL }
+			
+			            //STRENGHT                            //RESOURCES                
+		      //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
+			{{SPC, SPC}, {SPC, STD}, {SPC, STD}},  {{SPC, SPC}, {SPC, STD}, {SPC, STD}}, 
+
+		 	              //ATTACK                               //GUARD
+			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
+			{{SPC, STD}, {STD, STD}, {NOT, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
+
+		 	               //SPY                               //SABOTAGE
+			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
+			{{SPC, SPC}, {SPC, SPC}, {SPC, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
+
+		 	            //DIPLOMACY                            //CONQUEST
+			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
+			{{SPC, SPC}, {SPC, SPC}, {NOT, SPC}},  {{SPC, STD}, {STD, STD}, {NOT, STD}},
+		};
+
+		constexpr int howManyActionsOfKind(actModes mode, scope scp) {
+			int total = 0;
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				total += (int)(availableVariations[i][(int)mode][(int)scp] != actExists::NOT);
+			}
+
+			return total;
+		}
+
+		static constexpr bool isValid(int category, int mode, int scope) {
+			bool inBounds = (category < TOTAL_CATEGORIES);
+			inBounds &= (mode < TOTAL_MODES);
+			inBounds &= (scope < TOTAL_SCOPES);
+			if(!inBounds) {return false;}
+
+			return (availableVariations[category][mode][scope] != NOT);
+		}	
+
+		static constexpr actExists getExistence(int category, int mode, int scope) {
+			bool inBounds = (category < TOTAL_CATEGORIES);
+			inBounds &= (mode < TOTAL_MODES);
+			inBounds &= (scope < TOTAL_SCOPES);
+			if(!inBounds) {return NOT;}
+
+			return availableVariations[category][mode][scope];
+		}
+
+		static constexpr int totalLocals() {
+			int amount = 0;
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					amount += (availableVariations[i][j][LOCAL] != NOT);
+				}
+			}
+			return amount;
+		}
+
+		static constexpr int totalGlobals() {
+			int amount = 0;
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					amount += (availableVariations[i][j][GLOBAL] != NOT);
+				}
+			}
+			return amount;
+		}
+
+		//Standard actions with different mode and/or scope, no matter what category
+		static constexpr int kindsOfStandards() {
+			bool hasAppeard[TOTAL_MODES][TOTAL_SCOPES] = {};
+
+			for (int i = 0; i < TOTAL_MODES; i++) {
+				for (int j = 0; j < TOTAL_SCOPES; j++) {
+					hasAppeard[i][j] = false;
+				}
+			}
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					for (int k = 0; k < TOTAL_SCOPES; k++) {
+						hasAppeard[j][k] |= (availableVariations[i][j][k] == STD);
+					}
+				}
+			}
+
+			int amount = 0;
+			for (int i = 0; i < TOTAL_MODES; i++) {
+				for (int j = 0; j < TOTAL_SCOPES; j++) {
+					amount += (int)hasAppeard[i][j];
+				}
+			}
+			return amount;
+		}
+
+		static constexpr int totalSpecifics() {
+			int amount = 0;
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					amount += (availableVariations[i][j][LOCAL] == SPC);
+					amount += (availableVariations[i][j][GLOBAL] == SPC);
+				}
+			}
+			return amount;
+		}
+
+		static constexpr int totalStandards() {
+			int amount = 0;
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					amount += (availableVariations[i][j][LOCAL] == STD);
+					amount += (availableVariations[i][j][GLOBAL] == STD);
+				}
+			}
+			return amount;
+		}
+
+		static constexpr int totalNots() {
+			int amount = 0;
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					amount += (availableVariations[i][j][LOCAL] == NOT);
+					amount += (availableVariations[i][j][GLOBAL] == NOT);
+				}
+			}
+			return amount;
+		}
+
+		static constexpr int totalValids() {
+			int amount = 0;
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					amount += (availableVariations[i][j][LOCAL] != NOT);
+					amount += (availableVariations[i][j][GLOBAL] != NOT);
+				}
+			}
+			return amount;
+		}
+
+		static constexpr int totalPossible() {
+			return (int)AS::actCategories::TOTAL*(int)AS::actModes::TOTAL*(int)AS::scope::TOTAL;
+		}
+	};
+
+	namespace Decisions {
+		
+		enum class notionsSelf { S0, S1, S2, S3, S4, S5, S6, S7,
+													 TOTAL };
+		typedef	float AS_API notionsSelf_t[(int)notionsSelf::TOTAL];
+		
+		enum class notionsNeighbor { N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11,
+		                                                                   TOTAL };
+		typedef	float AS_API notionsNeighbor_t[(int)notionsNeighbor::TOTAL];
+
+		typedef struct notions_st {
+
+			notionsSelf_t self;
+			notionsNeighbor_t neighbors[MAX_LA_NEIGHBOURS];
+
+			enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
+		} AS_API notions_t;
+
+		using namespace ActionVariations;
+
+		namespace LA {
+
+			typedef	float AS_API 
+				scoresSelf_t[howManyActionsOfKind(actModes::SELF, scope::LOCAL)];
+			typedef	float AS_API 
+				scoresRequest_t[howManyActionsOfKind(actModes::REQUEST, scope::LOCAL)];
+			typedef	float AS_API 
+				scoresImmediate_t[howManyActionsOfKind(actModes::IMMEDIATE, scope::LOCAL)];
+			
+			typedef struct actionScores_st {
+
+				scoresSelf_t self;
+				scoresRequest_t request[MAX_LA_NEIGHBOURS];
+				scoresImmediate_t immediate[MAX_LA_NEIGHBOURS];
+
+				enum class fields { SELF, REQUEST, IMMEDIATE, 
+									  TOTAL_LA_SCORE_FIELDS };
+			} AS_API actionScores_t;
+
+		}
+
+		namespace GA {
+
+			typedef	float AS_API 
+				scoresSelf_t[howManyActionsOfKind(actModes::SELF, scope::GLOBAL)];
+			typedef	float AS_API 
+				scoresRequest_t[howManyActionsOfKind(actModes::REQUEST, scope::GLOBAL)];
+			typedef	float AS_API 
+				scoresImmediate_t[howManyActionsOfKind(actModes::IMMEDIATE, scope::GLOBAL)];
+
+			typedef struct actionScores_st {
+
+				scoresSelf_t self;
+				scoresRequest_t request[MAX_LA_NEIGHBOURS];
+				scoresImmediate_t immediate[MAX_LA_NEIGHBOURS];
+
+				enum class fields { SELF, REQUEST, IMMEDIATE, 
+									  TOTAL_LA_SCORE_FIELDS };
+			} AS_API actionScores_t;
+		}
+	}
 }
+
+
+	
+	
+	
 
