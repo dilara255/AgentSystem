@@ -12,6 +12,7 @@
 
 void testSayHello(void);
 bool testMockData(void);
+bool testSnooze(bool printLog = true);
 bool testFromTAifCLhasInitialized(void);
 bool testReadingCLdataFromTA(void);
 bool testChangingCLdataFromTAandRetrievingFromAS(void);
@@ -50,11 +51,7 @@ int main(void) {
 	LOG_TRACE("Drawing many PRNs, four at a time:");
 	resultsBattery0 += (int)AZ::testDraw4spcg32s(); GETCHAR_PAUSE;
 
-	LOG_TRACE("Will test sleeping and waking a few times...");
-	double result = AZ::testHybridBusySleeping(); GETCHAR_PAUSE;
-	bool passed = result > MINIMUM_PROPORTION_SLEEP_PASSES;
-	if(!passed) { LOG_ERROR("Snoozed more than the maximum margin set"); }
-	resultsBattery0 += passed;
+	resultsBattery0 += (int)testSnooze(printSteps); GETCHAR_PAUSE;
 
 	LOG_TRACE("Will test Flag Field functionality...");
 	resultsBattery0 += (int)AZ::testFlagFields(printSteps); GETCHAR_PAUSE;
@@ -199,6 +196,19 @@ int main(void) {
 	LOG_INFO("Done! Enter to exit"); GETCHAR_FORCE_PAUSE;
 
 	return (1 + (totalPassed - TOTAL_TESTS));
+}
+
+#define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
+bool testSnooze(bool printLog) {
+	LOG_TRACE("Will test sleeping and waking a few times...");
+
+	double result = AZ::testHybridBusySleeping(printLog); 
+
+	bool passed = result > MINIMUM_PROPORTION_SLEEP_PASSES;
+	if(!passed) { LOG_ERROR("Snoozed more than the maximum margin set"); }
+	else if(printLog) { LOG_INFO("Passed"); }
+
+	return passed;
 }
 
 //TODO-CRITICAL: this test needs to somehow guarantee no actions change the incomes and etc
