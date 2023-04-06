@@ -2,6 +2,42 @@
 
 namespace CL{
 
+	//TODO: Update methods to use buildAndPushChangeAndAcquireMutex
+	
+	//- Checks that the agent is within bounds (if passed the right size);
+	//- Creates and pushes the changeDataInfo with agentID and boundTransferFunction;
+	//- Acquires the relevant mutex before pushing and KEEPS IT LOCKED;
+	//- Returns true if everything worked, false if anything failed;
+	//WARNING: if this returns true, THE CALLER is responsible for RELEASING THE LOCK
+	bool buildAndPushChangeAndAcquireMutex(uint32_t agentID, int size, 
+		std::vector<CL::ClientData::changedDataInfo_t>* changesVector_ptr,
+		std::mutex** mutex_ptr_ptr, CL::ClientData::Handler* handler_ptr,
+		CL::ClientData::transferFunc_t boundTransferFunction) {
+
+		//Some sanity checking:
+		if (agentID >= (uint32_t)size) {
+			LOG_ERROR("Tried to change data for agentID out of range");
+			return false;
+		}
+
+		//Build the changeDataInfo:
+		CL::ClientData::changedDataInfo_t change;
+		change.agentID = agentID;
+		change.getNewData_fptr = boundTransferFunction;
+
+		//Lock in order to push the change:
+		*mutex_ptr_ptr = handler_ptr->acquireMutex();
+		if (*mutex_ptr_ptr == NULL) {
+			LOG_ERROR("Aborting Client Data Change");
+			return false;
+		}
+
+		//Store the callback function to transfer the change:
+		changesVector_ptr->push_back(change);
+
+		//Will return still locked: the caller will presumably send the changed data
+		return true;
+	}
 
 //NETWORK
 
@@ -85,6 +121,12 @@ namespace CL{
 		return false;
 	}
 
+	bool CL_API ClientData::NetworkParameterDataHandler::changeSeedsTo(uint32_t agentID, 
+														   uint64_t see0, uint64_t see1,
+			                                              uint64_t seed2, uint64_t see3)
+	{
+		return false;
+	}
 
 
 //ACTIONS
@@ -453,6 +495,61 @@ namespace CL{
 		return false;
 	}
 
+	bool CL_API CL::ClientData::LAdecisionDataHandler::changeShouldMakeDecisions(uint32_t agentID, bool should)
+	{
+		//This defines the functions to be used to tansfer the data to the AS:
+		auto boundTransferFunction = 
+			std::bind(&CL::ClientData::LAdecisionDataHandler::transferShouldMakeDecisions,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		//This prepares the change data. It shouldn't need to be changed:
+		std::mutex* mutex_ptr;
+		#pragma warning(push)
+		#pragma warning(disable : 4267) //TODO: try to understand the warning : p
+		bool result = buildAndPushChangeAndAcquireMutex(agentID, m_data_ptr->data.size(),
+			m_changesVector_ptr, &mutex_ptr, m_parentHandlerPtr, boundTransferFunction);
+		#pragma warning(pop)
+		
+		//The data to be transfered is actually recorded here:
+		if (result) {
+			m_data_ptr->data[agentID].shouldMakeDecisions = should;
+		}
+
+		//Then we clean up and exit:
+		if (mutex_ptr != NULL) {
+			mutex_ptr->unlock();
+		}
+		return result;
+	}
+
+	bool CL_API CL::ClientData::LAdecisionDataHandler::changeInfiltrationOnAll(uint32_t agentID, float newInfiltrationToAll)
+	{
+		//This defines the functions to be used to tansfer the data to the AS:
+		auto boundTransferFunction = 
+			std::bind(&CL::ClientData::LAdecisionDataHandler::transferInfiltrationOnAll,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		//This prepares the change data. It shouldn't need to be changed:
+		std::mutex* mutex_ptr;
+		#pragma warning(push)
+		#pragma warning(disable : 4267) //TODO: try to understand the warning : p
+		bool result = buildAndPushChangeAndAcquireMutex(agentID, m_data_ptr->data.size(),
+			m_changesVector_ptr, &mutex_ptr, m_parentHandlerPtr, boundTransferFunction);
+		#pragma warning(pop)
+		
+		//The data to be transfered is actually recorded here:
+		if (result) {
+			for (int i = 0; i < MAX_LA_NEIGHBOURS; i++) {
+				m_data_ptr->data[agentID].infiltration[i] = newInfiltrationToAll;
+			}			
+		}
+
+		//Then we clean up and exit:
+		if (mutex_ptr != NULL) {
+			mutex_ptr->unlock();
+		}
+		return result;
+	}
 
 
 //DECISION: PERSONALITY
@@ -708,14 +805,65 @@ namespace CL{
 	}
 
 
-	bool CL_API ClientData::GAdecisionDataHandler::changeInfiltration(uint32_t agentID, AS::GAinfiltrationOnNeighbors_t* newValue_ptr)
+	bool CL_API ClientData::GAdecisionDataHandler::changePersonality(uint32_t agentID, AS::GApersonality* newValue_ptr)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::GAdecisionDataHandler::changePersonality(uint32_t agentID, AS::GApersonality* newValue_ptr)
+	bool CL_API CL::ClientData::GAdecisionDataHandler::changeShouldMakeDecisions(uint32_t agentID, bool should)
 	{
-		return false;
+		//This defines the functions to be used to tansfer the data to the AS:
+		auto boundTransferFunction = 
+			std::bind(&CL::ClientData::GAdecisionDataHandler::transferShouldMakeDecisions,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		//This prepares the change data. It shouldn't need to be changed:
+		std::mutex* mutex_ptr;
+		#pragma warning(push)
+		#pragma warning(disable : 4267) //TODO: try to understand the warning : p
+		bool result = buildAndPushChangeAndAcquireMutex(agentID, m_data_ptr->data.size(),
+			m_changesVector_ptr, &mutex_ptr, m_parentHandlerPtr, boundTransferFunction);
+		#pragma warning(pop)
+		
+		//The data to be transfered is actually recorded here:
+		if (result) {
+			m_data_ptr->data[agentID].shouldMakeDecisions = should;
+		}
+
+		//Then we clean up and exit:
+		if (mutex_ptr != NULL) {
+			mutex_ptr->unlock();
+		}
+		return result;
+	}
+
+	bool CL_API CL::ClientData::GAdecisionDataHandler::changeInfiltrationOnAll(uint32_t agentID, float newInfiltrationToAll)
+	{
+		//This defines the functions to be used to tansfer the data to the AS:
+		auto boundTransferFunction = 
+			std::bind(&CL::ClientData::GAdecisionDataHandler::transferInfiltrationOnAll,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		//This prepares the change data. It shouldn't need to be changed:
+		std::mutex* mutex_ptr;
+		#pragma warning(push)
+		#pragma warning(disable : 4267) //TODO: try to understand the warning : p
+		bool result = buildAndPushChangeAndAcquireMutex(agentID, m_data_ptr->data.size(),
+			m_changesVector_ptr, &mutex_ptr, m_parentHandlerPtr, boundTransferFunction);
+		#pragma warning(pop)
+		
+		//The data to be transfered is actually recorded here:
+		if (result) {
+			for (int i = 0; i < MAX_GA_QUANTITY; i++) {
+				m_data_ptr->data[agentID].infiltration[i] = newInfiltrationToAll;
+			}			
+		}
+
+		//Then we clean up and exit:
+		if (mutex_ptr != NULL) {
+			mutex_ptr->unlock();
+		}
+		return result;
 	}
 }
 

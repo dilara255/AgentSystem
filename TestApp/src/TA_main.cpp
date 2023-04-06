@@ -37,7 +37,7 @@ std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
 
 int main(void) {
-	//TODO: review wich tests printo to console, and pass this (macro?)
+	//TODO: review wich tests print to console, and pass this (macro?)
 	bool printSteps = false;
 	#if ( (defined AS_DEBUG) || VERBOSE_RELEASE )
 		printSteps = true;
@@ -995,6 +995,10 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 
 	cp->LAaction.details.changeAuxTo(false, lastLA, maxActionsPerAgent - 1, 
 		                                               TST_LAST_ACTION_AUX);
+
+	LOG_TRACE("Will issue new shouldMakeDecisions to first LA");
+
+	cp->LAdecision.changeShouldMakeDecisions(0, false);
 
 	LOG_INFO("All test changes issued...");
 

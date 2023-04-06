@@ -131,24 +131,26 @@
 * -Implement state self-updating (ie, from income and upkeep, no actions involved);
 * -Add tests;
 * 
-* 4. Information and Expected Values:
+* 4. Information and Expected Values, plus notions and action score data structures:
 * 
 * -Update information and expected values;
 * --Add data structure for expected values;
 * --WILL HAVE TO SOLVE HOW TO SAVE THIS (at the bottom of the file seems good);
 * -add shouldMakeDecisions flag;
+* -Add "notions" and "actionScores" data structures;
+* --will be calculated per-step on the stack, so no saving and loading;
 * 
-* 5. Notions:
+* 5. More handling and updating:
 * 
-* > -Add "notions" data structure (no need to save them, as they're calculated per-step);
+* >-Complete 3.2.c-e for any necessary fields;
+* --All new fields on mirror, shouldMakeDecisions and infiltration on ClientDataHandler;
+* -Info and relation updates on LA and GA updateSteps;
 * 
-* 6. MVP:
+* 6. "MVP":
 * 
 * -Couple of simplified decisions and actions (and watever is necessary for that);
-* --Data structure to hold action-decision scores, zero for all other actions;
 * --Should just run their course and have a simple resolution;
-* -Complete 3.2.c-e for any necessary fields;
-* --Check that we have at least one of each data type and add to testing;
+* -Text-mode visualization of a couple agents running;
 * 
 * Some cleanup
 *

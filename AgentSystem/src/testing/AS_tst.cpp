@@ -488,13 +488,19 @@ namespace AS {
 			LOG_TRACE("Value read is not as expected"); 
 		}
 
+		bool shouldMakeDecisions = mp.LAdecision_ptr->getDataCptr()->at(0).shouldMakeDecisions;
+		if (shouldMakeDecisions != false) {
+			failed++; 
+			LOG_TRACE("Value read is not as expected"); 
+		}
+
 		LOG_TRACE("Checking results...");
 
 		if (failed) {
 			LOG_ERROR("Some of the values modified by the TA werent read back from the CL as expected");
 		
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
-				printf("\n%d out of 6 failed. Test action aux: %f - expected %f ", failed,
+				printf("\n%d out of 7 failed. Test action aux: %f - expected %f ", failed,
 					                                         auxRead, TST_LAST_ACTION_AUX);
 				printf("\nGA connection data: %d - expected %d ", connectedRead.getField(),
 					                                                    TST_GA_CONNECTIONS);
@@ -503,6 +509,7 @@ namespace AS {
 				printf("\nGA id: %d - expected %d ", idRead, TST_GA_ID);
 				printf(" | LA reinforcement : %f - expected %f", guardRead, TST_LA_REINFORCEMENT);
 				printf("\nLA disposition offset: %f - expected %f\n", offsetRead, TST_LA_OFFSET);
+				printf("\nLA0 shouldMakeDecisions: %d - expected %d", shouldMakeDecisions, false);
 				GETCHAR_PAUSE;
 			#endif // AS_DEBUG
 			return false;

@@ -22,6 +22,10 @@ bool AS::copyNetworkParameters(networkParameters_t * destination,
 	destination->numberGAs = source->numberGAs;
 	destination->numberLAs = source->numberLAs;
 
+	for(int i = 0; i < DRAW_WIDTH; i++){
+		destination->seeds[i] = source->seeds[i];
+	}
+
 	bool result = true;
 	if (nameCpy != 0) {
 		LOG_ERROR("Failed to receive network name...");
@@ -54,6 +58,12 @@ bool AS::defaultNetworkParameters(networkParameters_t* destination) {
 	strcpy(destination->name, "");
 	destination->numberGAs = 0;
 	destination->numberLAs = 0;
+
+	//TODO: this is kinda icky if we change the number of seeds
+	destination->seeds[0] = DEFAULT_PRNG_SEED0;
+	destination->seeds[1] = DEFAULT_PRNG_SEED1;
+	destination->seeds[2] = DEFAULT_PRNG_SEED2;
+	destination->seeds[3] = DEFAULT_PRNG_SEED3;
 
 	return true;
 }

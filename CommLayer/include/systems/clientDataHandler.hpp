@@ -11,6 +11,9 @@
 */
 
 /*
+//TODO: ADD in the description shouldMakeDecisions and the structures dealing with
+//reads, expectations and seeds (and review that everything is indeed here)
+
 Here we declare the class ClientDataHandler, its component classes and a helper type.
 API: External: the Client will have direct acces to an instance of this class.
 API: Internal: The AS will only have acces to a "CL::getNewClientData()" function.
@@ -117,6 +120,8 @@ namespace CL::ClientData {
 		bool CL_API changeNameTo(uint32_t agentID, std::string newValue);
 		bool CL_API changeNumberGAsTo(uint32_t agentID, int newValue);
 		bool CL_API changeNumberLAsTo(uint32_t agentID, int newValue);
+		bool CL_API changeSeedsTo(uint32_t agentID, uint64_t see0, uint64_t see1,
+			                                       uint64_t seed2, uint64_t see3);
 
 	protected:
 		friend class Handler;
@@ -135,6 +140,7 @@ namespace CL::ClientData {
 		bool transferName(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferNumberGAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferNumberLAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferSeeds(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 		networkParameters_t* m_data_ptr;
 	};
@@ -506,6 +512,10 @@ namespace CL::ClientData {
 		bool CL_API changeAll(uint32_t agentID, 
 				              LA::decisionData_t* newValue_ptr);
 
+		bool CL_API changeShouldMakeDecisions(uint32_t agentID, bool should);
+		//TODO-CRITICAL: make changes store more index info and pass so this changes one at a time:
+		bool CL_API changeInfiltrationOnAll(uint32_t agentID, float newInfiltrationToAll);
+
 		LApersonalityHandler personality;
 
 	protected:
@@ -516,6 +526,11 @@ namespace CL::ClientData {
 		                std::vector <changedDataInfo_t>* changesVector_ptr);
 
 		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+
+		bool transferShouldMakeDecisions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		//TODO-CRITICAL: see above and then fix this as well:
+		//these would all receive an IDs data type (say, with in agent, neighbor, field):
+		bool CL_API transferInfiltrationOnAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 		DecisionSystemLA* m_data_ptr;
 	};
@@ -667,11 +682,12 @@ namespace CL::ClientData {
 		
 		bool CL_API changeAll(uint32_t agentID, GA::decisionData_t* newValue_ptr);
 		
-		bool CL_API changeInfiltration(uint32_t agentID, 
-									   AS::GAinfiltrationOnNeighbors_t* newValue_ptr);
 		bool CL_API changePersonality(uint32_t agentID, 
 			                                          AS::GApersonality* newValue_ptr);
-
+		bool CL_API changeShouldMakeDecisions(uint32_t agentID, bool should);
+		//TODO-CRITICAL: make changes store more index info and pass so this changes one at a time:
+		bool CL_API changeInfiltrationOnAll(uint32_t agentID, float newInfiltrationToAll);
+		
 	protected:
 		friend class Handler;
 
@@ -681,8 +697,11 @@ namespace CL::ClientData {
 
 		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		
-		bool transferInfiltration(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferPersonality(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferShouldMakeDecisions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		//TODO-CRITICAL: see above and then fix this as well:
+		//these would all receive an IDs data type (say, with in agent, neighbor, field):
+		bool CL_API transferInfiltrationOnAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		
 		DecisionSystemGA* m_data_ptr;
 	};
