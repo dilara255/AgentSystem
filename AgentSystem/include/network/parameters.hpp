@@ -64,7 +64,7 @@ and data sizes static.
 #define TRADE_SATURATION_FROM_ALLY 1
 #define TRADE_SATURATION_FROM_ALLY_WITH_TRADE 2
 #define LA_UPKEEP_PER_EXCESS_STRENGHT (0.5)
-#define TRADE_FACTOR_PER_SECOND (0.5f)
+#define TRADE_FACTOR_PER_SECOND (0.5f) //applies to liquid income (LAs) / lastTax (GAs)
 #define ATTRITION_FACTOR_PER_SECOND (0.001)
 #define GA_TAX_RATE_PER_SECOND (0.001f)
 
@@ -126,7 +126,8 @@ and data sizes static.
 #define DEFAULT_LAST_TICK 1
 #define DEFAULT_INTENSITY (-3.0f)
 #define DEFAULT_ACTION_AUX (99.0f)
-#define DEFAULT_REQUESTS (0.0f)
+#define DEFAULT_REQUESTS (5.5f)
+#define DEFAULT_SHOULD_DECIDE 1
 
 //--> TEST-related defines:
 #define TST_NUMBER_LAS 15

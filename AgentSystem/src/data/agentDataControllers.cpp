@@ -159,7 +159,7 @@ namespace GA {
 
 	bool ColdDataController::addAgentData(coldData_t agentData) {
 		if (data.size() >= MAX_GA_QUANTITY) {
-			LOG_ERROR("Couldn't add GA's cold data: MAX_LA_QUANTITY reached");
+			LOG_ERROR("Couldn't add GA's cold data: MAX_GA_QUANTITY reached");
 			return false;
 		}
 		else {
@@ -195,7 +195,7 @@ namespace GA {
 
 	bool StateController::addAgentData(stateData_t agentData) {
 		if (data.size() >= MAX_GA_QUANTITY) {
-			LOG_ERROR("Couldn't add GA's state data: MAX_LA_QUANTITY reached");
+			LOG_ERROR("Couldn't add GA's state data: MAX_GA_QUANTITY reached");
 			return false;
 		}
 		else {
@@ -231,7 +231,7 @@ namespace GA {
 
 	bool DecisionSystem::addAgentData(decisionData_t agentData) {
 		if (data.size() >= MAX_GA_QUANTITY) {
-			LOG_ERROR("Couldn't add GA's decision data: MAX_LA_QUANTITY reached");
+			LOG_ERROR("Couldn't add GA's decision data: MAX_GA_QUANTITY reached");
 			return false;
 		}
 		else {
@@ -239,8 +239,7 @@ namespace GA {
 			return true;
 		}
 	}
-
-	//this is crashing
+	
 	bool DecisionSystem::getAgentData(uint32_t agentID, decisionData_t* recepient) const {
 		if (agentID >= data.size()) return false;
 
