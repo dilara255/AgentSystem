@@ -28,7 +28,6 @@ namespace CL {
 		return &m_mutex;
 	}
 	
-
 	//DISPATCHER - ALL
 	bool ClientData::Handler::sendNewClientData(ASdataControlPtrs_t recepientPtrs, 
 		                                                              bool silent) {
@@ -92,7 +91,6 @@ namespace CL {
 		return result;
 	}
 
-
 	//DISPATCHER - EACH
 	bool ClientData::Handler::processChange(ClientData::changedDataInfo_t change, 
 		                                    ASdataControlPtrs_t recepientPtrs) {
@@ -102,7 +100,7 @@ namespace CL {
 			return false;
 		}
 
-		//TODO-CITICAL: Check that this works, consideting the fptr is to a private method
+		//TODO-CITICAL: Check that this works, considering the fptr is to a private method
 		return change.getNewData_fptr(change.agentID, recepientPtrs);
 	}
 
@@ -161,6 +159,11 @@ namespace CL {
 	}
 
 	bool ClientData::NetworkParameterDataHandler::transferNumberLAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
+
+	bool ClientData::NetworkParameterDataHandler::transferSeeds(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
 		return false;
 	}
@@ -499,7 +502,46 @@ namespace CL {
 		return false;
 	}
 
+	bool CL::ClientData::LAdecisionDataHandler::transferShouldMakeDecisions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		//TODO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->LAstate_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
 
+		LA::decisionData_t* ASdecision_ptr =
+			&recepientPtrs.agentData_ptr->LAdecision_ptr->getDirectDataPtr()->at(agentID);
+		ASdecision_ptr->shouldMakeDecisions = m_data_ptr->data[agentID].shouldMakeDecisions;
+		
+		return true;	
+	}
+
+	bool CL::ClientData::LAdecisionDataHandler::transferInfiltrationOnAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		//TODO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->LAstate_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		LA::decisionData_t* ASdecision_ptr =
+			&recepientPtrs.agentData_ptr->LAdecision_ptr->getDirectDataPtr()->at(agentID);
+		
+		for (int i = 0; i < MAX_LA_NEIGHBOURS; i++) {
+			ASdecision_ptr->infiltration[i] = m_data_ptr->data[agentID].infiltration[i];
+		}
+		
+		return true;	
+	}
 
 //LA_DECISION: PERSONALITY
 
@@ -718,14 +760,49 @@ namespace CL {
 		return false;
 	}
 
-
-	bool ClientData::GAdecisionDataHandler::transferInfiltration(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
-	{
-		return false;
-	}
-
 	bool ClientData::GAdecisionDataHandler::transferPersonality(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
 		return false;
+	}
+	                                            
+	bool CL::ClientData::GAdecisionDataHandler::transferShouldMakeDecisions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		//TODO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->GAdecision_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		GA::decisionData_t* ASdecision_ptr =
+			&recepientPtrs.agentData_ptr->GAdecision_ptr->getDirectDataPtr()->at(agentID);
+		ASdecision_ptr->shouldMakeDecisions = m_data_ptr->data[agentID].shouldMakeDecisions;
+		
+		return true;	
+	}
+
+	bool CL::ClientData::GAdecisionDataHandler::transferInfiltrationOnAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		//TODO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->GAdecision_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		GA::decisionData_t* ASdecision_ptr =
+			&recepientPtrs.agentData_ptr->GAdecision_ptr->getDirectDataPtr()->at(agentID);
+		
+		for (int i = 0; i < MAX_GA_QUANTITY; i++) {
+			ASdecision_ptr->infiltration[i] = m_data_ptr->data[agentID].infiltration[i];
+		}
+		
+		return true;
 	}
 }
