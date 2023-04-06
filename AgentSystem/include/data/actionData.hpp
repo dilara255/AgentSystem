@@ -1,10 +1,11 @@
 #pragma once
 
-/*
-* WARNING: THIS FILE WILL BE EXPOSED TO THE APPLICATION!
-* - TODO: MOVE TO API/AS_dataTypes
-* - TODO: Move into namespace and turn enums into enum classes
+//TODO-CRITICAL: move to API/AS_actionDataTypes
+//TODO-CRITICAL: assignment and copy operators and initialization to default values
+//TODO-CRITICAL: handling: ASmirror and ClientDataHandler
+//TODO: review namespaces?
 
+/*
 This file:
 - Describes the data structure of actions;
 - Has enums for action categories, modes, scopes and availability;

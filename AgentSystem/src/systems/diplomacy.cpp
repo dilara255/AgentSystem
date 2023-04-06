@@ -12,7 +12,7 @@ float LA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
  
 	LA::stateData_t partner = agentDataPtrs_ptr->LAstate_ptr->getDirectDataPtr()->at(partnerID);
 
-	float totalPartnerTradeValue = TRADE_FACTOR_PER_SECOND*
+	float totalPartnerTradeValue = TRADE_FACTOR_PER_SECOND *
 		(partner.parameters.resources.updateRate - partner.parameters.strenght.currentUpkeep);
 
 	//calculates their total "trade saturation" (from trade, allies, allies with trade and war)
@@ -54,7 +54,7 @@ float GA::calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStan
 	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) { 
 
 	GA::stateData_t partner = agentDataPtrs_ptr->GAstate_ptr->getDirectDataPtr()->at(partnerID);
-	float totalPartnerTradeValue = (float)(partner.parameters.GAresources*TRADE_FACTOR_PER_SECOND);
+	float totalPartnerTradeValue = (float)(partner.parameters.lastTaxIncome*TRADE_FACTOR_PER_SECOND);
 
 	//calculates their total "trade saturation" (from trade, allies, allies with trade and war)
 	int tradeSaturation = 0;

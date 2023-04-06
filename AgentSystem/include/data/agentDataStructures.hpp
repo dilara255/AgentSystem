@@ -1,11 +1,11 @@
 #pragma once
 
-//TODO: CRITICAL: handling: add new data to save/load, ASmirror and ClientDataHandler
+//TODO-CRITICAL: handling: add new data to save/load, ASmirror and ClientDataHandler
+//TODO-CRITICAL: move to API/AS_agentDataTypes
+//TODO-CRITICAL: assignment and copy operators and initialization to default values
+//TODO: Review namespaces?
 
 /*
-* WARNING: THIS FILE WILL BE EXPOSED TO THE APPLICATION!
-* - TODO-CRITICAL: MOVE TO API/AS_dataTypes
-* 
 * This file declares the basic data structres of agents, as well as enum classes for each field.
 * These structures build up from primitives to "cold", "state" and "decision" data types,
 * each with a variation for LAs and another for GAs.
@@ -66,7 +66,6 @@ namespace AS {
 			                TOTAL_POSITION_FIELDS };
 	} AS_API pos_t;
 
-	//TODO: = operator PLEASE (and hunt down explicit loops)
 	typedef float AS_API 
 		LAdecisionOffsets_t[(int)AS::actCategories::TOTAL][(int)AS::actModes::TOTAL];
 
@@ -97,6 +96,7 @@ namespace AS {
 	//TODO: "fuse" GApersonality and the traits bellow:
 	//Possibly rethink this to follow the same logic of the notions
 	//Maybe personality, notions, and score weights should all be in one place?
+	//TODO: enum class?
 	enum gaPersonalityTraits {
 		GA_PERS_0, GA_PERS_1, GA_PERS_2, GA_PERS_3,
 		GA_PERS_4, GA_PERS_5, GA_PERS_6, GA_PERS_7,
@@ -106,7 +106,7 @@ namespace AS {
 	typedef AZ::FlagField32 GAflagField_t;
 
 	//From these, we build:
-	//TODO: some of these would benefit from having built-in initialization logic and etc
+
 	typedef struct {
 		resources_t resources;
 		strenght_t strenght;
@@ -149,7 +149,7 @@ namespace AS {
 	} AS_API GAparameterTotals_t;
 }
 
-//And finally:
+//And finally we compose these into the structures the system will use:
 
 namespace LA {
 	
@@ -247,9 +247,9 @@ namespace GA {
 
 		AS::GAinfiltrationOnNeighbors_t infiltration;
 		AS::GApersonality personality;
-		readsOnNeighbor_t reads[MAX_LA_NEIGHBOURS];
+		readsOnNeighbor_t reads[MAX_GA_QUANTITY];
 		requestExpectations_t requestsForSelf;
-		requestExpectations_t requestsForNeighbors[MAX_LA_NEIGHBOURS];
+		requestExpectations_t requestsForNeighbors[MAX_GA_QUANTITY];
 
 		enum class fields { SHOULD_DECIDE, INFILTRATION, PERSONALITY, 
 							READS, REQUEST_EXPECTATIONS_SELF, REQUEST_EXPECTATIONS_NEIGHBORS,

@@ -133,14 +133,14 @@
 * 
 * 4. Information and Expected Values:
 * 
-* > -Update information and expected values;
+* -Update information and expected values;
 * --Add data structure for expected values;
 * --WILL HAVE TO SOLVE HOW TO SAVE THIS (at the bottom of the file seems good);
 * -add shouldMakeDecisions flag;
 * 
 * 5. Notions:
 * 
-* -Add "notions" data structure (no need to save them, as they're calculated per-step);
+* > -Add "notions" data structure (no need to save them, as they're calculated per-step);
 * 
 * 6. MVP:
 * 

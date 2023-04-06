@@ -157,18 +157,19 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
     GA::stateData_t state;
     GA::decisionData_t decision;
 
-    int onOff = -99;//TODO: set a "TEST_INTEGER_VALUE" or something?
+    int onOff, shouldDecide;
 
-    tokens = fscanf(fp, GAidentity, &cold.id, &onOff);
-    if (tokens != 2 ) {
+    tokens = fscanf(fp, GAidentity, &cold.id, &onOff, &shouldDecide);
+    if (tokens != 3 ) {
         LOG_ERROR("Error reading identity tokens from GA. Aborting load.");
         #if (defined AS_DEBUG) || VERBOSE_RELEASE
-            printf("GA: %d , Tokens read = %d , Cold.id = %d , onOff = %d \n\n", 
-                    id, tokens, cold.id, onOff);
+            printf("GA: %d , Tokens read = %d , Cold.id = %d , onOff = %d , decide = %d \n\n", 
+                    id, tokens, cold.id, onOff, shouldDecide);
         #endif // AS_DEBUG 
         return false;
     }
     state.onOff = onOff;
+    decision.shouldMakeDecisions = shouldDecide;
 
     //Load name. Will check to make sure it's not too long
     size_t maxLenght = strlen(GAname) - 2 + NAME_LENGHT; //-2 to account for the "%s" (becomes "name")
@@ -193,10 +194,30 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
         LOG_ERROR("Error reading personality tokens from GA. Aborting load.");
         return false;
     }
+   
+    auto expecsSelf = &(decision.requestsForSelf.expected[0]);
 
-    tokens = fscanf(fp, GAresources, &state.parameters.GAresources);
-    if (tokens != 1) {
+    int expecResID = (int)GA::requestExpectations_t::fields::GA_RESOURCES;
+    int expecTaxID = (int)GA::requestExpectations_t::fields::TAX_INCOME;
+    int expecTradeID = (int)GA::requestExpectations_t::fields::TRADE_INCOME;
+
+    tokens = fscanf(fp, GAresources, &state.parameters.GAresources,  
+        &expecsSelf[expecResID], &state.parameters.lastTaxIncome, &expecsSelf[expecTaxID],
+        &state.parameters.lastTradeIncome, &expecsSelf[expecTradeID]);
+    if (tokens != 6) {
         LOG_ERROR("Error reading resource tokens from GA. Aborting load.");
+        return false;
+    }
+
+    int expecStrenghtID = (int)GA::requestExpectations_t::fields::STRENGHT_LAS;
+    int expecGuardID = (int)GA::requestExpectations_t::fields::GUARD_LAS;
+
+    tokens = fscanf(fp, GAtotals, &state.parameters.LAesourceTotals.current,
+        &state.parameters.LAesourceTotals.updateRate, &state.parameters.LAstrenghtTotal,
+                           &expecsSelf[expecStrenghtID], &state.parameters.LAguardTotal, 
+                                                              &expecsSelf[expecGuardID]);
+    if (tokens != 6) {
+        LOG_ERROR("Error reading LA totals tokens from GA. Aborting load.");
         return false;
     }
     
@@ -249,6 +270,25 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
             state.relations.dispositionToNeighbors[otherId] = disposition;
             state.relations.dispositionToNeighborsLastStep[otherId] = dispositionLastStep;
             decision.infiltration[otherId] = infiltration;
+
+            auto expecsNeighbor = &(decision.requestsForNeighbors[i].expected[0]);
+
+            int readResID = (int)GA::readsOnNeighbor_t::fields::GA_RESOURCES;
+            int readTaxID = (int)GA::readsOnNeighbor_t::fields::TAX_INCOME;
+            int readTradeID = (int)GA::readsOnNeighbor_t::fields::TRADE_INCOME;
+            int readStrenghtID = (int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
+            int readGuardID = (int)GA::readsOnNeighbor_t::fields::GUARD_LAS;
+
+            tokens = fscanf(fp, GAreadsOnNeighbor, 
+                &(decision.reads[i].readOf[readResID]), &expecsNeighbor[expecResID], 
+                &(decision.reads[i].readOf[readTaxID]), &expecsNeighbor[expecTaxID], 
+                &(decision.reads[i].readOf[readTradeID]), &expecsNeighbor[expecTradeID], 
+                &(decision.reads[i].readOf[readStrenghtID]), &expecsNeighbor[expecStrenghtID], 
+                &(decision.reads[i].readOf[readGuardID]), &expecsNeighbor[expecGuardID]);
+            if (tokens != 10) {
+                LOG_ERROR("Error reading GA read on neighbors tokens. Aborting load.");
+                return false;
+            }
         }
     }
 
@@ -314,18 +354,19 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     LA::stateData_t state;
     LA::decisionData_t decision;
 
-    int onOff = -99;//TODO: set a "TEST_INTEGER_VALUE" or something?
+    int onOff, shouldDecide;
 
-    tokens = fscanf(fp, LAidentity, &cold.id, &state.GAid, &onOff);
-    if (tokens != 3) {
+    tokens = fscanf(fp, LAidentity, &cold.id, &state.GAid, &onOff, &shouldDecide);
+    if (tokens != 4) {
         LOG_ERROR("Error reading identity tokens from LA. Aborting load.");
         #if (defined AS_DEBUG) || VERBOSE_RELEASE
-            printf("LA: %d , Tokens read = %d , Cold.id = %d , state.GAid = %d , onOff = %d \n\n",
-                id, tokens, cold.id, state.GAid, onOff);
+            printf("LA: %d , Tokens read = %d , Cold.id = %d , state.GAid = %d , onOff = %d, decide = %d \n\n",
+                id, tokens, cold.id, state.GAid, onOff, shouldDecide);
         #endif // AS_DEBUG 
         return false;
     }
     state.onOff = onOff;
+    decision.shouldMakeDecisions = shouldDecide;
 
     //Load name. Will check to make sure it's not too long
     size_t maxLenght = strlen(LAname) - 2 + NAME_LENGHT; //-2 to account for the "%s" (becomes "name")
@@ -346,23 +387,31 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     tokens = fscanf(fp, LAposition, &state.locationAndConnections.position.x,
                                     &state.locationAndConnections.position.y);
     if (tokens != 2) {
-        LOG_ERROR("Error reading position tokens from GA. Aborting load.");
+        LOG_ERROR("Error reading position tokens from LA. Aborting load.");
         return false;
     }
     
-
-    tokens = fscanf(fp, LAstrenght, &state.parameters.strenght.current,
-                                    &state.parameters.strenght.externalGuard,
-                                    &state.parameters.strenght.thresholdToCostUpkeep);
-    if (tokens != 3) {
-        LOG_ERROR("Error reading resource tokens from GA. Aborting load.");
+   int expecStrenghtID = (int)LA::requestExpectations_t::fields::STRENGHT;
+   int expecGuardID = (int)LA::requestExpectations_t::fields::GUARD;
+   
+   tokens = fscanf(fp, LAstrenght, 
+                        &state.parameters.strenght.current, 
+                        &decision.requestsForSelf.expected[expecStrenghtID],
+                        &state.parameters.strenght.externalGuard,
+                        &decision.requestsForSelf.expected[expecGuardID],
+                        &state.parameters.strenght.thresholdToCostUpkeep);
+    if (tokens != 5) {
+        LOG_ERROR("Error reading strenght tokens from LA. Aborting load.");
         return false;
     }
 
-    tokens = fscanf(fp, LAresources, &state.parameters.resources.current,
+    int expecResID = (int)LA::requestExpectations_t::fields::RESOURCES;
+
+    tokens = fscanf(fp, LAresources, 
+        &state.parameters.resources.current, &decision.requestsForSelf.expected[expecResID],
         &state.parameters.resources.updateRate, &state.parameters.strenght.currentUpkeep);
-    if (tokens != 3) {
-        LOG_ERROR("Error reading resource tokens from GA. Aborting load.");
+    if (tokens != 4) {
+        LOG_ERROR("Error reading resource tokens from LA. Aborting load.");
         return false;
     }
 
@@ -392,6 +441,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     };
 
     for (int i = 0; i < connections; i++) {
+
         int otherId, stance;
         float disposition, infiltration;
 
@@ -409,9 +459,31 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
         state.relations.diplomaticStanceToNeighbors[otherId] = (AS::diploStance)stance;
         state.relations.dispositionToNeighbors[otherId] = disposition;
         decision.infiltration[otherId] = infiltration;
+
+        auto expecsNeighbor = &(decision.requestsForNeighbors[i].expected[0]);
+        auto readsNeighbor = &(decision.reads[i].readOf[0]);
+
+        int readResID = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
+        int readIncomeID = (int)LA::readsOnNeighbor_t::fields::INCOME;
+        int readStrenghtID = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
+        int readGuardID = (int)LA::readsOnNeighbor_t::fields::GUARD;
+
+        tokens = fscanf(fp, LAreadsOnNeighbor, 
+                        &readsNeighbor[readResID], &expecsNeighbor[expecResID], 
+                        &readsNeighbor[readIncomeID],
+                        &readsNeighbor[readStrenghtID], &expecsNeighbor[expecStrenghtID], 
+                        &readsNeighbor[readGuardID], &expecsNeighbor[expecGuardID]);
+        if (tokens != 7) {
+            LOG_ERROR("Error reading LA neighbor reads tokens. Will Abort loading.");
+            return false;
+        }
     }
 
-    fscanf(fp, LAoffsetsTitle);
+    tokens = fscanf(fp, LAoffsetsTitle);
+    if (tokens != 0) {
+        LOG_ERROR("Error reading LA offset title line. Will Abort loading.");
+        return false;
+    }
 
     constexpr int localAndGlobal = 2;
     float offsets[(int)AS::actCategories::TOTAL][(int)AS::actModes::TOTAL][localAndGlobal];

@@ -104,7 +104,7 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
 
     for (int i = 0; i < (numberGAs - 1); i++) {
         
-        resultAux = fprintf(fp, GAidentity, i, DEFAULT_ONOFF);
+        resultAux = fprintf(fp, GAidentity, i, DEFAULT_ONOFF, DEFAULT_SHOULD_DECIDE);
         if (resultAux <= 0) result = 0;
 
         std::string name = defaultGAnamePrefix;
@@ -117,13 +117,26 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
                             DEFAULT_GA_PERSONA_3);
         if (resultAux <= 0) result = 0;
 
-        resultAux = fprintf(fp, GAresources, DEFAULT_GA_RESOURCES);
+        //DEFAULT: each GA is connected to *connections* LAs
+        int connections = TST_NUMBER_LAS / TST_NUMBER_GAS;
+        float defaultTotalLAres = DEFAULT_LA_RESOURCES * connections;
+
+        resultAux = fprintf(fp, GAresources, DEFAULT_GA_RESOURCES, DEFAULT_REQUESTS,
+            defaultTotalLAres * GA_TAX_RATE_PER_SECOND, DEFAULT_REQUESTS,
+            defaultTotalLAres * GA_TAX_RATE_PER_SECOND * TRADE_FACTOR_PER_SECOND,
+            DEFAULT_REQUESTS);
         if (resultAux <= 0) result = 0;
 
+        float defaultTotalLAincome = DEFAULT_LA_INCOME * connections;
+        float defaultTotalLAstrenght = DEFAULT_LA_STRENGHT * connections;
+        float defaultTotalLAguard = DEFAULT_REINFORCEMENT * connections;
+
+        resultAux = fprintf(fp, GAtotals, defaultTotalLAres, defaultTotalLAincome, 
+                                         defaultTotalLAstrenght, DEFAULT_REQUESTS, 
+                                            defaultTotalLAguard, DEFAULT_REQUESTS);
+        if (resultAux <= 0) result = 0;
         
         AZ::FlagField128 connectionField;
-        int connections = TST_NUMBER_LAS / TST_NUMBER_GAS;
-        //DEFAULT: each LA is connected to the next *connections* LAs after it
         for (int j = 0; j < connections; j++) {
             int laID = (i*connections + j) % TST_NUMBER_LAS; //which warps around if necessary   
             connectionField.setBitOn(laID);
@@ -136,15 +149,27 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
         if (resultAux <= 0) result = 0;
 
         //By default, all GAs are connected (except for the last, which is a dummy)
-        int defaultConnectedGAs = (int)(pow(2, numberGAs - 1) - 1) & (~(1 << i));
+        int allButLast = (int)(pow(2, numberGAs - 1) - 1);
+        int notThisOne = (~(1 << i));
+        int defaultConnectedGAs = allButLast & notThisOne;
+
         resultAux = fprintf(fp, connectedGAbitfield, defaultConnectedGAs);
         if (resultAux <= 0) result = 0;
 
         for (int j = 0; j < (numberGAs - 1); j++) {
             if (j != i) {
+
                 resultAux = fprintf(fp, GArelationsInfo, j,
                     DEFAULT_GA_STANCE, DEFAULT_GA_DISPOSITION, DEFAULT_GA_DISPOSITION,
                                                                DEFAULT_GA_INFILTRATION);
+                if (resultAux <= 0) result = 0;
+
+                resultAux = fprintf(fp, GAreadsOnNeighbor,
+                    DEFAULT_GA_RESOURCES, DEFAULT_REQUESTS, 
+                    defaultTotalLAres * GA_TAX_RATE_PER_SECOND, DEFAULT_REQUESTS,
+                    defaultTotalLAres * GA_TAX_RATE_PER_SECOND * TRADE_FACTOR_PER_SECOND, DEFAULT_REQUESTS,
+                    defaultTotalLAstrenght, DEFAULT_REQUESTS,
+                    defaultTotalLAguard, DEFAULT_REQUESTS);
                 if (resultAux <= 0) result = 0;
             }
         }
@@ -176,6 +201,9 @@ int insertGAsWithoutDefaults(int numberGAs, FILE* fp) {
         resultAux = fputs(GAresources, fp);
         if (resultAux == EOF) result = 0;
 
+        resultAux = fputs(GAtotals, fp);
+        if (resultAux == EOF) result = 0;
+
         resultAux = fputs(connectedLAbitfield, fp);
         if (resultAux == EOF) result = 0;
 
@@ -183,6 +211,9 @@ int insertGAsWithoutDefaults(int numberGAs, FILE* fp) {
         if (resultAux == EOF) result = 0;
 
         resultAux = fputs(GArelationsInfo, fp);
+        if (resultAux == EOF) result = 0;
+
+        resultAux = fputs(GAreadsOnNeighbor, fp);
         if (resultAux == EOF) result = 0;
     }
 
@@ -201,9 +232,9 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
     for (int i = 0; i < numberLAs; i++) {
         
-        //NOTE: last GA doesn't count, so numberGAs - 2 is the index of the last one
+        //Default GA: last effective actual last doesn't count, so numberGAs - 2
         //TODO: REFACTOR: CHANGE numberGAs TO BE THE NUMBER OF EFFECTIVE GAs
-        resultAux = fprintf(fp, LAidentity, i, numberGAs - 2, DEFAULT_ONOFF);
+        resultAux = fprintf(fp, LAidentity, i, numberGAs - 2, DEFAULT_ONOFF, DEFAULT_SHOULD_DECIDE);
         if (resultAux <= 0) result = 0;
 
         std::string name = defaultLAnamePrefix;
@@ -218,8 +249,9 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
         resultAux = fprintf(fp, LAposition, x, y);
         if (resultAux <= 0) result = 0;
 
-        resultAux = fprintf(fp, LAstrenght, DEFAULT_LA_STRENGHT, DEFAULT_REINFORCEMENT,
-                                                    DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
+        resultAux = fprintf(fp, LAstrenght, DEFAULT_LA_STRENGHT, DEFAULT_REQUESTS, 
+                                          DEFAULT_REINFORCEMENT, DEFAULT_REQUESTS,
+                                              DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
         if (resultAux <= 0) result = 0;
 
         float upkeep = 0;
@@ -228,8 +260,9 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
             upkeep = (float)(guardCost + DEFAULT_LA_STRENGHT - DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
             upkeep *= LA_UPKEEP_PER_EXCESS_STRENGHT;
         }
-        resultAux = fprintf(fp, LAresources, DEFAULT_LA_RESOURCES, DEFAULT_LA_INCOME,
-            upkeep);
+
+        resultAux = fprintf(fp, LAresources, DEFAULT_LA_RESOURCES, DEFAULT_REQUESTS, 
+                                                          DEFAULT_LA_INCOME, upkeep);
         if (resultAux <= 0) result = 0;
 
         AZ::FlagField128 connectionField;
@@ -248,8 +281,16 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
         if (resultAux <= 0) result = 0;
 
         for (int j = 0; j < connections; j++) {
+
             resultAux = fprintf(fp, LArelationsInfo, j,
                 DEFAULT_LA_STANCE, DEFAULT_LA_DISPOSITION, DEFAULT_LA_INFILTRATION);
+            if (resultAux <= 0) result = 0;
+
+             resultAux = fprintf(fp, LAreadsOnNeighbor, 
+                                DEFAULT_LA_RESOURCES, DEFAULT_REQUESTS, 
+                                DEFAULT_LA_INCOME,
+                                DEFAULT_LA_STRENGHT, DEFAULT_REQUESTS, 
+                                DEFAULT_REINFORCEMENT, DEFAULT_REQUESTS);
             if (resultAux <= 0) result = 0;
         }
 
@@ -296,7 +337,11 @@ int insertLAsWithoutDefaults(int numberLAs, int maxNeighbors, FILE* fp) {
         if (resultAux == EOF) result = 0;
 
         for (int j = 0; j < maxNeighbors; j++) {
+
             resultAux = fputs(LArelationsInfo, fp);
+            if (resultAux == EOF) result = 0;
+
+            resultAux = fputs(LAreadsOnNeighbor, fp);
             if (resultAux == EOF) result = 0;
         }
 
@@ -412,7 +457,7 @@ bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         dp->GAstate_ptr->getAgentData(i, &state);
         dp->GAdecision_ptr->getAgentData(i, &decision);
 
-        resultAux = fprintf(fp, GAidentity, cold.id, state.onOff);
+        resultAux = fprintf(fp, GAidentity, cold.id, state.onOff, decision.shouldMakeDecisions);
         if (resultAux <= 0) result = 0;
 
         resultAux = fprintf(fp, GAname, cold.name);
@@ -423,7 +468,25 @@ bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
                             decision.personality[3]);
         if (resultAux <= 0) result = 0;
 
-        resultAux = fprintf(fp, GAresources, state.parameters.GAresources);
+        auto expecsSelf = &(decision.requestsForSelf.expected[0]);
+        int expecResID = (int)GA::requestExpectations_t::fields::GA_RESOURCES;
+        int expecTaxID = (int)GA::requestExpectations_t::fields::TAX_INCOME;
+        int expecTradeID = (int)GA::requestExpectations_t::fields::TRADE_INCOME;
+
+        resultAux = fprintf(fp, GAresources, state.parameters.GAresources,
+                            expecsSelf[expecResID], state.parameters.lastTaxIncome, 
+                            expecsSelf[expecTaxID], state.parameters.lastTradeIncome, 
+                            expecsSelf[expecTradeID]);
+        if (resultAux <= 0) result = 0;
+
+        int expecStrenghtID = (int)GA::requestExpectations_t::fields::STRENGHT_LAS;
+        int expecGuardID = (int)GA::requestExpectations_t::fields::GUARD_LAS;
+
+        resultAux = fprintf(fp, GAtotals, state.parameters.LAesourceTotals.current,
+                                          state.parameters.LAesourceTotals.updateRate, 
+                                                     state.parameters.LAstrenghtTotal,
+                           expecsSelf[expecStrenghtID], state.parameters.LAguardTotal, 
+                                                             expecsSelf[expecGuardID]);
         if (resultAux <= 0) result = 0;
 
         resultAux = fprintf(fp, connectedLAbitfield, 
@@ -438,11 +501,27 @@ bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
 
         for (int j = 0; j < (pp->numberGAs - 1); j++) {
             if (j != i) {
+
                 resultAux = fprintf(fp, GArelationsInfo, j,
                     state.relations.diplomaticStanceToNeighbors[j], 
                     state.relations.dispositionToNeighbors[j],
                     state.relations.dispositionToNeighborsLastStep[j],
                     decision.infiltration[j]);
+                if (resultAux <= 0) result = 0;
+                
+                auto expecsNeighbor = &(decision.requestsForNeighbors[j].expected[0]);
+                int readResID = (int)GA::readsOnNeighbor_t::fields::GA_RESOURCES;
+                int readTaxID = (int)GA::readsOnNeighbor_t::fields::TAX_INCOME;
+                int readTradeID = (int)GA::readsOnNeighbor_t::fields::TRADE_INCOME;
+                int readStrenghtID = (int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
+                int readGuardID = (int)GA::readsOnNeighbor_t::fields::GUARD_LAS;
+
+                resultAux = fprintf(fp, GAreadsOnNeighbor,
+                    decision.reads[j].readOf[readResID], expecsNeighbor[expecResID], 
+                    decision.reads[j].readOf[readTaxID], expecsNeighbor[expecTaxID], 
+                    decision.reads[j].readOf[readTradeID], expecsNeighbor[expecTradeID], 
+                    decision.reads[j].readOf[readStrenghtID], expecsNeighbor[expecStrenghtID], 
+                    decision.reads[j].readOf[readGuardID], expecsNeighbor[expecGuardID]);
                 if (resultAux <= 0) result = 0;
             }
         }
@@ -475,7 +554,7 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         dp->LAstate_ptr->getAgentData(i, &state);
         dp->LAdecision_ptr->getAgentData(i, &decision);
 
-        resultAux = fprintf(fp, LAidentity, cold.id, state.GAid, state.onOff);
+        resultAux = fprintf(fp, LAidentity, cold.id, state.GAid, state.onOff, decision.shouldMakeDecisions);
         if (resultAux <= 0) result = 0;
 
         resultAux = fprintf(fp, LAname, cold.name);
@@ -485,14 +564,22 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
                                             state.locationAndConnections.position.y);
         if (resultAux <= 0) result = 0;
 
-        resultAux = fprintf(fp, LAstrenght, state.parameters.strenght.current,
-                                            state.parameters.strenght.externalGuard,
-                                            state.parameters.strenght.thresholdToCostUpkeep);
+        int expecStrenghtID = (int)LA::requestExpectations_t::fields::STRENGHT;
+        int expecGuardID = (int)LA::requestExpectations_t::fields::GUARD;
+
+        resultAux = fprintf(fp, LAstrenght, state.parameters.strenght.current, 
+                        decision.requestsForSelf.expected[expecStrenghtID],
+                        state.parameters.strenght.externalGuard,
+                        decision.requestsForSelf.expected[expecGuardID],
+                        state.parameters.strenght.thresholdToCostUpkeep);
         if (resultAux <= 0) result = 0;
 
+        int expecResID = (int)LA::requestExpectations_t::fields::RESOURCES;
+
         resultAux = fprintf(fp, LAresources, state.parameters.resources.current,
-                             state.parameters.resources.updateRate, 
-                             state.parameters.strenght.currentUpkeep);
+                                  decision.requestsForSelf.expected[expecResID],
+                                          state.parameters.resources.updateRate, 
+                                        state.parameters.strenght.currentUpkeep);
         if (resultAux <= 0) result = 0;
 
         resultAux = fprintf(fp, connectedLAbitfield, 
@@ -503,10 +590,26 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         if (resultAux <= 0) result = 0;
 
         for (int j = 0; j < state.locationAndConnections.numberConnectedNeighbors; j++) {
+            
             resultAux = fprintf(fp, LArelationsInfo, j,
                                 state.relations.diplomaticStanceToNeighbors[j],
                                 state.relations.dispositionToNeighbors[j],
                                 decision.infiltration[j]);
+            if (resultAux <= 0) result = 0;
+
+            auto expecsNeighbor = &(decision.requestsForNeighbors[j].expected[0]);
+            auto readsNeighbor = &(decision.reads[j].readOf[0]);
+
+            int readResID = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
+            int readIncomeID = (int)LA::readsOnNeighbor_t::fields::INCOME;
+            int readStrenghtID = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
+            int readGuardID = (int)LA::readsOnNeighbor_t::fields::GUARD;
+
+            resultAux = fprintf(fp, LAreadsOnNeighbor, 
+                            readsNeighbor[readResID], expecsNeighbor[expecResID], 
+                            readsNeighbor[readIncomeID],
+                            readsNeighbor[readStrenghtID], expecsNeighbor[expecStrenghtID], 
+                            readsNeighbor[readGuardID], expecsNeighbor[expecGuardID]);
             if (resultAux <= 0) result = 0;
         }
 

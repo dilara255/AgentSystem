@@ -90,6 +90,12 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 }
 
 namespace {
+
+//Taxes are proportional to current resources, and can be "negative"
+float taxPayedPerSecond(AS::resources_t resources) {
+	return ((float)GA_TAX_RATE_PER_SECOND * resources.current);
+}
+
 void updateLA(LA::stateData_t* state_ptr, int agentId, 
 	          AS::dataControllerPointers_t* dp, float timeMultiplier,
 	                 AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
@@ -110,7 +116,7 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	//and never smaller then zero : )
 	str_ptr->currentUpkeep = std::max(0.0f, str_ptr->currentUpkeep);
 
-	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep)*timeMultiplier;
+	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep) * timeMultiplier;
 	
 	int quantityNeighbours = state_ptr->locationAndConnections.numberConnectedNeighbors;
 	for (int i = 0; i < quantityNeighbours; i++) {
@@ -120,18 +126,20 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
 			res_ptr->current += 
-				LA::calculateTradeIncomePerSecond(partnerID, stance, dp, errorsCounter_ptr)*timeMultiplier;
+				LA::calculateTradeIncomePerSecond(partnerID, stance, dp, errorsCounter_ptr)
+				* timeMultiplier;
 		}
 
 		if ((stance == AS::diploStance::WAR)) {
 			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
 			str_ptr->current -= 
-				LA::calculateAttritionLossesPerSecond(agentId, partnerID, dp)*timeMultiplier;
+				LA::calculateAttritionLossesPerSecond(agentId, partnerID, dp)
+				* timeMultiplier;
 		}
 	}
 
-	//finally, LAs pay tax to GA (and can cost the GA if in debt):
-	res_ptr->current -= (float)GA_TAX_RATE_PER_SECOND*res_ptr->current*timeMultiplier;
+	//finally, LAs "pay tax" to GA (and can receive resources from the GA if in debt):
+	res_ptr->current -= taxPayedPerSecond(*res_ptr) * timeMultiplier;
 }
 
 void updateGA(GA::stateData_t* state_ptr, int agentId, 
@@ -148,6 +156,7 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	param_ptr->LAesourceTotals.current = 0;
 	param_ptr->LAesourceTotals.updateRate = 0;
 	param_ptr->LAstrenghtTotal = 0;
+	param_ptr->LAguardTotal = 0;
 	auto LAstates_cptr = dp->LAstate_ptr->getDataCptr();
 
 	for (int i = 0; i < connectedLAs; i++) {
@@ -159,11 +168,14 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 			LAstates_cptr->at(id).parameters.resources.updateRate;
 		param_ptr->LAstrenghtTotal += 
 			LAstates_cptr->at(id).parameters.strenght.current;
+		param_ptr->LAguardTotal += 
+			LAstates_cptr->at(id).parameters.strenght.externalGuard;
 	}
 	
 	//Get resoures from tax...
-	param_ptr->lastTaxIncome = (float)GA_TAX_RATE_PER_SECOND*state_ptr->parameters.LAesourceTotals.current;
-	param_ptr->GAresources += param_ptr->lastTaxIncome*timeMultiplier;
+	param_ptr->lastTaxIncome = taxPayedPerSecond(state_ptr->parameters.LAesourceTotals)
+							   * timeMultiplier;
+	param_ptr->GAresources += param_ptr->lastTaxIncome;
 
 	//... and from trade:
 	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
@@ -176,7 +188,8 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 		if ((stance == AS::diploStance::TRADE) ||
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 			param_ptr->lastTradeIncome +=
-				GA::calculateTradeIncomePerSecond(idOther, stance, dp, errorsCounter_ptr)*timeMultiplier;
+				GA::calculateTradeIncomePerSecond(idOther, stance, dp, errorsCounter_ptr)
+				* timeMultiplier;
 		}
 	}
 
