@@ -31,9 +31,9 @@ int* CLtestArray_ptr;
 
 bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int numberLAs);
 bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveGAs,
-	int neighbourIDs[MAX_GA_QUANTITY],
-	AS::LAflagField_t* connectedLAs_ptr, int numberLAs,
-	int laIDs[MAX_LA_QUANTITY]);
+																	int* neighbourIDs_arr,
+										AS::LAflagField_t* connectedLAs_ptr, int numberLAs,
+																			int* laIDs_arr);
 
 //TODO: Add reasonable return values to all tests : )
 namespace AS {
@@ -330,11 +330,11 @@ namespace AS {
 			GAstate.localAgentsBelongingToThis.loadField(effectiveBlock,i);
 		}
 
-		int* neighbourIDs = &GAstate.neighbourIDs[0];
-		int* laIDs = &GAstate.laIDs[0];		
+		int* neighbourIDs_arr = &GAstate.neighbourIDs[0];
+		int* laIDs_arr = &GAstate.laIDs[0];		
 		
-		result = setGAneighboursAndLAsIDs(connectedGAs_ptr, numberEffectiveGAs, neighbourIDs, 
-                                                     connectedLAs_ptr, TST_NUMBER_LAS, laIDs);
+		result = setGAneighboursAndLAsIDs(connectedGAs_ptr, numberEffectiveGAs, 
+				 neighbourIDs_arr, connectedLAs_ptr, TST_NUMBER_LAS, laIDs_arr);
 		if (!result) {
 			LOG_ERROR("Failed setting neighbour and LA IDs");
 		}

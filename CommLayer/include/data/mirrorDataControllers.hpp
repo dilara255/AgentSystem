@@ -169,6 +169,8 @@ namespace CL {
 		CL::ActionMirrorController actionMirror;
 	}mirror_t;
 
+	//TODO: ACTUALLY USE THIS SO THE MIRROR IS NOT ALL CONFUSED
+	//(MAYBE CREATE A "MIRROR VIEW" CLASS OR DATA STRUCTURE AND INITIALIZE IT WITH MIRROR?
 	typedef struct {
 		const std::vector <LA::coldData_t>* coldDataLAs_cptr;
 		const std::vector <LA::stateData_t>* stateLAs_cptr;
