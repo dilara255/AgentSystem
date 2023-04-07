@@ -83,22 +83,22 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
 
 //TODO: has some duplication with setLAneighbourIDsAndFirst
 bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEffectiveGAs,
-                                                        int neighbourIDs[MAX_GA_QUANTITY],
+                                                                    int* neighbourIDs_arr,
                                        AS::LAflagField_t* connectedLAs_ptr, int numberLAs,
-                                                               int laIDs[MAX_LA_QUANTITY]) {
-    //set IDs of neighbouring GAs:
-    int neighboursFound = 0;
-    
+                                                                           int* laIDs_arr) {
+    //set IDs of neighbouring GAs:   
     int connected = connectedGAs_ptr->howManyAreOn();
-    if (connected > numberEffectiveGAs) {
-            LOG_ERROR("Received data with more connections than the amount of effective GAs"); 
+    if (connected >= numberEffectiveGAs) {
+            LOG_ERROR("Received data with more connections than the amount of available GAs"); 
             return false;
     }
 
+    int neighboursFound = 0;
     uint32_t i = 0;
     while ( (neighboursFound < connected) && (i < (uint32_t)numberEffectiveGAs) ) {
+
         if (connectedGAs_ptr->isBitOn(i)) {
-            neighbourIDs[neighboursFound] = i;
+            neighbourIDs_arr[neighboursFound] = i;
             neighboursFound++;
         }
         i++;
@@ -109,22 +109,20 @@ bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEff
         #if (defined AS_DEBUG) || VERBOSE_RELEASE
             printf("\nFIELD: %d", connectedGAs_ptr->getField());
       
-            printf("\nID[0]: %d , ID[1] %d , ID[2] %d , ID[3]: %d , ID[%d ]: %d ",
-                                                 neighbourIDs[0], neighbourIDs[1],
-                                                 neighbourIDs[2], neighbourIDs[3],
-                                       connected - 1, neighbourIDs[connected - 1]);        
+            printf("\nID[0]: %d , ID[%d]: %d ", neighbourIDs_arr[0], 
+                      connected - 1, neighbourIDs_arr[connected - 1]);        
         #endif // AS_DEBUG 
         return false;
     }
 
     //set IDs LAs belonging to this:
-    i = 0;
     int connectedLAs = (uint32_t)connectedLAs_ptr->howManyAreOn();
     int belongingLAsFound = 0;
-
+    i = 0;
     while ( (belongingLAsFound < connectedLAs) && (i < (uint32_t)numberLAs) ) {
+
         if (connectedLAs_ptr->isBitOn(i)) {
-            laIDs[belongingLAsFound] = i;
+            laIDs_arr[belongingLAsFound] = i;
             belongingLAsFound++;
         }
         i++;
@@ -137,9 +135,8 @@ bool setGAneighboursAndLAsIDs(AS::GAflagField_t* connectedGAs_ptr, int numberEff
                                                    connectedLAs_ptr->getField(1),
                                                    connectedLAs_ptr->getField(2),
                                                    connectedLAs_ptr->getField(3));
-            printf("\nID[0]: %d , ID[1] %d , ID[2] %d , ID[3]: %d , ID[%d ]: %d ",
-                                           laIDs[0], laIDs[1], laIDs[2], laIDs[3],
-                                        connectedLAs - 1, laIDs[connectedLAs - 1]);             
+            printf("\nID[0]: %d , ID[%d]: %d ", laIDs_arr[0], connectedLAs - 1, 
+                                                    laIDs_arr[connectedLAs - 1]);             
         #endif // AS_DEBUG 
         return false;
     }
@@ -244,51 +241,54 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
         return false;
     }
     state.connectedGAs.loadField(connectedGAsFlagField);
-    if (!setGAneighboursAndLAsIDs(&state.connectedGAs, numEffectiveGAs, state.neighbourIDs,
-                                  &state.localAgentsBelongingToThis, numberLAs, state.laIDs)) {
+    if (!setGAneighboursAndLAsIDs(&state.connectedGAs, numEffectiveGAs, 
+                                  &(state.neighbourIDs[0]), &state.localAgentsBelongingToThis,
+                                                                 numberLAs, &(state.laIDs[0]))
+        ) 
+    {
         LOG_ERROR("Couldn't set Global Agent's neighbours IDs");
     }
-    
+   
+    state.connectedGAs.updateHowManyAreOn();
+    int totalNeighbors = state.connectedGAs.howManyAreOn();
+    for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
 
-    for (int i = 0; i < numEffectiveGAs; i++) {
-        if (i != id) {
-            int otherId, stance;
-            float disposition, dispositionLastStep, infiltration;
+        int neighborRead, otherId, stance;
+        float disposition, dispositionLastStep, infiltration;
             
-            tokens = fscanf(fp, GArelationsInfo, &otherId, &stance, 
-                            &disposition, &dispositionLastStep, &infiltration);
-            if (tokens != 5) {
-                LOG_ERROR("Error reading GA relation tokens. Aborting load.");
-                return false;
-            }
-            if (otherId != i) {
-                LOG_ERROR("Expected data relating to one GA but read from another. Aborting load.");
-                return false;
-            }
+        tokens = fscanf(fp, GArelationsInfo, &neighborRead, &otherId, &stance, 
+                        &disposition, &dispositionLastStep, &infiltration);
+        if (tokens != 6) {
+            LOG_ERROR("Error reading GA relation tokens. Aborting load.");
+            return false;
+        }
+        if (neighborRead != neighbor) {
+            LOG_ERROR("Expected data relating to one GA but read from another. Aborting load.");
+            return false;
+        }
 
-            state.relations.diplomaticStanceToNeighbors[otherId] = (AS::diploStance)stance;
-            state.relations.dispositionToNeighbors[otherId] = disposition;
-            state.relations.dispositionToNeighborsLastStep[otherId] = dispositionLastStep;
-            decision.infiltration[otherId] = infiltration;
+        state.relations.diplomaticStanceToNeighbors[neighbor] = (AS::diploStance)stance;
+        state.relations.dispositionToNeighbors[neighbor] = disposition;
+        state.relations.dispositionToNeighborsLastStep[neighbor] = dispositionLastStep;
+        decision.infiltration[neighbor] = infiltration;
 
-            auto expecsNeighbor = &(decision.requestsForNeighbors[i].expected[0]);
+        auto expecsNeighbor = &(decision.requestsForNeighbors[neighbor].expected[0]);
 
-            int readResID = (int)GA::readsOnNeighbor_t::fields::GA_RESOURCES;
-            int readTaxID = (int)GA::readsOnNeighbor_t::fields::TAX_INCOME;
-            int readTradeID = (int)GA::readsOnNeighbor_t::fields::TRADE_INCOME;
-            int readStrenghtID = (int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
-            int readGuardID = (int)GA::readsOnNeighbor_t::fields::GUARD_LAS;
+        int readResID = (int)GA::readsOnNeighbor_t::fields::GA_RESOURCES;
+        int readTaxID = (int)GA::readsOnNeighbor_t::fields::TAX_INCOME;
+        int readTradeID = (int)GA::readsOnNeighbor_t::fields::TRADE_INCOME;
+        int readStrenghtID = (int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
+        int readGuardID = (int)GA::readsOnNeighbor_t::fields::GUARD_LAS;
 
-            tokens = fscanf(fp, GAreadsOnNeighbor, 
-                &(decision.reads[i].readOf[readResID]), &expecsNeighbor[expecResID], 
-                &(decision.reads[i].readOf[readTaxID]), &expecsNeighbor[expecTaxID], 
-                &(decision.reads[i].readOf[readTradeID]), &expecsNeighbor[expecTradeID], 
-                &(decision.reads[i].readOf[readStrenghtID]), &expecsNeighbor[expecStrenghtID], 
-                &(decision.reads[i].readOf[readGuardID]), &expecsNeighbor[expecGuardID]);
-            if (tokens != 10) {
-                LOG_ERROR("Error reading GA read on neighbors tokens. Aborting load.");
-                return false;
-            }
+        tokens = fscanf(fp, GAreadsOnNeighbor, 
+            &(decision.reads[neighbor].readOf[readResID]), &expecsNeighbor[expecResID], 
+            &(decision.reads[neighbor].readOf[readTaxID]), &expecsNeighbor[expecTaxID], 
+            &(decision.reads[neighbor].readOf[readTradeID]), &expecsNeighbor[expecTradeID], 
+            &(decision.reads[neighbor].readOf[readStrenghtID]), &expecsNeighbor[expecStrenghtID], 
+            &(decision.reads[neighbor].readOf[readGuardID]), &expecsNeighbor[expecGuardID]);
+        if (tokens != 10) {
+            LOG_ERROR("Error reading GA read on neighbors tokens. Aborting load.");
+            return false;
         }
     }
 
@@ -313,6 +313,7 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
     while ( (neighboursFound < data_ptr->numberConnectedNeighbors) 
                                       && (i < (uint32_t)numberLAs) 
                           && (neighboursFound < MAX_LA_NEIGHBOURS) ) {
+
         if (data_ptr->connectedNeighbors.isBitOn(i)) {
             data_ptr->neighbourIDs[neighboursFound] = i;
             neighboursFound++;
@@ -440,28 +441,28 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
         LOG_ERROR("Couldn't set Local Agent's neighbours IDs");
     };
 
-    for (int i = 0; i < connections; i++) {
+    for (int neighbor = 0; neighbor < connections; neighbor++) {
 
-        int otherId, stance;
+        int neighborRead, otherId, stance;
         float disposition, infiltration;
 
-        tokens = fscanf(fp, LArelationsInfo, &otherId, &stance,
+        tokens = fscanf(fp, LArelationsInfo, &neighborRead, &otherId, &stance,
                         &disposition, &infiltration);
-        if (tokens != 4) {
+        if (tokens != 5) {
             LOG_ERROR("Error reading LA relation tokens. Will Abort loading.");
             return false;
         }
-        if (otherId != i) {
+        if (neighborRead != neighbor) {
             LOG_ERROR("Expected data relating to one GA but read from another.Will Abort loading.");
             return false;
         }
 
-        state.relations.diplomaticStanceToNeighbors[otherId] = (AS::diploStance)stance;
-        state.relations.dispositionToNeighbors[otherId] = disposition;
-        decision.infiltration[otherId] = infiltration;
+        state.relations.diplomaticStanceToNeighbors[neighbor] = (AS::diploStance)stance;
+        state.relations.dispositionToNeighbors[neighbor] = disposition;
+        decision.infiltration[neighbor] = infiltration;
 
-        auto expecsNeighbor = &(decision.requestsForNeighbors[i].expected[0]);
-        auto readsNeighbor = &(decision.reads[i].readOf[0]);
+        auto expecsNeighbor = &(decision.requestsForNeighbors[neighbor].expected[0]);
+        auto readsNeighbor = &(decision.reads[neighbor].readOf[0]);
 
         int readResID = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
         int readIncomeID = (int)LA::readsOnNeighbor_t::fields::INCOME;

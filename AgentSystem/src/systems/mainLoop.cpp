@@ -71,19 +71,20 @@ namespace AS{
 	};
 
 	void initializeTiming(timing_st* timingMicros_ptr){
-	timingMicros_ptr->targetStepTime = 
-		            std::chrono::milliseconds(AS_MILLISECONDS_PER_STEP);
-	timingMicros_ptr->timeMultiplier = (float)AS_MILLISECONDS_PER_STEP/MILLIS_IN_A_SECOND;
-	timingMicros_ptr->startThisStep = std::chrono::steady_clock::now();
-	timingMicros_ptr->startLastStep = timingMicros_ptr->startThisStep;
-	timingMicros_ptr->startFirstStep = timingMicros_ptr->startThisStep;
-	timingMicros_ptr->endTimingAndSleep =  timingMicros_ptr->startThisStep; //for first iteration
-	timingMicros_ptr->accumulatedMultiplier = g_currentNetworkParams_ptr->accumulatedMultiplier;
+		timingMicros_ptr->targetStepTime = 
+					std::chrono::milliseconds(AS_MILLISECONDS_PER_STEP);
+		timingMicros_ptr->timeMultiplier = (float)AS_MILLISECONDS_PER_STEP/MILLIS_IN_A_SECOND;
+		timingMicros_ptr->startThisStep = std::chrono::steady_clock::now();
+		timingMicros_ptr->startLastStep = timingMicros_ptr->startThisStep;
+		timingMicros_ptr->startFirstStep = timingMicros_ptr->startThisStep;
+		timingMicros_ptr->endTimingAndSleep =  timingMicros_ptr->startThisStep; //for first iteration
+		timingMicros_ptr->accumulatedMultiplier = 
+						g_currentNetworkParams_ptr->accumulatedMultiplier;
 
-	for (int i = 0; i < AS_TOTAL_CHOPS; i++) {
-		timingMicros_ptr->decisionStepTimeMultipliers[i] = 0;
-	}	
-}
+		for (int i = 0; i < AS_TOTAL_CHOPS; i++) {
+			timingMicros_ptr->decisionStepTimeMultipliers[i] = 0;
+		}	
+	}
 }
 
 void prepareStep(AS::chopControl_st* chopControl_ptr);

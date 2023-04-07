@@ -142,9 +142,9 @@
 * 
 * 5. More handling and updating:
 * 
-* >-Complete 3.2.c-e for any necessary fields;
+* -Complete 3.2.c-e for any necessary fields;
 * --All new fields on mirror, shouldMakeDecisions and infiltration on ClientDataHandler;
-* -Info and relation updates on LA and GA updateSteps;
+* >-Info and relation updates on LA and GA updateSteps;
 * 
 * 6. "MVP":
 * 

@@ -115,6 +115,7 @@ namespace AS {
 							TOTAL_PARAMETERS_FIELDS };
 	} AS_API LAparameters_t;
 
+	//TODO-CRITICAL: use in a class so that changing connections also updates IDs
 	typedef struct {
 		pos_t position;
 		int firstConnectedNeighborId;
@@ -212,6 +213,7 @@ namespace GA {
 			                TOTAL_GA_COLD_FIELDS };
 	} AS_API coldData_t;
 
+	//TODO-CRITICAL: use in a class so that changing connections also updates IDs
 	typedef struct {
 		bool onOff;
 		AS::GAflagField_t connectedGAs;

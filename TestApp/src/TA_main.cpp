@@ -23,6 +23,7 @@ bool testClientDataHAndlerInitialization(void);
 bool testPause(bool printLog = false, int pauseUnpauseCycles = 5);
 bool testMainLoopErrors(std::string filename);
 bool testAgentsUpdating(bool printLog, bool fixedAndStepped = false);
+bool testReads(bool printLog, float secondsToRun = 1);
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
@@ -30,7 +31,7 @@ bool testAgentsUpdating(bool printLog, bool fixedAndStepped = false);
 #define HELPER_FUNC_TESTS 7
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 11
-#define SPECIFIC_THREADED_LOOP_TESTS 11
+#define SPECIFIC_THREADED_LOOP_TESTS 12
 #define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 std::thread reader;//to test realtime reading of data trough CL as AS runs
@@ -159,6 +160,8 @@ int main(void) {
 	resultsBattery3 += (int)testAgentsUpdating(printSteps); GETCHAR_PAUSE;
 	
 	resultsBattery3 += (int)testAgentsUpdating(printSteps, true); GETCHAR_PAUSE;
+
+	resultsBattery3 += (int)testReads(printSteps); GETCHAR_PAUSE;
 	
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
@@ -209,6 +212,245 @@ bool testSnooze(bool printLog) {
 	else if(printLog) { LOG_INFO("Passed"); }
 
 	return passed;
+}
+
+//Tests that reads are happening, have reasonable values, and save and load as expected.
+//Loads a network, sets some values, runs it, checks new values, saves, loads, checks again
+//TODO: check all fields, better sanity checking
+bool testReads(bool print, float secondsToRun) {
+	LOG_WARN("Will load a network, run for several ticks, stop it, and check reads");
+	
+	//Load, but don't start, so we can calculate and set test conditions:
+	bool result = AS::loadNetworkFromFile(fileNameWithDefaults, false);
+	if (!result) {
+		LOG_ERROR("Failed to load network. Aborting test");
+		return false;
+	}
+
+	//Set some test values: we want one LA and one GA to have -0,5 , 0 and 0,5 infiltration
+	auto cldh_ptr = CL::getClientDataHandlerPtr();
+	if (cldh_ptr == NULL) {
+		LOG_ERROR("Failed to get client data handler. Aborting test");
+		return false;
+	}
+
+	int requiredTotalGAs = 5; //4 effective, so 0 is left alone and we have 3 more
+	int quantityGAs = CL::ASmirrorData_cptr->networkParams.numberGAs;
+	if (quantityGAs < requiredTotalGAs) { 
+		LOG_ERROR("Not enough GAs to perform this test. Aborting");
+		return false;
+	}
+
+	//Will leave GA0 alone and set the values in the others:
+	cldh_ptr->GAdecision.changeInfiltrationOnAll(1, -0.5f);
+	cldh_ptr->GAdecision.changeInfiltrationOnAll(2, 0.0f);
+	cldh_ptr->GAdecision.changeInfiltrationOnAll(3, 0.5f);
+
+	int quantityLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
+
+	//For the LAs, we will leave LA0 alone and for the others intercalate the test values:
+	for (int i = 1; i < quantityLAs; i++) {
+		int ref = i - 1; //so we start at -0,5 for LA1
+		float newInfiltration = (ref%3)*(0.5f) - 1; //-0,5 , 0, 0,5
+		cldh_ptr->LAdecision.changeInfiltrationOnAll(i, newInfiltration);
+	}
+		
+	//How long to wait for test to run?
+	int millisToRun = int(secondsToRun * A_THOUSAND);
+	int targetTicksToRun = millisToRun/AS_MILLISECONDS_PER_STEP;
+	
+	//Now we can run the test:
+	result = AS::run(true, targetTicksToRun);
+	if (!result) {
+		LOG_ERROR("Failed to run network. Aborting test");
+		return false;
+	}
+
+	//wait for it to be done and pause:
+	bool paused = false; //pause is NOT instantaneous
+	while(!paused){
+		paused = AS::checkIfMainLoopIsPaused();
+	}
+
+	//check that the reads are reasonable and save some of them
+	
+	std::vector<std::vector<float>> valuesToBeSavedPerNeighborPerGA;
+	int weirdValuesFound = 0;
+
+	auto GAdecisionsVector = &(CL::ASmirrorData_cptr->agentMirrorPtrs.GAdecision_ptr->data);
+	auto GAstateVector = &(CL::ASmirrorData_cptr->agentMirrorPtrs.GAstate_ptr->data);
+
+	for (int thisGA = 0; thisGA < quantityGAs - 1; thisGA++) {
+
+		auto thisState_ptr = &(GAstateVector->at(thisGA));
+		auto reads_ptr = &(GAdecisionsVector->at(thisGA).reads[0]);
+		
+		std::vector<float> valuesToBeSavedPerNeighborThisGA;
+
+		int totalConnections = thisState_ptr->connectedGAs.howManyAreOn();
+		for (int neighbor = 0; neighbor < totalConnections; neighbor++) {
+			
+			int neighborID = thisState_ptr->neighbourIDs[neighbor];
+			
+			int field = (int)GA::readsOnNeighbor_t::fields::GA_RESOURCES;
+			float read = reads_ptr[neighbor].readOf[field];
+			float real = GAstateVector->at(neighborID).parameters.GAresources;
+
+			float small = 1;
+			if (abs(real) < small) {
+				if(real >= 0) { 
+					real = small; 
+				}
+				else {
+					real = -small;
+				}
+			}
+
+			float proportionalDifference = abs((real - read))/abs(real);
+
+			if (proportionalDifference > 2 * EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION) {
+				//absurd!
+				weirdValuesFound++;
+			}
+
+			valuesToBeSavedPerNeighborThisGA.push_back(read);
+		}
+
+		valuesToBeSavedPerNeighborPerGA.push_back(valuesToBeSavedPerNeighborThisGA);
+	}
+
+	std::vector<std::vector<float>> valuesToBeSavedPerNeighborPerLA;
+
+	auto LAdecisionsVector = &(CL::ASmirrorData_cptr->agentMirrorPtrs.LAdecision_ptr->data);
+	auto LAstateVector = &(CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data);
+
+	for (int thisLA = 0; thisLA < quantityLAs; thisLA++) {
+
+		auto thisState_ptr = &(LAstateVector->at(thisLA));
+		auto reads_ptr = &(LAdecisionsVector->at(thisLA).reads[0]);
+		
+		std::vector<float> valuesToBeSavedPerNeighborThisLA;
+
+		thisState_ptr->locationAndConnections.connectedNeighbors.updateHowManyAreOn();
+		int totalConnections = 
+			thisState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+		for (int neighbor = 0; neighbor < totalConnections; neighbor++) {
+			
+			int neighborID = thisState_ptr->locationAndConnections.neighbourIDs[neighbor];
+			
+			int field = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
+			float read = reads_ptr[neighbor].readOf[field];
+			float real = LAstateVector->at(neighborID).parameters.resources.current;
+
+			float small = 1;
+			if (abs(real) < small) {
+				if(real >= 0) { 
+					real = small; 
+				}
+				else {
+					real = -small;
+				}
+			}
+
+			float proportionalDifference = abs((real - read))/abs(real);
+
+			if (proportionalDifference > 2 * EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION) {
+				//absurd!
+				weirdValuesFound++;
+			}
+
+			valuesToBeSavedPerNeighborThisLA.push_back(read);
+		}
+
+		valuesToBeSavedPerNeighborPerLA.push_back(valuesToBeSavedPerNeighborThisLA);
+	}
+
+	//save the network
+	result = AS::saveNetworkToFile(inNetworkReadsTest, false, false, true);
+	if (!result) {
+		LOG_ERROR("Failed to save network. Aborting test");
+		return false;
+	}
+	
+	//reload
+	result = AS::loadNetworkFromFile(inNetworkReadsTest, false);
+	if (!result) {
+		LOG_ERROR("Failed to reload network. Aborting test");
+		return false;
+	}
+
+	//test that the saved values were loaded right:
+
+	int loadedWrong = 0;
+	for (int thisGA = 0; thisGA < quantityGAs - 1; thisGA++) {
+
+		auto thisState_ptr = &(GAstateVector->at(thisGA));
+		auto reads_ptr = &(GAdecisionsVector->at(thisGA).reads[0]);
+		
+		thisState_ptr->connectedGAs.updateHowManyAreOn();
+		int totalConnections = thisState_ptr->connectedGAs.howManyAreOn();
+		for (int neighbor = 0; neighbor < totalConnections; neighbor++) {
+					
+			int field = (int)GA::readsOnNeighbor_t::fields::GA_RESOURCES;
+			float read = reads_ptr[neighbor].readOf[field];
+
+			float expected = valuesToBeSavedPerNeighborPerGA.at(thisGA).at(neighbor);
+			float difference = read - expected;
+			float tolerance = 2.0f/A_MILLION;
+			if(abs(difference) > tolerance){
+				loadedWrong++;
+				if (print) {
+					printf("GA%d (n%d) - read: %f, expected: %f | ", thisGA, neighbor, 
+						                                               read, expected);
+				}
+			}
+		}
+
+	}
+
+	for (int thisLA = 0; thisLA < quantityLAs; thisLA++) {
+
+		auto thisState_ptr = &(LAstateVector->at(thisLA));
+		auto reads_ptr = &(LAdecisionsVector->at(thisLA).reads[0]);
+		
+		thisState_ptr->locationAndConnections.connectedNeighbors.updateHowManyAreOn();
+		int totalConnections = 
+			thisState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+		for (int neighbor = 0; neighbor < totalConnections; neighbor++) {
+					
+			int field = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
+			float read = reads_ptr[neighbor].readOf[field];
+
+			float expected = valuesToBeSavedPerNeighborPerLA.at(thisLA).at(neighbor);
+			float difference = read - expected;
+			float tolerance = 2.0f/A_MILLION;
+			if(abs(difference) > tolerance){
+				loadedWrong++;
+				if (print) {
+					printf("LA%d (n%d) - read: %f, expected: %f | ", thisLA, neighbor, 
+						                                               read, expected);
+				}
+			}
+		}
+	}
+
+	if (loadedWrong > 0) {
+		LOG_ERROR("Values were not read back as expected after loading");
+		result = false;
+		if (print) {
+			printf("%d values read wrong", loadedWrong);
+		}
+	}
+
+	if (weirdValuesFound > 0) {
+		LOG_ERROR("Some weird values were found, updating is likely not working");
+		result = false;
+		if (print) {
+			printf("%d weird values found", weirdValuesFound);
+		}
+	}
+
+	return result;
 }
 
 //TODO-CRITICAL: this test needs to somehow guarantee no actions change the incomes and etc

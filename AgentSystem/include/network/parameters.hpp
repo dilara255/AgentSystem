@@ -70,6 +70,7 @@ and data sizes static.
 
 //Diplomacy:
 #define DIPLOMATIC_STANCES 5 //TODO: would this be better left to the enum class diploStances?
+#define TOTAL_LA_INFO_RELATION_WEIGHT_FOR_GA_PER_SECOND (0.001f)
 
 //Expected-value reading parameters:
 #define LA_FIELDS_TO_DEDUCE_EXPECTED 10
