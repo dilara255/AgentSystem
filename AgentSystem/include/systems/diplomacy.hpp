@@ -6,18 +6,24 @@
 //TODO-CRITICAL: Document
 
 namespace LA{
-	float calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStance, 
-		                                AS::dataControllerPointers_t* agentDataPtrs_ptr,
-		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+	float calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStance,
+				                        AS::dataControllerPointers_t* agentDataPtrs_ptr,
+	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+
+	float calculateTradeIncomePerSecond(float agentsShare, int partnerID,
+				                        AS::dataControllerPointers_t* agentDataPtrs_ptr);
 	
 	float calculateAttritionLossesPerSecond(int agentId1, int agentId2, 
 		                                    AS::dataControllerPointers_t* agentDataPtrs_ptr);
 }
 
 namespace GA{
-	float calculateTradeIncomePerSecond(int partnerID, AS::diploStance theirStance, 
-		                                AS::dataControllerPointers_t* agentDataPtrs_ptr,
-		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+	float calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStance,
+				                        AS::dataControllerPointers_t* agentDataPtrs_ptr,
+	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+
+	float calculateTradeIncomePerSecond(float agentsShare, int partnerID,
+				                        AS::dataControllerPointers_t* agentDataPtrs_ptr);
 }
 
 namespace AS {
