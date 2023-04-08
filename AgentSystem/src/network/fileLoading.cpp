@@ -444,11 +444,11 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     for (int neighbor = 0; neighbor < connections; neighbor++) {
 
         int neighborRead, otherId, stance;
-        float disposition, infiltration;
+        float disposition, lastDispo, infiltration;
 
         tokens = fscanf(fp, LArelationsInfo, &neighborRead, &otherId, &stance,
-                        &disposition, &infiltration);
-        if (tokens != 5) {
+                        &disposition, &lastDispo, &infiltration);
+        if (tokens != 6) {
             LOG_ERROR("Error reading LA relation tokens. Will Abort loading.");
             return false;
         }
@@ -459,6 +459,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
 
         state.relations.diplomaticStanceToNeighbors[neighbor] = (AS::diploStance)stance;
         state.relations.dispositionToNeighbors[neighbor] = disposition;
+        state.relations.dispositionToNeighborsLastStep[neighbor] = lastDispo;
         decision.infiltration[neighbor] = infiltration;
 
         auto expecsNeighbor = &(decision.requestsForNeighbors[neighbor].expected[0]);

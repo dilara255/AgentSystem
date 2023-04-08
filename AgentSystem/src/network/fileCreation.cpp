@@ -311,7 +311,8 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
         for (int j = blockStartingIndex; j < blockBoundingIndex; j++, neighbor++) {
 
             resultAux = fprintf(fp, LArelationsInfo, neighbor, j,
-                DEFAULT_LA_STANCE, DEFAULT_LA_DISPOSITION, DEFAULT_LA_INFILTRATION);
+                DEFAULT_LA_STANCE, DEFAULT_LA_DISPOSITION, DEFAULT_LA_DISPOSITION,
+                DEFAULT_LA_INFILTRATION);
             if (resultAux <= 0) result = 0;
 
              resultAux = fprintf(fp, LAreadsOnNeighbor, 
@@ -627,6 +628,7 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
             resultAux = fprintf(fp, LArelationsInfo, neighbor, neighborID,
                                 state.relations.diplomaticStanceToNeighbors[neighbor],
                                 state.relations.dispositionToNeighbors[neighbor],
+                                state.relations.dispositionToNeighborsLastStep[neighbor],
                                 decision.infiltration[neighbor]);
             if (resultAux <= 0) result = 0;
 

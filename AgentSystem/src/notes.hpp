@@ -144,8 +144,8 @@
 * 
 * -Complete 3.2.c-e for any necessary fields;
 * --All new fields on mirror, shouldMakeDecisions and infiltration on ClientDataHandler;
-* >-Info and relation updates on LA and GA updateSteps;
-* -Some general maintenence and fixes (sav/load of neighbor data, prn distribution, etc);
+* -Info and relation updates on LA and GA updateSteps;
+* >-Some general maintenence and fixes (sav/load of neighbor data, prn distribution, etc);
 * 
 * 6. "MVP":
 * 
