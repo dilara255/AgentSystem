@@ -445,16 +445,6 @@ namespace AS {
 			LOG_TRACE("Value read is not as expected"); 
 		}
 
-		LOG_TRACE("Will read Last GA's GA connection data...");
-
-		AS::GAflagField_t connectedRead = 
-			                        mp.GAstate_ptr->getDataCptr()->at(lastGA).connectedGAs;
-
-		if (connectedRead.getField() != TST_GA_CONNECTIONS) {
-			failed++;
-			LOG_TRACE("Value read is not as expected"); 
-		}
-
 		int lastLA = pp->numberLAs - 1;
 
 		LOG_TRACE("Will read Last LA's guard...");
@@ -502,8 +492,6 @@ namespace AS {
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("\n%d out of 7 failed. Test action aux: %f - expected %f ", failed,
 					                                         auxRead, TST_LAST_ACTION_AUX);
-				printf("\nGA connection data: %d - expected %d ", connectedRead.getField(),
-					                                                    TST_GA_CONNECTIONS);
 				printf(" | comment first letter: %c - expected %c", currentNetworkParams_cptr->comment[0],
 																   TST_COMMENT_LETTER_CHANGE);
 				printf("\nGA id: %d - expected %d ", idRead, TST_GA_ID);

@@ -2,6 +2,7 @@
 #include "AS_testsAPI.hpp"
 #include "systems/warningsAndErrorsCounter.hpp"
 #include "systems/diplomacy.hpp"
+#include "data/dataMisc.hpp"
 
 #include "systems/actionSystem.hpp"
 
@@ -38,7 +39,7 @@ namespace AS_TST {
 
 void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
 	                          dataControllerPointers_t* dp, float timeMultiplier,
-	                                                int numberLAs, int numberGAs,
+	                                        int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr,
 	                                                AS::PRNserver* prnServer_ptr,
 	                                          float secondsSinceLastDecisionStep) {
@@ -61,12 +62,13 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 		g_errorsCounter_ptr->incrementError(errors::AS_GA_STATE_PTR_NULL);
 	}
 
-	for (int i = 0; i < numberGAs; i++) {
+	for (int i = 0; i < numberEffectiveGAs; i++) {
 		updateGA(&GAstateData_ptr->at(i), i, dp, timeMultiplier, errorsCounter_ptr);
 	}
 	
 	//Make decisions:
 	
+	//For LAs:
 	static int nextDecisionLAindex = 0;	
 	int finalDecisionLAindex = nextDecisionLAindex + LAdecisionsToTakeThisChop - 1;
 
@@ -78,15 +80,16 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	}
 	nextDecisionLAindex %= numberLAs; //and then once outside the loop we modulo the static value
 		
+	//For GAs:
 	static int nextDecisionGAindex = 0;	
 	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
 
 	while (nextDecisionGAindex <= finalDecisionGAindex) {	
 		//for the same reason we modulo the index here as well:
-		makeDecisionGA(nextDecisionGAindex % numberGAs, dp, prnServer_ptr);
+		makeDecisionGA(nextDecisionGAindex % numberEffectiveGAs, dp, prnServer_ptr);
 		nextDecisionGAindex++;
 	}
-	nextDecisionGAindex %= numberGAs;
+	nextDecisionGAindex %= numberEffectiveGAs;
 }
 
 namespace {
@@ -116,98 +119,29 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	//and never smaller then zero : )
 	str_ptr->currentUpkeep = std::max(0.0f, str_ptr->currentUpkeep);
 
+	//now we can update the current resources:
 	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep) * timeMultiplier;
 	
+	//But resources, infiltration and relations can also change due to diplomacy:
+	//TODO: EXTRACT and leave definition on diplomacy.cpp
 	auto decision_ptr = &(dp->LAdecision_ptr->getDirectDataPtr()->at(agentId));
 
-	int quantityNeighbours = state_ptr->locationAndConnections.numberConnectedNeighbors;
-	for (int i = 0; i < quantityNeighbours; i++) {
-		
-		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[i];
-		int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
-
-		if ((stance == AS::diploStance::TRADE) ||
-		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
-
-			float share = LA::calculateShareOfPartnersTrade(partnerID, stance, dp, 
-				                                                errorsCounter_ptr);
-			res_ptr->current += 
-				LA::calculateTradeIncomePerSecond(share, partnerID, dp) * timeMultiplier;
-			
-			//raise relations and infiltration in proportion to share:
-			state_ptr->relations.dispositionToNeighbors[i] +=
-					share * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
-			decision_ptr->infiltration[i] +=
-				    share * MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
-		}
-
-		else if ((stance == AS::diploStance::WAR)) {
-			int partnerID = state_ptr->locationAndConnections.neighbourIDs[i];
-			str_ptr->current -= 
-				LA::calculateAttritionLossesPerSecond(agentId, partnerID, dp)
-				* timeMultiplier;
-			
-			//lower relations and infiltration because of war:
-			state_ptr->relations.dispositionToNeighbors[i] -=
-					MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
-			decision_ptr->infiltration[i] -=
-				    MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
-		}
-
-		if ((stance == AS::diploStance::ALLY) ||
-		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
-
-			//raise relations and infiltration because of alliance:
-			state_ptr->relations.dispositionToNeighbors[i] +=
-					DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
-			decision_ptr->infiltration[i] +=
-				    INFILTRATION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
-		}
-
-		//change infiltration according to neighbors disposition (can be negative):
-		auto partnerState_ptr = &(dp->LAstate_ptr->getDataCptr()->at(partnerID));
-		int idOnNeighbor = -1;
-		for (int i = 0; i < MAX_LA_NEIGHBOURS; i++) {
-			if (partnerState_ptr->locationAndConnections.neighbourIDs[i] == agentId) {
-				idOnNeighbor = agentId;
-			}
-		}
-
-		if (idOnNeighbor == -1) {
-			errorsCounter_ptr->incrementError(AS::errors::AS_LA_NOT_NEIGHBOR_OF_NEIGHBOR);
-		}
-
-		float neighborsDisposition = 
-			partnerState_ptr->relations.dispositionToNeighbors[idOnNeighbor];
-
-		decision_ptr->infiltration[i] += timeMultiplier * neighborsDisposition
-								* INFILTRATION_CHANGE_FROM_NEIGHBOR_DISPOSITION_PER_SECOND;
-	}
+	LA::applyAttritionTradeInfiltrationAndDispostionChanges(agentId, timeMultiplier, 
+	                                 state_ptr, decision_ptr, dp, errorsCounter_ptr);
 
 	//finally, LAs "pay tax" to GA (and can receive resources from the GA if in debt):
 	res_ptr->current -= taxPayedPerSecond(*res_ptr) * timeMultiplier;
 
 	//let's also make sure disposition and infiltration remain bounded to [-1,1]
-	int connected = state_ptr->locationAndConnections.numberConnectedNeighbors;
-	for (int neighbor = 0; neighbor < connected; neighbor++) {
+	auto infiltrationArr_ptr = &(decision_ptr->infiltration[0]);
+	auto dispositionArr_ptr = &(state_ptr->relations.dispositionToNeighbors[0]);
 
-		float infiltration = decision_ptr->infiltration[neighbor];
-		if (infiltration >= 0) {
-			decision_ptr->infiltration[neighbor] = std::min(1.0f, infiltration);
-		}
-		else {
-			decision_ptr->infiltration[neighbor] = std::max(-1.0f, infiltration);
-		}
-
-		float disposition = state_ptr->relations.dispositionToNeighbors[neighbor];
-		if (disposition >= 0) {
-			state_ptr->relations.dispositionToNeighbors[neighbor] = 
-												std::min(1.0f, disposition);
-		}
-		else {
-			state_ptr->relations.dispositionToNeighbors[neighbor] = 
-											std::max(-1.0f, disposition);
-		}		
+	int quantityNeighbours = state_ptr->locationAndConnections.numberConnectedNeighbors;
+	for (int neighbor = 0; neighbor < quantityNeighbours; neighbor++) {
+		infiltrationArr_ptr[neighbor] =
+			std::clamp(infiltrationArr_ptr[neighbor], MIN_INFILTRATION, MAX_INFILTRATION);
+		dispositionArr_ptr[neighbor] =
+			std::clamp(dispositionArr_ptr[neighbor], MIN_DISPOSITION, MAX_DISPOSITION);
 	}
 }
 
@@ -247,18 +181,17 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	param_ptr->GAresources += param_ptr->lastTaxIncome;
 
 	//... and from trade:
+	//TODO: EXTRACT and move to diplomacy.cpp (also comment as in the LAs version)
 	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
 	param_ptr->lastTradeIncome = 0;
 
 	auto decision_ptr = &(dp->GAdecision_ptr->getDirectDataPtr()->at(agentId));
 
-	for (int i = 0; i < quantityNeighbours; i++) {
+	for (int neighbor = 0; neighbor < quantityNeighbours; neighbor++) {
 
-		int idOther = state_ptr->neighbourIDs[i];
+		int idOther = state_ptr->neighbourIDs[neighbor];
 		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[idOther];
-		
-		
-		
+				
 		//raise relations and infiltration because of alliance
 		//change infiltration according to neighbors disposition (can be negative):
 
@@ -272,17 +205,17 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 				GA::calculateTradeIncomePerSecond(share, idOther, dp) * timeMultiplier;
 
 			//raise relations and infiltration in proportion to share:
-			state_ptr->relations.dispositionToNeighbors[i] +=
+			state_ptr->relations.dispositionToNeighbors[neighbor] +=
 					share * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
-			decision_ptr->infiltration[i] +=
+			decision_ptr->infiltration[neighbor] +=
 				    share * MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
 		}
 
 		else if (stance == AS::diploStance::WAR) {
 			//lower relations and infiltration because of war:
-			state_ptr->relations.dispositionToNeighbors[i] -=
+			state_ptr->relations.dispositionToNeighbors[neighbor] -=
 					MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
-			decision_ptr->infiltration[i] -=
+			decision_ptr->infiltration[neighbor] -=
 				    MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
 		}
 
@@ -290,57 +223,53 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 
 			//raise relations and infiltration because of alliance:
-			state_ptr->relations.dispositionToNeighbors[i] +=
+			state_ptr->relations.dispositionToNeighbors[neighbor] +=
 					DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
-			decision_ptr->infiltration[i] +=
+			decision_ptr->infiltration[neighbor] +=
 				    INFILTRATION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
 		}
 
-		//change infiltration according to neighbors disposition (can be negative):
+		//We also change infiltration according to neighbors disposition
+		//If the neighbor likes this agent, this agent gains infiltration, and vice-versa
+		
+		//First, we need to find this agent's index on the neighbor's arrays:
 		auto partnerState_ptr = &(dp->GAstate_ptr->getDataCptr()->at(idOther));
-		int idOnNeighbor = -1;
-		for (int i = 0; i < MAX_GA_QUANTITY; i++) {
-			if (partnerState_ptr->neighbourIDs[i] == agentId) {
-				idOnNeighbor = agentId;
-			}
-		}
+		int idOnNeighbor = 
+			AS::getGAsIDonNeighbor(agentId, idOther, partnerState_ptr);
+		bool found = (idOnNeighbor != NATURAL_RETURN_ERROR);
 
-		if (idOnNeighbor == -1) {
-			errorsCounter_ptr->incrementError(AS::errors::AS_GA_NOT_NEIGHBOR_OF_NEIGHBOR);
-		}
+		if(found){
+			float neighborsDisposition = 
+				partnerState_ptr->relations.dispositionToNeighbors[idOnNeighbor];
 
-		float neighborsDisposition = 
-			partnerState_ptr->relations.dispositionToNeighbors[idOnNeighbor];
-
-		decision_ptr->infiltration[i] += timeMultiplier * neighborsDisposition
+			decision_ptr->infiltration[neighbor] += timeMultiplier * neighborsDisposition
 								* INFILTRATION_CHANGE_FROM_NEIGHBOR_DISPOSITION_PER_SECOND;
+		}
+		else {
+			errorsCounter_ptr->incrementError(AS::errors::AS_GA_NOT_NEIGHBOR_OF_NEIGHBOR);
+		}	
 	}
 
 	//actually add the resources from all the trade:
 	param_ptr->GAresources += param_ptr->lastTradeIncome;
 
 	//and make sure disposition and infiltration remain bounded to [-1,1]
-	int connected = state_ptr->connectedGAs.howManyAreOn();
-	for (int neighbor = 0; neighbor < connected; neighbor++) {
+	auto infiltrationArr_ptr = &(decision_ptr->infiltration[0]);
+	auto dispositionArr_ptr = &(state_ptr->relations.dispositionToNeighbors[0]);
 
-		float infiltration = decision_ptr->infiltration[neighbor];
-		if (infiltration >= 0) {
-			decision_ptr->infiltration[neighbor] = std::min(1.0f, infiltration);
-		}
-		else {
-			decision_ptr->infiltration[neighbor] = std::max(-1.0f, infiltration);
-		}
+	for (int neighbor = 0; neighbor < quantityNeighbours; neighbor++) {
 
-		float disposition = state_ptr->relations.dispositionToNeighbors[neighbor];
-		if (disposition >= 0) {
-			state_ptr->relations.dispositionToNeighbors[neighbor] = 
-												std::min(1.0f, disposition);
-		}
-		else {
-			state_ptr->relations.dispositionToNeighbors[neighbor] = 
-											std::max(-1.0f, disposition);
-		}		
+		bool print = false &&
+			((infiltrationArr_ptr[neighbor] > 1) || (infiltrationArr_ptr[neighbor] < -1))
+			|| ((dispositionArr_ptr[neighbor] > 1) || (dispositionArr_ptr[neighbor] < -1));
+
+		infiltrationArr_ptr[neighbor] =
+			std::clamp(infiltrationArr_ptr[neighbor], MIN_INFILTRATION, MAX_INFILTRATION);
+		dispositionArr_ptr[neighbor] =
+			std::clamp(dispositionArr_ptr[neighbor], MIN_DISPOSITION, MAX_DISPOSITION);
 	}
+
+	
 }
 
 
@@ -363,6 +292,10 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 								    AS::PRNserver* prnServer_ptr) {
 
 	LA::stateData_t* state_ptr = &(dp->LAstate_ptr->getDirectDataPtr()->at(agent));
+
+	if (state_ptr->onOff == false) {
+		return;
+	}
 	
 	updateReadsLA(agent, dp, state_ptr, prnServer_ptr);
 
@@ -405,6 +338,10 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 	                                AS::PRNserver* prnServer_ptr) {
 
 	GA::stateData_t* state_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(agent));
+
+	if (state_ptr->onOff == false) {
+		return;
+	}
 
 	updateInfiltrationAndRelationsFromLAs(agent, dp, state_ptr);
 

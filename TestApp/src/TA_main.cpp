@@ -251,7 +251,7 @@ bool testReads(bool print, float secondsToRun) {
 	//For the LAs, we will leave LA0 alone and for the others intercalate the test values:
 	for (int i = 1; i < quantityLAs; i++) {
 		int ref = i - 1; //so we start at -0,5 for LA1
-		float newInfiltration = (ref%3)*(0.5f) - 1; //-0,5 , 0, 0,5
+		float newInfiltration = (ref%3)*(0.5f) - 0.5f; //-0,5 , 0, 0,5
 		cldh_ptr->LAdecision.changeInfiltrationOnAll(i, newInfiltration);
 	}
 		
@@ -1191,14 +1191,6 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 
 	AS::GAflagField_t newGAconnectionField;
 	newGAconnectionField.loadField(TST_GA_CONNECTIONS);
-
-	LOG_TRACE("Will issue new GA Connections for last GA");
-
-	result = cp->GAstate.changeConnectedGAs(lastGA, &newGAconnectionField);
-	if (!result) {
-		LOG_ERROR("Error issuing Connected GAs change. Aborting test.");
-		return false;
-	}
 
 	uint32_t lastLA = mp->networkParams.numberLAs - 1;
 

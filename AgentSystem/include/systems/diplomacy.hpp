@@ -6,6 +6,10 @@
 //TODO-CRITICAL: Document
 
 namespace LA{
+	void applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float timeMultiplier, 
+	                            LA::stateData_t* state_ptr, LA::decisionData_st* decision_ptr,
+	        AS::dataControllerPointers_t* dp, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+
 	float calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStance,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr,
 	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr);

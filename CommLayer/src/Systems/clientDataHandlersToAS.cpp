@@ -800,7 +800,8 @@ namespace CL {
 			&recepientPtrs.agentData_ptr->GAdecision_ptr->getDirectDataPtr()->at(agentID);
 		
 		for (int i = 0; i < MAX_GA_QUANTITY; i++) {
-			ASdecision_ptr->infiltration[i] = m_data_ptr->data[agentID].infiltration[i];
+			ASdecision_ptr->infiltration[i] = 
+				m_data_ptr->data[agentID].infiltration[i];
 		}
 		
 		return true;

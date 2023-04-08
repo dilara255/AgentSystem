@@ -3,6 +3,12 @@
 #include "AS_internal.hpp"
 
 namespace AS {
+	AS_API int getGAsIDonNeighbor(int agent, int neighborID, 
+		                      const GA::stateData_t* partnerState_ptr);
+
+	AS_API int getLAsIDonNeighbor(int agent, int neighborID, 
+		                      const LA::stateData_t* partnerState_ptr);
+
 	AS_API bool copyNetworkParameters(networkParameters_t* destination,
 		                            const networkParameters_t * source);
 

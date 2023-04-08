@@ -145,9 +145,11 @@
 * -Complete 3.2.c-e for any necessary fields;
 * --All new fields on mirror, shouldMakeDecisions and infiltration on ClientDataHandler;
 * >-Info and relation updates on LA and GA updateSteps;
+* -Some general maintenence and fixes (sav/load of neighbor data, prn distribution, etc);
 * 
 * 6. "MVP":
 * 
+* -Stubs of decisions and actions (no actual logic);
 * -Couple of simplified decisions and actions (and watever is necessary for that);
 * --Should just run their course and have a simple resolution;
 * -Text-mode visualization of a couple agents running;
@@ -155,40 +157,37 @@
 * Some cleanup
 *
 * ***** Minor 5. Tooling: inspection *****
-*
+* 
+* Quick system review and any pending groundwork.
+* Do some benchmarking.
 * Implement some tooling to inspect the system.
-* Client inuput limited by whats already implemented (focus on reading/output)
+* Client inuput limited by whats already implemented (focus on reading/output).
 *
 * General testing
 *
 * * ***** Minor 6. More groundwork, Technical Debt/future refactor organization*****
 *
-* - Technical debt organization pass and refactor planning;
+* - Quick technical debt organization pass and refactor planning;
 * -- Take a look at technical debt and TODOs (especially CRITICALs);
-* -- Prioritize what to deal with now, only if really necessary document the rest;
+* -- Prioritize what to deal with now, only if really necessary, and document the rest;
 * -- Plan a proposed first refactor around that, as well as the following steps to delivery;
 * 
 * - Any groundwork still necessary before focusing on behaviour;
 * --Especially action-related;
 * -- Also complete 3.2.c-e for a few more of the most relevant fields and update tooling;
 *
-* ***** Minor 7. Basic decision making and actions *****
+* ***** Minor 7. Basic decision making and actions: vertical slice *****
 *
-* A complete, but very simple version of the AS.
+* A complete vertical slice of the AS.
+* -- All planned functionality in place: some may be partially implemented, but validated.
 * Very simple versions of all initially expected actions.
 * 
-* Validation of the basic system and initial exploration of the decision process.
-*
-* ***** Minor 8. Behaviour *****
-*
-*
-* => MAY MERGE WITH PREVIOUS MINOR:
+* Validation of the system and initial exploration of the decision process:
 * - Minimum necessary detailed behaviour + reasonable behaviour for the rest, so that:
 * -- We have the initial minimum expected functionality in order. Fuck Equilibrium.
 * -- We can check that agent growth can be kept under control;
 * -- We can check the emergency of one key "complex" scnario with the detailed behaviour;
-* 
-*
+* *
 * ***** Major 1. Tying things up *****
 *
 * - A last pass on TODO's, documenting any left behind;
