@@ -635,7 +635,7 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	float defaultUpkeep = 0;
 	float defaultIncome = DEFAULT_LA_INCOME - defaultUpkeep;
 
-	float expectedTradeFirstLA = defaultIncome * TRADE_FACTOR_PER_SECOND
+	float expectedTradeFirstLA = defaultIncome * TRADE_FACTOR_LA_PER_SECOND
 									* (float)adjustedTotalMultiplier;
 
 	float effectiveArmyCostFirstLA = (float)(DEFAULT_LA_STRENGHT +
@@ -653,9 +653,9 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 		                  * (expectedTotalResourcesFirstLA + startingResourcesFirstLA)/2);
 	expectedTotalResourcesFirstLA -= expectedTaxesFirstLA; 
 	
-	float tradeFromFirstLA = (float)(TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
+	float tradeFromFirstLA = (float)(TRADE_FACTOR_LA_PER_SECOND * adjustedTotalMultiplier
 										* LAtradeCoeficient * expectedLiquidFirstLA);
-	float tradeFromOtherLAs = (float)(TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier
+	float tradeFromOtherLAs = (float)(TRADE_FACTOR_LA_PER_SECOND * adjustedTotalMultiplier
 												* LAtradeCoeficient * defaultIncome);
 	int quantityOtherLAs = (MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT) - 1;
 
@@ -673,7 +673,7 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	//First GA by default has LA0 and the next few, which by default do not trade with LA0
 	//So we can calculate a standard LAs expected tax and add connectedLAs-1 of that to LA0s:
 	float expectedTradeDefaultLA = 
-			(float)(TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier * defaultIncome);
+			(float)(TRADE_FACTOR_LA_PER_SECOND * adjustedTotalMultiplier * defaultIncome);
 	float expectedTotalIncomeDefaultLAMinusTrade =
 									(float)(defaultIncome * adjustedTotalMultiplier);
 	float expectedTotalResourcesDefaultLA =  DEFAULT_LA_RESOURCES + 
@@ -681,20 +681,28 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	float expectedTaxesDefaultLA = (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
 								* (expectedTotalResourcesDefaultLA + DEFAULT_LA_RESOURCES)/2);
 	
-	int connectedLAs = gaState_ptr->at(0).localAgentsBelongingToThis.howManyAreOn();
-	float firstGAtaxGain = (connectedLAs - 1)*expectedTaxesDefaultLA + expectedTaxesFirstLA;
+	int connectedLAsGA0 = gaState_ptr->at(0).localAgentsBelongingToThis.howManyAreOn();
+	int connectedLAsLastGA = gaState_ptr->at(quantityGAs - 1).localAgentsBelongingToThis.howManyAreOn();
+
+	float firstGAtaxGain = (connectedLAsGA0 - 1)*expectedTaxesDefaultLA 
+		                   + expectedTaxesFirstLA;
 
 	//For trade, we consider full trade with a GA with all standard taxes;
 	//Note that by doing this we ignore second and higher order GA trade effects;
-	float defaultGAtaxGain = connectedLAs*expectedTaxesDefaultLA;
-	float firstGAtradeGainFirstOrder = (float)((defaultGAtaxGain/2) 
-							* TRADE_FACTOR_PER_SECOND * adjustedTotalMultiplier);
+	float defaultGAtaxGain = connectedLAsGA0 * expectedTaxesDefaultLA;
+	
+	//GA's trade value is proportional to the tax they received last tick
+	//time multiplier is already applied there
+	
+	float firstGAtradeGainFirstOrder = defaultGAtaxGain * TRADE_FACTOR_GA 
+		                               * adjustedTotalMultiplier;
 
 	float expectedTotalResourcesFirstGA = 
 			startingResourcesFirstGA + firstGAtaxGain + firstGAtradeGainFirstOrder;
 
 	//For the last GA we do the same, but using the last LA, and there's no trade;
-	float lastGAtaxGain = (connectedLAs - 1)*expectedTaxesDefaultLA + expectedTaxesLastLA;;
+	float lastGAtaxGain = (connectedLAsLastGA - 1)*expectedTaxesDefaultLA 
+		                  + expectedTaxesLastLA;
 	float expectedTotalResourcesLastGA = DEFAULT_GA_RESOURCES + lastGAtaxGain;
 	
 	//And finally check them:
