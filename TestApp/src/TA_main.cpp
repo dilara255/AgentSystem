@@ -456,6 +456,7 @@ bool testReads(bool print, float secondsToRun) {
 //TODO-CRITICAL: this test needs to somehow guarantee no actions change the incomes and etc
 //UPDATE when actions are implemented
 //TODO: make a more interesting test-case using clientDataHandler (include war/attrition)
+//TODO: this is really brittle : /
 bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	LOG_WARN("Will load a network, run for several ticks, stop it, and check agent updating");
 	
