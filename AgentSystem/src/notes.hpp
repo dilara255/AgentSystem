@@ -145,11 +145,11 @@
 * -Complete 3.2.c-e for any necessary fields;
 * --All new fields on mirror, shouldMakeDecisions and infiltration on ClientDataHandler;
 * -Info and relation updates on LA and GA updateSteps;
-* >-Some general maintenence and fixes (sav/load of neighbor data, prn distribution, etc);
+* -Some general maintenence and fixes (sav/load of neighbor data, prn distribution, etc);
 * 
 * 6. "MVP":
 * 
-* -Stubs of decisions and actions (no actual logic);
+* >-Stubs of decisions and actions (no actual logic);
 * -Couple of simplified decisions and actions (and watever is necessary for that);
 * --Should just run their course and have a simple resolution;
 * -Text-mode visualization of a couple agents running;

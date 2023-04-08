@@ -404,7 +404,13 @@ void calculateAndPrintMainTimingInfo(AS::timing_st timingMicros) {
 }
 
 int getTotalPRNsToDraw(int numberLAs, int numberGAs) {
-	return PRNS_PER_LA*numberLAs + PRNS_PER_GA*numberGAs + MAX_ACT_PRNS;
+	
+	int prnsPerLA =  PRNS_TO_CHOOSE_ACTION + (LA_FIELDS_TO_READ * MAX_LA_NEIGHBOURS);
+	int prnsPerGA =  PRNS_TO_CHOOSE_ACTION + (GA_FIELDS_TO_READ * MAX_GA_QUANTITY);
+	int agents = numberLAs + numberGAs;
+
+	return (prnsPerLA * numberLAs) + (prnsPerGA * numberGAs) 
+								   + (agents * MAX_ACT_PRNS_PER_AGENT);
 }
 
 int howManyDecisionsThisChop(int chopIndex, int* decisionsMade_ptr, int numberAgents) {
