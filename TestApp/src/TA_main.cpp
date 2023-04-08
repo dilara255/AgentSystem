@@ -694,8 +694,8 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	//GA's trade value is proportional to the tax they received last tick
 	//time multiplier is already applied there
 	
-	float firstGAtradeGainFirstOrder = defaultGAtaxGain * TRADE_FACTOR_GA 
-		                               * adjustedTotalMultiplier;
+	float firstGAtradeGainFirstOrder = (float)(defaultGAtaxGain * TRADE_FACTOR_GA 
+		                               * adjustedTotalMultiplier);
 
 	float expectedTotalResourcesFirstGA = 
 			startingResourcesFirstGA + firstGAtaxGain + firstGAtradeGainFirstOrder;

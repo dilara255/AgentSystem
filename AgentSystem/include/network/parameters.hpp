@@ -83,8 +83,8 @@ and data sizes static.
 #define MAX_INFILTRATION (1.0f)
 
 //Expected-value reading parameters:
-#define LA_FIELDS_TO_DEDUCE_EXPECTED 10
-#define GA_FIELDS_TO_DEDUCE_EXPECTED 10
+#define LA_FIELDS_TO_READ 4 //TODO: use the enum from the data structure
+#define GA_FIELDS_TO_READ 5 //TODO: use the enum from the data structure
 #define PRNS_PER_FIELD_DEDUCED 2
 #define NEIGHBORS_RELATIVE_WEIGHT_FOR_REF_EXPECTATIONS (1.0f)
 #define TOTAL_WEIGHT_FOR_REF_EXPECTATIONS (1.0f + NEIGHBORS_RELATIVE_WEIGHT_FOR_REF_EXPECTATIONS)
@@ -108,6 +108,7 @@ and data sizes static.
 
 //Actions:
 #define PRNS_PER_ACT 5
+#define MAX_ACT_PRNS_PER_AGENT (PRNS_PER_ACT * MAX_ACTIONS_PER_AGENT)
 
 //--> DEFAULT values for new network creation:
 
