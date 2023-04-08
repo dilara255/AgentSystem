@@ -16,6 +16,7 @@ namespace AS {
 					   DS_RECEIVED_BAD_CHOP_INDEX, DS_NEGATIVE_DECISIONS_MADE, 
 					   DS_NEGATIVE_NUMBER_OF_AGENTS, AC_FAILED_PROCESS_LA_ACT,
 		               AC_FAILED_PROCESS_GA_ACT, AS_LA_STATE_PTR_NULL, AS_GA_STATE_PTR_NULL,
+					   AS_LA_NOT_NEIGHBOR_OF_NEIGHBOR, AS_GA_NOT_NEIGHBOR_OF_NEIGHBOR,
 		               TOTAL};
 	//PS: preparation step; RS: receive/send; DS: decision step; AC: Action; AS: Agent Step;
 	//DP: diplomacy;

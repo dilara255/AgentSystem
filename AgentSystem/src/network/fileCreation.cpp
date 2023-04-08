@@ -117,8 +117,9 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
                             DEFAULT_GA_PERSONA_3);
         if (resultAux <= 0) result = 0;
 
-        //DEFAULT: each GA is connected to *connections* LAs
-        int connections = TST_NUMBER_LAS / TST_NUMBER_GAS;
+        //DEFAULT: each GA is connected to *connections* LAs (last GA doesn't count)
+        //TODO: this supposes the division is exact, eventually rework defaults
+        int connections = TST_NUMBER_LAS / (TST_NUMBER_GAS - 1);
         float defaultTotalLAres = DEFAULT_LA_RESOURCES * connections;
 
         float targetTime = (float)AS_MILLISECONDS_PER_STEP / MILLIS_IN_A_SECOND;
@@ -240,9 +241,12 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
     for (int i = 0; i < numberLAs; i++) {
         
-        //Default GA: last effective actual last doesn't count, so numberGAs - 2
-        //TODO: REFACTOR: CHANGE numberGAs TO BE THE NUMBER OF EFFECTIVE GAs
-        resultAux = fprintf(fp, LAidentity, i, numberGAs - 2, DEFAULT_ONOFF, DEFAULT_SHOULD_DECIDE);
+        //Default GA: LAs are divided in groups for each GA
+        //The actual last GA doesn't count, so:
+        int effectiveGAs = numberGAs - 1;
+        int thisGAsIndex = i/effectiveGAs;
+        
+        resultAux = fprintf(fp, LAidentity, i, thisGAsIndex, DEFAULT_ONOFF, DEFAULT_SHOULD_DECIDE);
         if (resultAux <= 0) result = 0;
 
         std::string name = defaultLAnamePrefix;
@@ -275,12 +279,15 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
         AZ::FlagField128 connectionField;
         int connections = MAX_LA_NEIGHBOURS / DEFAULT_LA_NEIGHBOUR_QUOTIENT;
-        //DEFAULT: each LA is connected to the next *connections* LAs after it
-        for (int j = 0; j < connections; j++) {
-            
-            //TODO: extract, repeated bellow
-            int other = (i + 1 + j) % numberLAs; //which warps around if necessary   
-            connectionField.setBitOn(other);
+        
+        //DEFAULT: LAs are connected in blocks:
+        int neighborBlock = i/connections;
+        int blockStartingIndex = neighborBlock * connections;
+        int blockBoundingIndex = blockStartingIndex + connections;
+        blockBoundingIndex = std::min(blockBoundingIndex, numberLAs);
+
+        for (int j = blockStartingIndex; j < blockBoundingIndex; j++) {
+            connectionField.setBitOn(j);
         }
 
         resultAux = fprintf(fp, connectedLAbitfield, connectionField.getField(0),
@@ -289,12 +296,10 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
                                                     connectionField.getField(3));
         if (resultAux <= 0) result = 0;
 
-        for (int j = 0; j < connections; j++) {
+        int neighbor = 0;
+        for (int j = blockStartingIndex; j < blockBoundingIndex; j++, neighbor++) {
 
-            //TODO: extract, repeated above
-            int other = (i + 1 + j) % numberLAs; //which warps around if necessary   
-
-            resultAux = fprintf(fp, LArelationsInfo, j, other,
+            resultAux = fprintf(fp, LArelationsInfo, neighbor, j,
                 DEFAULT_LA_STANCE, DEFAULT_LA_DISPOSITION, DEFAULT_LA_INFILTRATION);
             if (resultAux <= 0) result = 0;
 

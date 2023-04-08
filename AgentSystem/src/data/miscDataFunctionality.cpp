@@ -4,6 +4,48 @@
 
 #include "data/agentDataStructures.hpp"
 
+//Returns agent's index on neighborID's arrays. If not found, returns NATURAL_RETURN_ERROR;
+int AS::getLAsIDonNeighbor(int agent, int neighborID, 
+	        const  LA::stateData_t* partnerState_ptr) {
+
+		int neighborsTotalNeighbors = 
+			partnerState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+
+		int idOnNeighbor = NATURAL_RETURN_ERROR;
+		for (int neighborsNeighbor = 0; neighborsNeighbor < neighborsTotalNeighbors; 
+														  neighborsNeighbor++) {
+			int neighborsNeighborID = 
+				partnerState_ptr->locationAndConnections.neighbourIDs[neighborsNeighbor];
+
+			if (neighborsNeighborID == agent) {
+				idOnNeighbor = neighborsNeighbor;
+			}
+		}
+
+		return idOnNeighbor;
+}
+
+//Returns agent's index on neighborID's arrays. If not found, returns NATURAL_RETURN_ERROR;
+int AS::getGAsIDonNeighbor(int agent, int neighborID, 
+	         const GA::stateData_t* partnerState_ptr) {
+
+		int neighborsTotalNeighbors = 
+			partnerState_ptr->connectedGAs.howManyAreOn();
+
+		int idOnNeighbor = NATURAL_RETURN_ERROR;
+		for (int neighborsNeighbor = 0; neighborsNeighbor < neighborsTotalNeighbors; 
+														  neighborsNeighbor++) {
+			int neighborsNeighborID = 
+				partnerState_ptr->neighbourIDs[neighborsNeighbor];
+
+			if (neighborsNeighborID == agent) {
+				idOnNeighbor = neighborsNeighbor;
+			}
+		}
+
+		return idOnNeighbor;
+}
+
 bool AS::copyNetworkParameters(networkParameters_t * destination, 
 		                            const networkParameters_t * source) {
 	

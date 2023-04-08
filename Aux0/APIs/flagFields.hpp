@@ -23,7 +23,7 @@ namespace AZ {
 			updateHowManyAreOn();
 		}
 
-		uint32_t getField() {
+		uint32_t getField() const {
 			return flags;
 		}
 
@@ -92,7 +92,7 @@ namespace AZ {
 			return true;
 		}
 
-		uint32_t getField(uint32_t whichField) {
+		uint32_t getField(uint32_t whichField) const {
 			if (whichField > 3) return 0; //doesn't exist: not active
 
 			return flags[whichField];

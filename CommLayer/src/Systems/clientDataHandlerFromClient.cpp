@@ -679,45 +679,36 @@ namespace CL{
 		return false;
 	}
 
-
-	bool CL_API ClientData::GAstateHandler::changeConnectedGAs(uint32_t agentID, AS::GAflagField_t* newValue_ptr)
+	//****************************************************************
+	//TODO-CRITICAL-BUG-WARNING:
+	//===> NEIGHBOR CONNECTION CHANGES HAVE TO BE SYMMETRICAL, ALWAYS;
+	//****************************************************************
+	bool CL_API ClientData::GAstateHandler::changeConnectedGAs(uint32_t agentID, 
+		                                        AS::GAflagField_t* newValue_ptr)
 	{
-		//TODO: extract
-		if (agentID >= m_data_ptr->data.size()) {
-			LOG_ERROR("Tried to change data for agentID out of range");
-			
-			#if (defined AS_DEBUG) || VERBOSE_RELEASE
-				printf("Data has capacity %zu, aid was %u\n", 
-												m_data_ptr->data.size(), agentID);
-			#endif // AS_DEBUG
-
-			return false;
-		}
-
-		changedDataInfo_t change;
-		change.agentID = agentID;
-
-		//Get the callback ready (so we hold the mutex for as little as possible):
-		auto callback = std::bind(&CL::ClientData::GAstateHandler::transferConnectedGAs,
+		//This defines the functions to be used to tansfer the data to the AS:
+		auto boundTransferFunction = 
+			std::bind(&CL::ClientData::GAstateHandler::transferConnectedGAs,
 			this, std::placeholders::_1, std::placeholders::_2);
 
-		change.getNewData_fptr = callback;
-
-		std::mutex* mutex_ptr = m_parentHandlerPtr->acquireMutex();
-		if (mutex_ptr == NULL) {
-			LOG_ERROR("Aborting Client Data Change");
-			return false;
+		//This prepares the change data. It shouldn't need to be changed:
+		std::mutex* mutex_ptr;
+		#pragma warning(push)
+		#pragma warning(disable : 4267) //TODO: try to understand the warning : p
+		bool result = buildAndPushChangeAndAcquireMutex(agentID, m_data_ptr->data.size(),
+			m_changesVector_ptr, &mutex_ptr, m_parentHandlerPtr, boundTransferFunction);
+		#pragma warning(pop)
+		
+		//The data to be transfered is actually recorded here:
+		if (result) {
+			m_data_ptr->data[agentID].connectedGAs.loadField(newValue_ptr->getField());
 		}
 
-		//Actually changes the value:
-		m_data_ptr->data[agentID].connectedGAs.loadField(newValue_ptr->getField());
-
-		//Store the callback function to transfer the change:
-		m_changesVector_ptr->push_back(change);
-
-		mutex_ptr->unlock();
-
-		return true;
+		//Then we clean up and exit:
+		if (mutex_ptr != NULL) {
+			mutex_ptr->unlock();
+		}
+		return result;
 	}
 
 	bool CL_API ClientData::GAstateHandler::changeLocalAgentsBelongingToThis(uint32_t agentID, AS::LAflagField_t* newValue_ptr)

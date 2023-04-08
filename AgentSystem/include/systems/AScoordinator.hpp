@@ -34,7 +34,7 @@ namespace AS {
 		             WarningsAndErrorsCounter* errorsCounter_ptr, AS::PRNserver* prnServer_ptr);
 	void stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop,
 		                         dataControllerPointers_t* agentDataPointers_ptr,
-		                      float timeMultiplier, int numberLAs, int numberGAs,
+		                      float timeMultiplier, int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr, 
 							                        AS::PRNserver* prnServer_ptr,
 		                                      float secondsSinceLastDecisionStep);
