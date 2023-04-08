@@ -81,8 +81,6 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 	}
 }
 
-//Trade share depends on stance and on the partners stance to it's neighbors
-//(if they do a lot of trade or are at war, your share goes down)
 float LA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStance,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr,
 	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
@@ -108,9 +106,6 @@ float LA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStan
 	return agentsShare;
 }
 
-//Total trade value of a LA is a portion of it's liquid income (income minus upkeep)
-//That gets divided between partners and also goes down in case of war
-//NOTE: can be negative if partners income minus upkeep gets negative!
 float LA::calculateTradeIncomePerSecond(float agentsShare, int partnerID,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr) {
  
@@ -125,7 +120,6 @@ float LA::calculateTradeIncomePerSecond(float agentsShare, int partnerID,
 	return agentsShare * totalPartnerTradeValue;
 }
 
-//Both agents loose a fraction of the smaller agents strenght each second:
 float LA::calculateAttritionLossesPerSecond(int agentId1, int agentId2,
 			                                AS::dataControllerPointers_t* agentDataPtrs_ptr) {
 
@@ -136,8 +130,83 @@ float LA::calculateAttritionLossesPerSecond(int agentId1, int agentId2,
 	return (float)(std::min(strenghtAgent1,strenghtAgent2)*ATTRITION_FACTOR_PER_SECOND);
 }
 
-//Trade share depends on stance and on the partners stance to it's neighbors
-//(if they do a lot of trade or are at war, your share goes down)
+void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr, 
+								 GA::decisionData_t* decision_ptr, int agentId, 
+	                    AS::dataControllerPointers_t* dp, float timeMultiplier,
+	                           AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+
+	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
+	auto param_ptr = &state_ptr->parameters;
+	param_ptr->lastTradeIncome = 0;
+	
+	for (int neighbor = 0; neighbor < quantityNeighbours; neighbor++) {
+		
+		int idOther = state_ptr->neighbourIDs[neighbor];
+		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[idOther];
+				
+		//raise relations and infiltration because of alliance
+		//change infiltration according to neighbors disposition (can be negative):
+		
+		if ((stance == AS::diploStance::TRADE) ||
+		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
+			
+			float share = LA::calculateShareOfPartnersTrade(idOther, stance, dp, 
+				                                                errorsCounter_ptr);
+
+			param_ptr->lastTradeIncome +=
+				GA::calculateTradeIncomePerSecond(share, idOther, dp) * timeMultiplier;
+
+			//raise relations and infiltration in proportion to share:
+			state_ptr->relations.dispositionToNeighbors[neighbor] +=
+					share * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+			decision_ptr->infiltration[neighbor] +=
+				    share * MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+		}
+
+		else if (stance == AS::diploStance::WAR) {
+			//lower relations and infiltration because of war:
+			state_ptr->relations.dispositionToNeighbors[neighbor] -=
+					MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+			decision_ptr->infiltration[neighbor] -=
+				    MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+		}
+
+		if ((stance == AS::diploStance::ALLY) ||
+		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
+
+			//raise relations and infiltration because of alliance:
+			state_ptr->relations.dispositionToNeighbors[neighbor] +=
+					DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
+			decision_ptr->infiltration[neighbor] +=
+				    INFILTRATION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
+		}
+
+		//We also change infiltration according to neighbors disposition
+		//If the neighbor likes this agent, this agent gains infiltration, and vice-versa
+		
+		//First, we need to find this agent's index on the neighbor's arrays:
+		auto partnerState_ptr = &(dp->GAstate_ptr->getDataCptr()->at(idOther));
+		int idOnNeighbor = 
+			AS::getGAsIDonNeighbor(agentId, idOther, partnerState_ptr);
+		bool found = (idOnNeighbor != NATURAL_RETURN_ERROR);
+
+		if(found){
+			float neighborsDisposition = 
+				partnerState_ptr->relations.dispositionToNeighbors[idOnNeighbor];
+
+			decision_ptr->infiltration[neighbor] += timeMultiplier * neighborsDisposition
+								* INFILTRATION_CHANGE_FROM_NEIGHBOR_DISPOSITION_PER_SECOND;
+		}
+		else {
+			errorsCounter_ptr->incrementError(AS::errors::AS_GA_NOT_NEIGHBOR_OF_NEIGHBOR);
+		}	
+		
+	}
+	
+	//actually add the resources from all the trade:
+	param_ptr->GAresources += param_ptr->lastTradeIncome;
+}
+
 float GA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStance,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr,
 	                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
@@ -164,9 +233,6 @@ float GA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStan
 	return agentsShare;
 }
 
-//Total trade value of a GA is a portion of it's current resources (not income)
-//That gets divided between partners and also goes down in case of war
-//NOTE: can be negative so long as GAs can get in debt!
 float GA::calculateTradeIncomePerSecond(float agentsShare, int partnerID,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr) { 
 

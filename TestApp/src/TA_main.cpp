@@ -577,9 +577,19 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 
 	//When you pause, timing info from the last step is not yet sent, although step is, so:
 	ticksRan++;
+	if (ticksRan <= 1) {
+		LOG_ERROR("Ran for one or less ticks: can't test");
+		return false;
+	}
+
 	double totalMultiplier = 
 				CL::ASmirrorData_cptr->networkParams.accumulatedMultiplier;
-	//for the same reason:
+	if (totalMultiplier == 0) {
+		LOG_ERROR("Network registered no time running: can't test");
+		return false;
+	}
+
+	//since we added one "lost" step:
 	double adjustedTotalMultiplier = totalMultiplier*((double)ticksRan/(ticksRan - 1)); 
 
 	float absoluteDifference = (float)fabs(millisToRun - (ticksRan * AS_MILLISECONDS_PER_STEP));
@@ -624,7 +634,8 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	float defaultUpkeep = 0;
 	float defaultIncome = DEFAULT_LA_INCOME - defaultUpkeep;
 
-	float expectedTradeFirstLA = defaultIncome*TRADE_FACTOR_PER_SECOND*(float)adjustedTotalMultiplier;
+	float expectedTradeFirstLA = defaultIncome * TRADE_FACTOR_PER_SECOND
+									* (float)adjustedTotalMultiplier;
 
 	float effectiveArmyCostFirstLA = (float)(DEFAULT_LA_STRENGHT +
 						EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED*externalGuardFirstLA);
@@ -886,6 +897,10 @@ bool testPause(bool printLog, int pauseUnpauseCycles) {
 		}
 		else if ((ticksNow - ticksAfterPause) < (periodsToWaitAfterUnpause/pauseGraceFactor)) {
 			LOG_ERROR("AS is ticking too slow after unpausing");
+			if (printLog) {
+				printf("expected to tick about %d times, but ticked %lld\n",
+					periodsToWaitAfterUnpause, ticksNow - ticksAfterPause);
+			}
 			return false;
 		}
 
