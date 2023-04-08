@@ -118,15 +118,26 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
         if (resultAux <= 0) result = 0;
 
         //DEFAULT: each GA is connected to *connections* LAs (last GA doesn't count)
-        //TODO: this supposes the division is exact, eventually rework defaults
         int connections = TST_NUMBER_LAS / (TST_NUMBER_GAS - 1);
+
+        //But the division may not be exact. If so, the first GAs will have an extra LAs:
+        int remainder = TST_NUMBER_LAS % (TST_NUMBER_GAS - 1);
+        if (thisGA < remainder) {
+            connections++;           
+        } 
+        int firstLAconnected = connections * thisGA;
+        
+        if (thisGA >= remainder) {
+            firstLAconnected += remainder;         
+        } 
+
         float defaultTotalLAres = DEFAULT_LA_RESOURCES * connections;
 
         float targetTime = (float)AS_MILLISECONDS_PER_STEP / MILLIS_IN_A_SECOND;
 
         resultAux = fprintf(fp, GAresources, DEFAULT_GA_RESOURCES, DEFAULT_REQUESTS,
             defaultTotalLAres * GA_TAX_RATE_PER_SECOND * targetTime, DEFAULT_REQUESTS,
-            defaultTotalLAres * GA_TAX_RATE_PER_SECOND * TRADE_FACTOR_PER_SECOND * targetTime,
+            defaultTotalLAres * GA_TAX_RATE_PER_SECOND * TRADE_FACTOR_GA * targetTime,
             DEFAULT_REQUESTS);
         if (resultAux <= 0) result = 0;
 
@@ -141,7 +152,7 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
         
         AZ::FlagField128 connectionField;
         for (int j = 0; j < connections; j++) {
-            int laID = (thisGA*connections + j) % TST_NUMBER_LAS; //which warps around if necessary   
+            int laID = (firstLAconnected + j) % TST_NUMBER_LAS;
             connectionField.setBitOn(laID);
         }
 
@@ -177,7 +188,7 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
             resultAux = fprintf(fp, GAreadsOnNeighbor,
                 DEFAULT_GA_RESOURCES, DEFAULT_REQUESTS, 
                 defaultTotalLAres * GA_TAX_RATE_PER_SECOND * targetTime, DEFAULT_REQUESTS,
-                defaultTotalLAres * GA_TAX_RATE_PER_SECOND * TRADE_FACTOR_PER_SECOND * targetTime,
+                defaultTotalLAres * GA_TAX_RATE_PER_SECOND * TRADE_FACTOR_GA * targetTime,
                 DEFAULT_REQUESTS, defaultTotalLAstrenght, DEFAULT_REQUESTS,
                 defaultTotalLAguard, DEFAULT_REQUESTS);
             if (resultAux <= 0) result = 0;

@@ -89,19 +89,21 @@ float LA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStan
 
 	//calculates their total "trade saturation" (from trade, allies, allies with trade and war)
 	int tradeSaturation = 0;
-	int partnersNeighbours = partner.locationAndConnections.numberConnectedNeighbors;
+	int partnersNeighbours = partner.locationAndConnections.connectedNeighbors.howManyAreOn();
 	
 	for (int i = 0; i < partnersNeighbours; i++) {
 		int diploStance = (int)partner.relations.diplomaticStanceToNeighbors[i];
 		tradeSaturation += AS::tradeSaturationFromStance[diploStance];
 	}
 
-	//each neighbour gets a share depending on their diplomatic stance:
-	float agentsShare = (float)AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
 	if(tradeSaturation == 0) {
 		errorsCounter_ptr->incrementWarning(AS::warnings::DP_LA_TRADE_PARTNER_HAS_ZERO_SAT);
-		agentsShare = 0; 
+		return 0; 
 	}
+
+	//each neighbour gets a share depending on their diplomatic stance:
+	float agentsShare = (float)AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
+	
 
 	return agentsShare;
 }
@@ -112,7 +114,7 @@ float LA::calculateTradeIncomePerSecond(float agentsShare, int partnerID,
 	LA::stateData_t partner = 
 		agentDataPtrs_ptr->LAstate_ptr->getDirectDataPtr()->at(partnerID);
 
-	float totalPartnerTradeValue = TRADE_FACTOR_PER_SECOND *
+	float totalPartnerTradeValue = TRADE_FACTOR_LA_PER_SECOND *
 		(partner.parameters.resources.updateRate - partner.parameters.strenght.currentUpkeep);
 
 	
@@ -150,11 +152,10 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 		if ((stance == AS::diploStance::TRADE) ||
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 			
-			float share = LA::calculateShareOfPartnersTrade(idOther, stance, dp, 
+			float share = GA::calculateShareOfPartnersTrade(idOther, stance, dp, 
 				                                                errorsCounter_ptr);
 
-			param_ptr->lastTradeIncome +=
-				GA::calculateTradeIncomePerSecond(share, idOther, dp) * timeMultiplier;
+			param_ptr->lastTradeIncome += GA::calculateTradeIncome(share, idOther, dp);
 
 			//raise relations and infiltration in proportion to share:
 			state_ptr->relations.dispositionToNeighbors[neighbor] +=
@@ -233,14 +234,15 @@ float GA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStan
 	return agentsShare;
 }
 
-float GA::calculateTradeIncomePerSecond(float agentsShare, int partnerID,
+float GA::calculateTradeIncome(float agentsShare, int partnerID,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr) { 
 
 	GA::stateData_t partner = 
 		agentDataPtrs_ptr->GAstate_ptr->getDirectDataPtr()->at(partnerID);
 
+
 	float totalPartnerTradeValue = 
-		(float)(partner.parameters.lastTaxIncome * TRADE_FACTOR_PER_SECOND);
+		(float)(partner.parameters.lastTaxIncome * TRADE_FACTOR_GA);
 
 	return agentsShare * totalPartnerTradeValue;
 }

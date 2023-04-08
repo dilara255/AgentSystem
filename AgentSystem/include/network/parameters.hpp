@@ -64,7 +64,8 @@ and data sizes static.
 #define TRADE_SATURATION_FROM_ALLY 1
 #define TRADE_SATURATION_FROM_ALLY_WITH_TRADE 2
 #define LA_UPKEEP_PER_EXCESS_STRENGHT (0.5)
-#define TRADE_FACTOR_PER_SECOND (0.5f) //applies to liquid income (LAs) / lastTax (GAs)
+#define TRADE_FACTOR_LA_PER_SECOND (0.5f) //applies to liquid income rate (LAs)
+#define TRADE_FACTOR_GA (0.5f) //applied to last tax income (already takes time in account)
 #define ATTRITION_FACTOR_PER_SECOND (0.001)
 #define GA_TAX_RATE_PER_SECOND (0.001f)
 

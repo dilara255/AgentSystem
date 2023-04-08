@@ -55,7 +55,7 @@ namespace GA{
 	//Total trade value of a GA is a portion of it's current resources (not income)
 	//That gets divided between partners and also goes down in case of war
 	//NOTE: can be negative so long as GAs can get in debt!
-	float calculateTradeIncomePerSecond(float agentsShare, int partnerID,
+	float calculateTradeIncome(float agentsShare, int partnerID,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr);
 }
 
