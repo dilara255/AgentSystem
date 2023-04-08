@@ -12,12 +12,15 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 	int quantityNeighbours = state_ptr->locationAndConnections.numberConnectedNeighbors;
 	for (int neighbor = 0; neighbor < quantityNeighbours; neighbor++) {
 		
+		//Save last step's disposition towards this neighbor:
+		state_ptr->relations.dispositionToNeighborsLastStep[neighbor] = 
+							state_ptr->relations.dispositionToNeighbors[neighbor];
+
 		auto res_ptr = &state_ptr->parameters.resources;
 		auto str_ptr = &state_ptr->parameters.strenght;
-
 		int partnerID = state_ptr->locationAndConnections.neighbourIDs[neighbor];	
-		
-		//The changes depend on the doplomatic stance to the neighbor:
+
+		//The changes depend on the diplomatic stance to the neighbor:
 		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[neighbor];
 
 		if ((stance == AS::diploStance::TRADE) ||
@@ -28,7 +31,7 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 			res_ptr->current += 
 				LA::calculateTradeIncomePerSecond(share, partnerID, dp) * timeMultiplier;
 			
-			//raise relations and infiltration in proportion to share:
+			//raise relations and infiltration in proportion to share of trade:
 			state_ptr->relations.dispositionToNeighbors[neighbor] +=
 					share * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
 			decision_ptr->infiltration[neighbor] +=
@@ -143,12 +146,14 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 	
 	for (int neighbor = 0; neighbor < quantityNeighbours; neighbor++) {
 		
+		//Save last step's disposition towards this neighbor:
+		state_ptr->relations.dispositionToNeighborsLastStep[neighbor] = 
+							state_ptr->relations.dispositionToNeighbors[neighbor];
+
+		//The changes depend on the diplomatic stance to the neighbor:
+		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[neighbor];
 		int idOther = state_ptr->neighbourIDs[neighbor];
-		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[idOther];
 				
-		//raise relations and infiltration because of alliance
-		//change infiltration according to neighbors disposition (can be negative):
-		
 		if ((stance == AS::diploStance::TRADE) ||
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 			
@@ -157,7 +162,7 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 
 			param_ptr->lastTradeIncome += GA::calculateTradeIncome(share, idOther, dp);
 
-			//raise relations and infiltration in proportion to share:
+			//Raise relations and infiltration in proportion to share of Trade:
 			state_ptr->relations.dispositionToNeighbors[neighbor] +=
 					share * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
 			decision_ptr->infiltration[neighbor] +=
@@ -165,7 +170,7 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 		}
 
 		else if (stance == AS::diploStance::WAR) {
-			//lower relations and infiltration because of war:
+			//Lower relations and infiltration because of war:
 			state_ptr->relations.dispositionToNeighbors[neighbor] -=
 					MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
 			decision_ptr->infiltration[neighbor] -=
@@ -175,7 +180,7 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 		if ((stance == AS::diploStance::ALLY) ||
 		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
 
-			//raise relations and infiltration because of alliance:
+			//Raise relations and infiltration because of alliance:
 			state_ptr->relations.dispositionToNeighbors[neighbor] +=
 					DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
 			decision_ptr->infiltration[neighbor] +=
@@ -201,7 +206,6 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 		else {
 			errorsCounter_ptr->incrementError(AS::errors::AS_GA_NOT_NEIGHBOR_OF_NEIGHBOR);
 		}	
-		
 	}
 	
 	//actually add the resources from all the trade:
