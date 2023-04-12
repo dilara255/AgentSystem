@@ -46,6 +46,8 @@ and data sizes static.
 #define COMMENT_LENGHT 250
 
 //System flow:
+//Note: the AS uses naive integration in some spots, so high pace and period may break stuff
+#define AS_GENERAL_PACE (1.0f) //will change all timeMultipliers
 #define AS_MILLISECONDS_PER_STEP (4)
 #define MAX_PROPORTIONAL_STEP_DURATION_ERROR (5) 
 #define AS_MILLISECONDS_PER_DECISION_ROUND (40) //will be floored to multiple of step time

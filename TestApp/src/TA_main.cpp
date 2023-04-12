@@ -450,6 +450,10 @@ bool testReads(bool print, float secondsToRun) {
 		}
 	}
 
+	if (result) {
+		LOG_INFO("Reads seem ok");
+	}
+
 	return result;
 }
 
@@ -792,7 +796,7 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 		return false;
 	}
 
-	if(result) { LOG_TRACE("Test passed!"); }
+	if(result) { LOG_INFO("Test passed!"); }
 	return result;
 }
 
