@@ -134,6 +134,18 @@ namespace AS {
 			{{SPC, SPC}, {SPC, SPC}, {NOT, SPC}},  {{SPC, STD}, {STD, STD}, {NOT, STD}},
 		};
 
+		constexpr uint32_t actionIDonScope(int category, int mode) {
+			return (category * TOTAL_MODES) + mode;
+		}
+
+		constexpr actCategories categoryFromScopesActionID(uint32_t id) {
+			return (actCategories)(id / TOTAL_MODES);
+		}
+
+		constexpr actCategories modeFromScopesActionID(uint32_t id) {
+			return (actCategories)(id % TOTAL_CATEGORIES);
+		}
+
 		constexpr int howManyActionsOfKind(actModes mode, scope scp) {
 			int total = 0;
 
@@ -282,9 +294,32 @@ namespace AS {
 			enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
 		} AS_API notions_t;
 
+		typedef struct actionScore_st {
+
+			int32_t actID = -1;
+			int32_t neighbor = -1;
+			float score = 0;
+		} AS_API actionScore_t;
+
+
+		inline bool ascendingScoreCompare(actionScore_st scoreA, actionScore_st scoreB) {
+			return (scoreA.score < scoreB.score);
+		}
+
+		inline bool descendingScoreCompare(actionScore_st scoreA, actionScore_st scoreB) {
+			return (scoreA.score > scoreB.score);
+		}
+
 		using namespace ActionVariations;
 
 		namespace LA {
+
+			typedef actionScore_t AS_API allScoresThisScope_t[totalLocals()];
+
+			typedef struct decisionScores_st {
+				allScoresThisScope_t inFavor, against, overall;
+				int totalScores = 0;
+			} AS_API decisionScores_t;
 
 			typedef	float AS_API 
 				scoresSelf_t[howManyActionsOfKind(actModes::SELF, scope::LOCAL)];
@@ -293,7 +328,7 @@ namespace AS {
 			typedef	float AS_API 
 				scoresImmediate_t[howManyActionsOfKind(actModes::IMMEDIATE, scope::LOCAL)];
 			
-			typedef struct actionScores_st {
+			typedef struct actionScoresByMode_st {
 
 				scoresSelf_t self;
 				scoresRequest_t request[MAX_LA_NEIGHBOURS];
@@ -301,11 +336,17 @@ namespace AS {
 
 				enum class fields { SELF, REQUEST, IMMEDIATE, 
 									  TOTAL_LA_SCORE_FIELDS };
-			} AS_API actionScores_t;
-
+			} AS_API actionScoresByMode_t;
 		}
 
 		namespace GA {
+
+			typedef actionScore_t AS_API allScoresThisScope_t[totalGlobals()];
+
+			typedef struct decisionScores_st {
+				allScoresThisScope_t inFavor, against, overall;
+				int totalScores = 0;
+			} AS_API decisionScores_t;
 
 			typedef	float AS_API 
 				scoresSelf_t[howManyActionsOfKind(actModes::SELF, scope::GLOBAL)];
@@ -314,7 +355,7 @@ namespace AS {
 			typedef	float AS_API 
 				scoresImmediate_t[howManyActionsOfKind(actModes::IMMEDIATE, scope::GLOBAL)];
 
-			typedef struct actionScores_st {
+			typedef struct actionScoresByMode_st {
 
 				scoresSelf_t self;
 				scoresRequest_t request[MAX_LA_NEIGHBOURS];
@@ -322,11 +363,10 @@ namespace AS {
 
 				enum class fields { SELF, REQUEST, IMMEDIATE, 
 									  TOTAL_LA_SCORE_FIELDS };
-			} AS_API actionScores_t;
+			} AS_API actionScoresByMode_t;
 		}
 	}
 }
-
 
 	
 	
