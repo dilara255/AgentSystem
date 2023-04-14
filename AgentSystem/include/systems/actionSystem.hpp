@@ -1,5 +1,7 @@
 #pragma once
 
+//TODO: Pull some definitions into a .cpp?
+
 /*
 This file declares the classes:
 - The ActionSystem itself, which includes:
@@ -131,7 +133,7 @@ namespace AS {
 
 		 	            //DIPLOMACY                            //CONQUEST
 			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, SPC}, {SPC, SPC}, {NOT, SPC}},  {{SPC, STD}, {STD, STD}, {NOT, STD}},
+			{{SPC, SPC}, {SPC, SPC}, {NOT, SPC}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}
 		};
 
 		constexpr uint32_t actionIDonScope(int category, int mode) {
@@ -278,24 +280,7 @@ namespace AS {
 
 	namespace Decisions {
 		
-		enum class notionsSelf { S0, S1, S2, S3, S4, S5, S6, S7,
-													 TOTAL };
-		typedef	float AS_API notionsSelf_t[(int)notionsSelf::TOTAL];
-		
-		enum class notionsNeighbor { N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11,
-		                                                                   TOTAL };
-		typedef	float AS_API notionsNeighbor_t[(int)notionsNeighbor::TOTAL];
-
-		typedef struct notions_st {
-
-			notionsSelf_t self;
-			notionsNeighbor_t neighbors[MAX_LA_NEIGHBOURS];
-
-			enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
-		} AS_API notions_t;
-
 		typedef struct actionScore_st {
-
 			int32_t actID = -1;
 			int32_t neighbor = -1;
 			float score = 0;
@@ -309,6 +294,24 @@ namespace AS {
 		inline bool descendingScoreCompare(actionScore_st scoreA, actionScore_st scoreB) {
 			return (scoreA.score > scoreB.score);
 		}
+
+		enum class notionsSelf { S0, S1, S2, S3, S4, S5, S6, S7,
+													 TOTAL };
+		typedef	float AS_API notionsSelf_t[(int)notionsSelf::TOTAL];
+		
+		enum class notionsNeighbor { N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11,
+		                                                                   TOTAL };
+		typedef	float AS_API notionsNeighbor_t[(int)notionsNeighbor::TOTAL];
+
+		constexpr int TOTAL_NOTIONS = (int)notionsSelf::TOTAL + (int)notionsNeighbor::TOTAL;
+
+		typedef struct notions_st {
+
+			notionsSelf_t self;
+			notionsNeighbor_t neighbors[MAX_LA_NEIGHBOURS];
+
+			enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
+		} AS_API notions_t;
 
 		using namespace ActionVariations;
 
@@ -337,7 +340,7 @@ namespace AS {
 				enum class fields { SELF, REQUEST, IMMEDIATE, 
 									  TOTAL_LA_SCORE_FIELDS };
 			} AS_API actionScoresByMode_t;
-		}
+		}		
 
 		namespace GA {
 
@@ -365,6 +368,139 @@ namespace AS {
 									  TOTAL_LA_SCORE_FIELDS };
 			} AS_API actionScoresByMode_t;
 		}
+
+		typedef std::array<std::array<std::array<float, TOTAL_NOTIONS>, TOTAL_MODES>, TOTAL_CATEGORIES>
+			notionsWeightsArray_t;
+
+		static constexpr notionsWeightsArray_t notionWeights = {{
+			
+			//Weights apply to both LAs and GAs. Meaningless for undefined action variation.
+			//For each variation, first row is notionsSelf, second notionsNeighbor.
+
+			{{                         //STRENGHT  
+				//IMMEDIATE:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//REQUEST:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//SELF:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+			}},
+			{{                         //RESOURCES 
+				//IMMEDIATE:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//REQUEST:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//SELF:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+			}},	
+			{{                         //ATTACK       
+				//IMMEDIATE:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//REQUEST:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//SELF:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+			}},	
+			{{                         //GUARD       
+				//IMMEDIATE:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//REQUEST:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//SELF:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+			}},	
+			{{                         //SPY       
+				//IMMEDIATE:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//REQUEST:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//SELF:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+			}},	
+			{{                         //SABOTAGE       
+				//IMMEDIATE:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//REQUEST:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//SELF:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+			}},
+			{{                         //DIPLOMACY       
+				//IMMEDIATE:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//REQUEST:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//SELF:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+			}},
+			{{                         //CONQUEST       
+				//IMMEDIATE:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//REQUEST:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
+				//SELF:
+				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
+				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+			}}		
+		}};
+
+		static constexpr notionsWeightsArray_t getWeightsInFavor() {
+			notionsWeightsArray_t weights{};
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					for (int k = 0; k < TOTAL_NOTIONS; k++) {
+
+						weights.at(i).at(j).at(k) =
+							std::max(0.f, notionWeights.at(i).at(j).at(k));
+					}
+				}
+			}
+
+			return weights;
+		}
+
+		static constexpr notionsWeightsArray_t getWeightsAgainst() {
+			notionsWeightsArray_t weights{};
+
+			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
+				for (int j = 0; j < TOTAL_MODES; j++) {
+					for (int k = 0; k < TOTAL_NOTIONS; k++) {		
+
+						weights.at(i).at(j).at(k) =
+							- std::min(0.f, notionWeights.at(i).at(j).at(k));
+					}
+				}
+			}
+
+			return weights;
+		}
+
+		static constexpr notionsWeightsArray_t notionWeightsInFavor = getWeightsInFavor();
+		static constexpr notionsWeightsArray_t notionWeightsAgainst = getWeightsAgainst();
 	}
 }
 
