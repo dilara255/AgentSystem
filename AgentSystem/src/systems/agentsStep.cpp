@@ -251,6 +251,8 @@ void redistributeScoreDueToImpedimmentsLA(int agent,
 void chooseActionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
 	                                        AD::LA::decisionScores_t* scores_ptr);
 
+void updatedLastDispositionsLA(LA::stateData_t* agentState_ptr, int neighbors);
+
 void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
 								    AS::PRNserver* prnServer_ptr) {
 
@@ -270,10 +272,12 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	AD::notions_t notions;
 	calculateNotionsLA(agent, dp, &notions, &referenceReads);
 
-	AD::LA::decisionScores_t scores;
+	auto agentsState_ptr = &(dp->LAstate_ptr->getDirectDataPtr()->at(agent));
+	int neighbors = agentsState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
 
-	int neighbors = 
-		dp->LAstate_ptr->getDataCptr()->at(agent).locationAndConnections.connectedNeighbors.howManyAreOn();
+	updatedLastDispositionsLA(agentsState_ptr, neighbors);
+
+	AD::LA::decisionScores_t scores;	
 
 	scores.totalScores = AV::howManyActionsOfKind(AS::actModes::SELF, AS::scope::LOCAL)
 		+ (neighbors * (
@@ -308,6 +312,8 @@ void redistributeScoreDueToImpedimmentsGA(int agent,
 void chooseActionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
 	                                        AD::GA::decisionScores_t* scores_ptr);
 
+void updatedLastDispositionsGA(GA::stateData_t* agentState_ptr, int neighbors);
+
 void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp, AS::PRNserver* prnServer_ptr,
 	                                        AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
@@ -329,10 +335,12 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp, AS::PRNserver* 
 	AD::notions_t notions;
 	calculateNotionsGA(agent, dp, &notions, &referenceReads);
 
-	AD::GA::decisionScores_t scores;
-	int neighbors =
-		dp->GAstate_ptr->getDataCptr()->at(agent).connectedGAs.howManyAreOn();
+	auto agentsState_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(agent));
+	int neighbors = agentsState_ptr->connectedGAs.howManyAreOn();
+	updatedLastDispositionsGA(agentsState_ptr, neighbors);
 
+	AD::GA::decisionScores_t scores;
+	
 	scores.totalScores = AV::howManyActionsOfKind(AS::actModes::SELF, AS::scope::GLOBAL)
 		+ (neighbors * (
 				AV::howManyActionsOfKind(AS::actModes::IMMEDIATE, AS::scope::GLOBAL)
@@ -369,6 +377,14 @@ void chooseActionLA(int agent, AS::dataControllerPointers_t* dp,
 
 }
 
+void updatedLastDispositionsLA(LA::stateData_t* agentState_ptr, int neighbors) {
+
+	for (int i = 0; i < neighbors; i++) {
+		agentState_ptr->relations.dispositionToNeighborsLastStep[i] =
+						agentState_ptr->relations.dispositionToNeighbors[i];
+	}
+}
+
 //GA:
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions_t* np,
 	                                                         GA::readsOnNeighbor_t* rp) {
@@ -389,6 +405,14 @@ void redistributeScoreDueToImpedimmentsGA(int agent, AS::dataControllerPointers_
 void chooseActionGA(int agent, AS::dataControllerPointers_t* dp, 
 						             AD::GA::decisionScores_t* sp) {
 
+}
+
+void updatedLastDispositionsGA(GA::stateData_t* agentState_ptr, int neighbors) {
+
+	for (int i = 0; i < neighbors; i++) {
+		agentState_ptr->relations.dispositionToNeighborsLastStep[i] =
+						agentState_ptr->relations.dispositionToNeighbors[i];
+	}
 }
 
 //Reads disposition and infiltration of connected LAs towards other LAs from each GA.

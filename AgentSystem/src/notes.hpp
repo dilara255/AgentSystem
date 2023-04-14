@@ -152,11 +152,12 @@
 * >-Stubs of decisions and actions (no actual logic);
 * -Couple of simplified decisions and actions (and watever is necessary for that);
 * --Should just run their course and have a simple resolution;
-* -Text-mode visualization of a couple agents running;
-* 
+*  
 * Some cleanup
 *
 * ***** Minor 5. Tooling: inspection *****
+* 
+* -Text-mode visualization of a couple agents running;
 * 
 * Quick system review and any pending groundwork.
 * Do some benchmarking.
