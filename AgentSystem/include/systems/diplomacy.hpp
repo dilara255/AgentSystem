@@ -6,7 +6,7 @@
 //TODO-CRITICAL: Document
 
 namespace LA{
-	//This basically deals with all updating with has to be done because of neighbors:
+	//This basically deals with all updating wich has to be done because of neighbors:
 	//-Trade income is calculated and added to current resources;
 	//-Attrition from any wars is calculated and taken from strenght;
 	//-Disposition towards neighbors is changed because of trade, alliance, and war;
@@ -35,7 +35,7 @@ namespace LA{
 }
 
 namespace GA{
-	//This basically deals with all updating with has to be done because of neighbors:
+	//This basically deals with all updating wich has to be done because of neighbors:
 	//-Trade income is calculated and added to current resources;
 	//-Disposition towards neighbors is changed because of trade, alliance, and war;
 	//-Infiltration on each neighbor changes according to these factors as well as disposition;
