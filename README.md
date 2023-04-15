@@ -7,11 +7,13 @@ Aux0 is little a helper project of mine (logging interface, dlls, precompiled he
 
 Progress overview (may be a few days old):
 
-v0.1 -Project scafolding (done);<br />
-v0.2 -Basic data structures, loading and exporting (done);<br />
-v0.4 -Runtime loop and realtime data manipulation (~70%);<br />
-v0.5 -Some tooling;<br />
-v0.6 -Groundwork for decision making and a couple actions + decisions;<br />
+v0.1   -Project scafolding (done);<br />
+v0.2   -Basic data structures, loading and exporting (done);<br />
+v0.3   -Data manipulation (50% done: not implemented for all fields);<br />
+v0.4   -Runtime loop (85% done);<br />
+v0.5.1 -Simplified decisions and actions (35% done);<br />
+v0.5.4 -Inspection and tooling;<br />
+v0.7 -Vertical Slice (refined decision making and actions for a couple cases);<br />
 v1.0 -Actual behaviours, targeted prototype and final testing.
 
 More detaild version planning and info on AgentSystem/src/notes.hpp

@@ -150,21 +150,24 @@
 * 6. "MVP":
 * 
 * >-Stubs of decisions and actions (no actual logic);
-* -Couple of simplified decisions and actions (and watever is necessary for that);
-* --Should just run their course and have a simple resolution;
 *  
 * Some cleanup
 *
 * ***** Minor 5. Tooling: inspection *****
-* 
-* -Text-mode visualization of a couple agents running;
-* 
-* Quick system review and any pending groundwork.
-* Do some benchmarking.
-* Implement some tooling to inspect the system.
-* Client inuput limited by whats already implemented (focus on reading/output).
 *
-* General testing
+* 1. Decisions and actions for inspection:
+* -Couple of simplified decisions and actions (and watever is necessary for that);
+* --Should just run their course and have a simple resolution; 
+* 
+* 2. Text-mode visualization of a couple agents running.
+* 
+* 3. Quick system review and any pending groundwork:
+* - Also do some benchmarking;
+* 
+* 4. basic GUI tool to inspect the system:
+* - Client inuput limited by whats already implemented (focus on reading/output);
+* -- May later be extended as a network authoring tool;
+* - General testing;
 *
 * * ***** Minor 6. More groundwork, Technical Debt/future refactor organization*****
 *
