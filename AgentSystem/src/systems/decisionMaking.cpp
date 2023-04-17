@@ -4,6 +4,7 @@
 #include "systems/AScoordinator.hpp"
 #include "systems/actionSystem.hpp"
 #include "systems/actionHelpers.hpp"
+#include "systems/notions.hpp"
 
 #include "network/parameters.hpp"
 
