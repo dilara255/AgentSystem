@@ -3,6 +3,8 @@
 //TODO: Pull some definitions into a .cpp?
 
 /*
+//TODO: review/update this:
+
 This file declares the classes:
 - The ActionSystem itself, which includes:
 -- ActionDataController class, with two bundles of action data: for LAs and GAs;
@@ -92,6 +94,11 @@ namespace AS {
 		ActionDataController* getDataDirectPointer() {
 			if(!data.isInitialized()){return NULL;}
 			return &data;
+		}
+
+		ActionDataController const * getDataDirectPointer() const {
+			if(!data.isInitialized()){return NULL;}
+			return (ActionDataController const *)&data;
 		}
 
 		bool isInitialized() const { return m_isInitialized; }

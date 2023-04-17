@@ -4,6 +4,7 @@
 #include "data/dataMisc.hpp"
 
 #include "systems/actionSystem.hpp"
+#include "systems/actionHelpers.hpp"
 
 namespace {
 	static AS::WarningsAndErrorsCounter* g_errorsCounter_ptr;
@@ -20,14 +21,14 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
 					  LA::stateData_t* state_ptr, AS::PRNserver* prnServer_ptr, 
 									 LA::readsOnNeighbor_t* referenceReads_ptr, 
-		                       AS::WarningsAndErrorsCounter* errorsCounter_ptr,
-									  const float secondsSinceLastDecisionStep);
+		                       AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
+	              const float secondsSinceLastDecisionStep, int currentActions);
 
 void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
 					  GA::stateData_t* state_ptr, AS::PRNserver* prnServer_ptr, 
 					                 GA::readsOnNeighbor_t* referenceReads_ptr,
-		                       AS::WarningsAndErrorsCounter* errorsCounter_ptr,
-									  const float secondsSinceLastDecisionStep);
+		                       AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
+	              const float secondsSinceLastDecisionStep, int currentActions);
 
 LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp);
 GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPointers_t* dp);
@@ -53,8 +54,8 @@ namespace AS_TST {
 }
 
 void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
-	                          dataControllerPointers_t* dp, float timeMultiplier,
-	                                        int numberLAs, int numberEffectiveGAs,
+            dataControllerPointers_t* dp, ActionSystem const * actionSystem_cptr,
+	                 float timeMultiplier, int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr,
 	                                                AS::PRNserver* prnServer_ptr,
 	                                          float secondsSinceLastDecisionStep) {
@@ -98,8 +99,13 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 			LA::readsOnNeighbor_t referenceReads =  calculateLAreferences(agent, dp);
 			updateReadsLA(agent, dp, state_ptr, &referenceReads, prnServer_ptr);
 
+			
+			int currentActions = AS::getQuantityOfCurrentActions(AS::scope::LOCAL, agent,
+				                                    actionSystem_cptr, errorsCounter_ptr);
+
 			makeDecisionLA(agent, dp, state_ptr, prnServer_ptr, &referenceReads, 
-				              errorsCounter_ptr, g_secondsSinceLastDecisionStep);
+		                      errorsCounter_ptr, g_secondsSinceLastDecisionStep, 
+				                                                 currentActions);
 
 			updatedLastDispositionsLA(state_ptr);
 		}
@@ -124,8 +130,12 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 			GA::readsOnNeighbor_t referenceReads =  calculateGAreferences(agent, dp);
 			updateReadsGA(agent, dp, state_ptr, &referenceReads, prnServer_ptr);
 
+			int currentActions = AS::getQuantityOfCurrentActions(AS::scope::GLOBAL, agent,
+				                                    actionSystem_cptr, errorsCounter_ptr);
+
 			makeDecisionGA(agent , dp, state_ptr, prnServer_ptr, &referenceReads,
-				               errorsCounter_ptr, g_secondsSinceLastDecisionStep);
+				               errorsCounter_ptr, g_secondsSinceLastDecisionStep, 
+																  currentActions);
 
 			updatedLastDispositionsGA(state_ptr);			
 		}

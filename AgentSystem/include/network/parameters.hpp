@@ -1,5 +1,7 @@
 #pragma once
 
+//TODO: separate DEFAULTS and REFERENCE_VALUES
+
 /*
 This file holds:
 - Defines for:
@@ -108,10 +110,6 @@ and data sizes static.
 #define NUMBER_LA_OFFSETS (MAX_ACTIONS_PER_AGENT + (DIPLOMATIC_STANCES - 1))
 #define GA_PERSONALITY_TRAITS 4
 
-//Actions:
-#define PRNS_PER_ACT 5
-#define MAX_ACT_PRNS_PER_AGENT (PRNS_PER_ACT * MAX_ACTIONS_PER_AGENT)
-
 //--> DEFAULT values for new network creation:
 
 #define DEFAULT_ONOFF (true)
@@ -142,6 +140,14 @@ and data sizes static.
 #define DEFAULT_ACTION_AUX (99.0f)
 #define DEFAULT_REQUESTS (5.5f)
 #define DEFAULT_SHOULD_DECIDE 1
+
+//Actions:
+#define PRNS_PER_ACT 5
+#define MAX_ACT_PRNS_PER_AGENT (PRNS_PER_ACT * MAX_ACTIONS_PER_AGENT)
+#define ACT_COST_MULTIPLIER_FROM_REFERENCE (0.5f)
+#define BASE_ACT_COST (ACT_COST_MULTIPLIER_FROM_REFERENCE * DEFAULT_LA_RESOURCES)
+#define ACT_SUPERLINEAR_WEIGHT (1.0f)
+#define ACT_SUPERLINEAR_EXPO (2)
 
 //--> TEST-related defines:
 #define TST_NUMBER_LAS 15
