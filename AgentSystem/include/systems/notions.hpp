@@ -5,8 +5,8 @@
 
 namespace AS::Decisions{
 	
-	float calculateNotion(notionsSelf notion, scope scope, int agentID, 
+	float calculateNotionSelf(notionsSelf notion, scope scope, int agentID, 
 		                                  AS::dataControllerPointers_t* dp);
-	float calculateNotion(notionsNeighbor notion, scope scope, int agentID, 
-		                                      AS::dataControllerPointers_t* dp);
+	float calculateNotionNeighbor(notionsNeighbor notion, scope scope, int neighbor,
+		                              int agentID, AS::dataControllerPointers_t* dp);
 }

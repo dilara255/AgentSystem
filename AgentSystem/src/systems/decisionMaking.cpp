@@ -15,17 +15,20 @@ namespace AD = AS::Decisions;
 namespace AV = AS::ActionVariations;
 
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-             AD::notions_t* notions_ptr, LA::readsOnNeighbor_t* referenceReads_ptr);
+             AD::notions_t* notions_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
+	                                                            int totalNeighbors);
+
 void scoreActionsByDesirabilityLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
 															      AD::notions_t* notions_ptr, 
 													     AD::LA::decisionScores_t* scores_ptr);
 void redistributeScoreDueToImpedimmentsLA(int agent, 
 	AS::dataControllerPointers_t* agentDataPtrs_ptr, AD::notions_t* notions_ptr,
 	                                         AD::LA::decisionScores_t* scores_ptr);
+
 void chooseActionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
 	                                        AD::LA::decisionScores_t* scores_ptr);
 
-int getTotalScoresLA(LA::stateData_t* state_ptr);
+int getTotalScoresLA(LA::stateData_t* state_ptr, int neighbors);
 
 //TODO: updating of last dispositions should probably not be done in here
 void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
@@ -43,11 +46,13 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 		return; //won't be able to pay for any action anyway
 	}
 	
+	int neighbors = state_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+
 	AD::notions_t notions;
-	calculateNotionsLA(agent, dp, &notions, referenceReads_ptr);
+	calculateNotionsLA(agent, dp, &notions, referenceReads_ptr, neighbors);
 
 	AD::LA::decisionScores_t scores;	
-	scores.totalScores = getTotalScoresLA(state_ptr);		
+	scores.totalScores = getTotalScoresLA(state_ptr, neighbors);		
 
 	scoreActionsByDesirabilityLA(agent, dp, &notions, &scores);
 
@@ -60,17 +65,20 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 }
 
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-             AD::notions_t* notions_ptr, GA::readsOnNeighbor_t* referenceReads_ptr);
+             AD::notions_t* notions_ptr, GA::readsOnNeighbor_t* referenceReads_ptr, 
+	                                                            int totalNeighbors);
+
 void scoreActionsByDesirabilityGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
 															      AD::notions_t* notions_ptr, 
 													      AD::GA::decisionScores_t* scores_ptr);
 void redistributeScoreDueToImpedimmentsGA(int agent, 
 	AS::dataControllerPointers_t* agentDataPtrs_ptr, AD::notions_t* notions_ptr,
 	                                         AD::GA::decisionScores_t* scores_ptr);
+
 void chooseActionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
 	                                        AD::GA::decisionScores_t* scores_ptr);
 
-int getTotalScoresGA(GA::stateData_t* state_ptr);
+int getTotalScoresGA(GA::stateData_t* state_ptr, int neighbors);
 
 //TODO: updating of last dispositions should probably not be done in here
 void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
@@ -88,11 +96,13 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 		return; //won't be able to pay for any action anyway
 	}
 
+	int neighbors = state_ptr->connectedGAs.howManyAreOn();
+
 	AD::notions_t notions;
-	calculateNotionsGA(agent, dp, &notions, referenceReads_ptr);
+	calculateNotionsGA(agent, dp, &notions, referenceReads_ptr, neighbors);
 
 	AD::GA::decisionScores_t scores;
-	scores.totalScores = getTotalScoresGA(state_ptr);
+	scores.totalScores = getTotalScoresGA(state_ptr, neighbors);
 
 	scoreActionsByDesirabilityGA(agent, dp, &notions, &scores);
 
@@ -106,8 +116,7 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 
 //LA:
 
-int getTotalScoresLA(LA::stateData_t* state_ptr) {
-	int neighbors = state_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+int getTotalScoresLA(LA::stateData_t* state_ptr, int neighbors) {
 
 	return AV::howManyActionsOfKind(AS::actModes::SELF, AS::scope::LOCAL)
 		+ (neighbors * (
@@ -116,8 +125,27 @@ int getTotalScoresLA(LA::stateData_t* state_ptr) {
 }
 
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions_t* np,
-	                                                         LA::readsOnNeighbor_t* rp) {
+	                                     LA::readsOnNeighbor_t* rp, int totalNeighbors) {
 
+	int totalNotionsSelf = (int)AS::Decisions::notionsSelf::TOTAL;
+
+	for (int notion = 0; notion < totalNotionsSelf; notion++) {
+
+		np->self[notion] = 
+			AS::Decisions::calculateNotionSelf((AS::Decisions::notionsSelf)notion, 
+											          AS::scope::LOCAL, agent, dp);
+	}
+
+	int totalNotionsNeighbor = (int)AS::Decisions::notionsNeighbor::TOTAL;
+	
+	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+		for(int notion = 0; notion < totalNotionsNeighbor; notion++){
+			
+			np->neighbors[neighbor][notion] =
+				AS::Decisions::calculateNotionNeighbor((AS::Decisions::notionsNeighbor)notion, 
+					                                    AS::scope::LOCAL, neighbor, agent, dp);
+		}
+	}
 }
 
 void scoreActionsByDesirabilityLA(int agent, AS::dataControllerPointers_t* dp, 
@@ -136,8 +164,7 @@ void chooseActionLA(int agent, AS::dataControllerPointers_t* dp,
 }
 
 //GA:
-int getTotalScoresGA(GA::stateData_t* state_ptr) {
-	int neighbors = state_ptr->connectedGAs.howManyAreOn();
+int getTotalScoresGA(GA::stateData_t* state_ptr, int neighbors) {
 
 	return AV::howManyActionsOfKind(AS::actModes::SELF, AS::scope::GLOBAL)
 		+ (neighbors * (
@@ -146,8 +173,27 @@ int getTotalScoresGA(GA::stateData_t* state_ptr) {
 }
 
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions_t* np,
-	                                                         GA::readsOnNeighbor_t* rp) {
+                                         GA::readsOnNeighbor_t* rp, int totalNeighbors) {
 
+	int totalNotionsSelf = (int)AS::Decisions::notionsSelf::TOTAL;
+
+	for (int notion = 0; notion < totalNotionsSelf; notion++) {
+
+		np->self[notion] = 
+			AS::Decisions::calculateNotionSelf((AS::Decisions::notionsSelf)notion, 
+											         AS::scope::GLOBAL, agent, dp);
+	}
+
+	int totalNotionsNeighbor = (int)AS::Decisions::notionsNeighbor::TOTAL;
+	
+	for (int notion = 0; notion < totalNotionsNeighbor; notion++) {
+		for(int neighbor = 0; neighbor < totalNeighbors; neighbor++){
+			
+			np->neighbors[neighbor][notion] =
+				AS::Decisions::calculateNotionNeighbor((AS::Decisions::notionsNeighbor)notion, 
+					                                   AS::scope::GLOBAL, neighbor, agent, dp);
+		}
+	}
 }
 
 void scoreActionsByDesirabilityGA(int agent, AS::dataControllerPointers_t* dp, 

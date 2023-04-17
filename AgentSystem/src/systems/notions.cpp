@@ -62,90 +62,102 @@ namespace AS::Decisions {
 	}
 
 
-	float calcNotionN0(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN0(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
 		return 1.0f;
 	}
 
-	float calcNotionN1(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN1(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN2(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN2(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN3(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN3(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN4(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN4(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN5(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN5(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN6(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN6(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN7(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN7(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN8(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN8(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN9(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN9(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN10(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN10(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calcNotionN11(scope scope, int agentID, AS::dataControllerPointers_t* dp) {
+	float calcNotionN11(scope scope, int neighbor, int agentID, 
+		                     AS::dataControllerPointers_t* dp) {
 		
-		float timeWaster = calcNotionN0(scope, agentID, dp);
+		float timeWaster = calcNotionN0(scope, neighbor, agentID, dp);
 
 		return 1.0f;
 	}
 
-	float calculateNotion(notionsSelf notion, scope scope, int agentID, 
-		                              AS::dataControllerPointers_t* dp) {
+	float calculateNotionSelf(notionsSelf notion, scope scope, int agentID, 
+		                                  AS::dataControllerPointers_t* dp) {
 
 		switch ((int)notion)
 		{
@@ -170,35 +182,35 @@ namespace AS::Decisions {
 		}
 	}
 
-	float calculateNotion(notionsNeighbor notion, scope scope, int agentID, 
-		                                 AS::dataControllerPointers_t* dp) {
+	float calculateNotionNeighbor(notionsNeighbor notion, scope scope, int neighbor, 
+		                              int agentID, AS::dataControllerPointers_t* dp) {
 
 		switch ((int)notion)
 		{
 		case 0:
-			return calcNotionN0(scope, agentID, dp);
+			return calcNotionN0(scope, neighbor, agentID, dp);
 		case 1:
-			return calcNotionN1(scope, agentID, dp);
+			return calcNotionN1(scope, neighbor, agentID, dp);
 		case 2:
-			return calcNotionN2(scope, agentID, dp);
+			return calcNotionN2(scope, neighbor, agentID, dp);
 		case 3:
-			return calcNotionN3(scope, agentID, dp);
+			return calcNotionN3(scope, neighbor, agentID, dp);
 		case 4:
-			return calcNotionN4(scope, agentID, dp);
+			return calcNotionN4(scope, neighbor, agentID, dp);
 		case 5:
-			return calcNotionN5(scope, agentID, dp);
+			return calcNotionN5(scope, neighbor, agentID, dp);
 		case 6:
-			return calcNotionN6(scope, agentID, dp);
+			return calcNotionN6(scope, neighbor, agentID, dp);
 		case 7:
-			return calcNotionN7(scope, agentID, dp);
+			return calcNotionN7(scope, neighbor, agentID, dp);
 		case 8:
-			return calcNotionN8(scope, agentID, dp);
+			return calcNotionN8(scope, neighbor, agentID, dp);
 		case 9:
-			return calcNotionN9(scope, agentID, dp);
+			return calcNotionN9(scope, neighbor, agentID, dp);
 		case 10:
-			return calcNotionN10(scope, agentID, dp);
+			return calcNotionN10(scope, neighbor, agentID, dp);
 		case 11:
-			return calcNotionN11(scope, agentID, dp);
+			return calcNotionN11(scope, neighbor, agentID, dp);
 		default:
 			return 0.0f;
 		}
