@@ -3,6 +3,7 @@
 
 #include "systems/AScoordinator.hpp"
 #include "systems/actionSystem.hpp"
+#include "systems/actionHelpers.hpp"
 
 #include "network/parameters.hpp"
 
@@ -30,10 +31,15 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 					LA::stateData_t* state_ptr, AS::PRNserver* prnServer_ptr, 
 	                LA::readsOnNeighbor_t* referenceReads_ptr, 
 		            AS::WarningsAndErrorsCounter* errorsCounter_ptr,
-	                       const float secondsSinceLastDecisionStep) {
-
+	                const float secondsSinceLastDecisionStep, int currentActions) {
+	
 	if (!dp->LAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return;
+	}
+
+	float cost = AS::nextActionsCost(currentActions);
+	if ((cost > 0) && (cost > state_ptr->parameters.resources.current)) {
+		return; //won't be able to pay for any action anyway
 	}
 	
 	AD::notions_t notions;
@@ -70,10 +76,15 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 				    GA::stateData_t* state_ptr, AS::PRNserver* prnServer_ptr, 
 					GA::readsOnNeighbor_t* referenceReads_ptr,
 		            AS::WarningsAndErrorsCounter* errorsCounter_ptr,
-	                       const float secondsSinceLastDecisionStep) {
+	                const float secondsSinceLastDecisionStep, int currentActions) {
 
 	if (!dp->GAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return;
+	}
+
+	float cost = AS::nextActionsCost(currentActions);
+	if ((cost > 0) && (cost > state_ptr->parameters.GAresources)) {
+		return; //won't be able to pay for any action anyway
 	}
 
 	AD::notions_t notions;

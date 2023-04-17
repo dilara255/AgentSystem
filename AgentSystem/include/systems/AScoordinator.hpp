@@ -34,6 +34,7 @@ namespace AS {
 		             WarningsAndErrorsCounter* errorsCounter_ptr, AS::PRNserver* prnServer_ptr);
 	void stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop,
 		                         dataControllerPointers_t* agentDataPointers_ptr,
+		                                  ActionSystem const * actionSystem_cptr,
 		                      float timeMultiplier, int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr, 
 							                        AS::PRNserver* prnServer_ptr,

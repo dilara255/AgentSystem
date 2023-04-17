@@ -21,6 +21,7 @@ namespace AS {
 					   AS_GA_DISPOSITION_NOT_FINITE, AS_LA_DISPOSITION_NOT_FINITE,
 		               AS_GA_INFILTRATION_FROM_LAS_NOT_FINITE, 
 		               AS_GA_DISPOSITION_FROM_LAS_NOT_FINITE,
+		               AS_COULDNT_GET_ACTIONS_CPTR,
 		               TOTAL};
 	//PS: preparation step; RS: receive/send; DS: decision step; AC: Action; AS: Agent Step;
 	//DP: diplomacy;
