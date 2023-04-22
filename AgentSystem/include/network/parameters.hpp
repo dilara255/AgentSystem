@@ -109,6 +109,17 @@ and data sizes static.
 #define NOTIONS_ABOUT_NEIGHBOR 12
 #define NUMBER_LA_OFFSETS (MAX_ACTIONS_PER_AGENT + (DIPLOMATIC_STANCES - 1))
 #define GA_PERSONALITY_TRAITS 4
+#define MAX_MITIGATION_ROUNDS 3
+#define MAX_ACT_GOAL_SHORTLIST_SIZE 10
+#define MAX_ACT_CHOICE_SHORTLIST_SIZE 10
+//** TODO: make these a part of agent's personalities (and add defaults) **
+#define ACT_EXTRA_SCORE_MULTIPLIER (1.0f)
+#define ACT_MITIGATION_ROUNDS 2
+#define ACT_GOAL_SHORTLIST_SIZE 6
+#define ACT_CHOICE_SHORTLIST_SIZE 6 
+#define ACT_WHY_BOTHER_THRESOLD (0.2f)
+#define ACT_JUST_DO_IT_THRESOLD (0.8f)
+//*************************************************************************
 
 //--> DEFAULT values for new network creation:
 

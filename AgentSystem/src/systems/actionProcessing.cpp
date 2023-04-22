@@ -22,7 +22,7 @@ namespace AS{
 		}
 		if (actionDataVec_cptr == NULL) {
 			if (errorsCounter_ptr == NULL) {
-				LOG_ERROR("Couldn't get action data constant pointer");
+				LOG_ERROR("Couldn't get action data constant pointer (nor find the error counter)");
 			}
 			else {
 				errorsCounter_ptr->incrementError(errors::AS_COULDNT_GET_ACTIONS_CPTR);
@@ -43,6 +43,7 @@ namespace AS{
 		return currentActions;
 	}
 
+	//TODO: document math
 	float nextActionsCost(int currentActions) {
 
 		float multiplier = currentActions
