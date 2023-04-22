@@ -40,7 +40,13 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	if (!dp->LAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return;
 	}
-
+	if (currentActions >= MAX_ACTIONS_PER_AGENT) {
+		return; //won't be able to spawn any action anyway;
+	}
+	if (currentActions == NATURAL_RETURN_ERROR) {
+		errorsCounter_ptr->incrementWarning(AS::warnings::DS_LA_GOT_BAD_ACT_COUNT);
+		return; //won't be able to charge for the action;
+	}
 	float cost = AS::nextActionsCost(currentActions);
 	if ((cost > 0) && (cost > state_ptr->parameters.resources.current)) {
 		return; //won't be able to pay for any action anyway
@@ -51,6 +57,7 @@ void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	AD::notions_t notions;
 	calculateNotionsLA(agent, dp, &notions, referenceReads_ptr, neighbors);
 
+	//TODO: Wipe and implement notes from here:
 	AD::LA::decisionScores_t scores;	
 	scores.totalScores = getTotalScoresLA(state_ptr, neighbors);		
 
@@ -90,7 +97,13 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 	if (!dp->GAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return;
 	}
-
+	if (currentActions >= MAX_ACTIONS_PER_AGENT) {
+		return; //won't be able to spawn any action anyway;
+	}
+	if (currentActions == NATURAL_RETURN_ERROR) {
+		errorsCounter_ptr->incrementWarning(AS::warnings::DS_GA_GOT_BAD_ACT_COUNT);
+		return; //won't be able to charge for the action;
+	}
 	float cost = AS::nextActionsCost(currentActions);
 	if ((cost > 0) && (cost > state_ptr->parameters.GAresources)) {
 		return; //won't be able to pay for any action anyway
@@ -101,6 +114,7 @@ void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 	AD::notions_t notions;
 	calculateNotionsGA(agent, dp, &notions, referenceReads_ptr, neighbors);
 
+	//TODO: Wipe and implement notes from here:
 	AD::GA::decisionScores_t scores;
 	scores.totalScores = getTotalScoresGA(state_ptr, neighbors);
 
