@@ -96,7 +96,7 @@ namespace AS {
 			return &data;
 		}
 
-		ActionDataController const * getDataDirectPointer() const {
+		ActionDataController const * getDataDirectConstPointer() const {
 			if(!data.isInitialized()){return NULL;}
 			return (ActionDataController const *)&data;
 		}
@@ -331,6 +331,7 @@ namespace AS {
 				int totalScores = 0;
 			} AS_API decisionScores_t;
 
+			//TODO: scores by mode bellow not currently in use: should we even keep them?
 			typedef	float AS_API 
 				scoresSelf_t[howManyActionsOfKind(actModes::SELF, scope::LOCAL)];
 			typedef	float AS_API 
@@ -354,10 +355,11 @@ namespace AS {
 			typedef actionScore_t AS_API allScoresThisScope_t[totalGlobals()];
 
 			typedef struct decisionScores_st {
-				allScoresThisScope_t inFavor, against, overall;
+				allScoresThisScope_t ambitions, worries, overallUtility;
 				int totalScores = 0;
 			} AS_API decisionScores_t;
 
+			//TODO: scores by mode bellow not currently in use: should we even keep them?
 			typedef	float AS_API 
 				scoresSelf_t[howManyActionsOfKind(actModes::SELF, scope::GLOBAL)];
 			typedef	float AS_API 

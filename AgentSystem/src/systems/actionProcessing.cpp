@@ -10,7 +10,7 @@ namespace AS{
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
 		                               AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
-		auto actionController_cptr = asp->getDataDirectPointer();
+		auto actionController_cptr = asp->getDataDirectConstPointer();
 
 		const std::vector<AS::actionData_t> * actionDataVec_cptr = NULL;
 
@@ -25,9 +25,9 @@ namespace AS{
 				LOG_ERROR("Couldn't get action data constant pointer (nor find the error counter)");
 			}
 			else {
-				errorsCounter_ptr->incrementError(errors::AS_COULDNT_GET_ACTIONS_CPTR);
+				errorsCounter_ptr->incrementError(errors::AC_COULDNT_GET_ACTIONS_CPTR);
 			}
-
+			
 			return NATURAL_RETURN_ERROR;
 		}
 		

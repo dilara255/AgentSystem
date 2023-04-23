@@ -15,8 +15,9 @@ namespace AS {
 	//Loads network and instantiates appropriate Client Data Handler.
 	//If active, stops AS's main loop before loading.
 	//Client is blocked from issuing data before new Client Data Handler is instantiated.
-	//v
-	//- WARNING: CLEARS active Network and Client Data Handler, no confirmation needed! 
+	//Also transfer data from the network to the mirror (wipes any old data on the mirror).
+	// 
+	//WARNING: CLEARS active Network and Client Data Handler, no confirmation needed! 
 	//Any logic to save current network first and etc should be handled by the CLIENT.
 	AS_API bool loadNetworkFromFile(std::string name, bool runNetwork = false);
 
@@ -26,6 +27,8 @@ namespace AS {
 	//If fixedTimestep, treats each step as having taken the target time, always.
 	//If stepsToRun < 1, will run until stopped by another command.
 	//If stepsToRun >= 1, will give this many steps and then pause.
+	// 
+	//WARNING: This WILL consume any Client issued changes BEFORE running the network.
 	AS_API bool run(bool fixedTimeStep = false, int stepsToRun = -1);
 
 	//Stops AS execution thread, marks it as stopped and clears the stored thread::id;
@@ -57,14 +60,15 @@ namespace AS {
 	//If we're not resuming after save, then issuing of further changes will be blocked.
 	//AS's main loop will only actually resume if previously active.
 	//Default fileName uses network name (as stored by AS).
-	//NOTE: if willResumeAfterSave == false, issuing changes while AS sleeps before saving
-	//makes these changes be absorbed one step before they would otherwise, in order to
-	//preserve issued changes.
+	//
+	//WARNING: if willResumeAfterSave == false and the AS is asleep, changes issued before
+	//saving will be absorbed one step before they would otherwise, in order to preserve them.
 	AS_API bool saveNetworkToFile(std::string fileName = "", bool shouldOverwrite = false,
 		                             bool willResumeAfterSave = true, bool silent = false);
 
 	//For now, this is mostly an alias to stop(), but cheks if running before calling it.
 	//Future intended use is to also clean up mirror/client data and "unitialize" AS and CL.
+	// 
 	//TODO: BUG: if called right after AS::run(1) with no wait, may hang;
 	AS_API bool quit();
 }

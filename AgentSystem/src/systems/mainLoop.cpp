@@ -516,6 +516,15 @@ bool AS::run(bool fixedTimeStep, int stepsToRun) {
 		AS::g_prnServer_ptr->setSeed(i, AS::g_currentNetworkParams_ptr->seeds[i]);
 	}
 
+	//Before running, we want to get any data the Client may have issued:
+	bool result = CL::getNewClientData(AS::g_currentNetworkParams_ptr, 
+			                               AS::g_agentDataControllerPtrs_ptr,
+						   			       AS::g_actionSystem_ptr->getDataDirectPointer(), 
+			                               *AS::g_shouldMainLoopBeRunning_ptr);
+	if (!result) { 
+		AS::g_errorsCounter_ptr->incrementError(AS::errors::RS_FAILED_RECEIVING);
+	}
+
 	LOG_TRACE("Creating Main Loop Thread and marking as started...");
 
 	*g_shouldMainLoopBeRunning_ptr = true;
