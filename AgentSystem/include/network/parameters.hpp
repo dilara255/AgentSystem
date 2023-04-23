@@ -47,6 +47,9 @@ and data sizes static.
 #define NAME_LENGHT 30
 #define COMMENT_LENGHT 250
 
+//TODO: The following parameters can sort-of-easily be turned into load-time parameters
+//TODO: A few of the following parameters are really other systems' limits : split them
+
 //System flow:
 //Note: the AS uses naive integration in some spots, so high pace and period may break stuff
 #define AS_GENERAL_PACE (1.0f) //will change all timeMultipliers
@@ -111,14 +114,23 @@ and data sizes static.
 #define GA_PERSONALITY_TRAITS 4
 #define MAX_MITIGATION_ROUNDS 3
 #define MAX_ACT_GOAL_SHORTLIST_SIZE 10
-#define MAX_ACT_CHOICE_SHORTLIST_SIZE 10
+#define MAX_ACT_CHOICE_SHORTLIST_SIZE 20
 //** TODO: make these a part of agent's personalities (and add defaults) **
 #define ACT_EXTRA_SCORE_MULTIPLIER (1.0f)
 #define ACT_MITIGATION_ROUNDS 2
-#define ACT_GOAL_SHORTLIST_SIZE 6
-#define ACT_CHOICE_SHORTLIST_SIZE 6 
+#define ACT_GOAL_SHORTLIST_SIZE 4
+#define ACT_CHOICE_SHORTLIST_SIZE 10
 #define ACT_WHY_BOTHER_THRESOLD (0.2f)
 #define ACT_JUST_DO_IT_THRESOLD (0.8f)
+
+//Actions:
+#define PRNS_PER_ACT 5
+#define MAX_ACT_PRNS_PER_AGENT (PRNS_PER_ACT * MAX_ACTIONS_PER_AGENT)
+#define ACT_COST_MULTIPLIER_FROM_REFERENCE (0.5f)
+#define ACT_REFERENCE_RESOURCES (100.0f)
+#define BASE_ACT_COST (ACT_COST_MULTIPLIER_FROM_REFERENCE * ACT_REFERENCE_RESOURCES)
+#define ACT_SUPERLINEAR_WEIGHT (1.0f)
+#define ACT_SUPERLINEAR_EXPO (2)
 //*************************************************************************
 
 //--> DEFAULT values for new network creation:
@@ -129,7 +141,7 @@ and data sizes static.
 #define DEFAULT_GA_DISPOSITION (0.0f)
 #define DEFAULT_LA_STRENGHT (10.0f)
 #define DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP (100.0f)
-#define DEFAULT_LA_RESOURCES (100.0f)
+#define DEFAULT_LA_RESOURCES ACT_REFERENCE_RESOURCES
 #define DEFAULT_LA_INCOME (0.5f)
 #define DEFAULT_LA_STANCE 2
 #define DEFAULT_LA_DISPOSITION (0.0f)
@@ -151,14 +163,6 @@ and data sizes static.
 #define DEFAULT_ACTION_AUX (99.0f)
 #define DEFAULT_REQUESTS (5.5f)
 #define DEFAULT_SHOULD_DECIDE 1
-
-//Actions:
-#define PRNS_PER_ACT 5
-#define MAX_ACT_PRNS_PER_AGENT (PRNS_PER_ACT * MAX_ACTIONS_PER_AGENT)
-#define ACT_COST_MULTIPLIER_FROM_REFERENCE (0.5f)
-#define BASE_ACT_COST (ACT_COST_MULTIPLIER_FROM_REFERENCE * DEFAULT_LA_RESOURCES)
-#define ACT_SUPERLINEAR_WEIGHT (1.0f)
-#define ACT_SUPERLINEAR_EXPO (2)
 
 //--> TEST-related defines:
 #define TST_NUMBER_LAS 15

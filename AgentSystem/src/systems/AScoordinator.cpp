@@ -257,7 +257,7 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 		LOG_TRACE("Mutex Released closed");
 	}
 
-	//TODO: This could be just an update(), which clears + shrinks + reserves stuff.
+	//TODO: Could this be just an update(), which clears + shrinks + reserves stuff?
 	result = CL::createClientDataHandler(*currentNetworkParams_ptr);
 	if(!result){
 		LOG_ERROR("Failed to create new Client Data Handler!");

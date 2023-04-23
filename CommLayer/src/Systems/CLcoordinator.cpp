@@ -202,7 +202,7 @@ namespace CL {
 						   bool silent) {
 
 		if (!isASdataPointerInitialized()) {
-			if(!silent){
+			if(!silent){ //TODO: use errorCounter instead (either here or just upstream)
 				LOG_ERROR("Can't transfer data from AS because AS data mirror on CL is not initialized");
 			}
 			return false;
@@ -224,7 +224,7 @@ namespace CL {
 		actionPtrs.actionsLAs_cptr = actionsLAs_cptr;
 		actionPtrs.actionsGAs_cptr = actionsGAs_cptr;
 
-		//Clear old data: TODO: review wether this was actually necessary
+		//Clear old data: TODO: review whether this was actually doing anything
 		//bool result = ASmirror.clearAllData();
 		
 		//Actually send the data:
@@ -234,13 +234,13 @@ namespace CL {
 		result &= ASmirror.receiveReplacementActionData(actionPtrs);
 
 		if (!result) { 
-			LOG_ERROR("Aborting transfer, will clear ASmirror"); 
-			ASmirror.clearAllData();
+			LOG_ERROR("Data transfer to ASmirror failed"); //TODO: use errorCounter instead
 		}
 
-		ASmirror.updateHasData();
+		ASmirror.updateHasData(); //TODO: hasData is not invalidated if transfer fails
 		if (!ASmirror.hasData()) {
-			LOG_ERROR("Mirror System says some data controllers read as not initialized");				
+			LOG_ERROR("Mirror System says some data controllers read as not initialized");	
+			//TODO: use errorCounter instead
 			return false;
 		}
 
