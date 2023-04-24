@@ -18,118 +18,95 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_p
              AD::notions_t* notions_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
 	                                                            int totalNeighbors);
 
-void scoreActionsByDesirabilityLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-															      AD::notions_t* notions_ptr, 
-													     AD::LA::decisionScores_t* scores_ptr);
-void redistributeScoreDueToImpedimmentsLA(int agent, 
-	AS::dataControllerPointers_t* agentDataPtrs_ptr, AD::notions_t* notions_ptr,
-	                                         AD::LA::decisionScores_t* scores_ptr);
-
-void chooseActionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-	                                        AD::LA::decisionScores_t* scores_ptr);
+//If decision is to do "doNothing", returns an innactive action
+AS::actionData_t chooseActionLA(AD::notions_t* np, AD::LA::decisionScores_t* sp,
+	                                int agent, AS::dataControllerPointers_t* dp);
 
 int getTotalScoresLA(LA::stateData_t* state_ptr, int neighbors);
 
-//TODO: updating of last dispositions should probably not be done in here
-void makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
-					LA::stateData_t* state_ptr, AS::PRNserver* prnServer_ptr, 
-	                LA::readsOnNeighbor_t* referenceReads_ptr, 
-		            AS::WarningsAndErrorsCounter* errorsCounter_ptr,
-	                const float secondsSinceLastDecisionStep, int currentActions) {
+AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
+					 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
+					 AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+					 const float secondsSinceLastDecisionStep, int currentActions) {
 	
+	AS::actionData_t nullAction;
+	nullAction.ids.active = 0;
+
 	if (!dp->LAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
-		return;
+		return nullAction;
 	}
 	if (currentActions >= MAX_ACTIONS_PER_AGENT) {
-		return; //won't be able to spawn any action anyway;
+		return nullAction; //won't be able to spawn any action anyway;
 	}
 	if (currentActions == NATURAL_RETURN_ERROR) {
 		errorsCounter_ptr->incrementWarning(AS::warnings::DS_LA_GOT_BAD_ACT_COUNT);
-		return; //won't be able to charge for the action;
+		return nullAction; //won't be able to charge for the action;
 	}
 	float cost = AS::nextActionsCost(currentActions);
 	if ((cost > 0) && (cost > state_ptr->parameters.resources.current)) {
-		return; //won't be able to pay for any action anyway
+		return nullAction; //won't be able to pay for any action anyway
 	}
 	
 	int neighbors = state_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
 
+	//TODO: PERF: notions and scores can be static, if their allocation's measured to matter
+
 	AD::notions_t notions;
 	calculateNotionsLA(agent, dp, &notions, referenceReads_ptr, neighbors);
 
-	//TODO: Wipe and implement notes from here:
-	AD::LA::decisionScores_t scores;	
-	scores.totalScores = getTotalScoresLA(state_ptr, neighbors);		
+	AD::LA::decisionScores_t scores;
+	scores.totalScores = getTotalScoresLA(state_ptr, neighbors);
 
-	scoreActionsByDesirabilityLA(agent, dp, &notions, &scores);
-
-	for(int i = 0; i < CONSTRAINT_CHECK_ROUNDS; i++){
-		redistributeScoreDueToImpedimmentsLA(agent, dp, &notions, &scores);
-	}
-
-	//TODO: if I take out the random factor on action choosing, what does this become?
-	chooseActionLA(agent, dp, &scores);
+	return chooseActionLA(&notions, &scores, agent, dp);
 }
 
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
              AD::notions_t* notions_ptr, GA::readsOnNeighbor_t* referenceReads_ptr, 
 	                                                            int totalNeighbors);
 
-void scoreActionsByDesirabilityGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-															      AD::notions_t* notions_ptr, 
-													      AD::GA::decisionScores_t* scores_ptr);
-void redistributeScoreDueToImpedimmentsGA(int agent, 
-	AS::dataControllerPointers_t* agentDataPtrs_ptr, AD::notions_t* notions_ptr,
-	                                         AD::GA::decisionScores_t* scores_ptr);
-
-void chooseActionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-	                                        AD::GA::decisionScores_t* scores_ptr);
+//If decision is to do "doNothing", returns an innactive action
+AS::actionData_t chooseActionGA(AD::notions_t* np, AD::GA::decisionScores_t* sp,
+	                                int agent, AS::dataControllerPointers_t* dp);
 
 int getTotalScoresGA(GA::stateData_t* state_ptr, int neighbors);
 
-//TODO: updating of last dispositions should probably not be done in here
-void makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
-				    GA::stateData_t* state_ptr, AS::PRNserver* prnServer_ptr, 
-					GA::readsOnNeighbor_t* referenceReads_ptr,
-		            AS::WarningsAndErrorsCounter* errorsCounter_ptr,
-	                const float secondsSinceLastDecisionStep, int currentActions) {
+AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
+				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,
+				 AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+				 const float secondsSinceLastDecisionStep, int currentActions) {
+
+	AS::actionData_t nullAction;
+	nullAction.ids.active = 0;
 
 	if (!dp->GAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
-		return;
+		return nullAction;
 	}
 	if (currentActions >= MAX_ACTIONS_PER_AGENT) {
-		return; //won't be able to spawn any action anyway;
+		return nullAction; //won't be able to spawn any action anyway;
 	}
 	if (currentActions == NATURAL_RETURN_ERROR) {
 		errorsCounter_ptr->incrementWarning(AS::warnings::DS_GA_GOT_BAD_ACT_COUNT);
-		return; //won't be able to charge for the action;
+		return nullAction; //won't be able to charge for the action;
 	}
 	float cost = AS::nextActionsCost(currentActions);
 	if ((cost > 0) && (cost > state_ptr->parameters.GAresources)) {
-		return; //won't be able to pay for any action anyway
+		return nullAction; //won't be able to pay for any action anyway
 	}
 
 	int neighbors = state_ptr->connectedGAs.howManyAreOn();
 
+	//TODO: PERF: notions and scores can be static, if their allocation's measured to matter
+
 	AD::notions_t notions;
 	calculateNotionsGA(agent, dp, &notions, referenceReads_ptr, neighbors);
 
-	//TODO: Wipe and implement notes from here:
 	AD::GA::decisionScores_t scores;
 	scores.totalScores = getTotalScoresGA(state_ptr, neighbors);
 
-	scoreActionsByDesirabilityGA(agent, dp, &notions, &scores);
-
-	for(int i = 0; i < CONSTRAINT_CHECK_ROUNDS; i++){
-		redistributeScoreDueToImpedimmentsGA(agent, dp, &notions, &scores);
-	}
-	//TODO: if I take out the random factor on action choosing, what does this become?
-	chooseActionGA(agent, dp, &scores);
+	return chooseActionGA(&notions, &scores, agent, dp);
 }
 
-
 //LA:
-
 int getTotalScoresLA(LA::stateData_t* state_ptr, int neighbors) {
 
 	return AV::howManyActionsOfKind(AS::actModes::SELF, AS::scope::LOCAL)
@@ -162,19 +139,19 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 	}
 }
 
-void scoreActionsByDesirabilityLA(int agent, AS::dataControllerPointers_t* dp, 
-	                            AD::notions_t* np, AD::LA::decisionScores_t* sp) {
+AS::actionData_t chooseActionLA(AD::notions_t* np, AD::LA::decisionScores_t* sp,
+	                                int agent, AS::dataControllerPointers_t* dp) {
 
-}
+	AS::actionData_t chosenAction;
+	float chosenActionsScore = 0;
 
-void redistributeScoreDueToImpedimmentsLA(int agent, AS::dataControllerPointers_t* dp,
-			                            AD::notions_t* np, AD::LA::decisionScores_t* sp) {
+	//choose action
+	//(if doNothing, chosenAction.ids.active == 0, else, == 1)
+	
+	setActionDetails(chosenActionsScore, ACT_WHY_BOTHER_THRESOLD, ACT_JUST_DO_IT_THRESOLD, 
+		                                                                &chosenAction, dp);
 
-}
-
-void chooseActionLA(int agent, AS::dataControllerPointers_t* dp, 
-	                                 AD::LA::decisionScores_t* sp) {
-
+	return chosenAction;
 }
 
 //GA:
@@ -210,18 +187,17 @@ void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 	}
 }
 
-void scoreActionsByDesirabilityGA(int agent, AS::dataControllerPointers_t* dp, 
-	                            AD::notions_t* np, AD::GA::decisionScores_t* sp) {
+AS::actionData_t chooseActionGA(AD::notions_t* np, AD::GA::decisionScores_t* sp,
+	                                int agent, AS::dataControllerPointers_t* dp) {
+	
+	AS::actionData_t chosenAction;
+	float chosenActionsScore = 0;
 
-}
+	//choose action
+	//(if doNothing, chosenAction.ids.active == 0, else, == 1)
+	
+	setActionDetails(chosenActionsScore, ACT_WHY_BOTHER_THRESOLD, ACT_JUST_DO_IT_THRESOLD, 
+		                                                                &chosenAction, dp);
 
-void redistributeScoreDueToImpedimmentsGA(int agent, AS::dataControllerPointers_t* dp,
-													                AD::notions_t* np, 
-											               AD::GA::decisionScores_t* sp) {
-
-}
-
-void chooseActionGA(int agent, AS::dataControllerPointers_t* dp, 
-						             AD::GA::decisionScores_t* sp) {
-
+	return chosenAction;
 }

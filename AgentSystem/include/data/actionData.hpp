@@ -33,7 +33,7 @@ namespace AS {
     //NOT: "no". SPC: "yes, and is specific to this action". STD: "yes, and is the standard".
 	enum class actExists { NOT = 0, SPC = 1, STD = -1 };
 
-	//TODO: WARNING: MAY NOT BE PORTABLE?
+	//TODO-CRITICAL: WARNING: (possible) BUG: MAY NOT BE PORTABLE?
 	typedef struct {
 		uint32_t active : 1;
 		uint32_t origin : 13;

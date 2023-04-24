@@ -8,6 +8,13 @@
 
 namespace AS {
 
+	void setActionDetails(float score, float whyBother, float JustDoIt, 
+		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp);
+
+	void chargeForAndSpawnAction(actionData_t action, AS::dataControllerPointers_t* dp,
+							               WarningsAndErrorsCounter* errorsCounter_ptr);	
+	bool spawnAction(actionData_t action);
+
 	float nextActionsCost(int currentActions);
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
 		                            AS::WarningsAndErrorsCounter* errorsCounter_ptr);
