@@ -133,6 +133,16 @@ namespace CL {
 		return false;
 	}
 
+	bool ClientData::NetworkParameterDataHandler::transAccumulatedMultiplier(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
+
+	bool ClientData::NetworkParameterDataHandler::transLastStepTimeMicros(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
+
 	bool ClientData::NetworkParameterDataHandler::transferMainLoopTicks(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
 		return false;
@@ -168,7 +178,19 @@ namespace CL {
 		return false;
 	}
 
+	bool ClientData::NetworkParameterDataHandler::transferMakeDecisions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		recepientPtrs.params_ptr->makeDecisions = m_data_ptr->makeDecisions;
+		
+		return true;
+	}
 
+	bool ClientData::NetworkParameterDataHandler::transferProcessActions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		recepientPtrs.params_ptr->processActions = m_data_ptr->processActions;
+		
+		return true;
+	}
 
 //ACTION
 	

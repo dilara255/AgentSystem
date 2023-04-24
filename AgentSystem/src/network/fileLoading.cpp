@@ -33,13 +33,19 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     bool result = true;
     int tokensRead;
     float mult;
+    int makeDecisions, processActions;
 
     tokensRead = fscanf(fp, headerLine, &version, &pp->numberGAs, &pp->numberLAs,
                        &pp->maxLAneighbours, &pp->maxActions, &pp->mainLoopTicks,
                        &mult, //TODO: WHY? Doesn't work if I use &pp->accumulatedMultiplier D:
-                      &pp->seeds[0], &pp->seeds[1], &pp->seeds[2], &pp->seeds[3]);
-    result &= (tokensRead == 11);
+                       &makeDecisions, &processActions, //So we don't try to load into a bool            
+                       &pp->seeds[0], &pp->seeds[1], &pp->seeds[2], &pp->seeds[3]);
+    result &= (tokensRead == 13);
+
     pp->accumulatedMultiplier = mult;
+    pp->makeDecisions = (bool)makeDecisions;
+    pp->processActions = (bool)processActions;
+
 
     LOG_TRACE("Will load the comment line...");
 
@@ -675,16 +681,18 @@ FILE* AS::acquireFilePointerToLoad(std::string name, std::string filePath) {
 
 bool AS::fileIsCompatible(FILE* fp) {
     
-    LOG_TRACE("Will check wether the file is compatible...");
+    LOG_TRACE("Will check whether the file is compatible...");
 
     int version, GAs, LAs, maxNeighbours, maxActions;
     uint64_t ticks;
     double accumulatedMultiplier;
+    int makeDecisions, processActions;
     uint64_t seeds[DRAW_WIDTH];
 
     int tokens = fscanf(fp, headerLine, &version, &GAs, &LAs, &maxNeighbours, &maxActions,
-               &ticks, &accumulatedMultiplier, &seeds[0], &seeds[1], &seeds[2], &seeds[3]);
-    if (tokens != 11) {
+                          &ticks, &accumulatedMultiplier, &makeDecisions, &processActions,
+                                               &seeds[0], &seeds[1], &seeds[2], &seeds[3]);
+    if (tokens != 13) {
         LOG_ERROR("Couldn't read all tokens from header to validade file format. Aborting load.");
         return false;
     }

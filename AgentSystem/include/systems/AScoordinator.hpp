@@ -28,16 +28,16 @@ namespace AS {
 	bool sendReplacementDataToCL(bool silent);
 	void mainLoop(bool fixedTimeStep = false);
 
-	class PRNserver;
 	void stepActions(ActionSystem* actionSystem_ptr, 
 		             int numberLAs, int numberGAs, float timeMultiplier,
 		             WarningsAndErrorsCounter* errorsCounter_ptr, AS::PRNserver* prnServer_ptr);
+	
 	void stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop,
 		                         dataControllerPointers_t* agentDataPointers_ptr,
-		                                  ActionSystem const * actionSystem_cptr,
-		                      float timeMultiplier, int numberLAs, int numberEffectiveGAs,
+		                    ActionSystem* actionSystem_ptr, float timeMultiplier, 
+										   int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr, 
-							                        AS::PRNserver* prnServer_ptr,
+							    bool makeDecisions, AS::PRNserver* prnServer_ptr,
 		                                      float secondsSinceLastDecisionStep);
 
 	struct chopControl_st {

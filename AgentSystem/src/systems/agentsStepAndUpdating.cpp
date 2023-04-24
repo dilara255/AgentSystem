@@ -23,7 +23,7 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 AS::actionData_t makeDecisionLA(int agent, 
 	             AS::dataControllerPointers_t* agentDataPtrs_ptr,
 				 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
-		         AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
+	             AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
 				 const float secondsSinceLastDecisionStep, int currentActions);
 
 //Action returns as innactive in case no decision is made
@@ -31,7 +31,7 @@ AS::actionData_t makeDecisionLA(int agent,
 AS::actionData_t makeDecisionGA(int agent, 
 				 AS::dataControllerPointers_t* agentDataPtrs_ptr,
 				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,
-				 AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
+	             AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
 				 const float secondsSinceLastDecisionStep, int currentActions);
 
 LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp);
@@ -49,19 +49,12 @@ void updatedLastDispositionsGA(GA::stateData_t* agentState_ptr);
 void updateInfiltrationAndRelationsFromLAs(int agent, AS::dataControllerPointers_t* dp, 
            GA::stateData_t* state_ptr, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
-namespace AS_TST {
-	void updateReadTest(float* read, float real, float reference, float infiltration,
-		float prnFrom0to1, float timeMultiplier) {
-
-		updateRead(read, real, reference, infiltration, prnFrom0to1, timeMultiplier);
-	}
-}
-
+//WARNING: This is the only entrypoint to this file, and should remain so!
 void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
-            dataControllerPointers_t* dp, ActionSystem const * actionSystem_cptr,
+                    dataControllerPointers_t* dp, ActionSystem* actionSystem_ptr,
 	                 float timeMultiplier, int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr,
-	                                                AS::PRNserver* prnServer_ptr,
+	                            bool makeDecisions, AS::PRNserver* prnServer_ptr,
 	                                          float secondsSinceLastDecisionStep) {
 	
 	g_errorsCounter_ptr = errorsCounter_ptr;
@@ -92,7 +85,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	static int nextDecisionLAindex = 0;	
 	int finalDecisionLAindex = nextDecisionLAindex + LAdecisionsToTakeThisChop - 1;
 
-	while (nextDecisionLAindex <= finalDecisionLAindex) {
+	while ( makeDecisions && (nextDecisionLAindex <= finalDecisionLAindex) ) {
 		//Note that finalDecisionLAindex may be larger than the index of the last LA...
 		//so we modulo it in here:
 		int agent = nextDecisionLAindex % numberLAs;
@@ -105,7 +98,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 			
 			int currentActions = AS::getQuantityOfCurrentActions(AS::scope::LOCAL, agent,
-				                                    actionSystem_cptr, errorsCounter_ptr);
+				                                     actionSystem_ptr, errorsCounter_ptr);
 
 			actionData_t chosenAction = 
 					makeDecisionLA(agent, dp, state_ptr, &referenceReads, errorsCounter_ptr, 
@@ -113,7 +106,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 			//In case no decision is made, makeDecisionLA returns an innactive action, so:
 			if(chosenAction.ids.active){
-				chargeForAndSpawnAction(chosenAction, dp, errorsCounter_ptr);
+				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, errorsCounter_ptr);
 			}
 
 			updatedLastDispositionsLA(state_ptr);
@@ -127,7 +120,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	static int nextDecisionGAindex = 0;	
 	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
 
-	while (nextDecisionGAindex <= finalDecisionGAindex) {	
+	while ( makeDecisions && (nextDecisionGAindex <= finalDecisionGAindex) ) {	
 		//for the same reason we modulo the index here as well:
 		int agent = nextDecisionGAindex % numberEffectiveGAs;
 		GA::stateData_t* state_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(agent));
@@ -140,7 +133,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 			updateReadsGA(agent, dp, state_ptr, &referenceReads, prnServer_ptr);
 
 			int currentActions = AS::getQuantityOfCurrentActions(AS::scope::GLOBAL, agent,
-				                                    actionSystem_cptr, errorsCounter_ptr);
+				                                      actionSystem_ptr, errorsCounter_ptr);
 
 			actionData_t chosenAction = 
 					makeDecisionGA(agent , dp, state_ptr, &referenceReads, errorsCounter_ptr, 
@@ -148,7 +141,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 			//In case no decision is made, makeDecisionGA returns an innactive action, so:
 			if(chosenAction.ids.active){
-				chargeForAndSpawnAction(chosenAction, dp, errorsCounter_ptr);
+				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, errorsCounter_ptr);
 			}
 
 			updatedLastDispositionsGA(state_ptr);			
@@ -645,4 +638,12 @@ void updateRead(float* read_ptr, float real, float reference, float infiltration
 					) );
 	*read_ptr += difference * multiplier * timeMultiplier;
 	*read_ptr = std::max(-*read_ptr, *read_ptr);
+}
+
+namespace AS_TST {
+	void updateReadTest(float* read, float real, float reference, float infiltration,
+		float prnFrom0to1, float timeMultiplier) {
+
+		updateRead(read, real, reference, infiltration, prnFrom0to1, timeMultiplier);
+	}
 }

@@ -22,6 +22,8 @@ namespace CL {
 		bool receiveReplacementAgentData(CL::agentToMirrorVectorPtrs_t dataPtrs);
 		bool receiveReplacementActionData(actionToMirrorVectorPtrs_t actionPtrs);
 
+		//These are not implemented and not used so far
+		//TODO: remove?
 		bool transferParams(AS::networkParameters_t* recepient_ptr) const;
 		bool transferAgentData(CL::agentMirrorControllerPtrs_t* recepient_ptr) const;
 		bool transferActionData(CL::ActionMirrorController* recepient_ptr) const;

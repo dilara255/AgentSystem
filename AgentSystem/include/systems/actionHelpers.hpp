@@ -13,10 +13,12 @@ namespace AS {
 		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp);
 
 	void chargeForAndSpawnAction(actionData_t action, AS::dataControllerPointers_t* dp,
+												        ActionSystem* actionSystem_ptr,   
 							               WarningsAndErrorsCounter* errorsCounter_ptr);	
-	bool spawnAction(actionData_t action);
+	bool spawnAction(actionData_t action, ActionSystem* actionSystem_ptr);
 
+	float actionCostFromIntensity(AS::actionData_t action);
 	float nextActionsCost(int currentActions);
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
-		                            AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+		                               AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 }
