@@ -109,19 +109,22 @@ namespace CL::ClientData {
 	class NetworkParameterDataHandler: public BaseSubHandler {
 	public:
 		
-		bool CL_API changeAll(uint32_t agentID, networkParameters_t* newValue_ptr);
+		bool CL_API changeAll(networkParameters_t* newValue_ptr);
 		
-		bool CL_API changeCommentTo(uint32_t agentID, std::string newValue);
-		bool CL_API changeIsNetworkInitializedTo(uint32_t agentID, bool newValue);
-		bool CL_API changeLastMainLoopStartingTickTo(uint32_t agentID, uint64_t newValue);
-		bool CL_API changeMainLoopTicksTo(uint32_t agentID, uint64_t newValue);
-		bool CL_API changeMaxActionsTo(uint32_t agentID, int newValue);
-		bool CL_API changeMaxLAneighboursTo(uint32_t agentID, int newValue);
-		bool CL_API changeNameTo(uint32_t agentID, std::string newValue);
-		bool CL_API changeNumberGAsTo(uint32_t agentID, int newValue);
-		bool CL_API changeNumberLAsTo(uint32_t agentID, int newValue);
-		bool CL_API changeSeedsTo(uint32_t agentID, uint64_t see0, uint64_t see1,
-			                                       uint64_t seed2, uint64_t see3);
+		bool CL_API changeIsNetworkInitializedTo(bool newValue);
+		bool CL_API changeMainLoopTicksTo(uint64_t newValue);
+		bool CL_API changeLastMainLoopStartingTickTo(uint64_t newValue);
+		bool CL_API changeAccumulatedMultiplierTo(double newValue);
+		bool CL_API changeLastStepTimeMicrosTo(std::chrono::microseconds newValue);
+		bool CL_API changeNumberLAsTo(int newValue);
+		bool CL_API changeNumberGAsTo(int newValue);
+		bool CL_API changeMaxLAneighboursTo(int newValue);
+		bool CL_API changeMaxActionsTo(int newValue);
+		bool CL_API changeNameTo(std::string newValue);
+		bool CL_API changeCommentTo(std::string newValue);
+		bool CL_API changeSeedsTo(uint64_t seed0, uint64_t see1, uint64_t seed2, uint64_t seed3);
+		bool CL_API changeMakeDecisionsTo(bool newValue);
+		bool CL_API changeProcessActionsTo(bool newValue);
 
 	protected:
 		friend class Handler;
@@ -131,16 +134,20 @@ namespace CL::ClientData {
 		
 		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
-		bool transferComment(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferIsNetworkInitialized(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-		bool transferLastMainLoopStartingTick(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferMainLoopTicks(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-		bool transferMaxActions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-		bool transferMaxLAneighbours(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-		bool transferName(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-		bool transferNumberGAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferLastMainLoopStartingTick(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transAccumulatedMultiplier(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transLastStepTimeMicros(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferNumberLAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferNumberGAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferMaxLAneighbours(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferMaxActions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferName(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferComment(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferSeeds(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferMakeDecisions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferProcessActions(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 		networkParameters_t* m_data_ptr;
 	};

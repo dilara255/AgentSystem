@@ -140,6 +140,7 @@ and data sizes static.
 #define ACT_COST_MULTIPLIER_FROM_REFERENCE (0.5f)
 #define ACT_REFERENCE_RESOURCES (100.0f)
 #define BASE_ACT_COST (ACT_COST_MULTIPLIER_FROM_REFERENCE * ACT_REFERENCE_RESOURCES)
+#define ACT_INTENSITY_COST_MULTIPLIER (5.0f)
 #define ACT_SUPERLINEAR_WEIGHT (1.0f)
 #define ACT_SUPERLINEAR_EXPO (2)
 //*************************************************************************
@@ -174,6 +175,8 @@ and data sizes static.
 #define DEFAULT_ACTION_AUX (99.0f)
 #define DEFAULT_REQUESTS (5.5f)
 #define DEFAULT_SHOULD_DECIDE 1
+#define DEFAULT_SYSTEM_WIDE_MAKE_DECISIONS (true)
+#define DEFAULT_SYSTEM_WIDE_PROCESS_ACTIONS (true)
 
 //--> TEST-related defines:
 #define TST_NUMBER_LAS 15
@@ -206,7 +209,8 @@ namespace AS {
 
 	//TODO-CRITICAL: WARNING: REFACTOR: this will be part of a DATA project
 	//Should then have copy/assignment constructor
-	//FOR NOW: NOTE: any change here has to be reflected on dataMisc and dataMirror!
+	//FOR NOW: WARNING: FIX: any changes here have to be reflected on dataMisc, dataMirror,
+	//clientDataHandler, and file format, creation and loading!
 	typedef struct {
 		bool isNetworkInitialized;
 		uint64_t mainLoopTicks;
@@ -220,6 +224,8 @@ namespace AS {
 		char name[NAME_LENGHT];
 		char comment[COMMENT_LENGHT];
 		uint64_t seeds[DRAW_WIDTH];
+		bool makeDecisions;
+		bool processActions;
 	} AS_API networkParameters_t;
 }
 

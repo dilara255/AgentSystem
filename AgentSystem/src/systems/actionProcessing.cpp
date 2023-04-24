@@ -12,54 +12,6 @@ namespace AS{
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier, 
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp);
 
-	bool spawnAction(actionData_t action) {
-
-		return false;
-	}
-
-	void chargeForAndSpawnAction(actionData_t action, AS::dataControllerPointers_t* dp,
-							               WarningsAndErrorsCounter* errorsCounter_ptr) {
-		
-		bool spawned = spawnAction(action);
-
-		if (spawned) {
-
-			//charge for action
-		}
-	}
-
-	void setActionDetails(float score, float whyBother, float JustDoIt,
-		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp) {
-	
-		//First we change the target info so it stores the target's actual ID:
-		int agent = action_ptr->ids.origin;
-		int neighborIndexOnAgent = action_ptr->ids.target;
-
-		if (neighborIndexOnAgent == NEIGHBOR_ID_FOR_SELF) {
-			action_ptr->ids.target = agent;
-		}
-		else {
-			if (action_ptr->ids.scope == (int)AS::scope::LOCAL) {
-
-				auto agent_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent));
-
-				action_ptr->ids.target = 
-						agent_ptr->locationAndConnections.neighbourIDs[neighborIndexOnAgent];
-			}
-			else if (action_ptr->ids.scope == (int)AS::scope::GLOBAL) {
-
-				auto agent_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agent));
-
-				action_ptr->ids.target = agent_ptr->neighbourIDs[neighborIndexOnAgent];
-			}
-		}
-
-		float desiredIntensityMultiplier =
-			calculateDesiredIntensityMultiplier(score, whyBother, JustDoIt);
-
-		dispatchActionDetailSetting(desiredIntensityMultiplier, action_ptr, dp);		
-	}
-
 	//TODO: test
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
 		                               AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
@@ -106,6 +58,81 @@ namespace AS{
 		return multiplier * BASE_ACT_COST;
 	}
 
+	//TODO: review scaling (ie: size of agent should matter too?)
+	//TODO: should take category in account too? Mode?
+	float actionCostFromIntensity(AS::actionData_t action) {
+
+		return ACT_INTENSITY_COST_MULTIPLIER * action.details.intensity;
+	}
+
+	bool spawnAction(actionData_t action, ActionSystem* actionSystem_ptr) {
+
+		return actionSystem_ptr->getDataDirectPointer()->addActionData(action);
+	}
+
+	void chargeForAndSpawnAction(actionData_t action, AS::dataControllerPointers_t* dp,
+											            ActionSystem* actionSystem_ptr, 
+										   WarningsAndErrorsCounter* errorsCounter_ptr) {
+		
+		bool spawned = spawnAction(action, actionSystem_ptr);
+
+		if (spawned) {
+			AS::scope scope = (AS::scope)action.ids.scope;
+			int agentID = action.ids.origin;
+
+			int currentActions = 
+				getQuantityOfCurrentActions(scope, agentID, actionSystem_ptr, 
+					                                       errorsCounter_ptr);
+			
+			float cost = nextActionsCost(currentActions - 1) + actionCostFromIntensity(action);
+			
+			float* currency_ptr = NULL;
+			if(scope == AS::scope::LOCAL){
+				auto agent_ptr = &(dp->LAstate_ptr->getDirectDataPtr()->at(agentID));
+				currency_ptr = &(agent_ptr->parameters.resources.current);
+			}
+			else if(scope == AS::scope::GLOBAL){
+				auto agent_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(agentID));
+				currency_ptr = &(agent_ptr->parameters.GAresources);
+			}
+			assert(currency_ptr != NULL);
+			
+			*currency_ptr -= cost;
+		}
+	}
+
+	void setActionDetails(float score, float whyBother, float JustDoIt,
+		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp) {
+	
+		//First we change the target info so it stores the target's actual ID:
+		int agent = action_ptr->ids.origin;
+		int neighborIndexOnAgent = action_ptr->ids.target;
+
+		if (neighborIndexOnAgent == NEIGHBOR_ID_FOR_SELF) {
+			action_ptr->ids.target = agent;
+		}
+		else {
+			if (action_ptr->ids.scope == (int)AS::scope::LOCAL) {
+
+				auto agent_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent));
+
+				action_ptr->ids.target = 
+						agent_ptr->locationAndConnections.neighbourIDs[neighborIndexOnAgent];
+			}
+			else if (action_ptr->ids.scope == (int)AS::scope::GLOBAL) {
+
+				auto agent_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agent));
+
+				action_ptr->ids.target = agent_ptr->neighbourIDs[neighborIndexOnAgent];
+			}
+		}
+
+		float desiredIntensityMultiplier =
+			calculateDesiredIntensityMultiplier(score, whyBother, JustDoIt);
+
+		dispatchActionDetailSetting(desiredIntensityMultiplier, action_ptr, dp);		
+	}
+
 	//Todo: test
 	float calculateDesiredIntensityMultiplier(float score, float whyBother, float JustDoIt) {
 		//first we make sure that whyBother and JustDoIt are on a valid range:
@@ -147,10 +174,12 @@ namespace AS{
 	}
 
 	//TODO: this is temporary. We'll have these for different variations, elsewehere
-	void setActionDetailsVarTMP(float desiredIntensityMultiplier,
+	void setActionDetailsVarSTUB(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp) {
 
 		//Temporary way of setting the details of an action:
+
+
 	}
 
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier,
@@ -159,6 +188,6 @@ namespace AS{
 		//We'll need a different dispatcher for each unique variation : )
 		
 		//BUT for now we set all actions details with a single temp function:
-		setActionDetailsVarTMP(desiredIntensityMultiplier, action_ptr, dp);
+		setActionDetailsVarSTUB(desiredIntensityMultiplier, action_ptr, dp);
 	}
 }

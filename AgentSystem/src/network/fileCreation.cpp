@@ -52,6 +52,8 @@ int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int nu
 
     uint64_t tickCount = DEFAULT_TICK_COUNT;
     double totalMultiplier = DEFAULT_TOTAL_MULTIPLIER;
+    bool makeDecisions = DEFAULT_SYSTEM_WIDE_MAKE_DECISIONS;
+    bool processActions = DEFAULT_SYSTEM_WIDE_PROCESS_ACTIONS;
     uint64_t seed0 = DEFAULT_PRNG_SEED0;
     uint64_t seed1 = DEFAULT_PRNG_SEED1;
     uint64_t seed2 = DEFAULT_PRNG_SEED2;
@@ -63,7 +65,8 @@ int AS::createEmptyNetworkFile(std::string fileName, std::string comment, int nu
 
     resultAux = fprintf(fp, headerLine,
         FILE_FORMAT_VERSION, numberGAs, numberLAs, maxNeighbors, maxActions, tickCount,
-                                           totalMultiplier, seed0, seed1, seed2, seed3);
+                                        totalMultiplier, makeDecisions, processActions, 
+                                                            seed0, seed1, seed2, seed3);
     result *= (resultAux > 0); //fprintf returns negative number on error
     
     resultAux = fprintf(fp, commentLine, comment.c_str());
@@ -721,7 +724,7 @@ bool AS::createNetworkFileFromData(FILE* fp,
     //Header, with version control, network sizes and comment
     resultAux = fprintf(fp, headerLine, FILE_FORMAT_VERSION, pp->numberGAs, 
                         pp->numberLAs, pp->maxLAneighbours, pp->maxActions, pp->mainLoopTicks,
-                                                                    pp->accumulatedMultiplier,
+                             pp->accumulatedMultiplier, pp->makeDecisions, pp->processActions,
                                        pp->seeds[0], pp->seeds[1], pp->seeds[2], pp->seeds[3]);
     result &= (resultAux > 0); //fprintf returns negative number on error
 

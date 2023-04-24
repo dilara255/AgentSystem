@@ -63,6 +63,8 @@ bool AS::copyNetworkParameters(networkParameters_t * destination,
 	int nameCpy = strcpy_s(destination->name, nameSize, source->name);
 	destination->numberGAs = source->numberGAs;
 	destination->numberLAs = source->numberLAs;
+	destination->makeDecisions = source->makeDecisions;
+	destination->processActions = source->processActions;
 
 	for(int i = 0; i < DRAW_WIDTH; i++){
 		destination->seeds[i] = source->seeds[i];
@@ -107,5 +109,8 @@ bool AS::defaultNetworkParameters(networkParameters_t* destination) {
 	destination->seeds[2] = DEFAULT_PRNG_SEED2;
 	destination->seeds[3] = DEFAULT_PRNG_SEED3;
 
+	destination->makeDecisions = DEFAULT_SYSTEM_WIDE_MAKE_DECISIONS;
+	destination->makeDecisions = DEFAULT_SYSTEM_WIDE_PROCESS_ACTIONS;
+	
 	return true;
 }

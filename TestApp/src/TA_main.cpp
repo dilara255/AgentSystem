@@ -227,6 +227,11 @@ bool testReads(bool print, float secondsToRun) {
 		return false;
 	}
 
+	//We want to focus on the reading, so we'll disable decision-making and action processing:
+	auto clientData_ptr = CL::getClientDataHandlerPtr();
+	clientData_ptr->networkParameters.changeMakeDecisionsTo(false);
+	clientData_ptr->networkParameters.changeProcessActionsTo(false);
+
 	//Set some test values: we want one LA and one GA to have -0,5 , 0 and 0,5 infiltration
 	auto cldh_ptr = CL::getClientDataHandlerPtr();
 	if (cldh_ptr == NULL) {
@@ -494,6 +499,10 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 		return false;
 	}
 
+	//We don't really want to test actions now, so all decisions and actions will be frozen:
+	clientData_ptr->networkParameters.changeMakeDecisionsTo(false);
+	clientData_ptr->networkParameters.changeProcessActionsTo(false);
+
 	AS::GAflagField_t neighboursLastGA; //none will be on: no trade
 	AS::GAflagField_t neighboursFirstGA;
 	uint32_t flagField = (uint32_t)pow(2,(quantityGAs - 1)) - 1; //All on, but last
@@ -574,7 +583,7 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 		AS::quit();
 		return false;
 	}
-	
+
 	//How long did it actually run?
 	uint64_t initialTick =  CL::ASmirrorData_cptr->networkParams.lastMainLoopStartingTick;
 	uint64_t finalTick =  CL::ASmirrorData_cptr->networkParams.mainLoopTicks;							
@@ -605,6 +614,14 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	}
 
 	//Did anything change which shouldn't have changed?
+	bool eitherDecisionsOrActionsAreOn = CL::ASmirrorData_cptr->networkParams.makeDecisions
+		                              || CL::ASmirrorData_cptr->networkParams.processActions;
+	if(eitherDecisionsOrActionsAreOn){
+		LOG_ERROR("Network went back to deciding/acting after that was disabled. Will fail.");
+		AS::quit();
+		return false;
+	}
+
 	if (gaState_ptr->at(0).connectedGAs.getField() != neighboursFirstGA.getField()) {
 		LOG_ERROR("Unexpected changes happened TO GA0, maybe through actions or decisions. Will fail.");
 		AS::quit();
@@ -1200,7 +1217,7 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 
 	LOG_TRACE("Will issue new network comment");
 
-	bool result = cp->networkParameters.changeCommentTo(0, newComment.c_str());
+	bool result = cp->networkParameters.changeCommentTo(newComment.c_str());
 	if (!result) {
 		LOG_ERROR("Error issuing comment change. Aborting test.");
 		return false;

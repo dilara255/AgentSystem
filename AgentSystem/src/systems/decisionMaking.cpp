@@ -27,7 +27,7 @@ int getTotalScoresLA(LA::stateData_t* state_ptr, int neighbors);
 
 AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
 					 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
-					 AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+	                 AS::WarningsAndErrorsCounter* errorsCounter_ptr,
 					 const float secondsSinceLastDecisionStep, int currentActions) {
 	
 	AS::actionData_t nullAction;
@@ -69,7 +69,7 @@ int getTotalScoresGA(GA::stateData_t* state_ptr, int neighbors);
 
 AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,
-				 AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+	             AS::WarningsAndErrorsCounter* errorsCounter_ptr,
 				 const float secondsSinceLastDecisionStep, int currentActions) {
 
 	AS::actionData_t nullAction;

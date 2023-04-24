@@ -41,13 +41,13 @@ namespace CL{
 
 //NETWORK
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeAll(uint32_t agentID, networkParameters_t* newValue_ptr)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeAll(networkParameters_t* newValue_ptr)
 	{
 		return false;
 	}
 
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeCommentTo(uint32_t agentID, std::string newValue)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeCommentTo(std::string newValue)
 	{
 
 		if (newValue.size() >= COMMENT_LENGHT) {
@@ -57,7 +57,7 @@ namespace CL{
 
 		//Get the callback ready (so we hold the mutex for as little as possible):
 		changedDataInfo_t change;
-		change.agentID = agentID;
+		change.agentID = 0; //doesn't matter for network parameters
 
 		auto callback = std::bind(&CL::ClientData::NetworkParameterDataHandler::transferComment,
 			this, std::placeholders::_1, std::placeholders::_2);
@@ -81,53 +81,115 @@ namespace CL{
 		return true;
 	}
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeIsNetworkInitializedTo(uint32_t agentID, bool newValue)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeIsNetworkInitializedTo(bool newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeLastMainLoopStartingTickTo(uint32_t agentID, uint64_t newValue)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeLastMainLoopStartingTickTo(uint64_t newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeMainLoopTicksTo(uint32_t agentID, uint64_t newValue)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeAccumulatedMultiplierTo(double newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeMaxActionsTo(uint32_t agentID, int newValue)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeLastStepTimeMicrosTo(std::chrono::microseconds newValue)
+	{
+		return false;
+	}
+	
+	bool CL_API ClientData::NetworkParameterDataHandler::changeMainLoopTicksTo(uint64_t newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeMaxLAneighboursTo(uint32_t agentID, int newValue)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeMaxActionsTo(int newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeNameTo(uint32_t agentID, std::string newValue)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeMaxLAneighboursTo(int newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeNumberGAsTo(uint32_t agentID, int newValue)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeNameTo(std::string newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeNumberLAsTo(uint32_t agentID, int newValue)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeNumberGAsTo(int newValue)
 	{
 		return false;
 	}
 
-	bool CL_API ClientData::NetworkParameterDataHandler::changeSeedsTo(uint32_t agentID, 
-														   uint64_t see0, uint64_t see1,
-			                                              uint64_t seed2, uint64_t see3)
+	bool CL_API ClientData::NetworkParameterDataHandler::changeNumberLAsTo(int newValue)
 	{
 		return false;
 	}
 
+	bool CL_API ClientData::NetworkParameterDataHandler::changeSeedsTo(uint64_t seed0, 
+		                                uint64_t see1, uint64_t seed2, uint64_t seed3)
+	{
+		return false;
+	}
+
+	bool CL_API ClientData::NetworkParameterDataHandler::changeMakeDecisionsTo(bool newValue)
+	{
+		//This defines the functions to be used to tansfer the data to the AS:
+		auto boundTransferFunction = 
+			std::bind(&CL::ClientData::NetworkParameterDataHandler::transferMakeDecisions,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		//This prepares the change data. It shouldn't need to be changed:
+		std::mutex* mutex_ptr;
+		#pragma warning(push)
+		#pragma warning(disable : 4267) //TODO: try to understand the warning : p
+		bool result = buildAndPushChangeAndAcquireMutex(0, 1,
+			m_changesVector_ptr, &mutex_ptr, m_parentHandlerPtr, boundTransferFunction);
+		#pragma warning(pop)
+		
+		//The data to be transfered is actually recorded here:
+		if (result) {
+			m_data_ptr->makeDecisions = newValue;
+		}
+
+		//Then we clean up and exit:
+		if (mutex_ptr != NULL) {
+			mutex_ptr->unlock();
+		}
+		return result;
+	}
+
+	bool CL_API ClientData::NetworkParameterDataHandler::changeProcessActionsTo(bool newValue)
+	{
+		//This defines the functions to be used to tansfer the data to the AS:
+		auto boundTransferFunction = 
+			std::bind(&CL::ClientData::NetworkParameterDataHandler::transferProcessActions,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		//This prepares the change data. It shouldn't need to be changed:
+		std::mutex* mutex_ptr;
+		#pragma warning(push)
+		#pragma warning(disable : 4267) //TODO: try to understand the warning : p
+		bool result = buildAndPushChangeAndAcquireMutex(0, 1,
+			m_changesVector_ptr, &mutex_ptr, m_parentHandlerPtr, boundTransferFunction);
+		#pragma warning(pop)
+		
+		//The data to be transfered is actually recorded here:
+		if (result) {
+			m_data_ptr->processActions = newValue;
+		}
+
+		//Then we clean up and exit:
+		if (mutex_ptr != NULL) {
+			mutex_ptr->unlock();
+		}
+		return result;
+	}
 
 //ACTIONS
 

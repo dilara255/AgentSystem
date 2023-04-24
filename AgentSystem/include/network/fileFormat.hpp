@@ -26,7 +26,7 @@ int insertLAsWithoutDefaults(int numberLAs, int maxNeighbors, FILE* fp);
 int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE* fp);
 int insertActionsWithoutDefaults(int numberLAs, int numberGAs, int maxActions, FILE* fp);
 
-static const char* headerLine = "Version: %d\nGAs: %d, LAs: %d, maxNeighbors: %d, maxActions: %d, ticks: %llu (total multiplier last: %f), s0: %llu, s1: %llu, s2: %llu, s3: %llu\n";
+static const char* headerLine = "Version: %d\nGAs: %d, LAs: %d, maxNeighbors: %d, maxActions: %d, ticks: %llu (total multiplier last: %f), makeDecisions: %d, act: %d\ns0: %llu, s1: %llu, s2: %llu, s3: %llu\n";
 static const char* commentLine = "# %s\n";
 static const char* commentSeparator = "commentSeparatorToCheckOverflowDontEdit\n";
 static const char* commentSeparatorFormat = "%s\n";

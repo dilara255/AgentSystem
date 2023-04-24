@@ -186,7 +186,9 @@ namespace CL {
 		data.networkParams.mainLoopTicks = params_cptr->mainLoopTicks;
 		data.networkParams.accumulatedMultiplier = params_cptr->accumulatedMultiplier;
 		data.networkParams.lastMainLoopStartingTick = params_cptr->lastMainLoopStartingTick;
-		
+		data.networkParams.makeDecisions = params_cptr->makeDecisions;
+		data.networkParams.processActions = params_cptr->processActions;
+
 		size_t nameSize = NAME_LENGHT * sizeof(char);
 
 		int result = strcpy_s(data.networkParams.name, nameSize, params_cptr->name);
