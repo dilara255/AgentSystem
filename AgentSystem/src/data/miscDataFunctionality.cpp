@@ -4,6 +4,48 @@
 
 #include "data/agentDataStructures.hpp"
 
+//Returns neighbor's index on this agent's state data. Returns NATURAL_RETURN_ERROR on failure
+//WARNING: WILL fail if agent is passed to itlself (agentID = neighborID) 
+AS_API int AS::getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_ptr) {
+
+	int totalNeighbors = 
+			ThisState_ptr->connectedGAs.howManyAreOn();
+
+		int neighborIndex = NATURAL_RETURN_ERROR;
+		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+
+			int tryNeighborsID = 
+				ThisState_ptr->neighbourIDs[neighbor];
+
+			if (tryNeighborsID == neighborID) {
+				neighborIndex = neighbor;
+			}
+		}
+
+		return neighborIndex;
+}
+
+//Returns neighbor's index on this agent's state data. Returns NATURAL_RETURN_ERROR on failure
+//WARNING: WILL fail if agent is passed to itlself (agentID = neighborID)
+AS_API int AS::getNeighborsIndexOnLA(int neighborID, const LA::stateData_t* ThisState_ptr) {
+
+	int totalNeighbors = 
+			ThisState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+
+		int neighborIndex = NATURAL_RETURN_ERROR;
+		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+
+			int tryNeighborsID = 
+				ThisState_ptr->locationAndConnections.neighbourIDs[neighbor];
+
+			if (tryNeighborsID == neighborID) {
+				neighborIndex = neighbor;
+			}
+		}
+
+		return neighborIndex;
+}
+
 //Returns agent's index on neighborID's arrays. If not found, returns NATURAL_RETURN_ERROR;
 int AS::getLAsIDonNeighbor(int agent, int neighborID, 
 	        const  LA::stateData_t* partnerState_ptr) {

@@ -38,7 +38,7 @@ namespace AS {
 										   int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr, 
 							    bool makeDecisions, AS::PRNserver* prnServer_ptr,
-		                                      float secondsSinceLastDecisionStep);
+		                       float secondsSinceLastDecisionStep, uint32_t tick);
 
 	struct chopControl_st {
 		int chopIndex = 0;

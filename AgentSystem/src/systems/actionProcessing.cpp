@@ -6,11 +6,14 @@
 #include "systems/warningsAndErrorsCounter.hpp"
 #include "systems/actionSystem.hpp"
 
+#include "data/dataMisc.hpp"
+
 namespace AS{
 		
 	float calculateDesiredIntensityMultiplier(float score, float whyBother, float JustDoIt);
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier, 
-							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp);
+							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
+							                   WarningsAndErrorsCounter* errorsCounter_ptr);
 
 	//TODO: test
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
@@ -65,16 +68,20 @@ namespace AS{
 		return ACT_INTENSITY_COST_MULTIPLIER * action.details.intensity;
 	}
 
-	bool spawnAction(actionData_t action, ActionSystem* actionSystem_ptr) {
+	bool spawnAction(actionData_t action, ActionSystem* actionSystem_ptr, uint32_t tick) {
+
+		action.ids.phase = 0;
+		action.ticks.initial = tick;
+		action.ticks.lastProcessed = action.ticks.initial;
 
 		return actionSystem_ptr->getDataDirectPointer()->addActionData(action);
 	}
 
 	void chargeForAndSpawnAction(actionData_t action, AS::dataControllerPointers_t* dp,
-											            ActionSystem* actionSystem_ptr, 
+							             ActionSystem* actionSystem_ptr, uint32_t tick, 
 										   WarningsAndErrorsCounter* errorsCounter_ptr) {
 		
-		bool spawned = spawnAction(action, actionSystem_ptr);
+		bool spawned = spawnAction(action, actionSystem_ptr, tick);
 
 		if (spawned) {
 			AS::scope scope = (AS::scope)action.ids.scope;
@@ -102,13 +109,14 @@ namespace AS{
 	}
 
 	void setActionDetails(float score, float whyBother, float JustDoIt,
-		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp) {
+		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
+							                 WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
 		//First we change the target info so it stores the target's actual ID:
 		int agent = action_ptr->ids.origin;
 		int neighborIndexOnAgent = action_ptr->ids.target;
 
-		if (neighborIndexOnAgent == NEIGHBOR_ID_FOR_SELF) {
+		if (action_ptr->ids.mode == (uint32_t)AS::actModes::SELF) {
 			action_ptr->ids.target = agent;
 		}
 		else {
@@ -130,7 +138,8 @@ namespace AS{
 		float desiredIntensityMultiplier =
 			calculateDesiredIntensityMultiplier(score, whyBother, JustDoIt);
 
-		dispatchActionDetailSetting(desiredIntensityMultiplier, action_ptr, dp);		
+		dispatchActionDetailSetting(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                 errorsCounter_ptr);		
 	}
 
 	//Todo: test
@@ -174,20 +183,96 @@ namespace AS{
 	}
 
 	//TODO: this is temporary. We'll have these for different variations, elsewehere
+	//NOTE: the stub I made makes no sense for SELF actions, but I'll ignore that
 	void setActionDetailsVarSTUB(float desiredIntensityMultiplier,
-							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp) {
-
+							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+		
 		//Temporary way of setting the details of an action:
+		int agent = action_ptr->ids.origin;
+		int scope = action_ptr->ids.scope;
 
+		float agentStrenght;
+		float enemyStrenght;
 
+		if (scope == (int)AS::scope::LOCAL) {
+
+			const auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent));
+			agentStrenght = state_ptr->parameters.strenght.current;
+			
+			int targetsIndexOnAgent = 
+					getNeighborsIndexOnLA(action_ptr->ids.target, state_ptr);
+
+			if (targetsIndexOnAgent == NATURAL_RETURN_ERROR) {
+				if (action_ptr->ids.mode != (uint32_t)AS::actModes::SELF) {
+					errorsCounter_pt->incrementError(AS::errors::DS_FAILED_TO_FIND_NEIGHBORS_INDEX);
+				}
+				enemyStrenght = 0;
+			}
+			else {
+				const auto& decision_ptr = dp->LAdecision_ptr->getDataCptr()->at(agent);
+				int strenghtIndex = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
+
+				enemyStrenght = 
+						decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
+			}
+		}
+		else if (scope == (int)AS::scope::GLOBAL) {
+		
+			const auto state_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agent));		
+			agentStrenght = state_ptr->parameters.LAstrenghtTotal;
+			
+			int targetsIndexOnAgent = 
+					getNeighborsIndexOnGA(action_ptr->ids.target, state_ptr);
+			
+			if (targetsIndexOnAgent == NATURAL_RETURN_ERROR) {
+				if (action_ptr->ids.mode != (uint32_t)AS::actModes::SELF) {
+					errorsCounter_pt->incrementError(AS::errors::DS_FAILED_TO_FIND_NEIGHBORS_INDEX);
+				}
+				enemyStrenght = 0;
+			}
+			else {
+				const auto& decision_ptr = dp->GAdecision_ptr->getDataCptr()->at(agent);
+				int strenghtIndex = (int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
+
+				enemyStrenght = 
+						decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
+			}
+		}
+		else {
+			assert(false);
+		}
+		
+		float attackMarginProportion = 
+			ACT_INTENS_ATTACK_MARGIN_PROPORTION * action_ptr->details.intensity;
+
+		float attackSize;
+
+		if (agentStrenght > enemyStrenght) {
+			attackSize = enemyStrenght * (1 + attackMarginProportion);
+		}
+		else {
+			attackSize = 
+				agentStrenght * (action_ptr->details.intensity / (ACT_INTENSITY_SCORE_1/2.0f));
+		}
+		
+		attackSize = std::clamp(attackSize, 0.0f, agentStrenght);
+		action_ptr->details.intensity = attackSize;
+
+		//More troops = longer preparation phase, which is stored on aux (in ms):
+		float effectiveAttackSize = sqrt(attackSize/DEFAULT_LA_STRENGHT);
+
+		action_ptr->details.processingAux = 
+					ACT_BASE_ATTACK_PREP_SECS_PER_DEFAULT_STR * effectiveAttackSize;
 	}
 
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier,
-							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp) {
+							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
 
 		//We'll need a different dispatcher for each unique variation : )
 		
 		//BUT for now we set all actions details with a single temp function:
-		setActionDetailsVarSTUB(desiredIntensityMultiplier, action_ptr, dp);
+		setActionDetailsVarSTUB(desiredIntensityMultiplier, action_ptr, dp, errorsCounter_pt);
 	}
 }

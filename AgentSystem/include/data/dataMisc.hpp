@@ -3,6 +3,10 @@
 #include "AS_internal.hpp"
 
 namespace AS {
+	AS_API int getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_ptr);
+
+	AS_API int getNeighborsIndexOnLA(int neighborID, const LA::stateData_t* ThisState_ptr);
+
 	AS_API int getGAsIDonNeighbor(int agent, int neighborID, 
 		                      const GA::stateData_t* partnerState_ptr);
 
