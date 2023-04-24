@@ -120,7 +120,8 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 	
 	//TODO: add more sanity checks
 	if ( (choice.ids.target >= (uint32_t)neighbors)
-		  && (choice.ids.mode != (uint32_t)AS::actModes::SELF) ) {
+		  && (choice.ids.mode != (uint32_t)AS::actModes::SELF)
+		  && (choice.ids.active == 1) ) {
 		
 		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_GA_TARGET);
 		choice.ids.active = 0; //invalidate choice so we don't blow stuff up

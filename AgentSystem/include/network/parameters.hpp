@@ -134,7 +134,7 @@ and data sizes static.
 #define ACT_WHY_BOTHER_THRESOLD (0.2f)
 #define ACT_JUST_DO_IT_THRESOLD (0.8f)
 
-//Actions:
+//Actions (general):
 #define PRNS_PER_ACT 5
 #define MAX_ACT_PRNS_PER_AGENT (PRNS_PER_ACT * MAX_ACTIONS_PER_AGENT)
 #define ACT_COST_MULTIPLIER_FROM_REFERENCE (0.5f)
@@ -144,9 +144,13 @@ and data sizes static.
 #define ACT_SUPERLINEAR_WEIGHT (1.0f)
 #define ACT_SUPERLINEAR_EXPO (2)
 
-//Intensities:
+//Spefic Action details:
 #define ACT_INTENS_ATTACK_MARGIN_PROPORTION (0.2f)
 #define ACT_BASE_ATTACK_PREP_SECS_PER_DEFAULT_STR (10.0f)
+
+//Notion Calculation:
+#define NOTION_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY (0.8f)
+
 //*************************************************************************
 
 //--> DEFAULT values for new network creation:
