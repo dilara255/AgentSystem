@@ -55,7 +55,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	                 float timeMultiplier, int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr,
 	                            bool makeDecisions, AS::PRNserver* prnServer_ptr,
-	                                          float secondsSinceLastDecisionStep) {
+                               float secondsSinceLastDecisionStep, uint32_t tick) {
 	
 	g_errorsCounter_ptr = errorsCounter_ptr;
 	g_secondsSinceLastDecisionStep = secondsSinceLastDecisionStep;
@@ -106,7 +106,8 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 			//In case no decision is made, makeDecisionLA returns an innactive action, so:
 			if(chosenAction.ids.active){
-				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, errorsCounter_ptr);
+				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
+					                                           errorsCounter_ptr);
 			}
 
 			updatedLastDispositionsLA(state_ptr);
@@ -141,7 +142,8 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 			//In case no decision is made, makeDecisionGA returns an innactive action, so:
 			if(chosenAction.ids.active){
-				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, errorsCounter_ptr);
+				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
+					                                           errorsCounter_ptr);
 			}
 
 			updatedLastDispositionsGA(state_ptr);			

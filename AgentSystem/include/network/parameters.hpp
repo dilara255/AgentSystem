@@ -143,6 +143,10 @@ and data sizes static.
 #define ACT_INTENSITY_COST_MULTIPLIER (5.0f)
 #define ACT_SUPERLINEAR_WEIGHT (1.0f)
 #define ACT_SUPERLINEAR_EXPO (2)
+
+//Intensities:
+#define ACT_INTENS_ATTACK_MARGIN_PROPORTION (0.2f)
+#define ACT_BASE_ATTACK_PREP_SECS_PER_DEFAULT_STR (10.0f)
 //*************************************************************************
 
 //--> DEFAULT values for new network creation:

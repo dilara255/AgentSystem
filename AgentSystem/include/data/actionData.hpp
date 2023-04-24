@@ -36,13 +36,14 @@ namespace AS {
 	//TODO-CRITICAL: WARNING: (possible) BUG: MAY NOT BE PORTABLE?
 	typedef struct {
 		uint32_t active : 1;
-		uint32_t origin : 13;
-		uint32_t target : 13;
+		uint32_t origin : 11;
+		uint32_t target : 11;
 		uint32_t category : 3;
 		uint32_t scope : 1;
-		uint32_t mode : 1;
+		uint32_t mode : 2;
+		uint32_t phase : 2;
 
-		enum class fields { ACTIVE, ORIGIN, TARGET, CATEGORY, SCOPE, MODE,
+		enum class fields { ACTIVE, ORIGIN, TARGET, CATEGORY, SCOPE, MODE, PHASE,
 			                TOTAL_ACTION_FIELDS };
 	} AS_API ids_t;
 

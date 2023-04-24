@@ -17,11 +17,12 @@ namespace AV = AS::ActionVariations;
 //If decision is to do "doNothing", returns an innactive action
 AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 							     int agent, AS::dataControllerPointers_t* dp, 
-								 	    AS::scope scope, int totalNeighbors);
+								 	     AS::scope scope, int totalNeighbors,
+	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
              AD::notions_t* notions_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
-	                                                            int totalNeighbors);
+               int totalNeighbors, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
 int getTotalScoresLA(LA::stateData_t* state_ptr, int neighbors);
 
@@ -53,17 +54,30 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	//TODO: PERF: notions and scores can be static, if their allocation's measured to matter
 
 	AD::notions_t notions;
-	calculateNotionsLA(agent, dp, &notions, referenceReads_ptr, neighbors);
+	calculateNotionsLA(agent, dp, &notions, referenceReads_ptr, neighbors, errorsCounter_ptr);
 
 	AD::allScoresAnyScope_t scores;
 	scores.actualTotalScores = getTotalScoresLA(state_ptr, neighbors);
 	
-	return chooseAction(&notions, &scores, agent, dp, AS::scope::LOCAL, neighbors);
+	AS::actionData_t choice =
+		chooseAction(&notions, &scores, agent, dp, AS::scope::LOCAL, neighbors,
+			                                                 errorsCounter_ptr);
+
+	//TODO: add more sanity checks
+	if ( (choice.ids.target >= (uint32_t)neighbors) 
+		  && (choice.ids.mode != (uint32_t)AS::actModes::SELF) 
+		  && (choice.ids.active == 1) ) {
+		
+		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_LA_TARGET);
+		choice.ids.active = 0; //invalidate choice so we don't blow stuff up
+	}
+
+	return choice;
 }
 
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
              AD::notions_t* notions_ptr, GA::readsOnNeighbor_t* referenceReads_ptr, 
-	                                                            int totalNeighbors);
+               int totalNeighbors, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
 int getTotalScoresGA(GA::stateData_t* state_ptr, int neighbors);
 
@@ -95,12 +109,24 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 	//TODO: PERF: notions and scores can be static, if their allocation's measured to matter
 
 	AD::notions_t notions;
-	calculateNotionsGA(agent, dp, &notions, referenceReads_ptr, neighbors);
+	calculateNotionsGA(agent, dp, &notions, referenceReads_ptr, neighbors, errorsCounter_ptr);
 
 	AD::allScoresAnyScope_t scores;
 	scores.actualTotalScores = getTotalScoresGA(state_ptr, neighbors);
 
-	return chooseAction(&notions, &scores, agent, dp, AS::scope::GLOBAL, neighbors);
+	AS::actionData_t choice = 
+		chooseAction(&notions, &scores, agent, dp, AS::scope::GLOBAL, neighbors, 
+			                                                  errorsCounter_ptr);
+	
+	//TODO: add more sanity checks
+	if ( (choice.ids.target >= (uint32_t)neighbors)
+		  && (choice.ids.mode != (uint32_t)AS::actModes::SELF) ) {
+		
+		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_GA_TARGET);
+		choice.ids.active = 0; //invalidate choice so we don't blow stuff up
+	}
+
+	return choice;
 }
 
 void setScore(AD::actionScore_t* actionScore_ptr, AD::notions_t* np,
@@ -159,16 +185,19 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 
 		auto sp = &(allScores_ptr->allScores[cat]);
 
+		sp->ambitions.neighbor = NEIGHBOR_ID_FOR_SELF;
 		sp->ambitions.actCategory = cat;
 		sp->ambitions.actMode = (int)AS::actModes::SELF;
 		setScore(&(sp->ambitions), np, &AD::notionWeightsInFavor);
 				
 		maxAmbition = std::max(maxAmbition, sp->ambitions.score);
 				
+		sp->worries.neighbor = NEIGHBOR_ID_FOR_SELF;
 		sp->worries.actCategory = cat;
 		sp->worries.actMode = (int)AS::actModes::SELF;
 		setScore(&(sp->worries), np, &AD::notionWeightsAgainst);
 
+		sp->overallUtility.neighbor = NEIGHBOR_ID_FOR_SELF;
 		sp->overallUtility.actCategory = cat;
 		sp->overallUtility.actMode = (int)AS::actModes::SELF;
 				
@@ -217,21 +246,22 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 }
 
 //If doNothing, returns innactive action. Else, score is recorded on action's intensity
-//TODO: full testing (especially of sorting)
+//Also returns innactive action in case of error.
+//TODO: full testing (including the sorting)
 AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr, 
-	                                        int agent, AS::scope scope) {
-	
+											int agent, AS::scope scope, 
+					   AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	//We first sort scores from least to most worriesome:
 	std::sort(&allScores_ptr->allScores[0], 
 		      &allScores_ptr->allScores[allScores_ptr->actualTotalScores - 1], 
 		      AD::ascendingWorriesCompare);
-	
+
 	//Then we try to choose the least worriesome action with overallUtility >= 0:
 	int i = 0;
 	bool chose = false;
 	while ( (!chose) && (i < allScores_ptr->actualTotalScores) ) {
 
-		if (&allScores_ptr->allScores[i].overallUtility.score > 0) {
+		if (allScores_ptr->allScores[i].overallUtility.score > 0.0f) {
 			chose = true;
 		}
 		else {
@@ -244,6 +274,13 @@ AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr,
 	auto decision_ptr = &(allScores_ptr->allScores[i].overallUtility);
 	if (chose) {
 		choice.ids.active = 1;
+
+		if ( (decision_ptr->neighbor == NEIGHBOR_ID_FOR_SELF)
+			  && (decision_ptr->actMode != (int)AS::actModes::SELF) ) {
+
+			errorsCounter_ptr->incrementError(AS::errors::DS_NEIGHBOR_MARKED_SELF_WRONG_MODE_ON_LEAST_HARM);
+			choice.ids.active = 0; //invalidate
+		}
 
 		choice.ids.category = decision_ptr->actCategory;
 		choice.ids.mode = decision_ptr->actMode;
@@ -381,9 +418,11 @@ void mitigate(AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np,
 }
 
 //If doNothing, returns innactive action. Else, score is recorded on action's intensity
+//Also returns innactive action in case of error.
 //TODO: test A LOT (and make sure sorting is working as expected)
 AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScores_ptr, 
-	                                    AD::notions_t* np, int agent, AS::scope scope) {
+	                                    AD::notions_t* np, int agent, AS::scope scope,
+	                                  AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 	AS::actionData_t chosenAction;
 	chosenAction.ids.active = 0;
@@ -393,7 +432,7 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 	//Otherwise, if we still can, we try to mitigate worries associated to our top desires,
 	//and then we sort from the highest overallUtility and try again, 
 	//until either an action is chosen or we give up : )
-	
+
 	//Before starting, we sort the scores from the most desirable to the least, by ambition:
 	std::sort(&allScores_ptr->allScores[0], 
 		      &allScores_ptr->allScores[allScores_ptr->actualTotalScores - 1], 
@@ -426,7 +465,7 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 		}
 		std::sort(&allScores_ptr->allScores[0], &allScores_ptr->allScores[scoresToSort - 1], 
 		                                                AD::descendingOverallUtilityCompare);
-		
+
 		mitigationAttempts++;
 	}
 
@@ -443,6 +482,13 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 		                    
 		choice.ids.active = 1;
 
+		if ( (decision_ptr->neighbor == NEIGHBOR_ID_FOR_SELF) 
+			  && (decision_ptr->actMode != (int)AS::actModes::SELF) ) {
+				
+			errorsCounter_ptr->incrementError(AS::errors::DS_NEIGHBOR_MARKED_SELF_WRONG_MODE_ON_TRY_BEST);
+			choice.ids.active = 0; //invalidate
+		}
+
 		choice.ids.category = decision_ptr->actCategory;
 		choice.ids.mode = decision_ptr->actMode;
 		choice.ids.scope = (int)scope;
@@ -455,13 +501,14 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 	else {
 		
 		//We didn't find anything interesting enough, so let's play safe:
-		return doLeastHarmful(allScores_ptr, agent, scope);
+		return doLeastHarmful(allScores_ptr, agent, scope, errorsCounter_ptr);
    }
 }
 
 AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 							     int agent, AS::dataControllerPointers_t* dp, 
-							             AS::scope scope, int totalNeighbors) {
+							             AS::scope scope, int totalNeighbors,
+ 	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
 	//TODO-CRITICAL: use agent's values after that's implemented
 	float whyBother = ACT_WHY_BOTHER_THRESOLD;
@@ -469,22 +516,22 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 
 	//choose action:
 	float maxAmbition = calculateScores(np, sp, scope, totalNeighbors);
-
+	
 	AS::actionData_t chosenAction;
 	if(maxAmbition < whyBother){ 
 
-		chosenAction = doLeastHarmful(sp, agent, scope);
+		chosenAction = doLeastHarmful(sp, agent, scope, errorsCounter_ptr);
 	}
 	else {
 
-		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope);
+		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope, errorsCounter_ptr);
 	}
 	
 	//If we choose to doNothing, chosenAction.ids.active will be 0, else, 1, so:
 	if(chosenAction.ids.active) {
 
 		setActionDetails(chosenAction.details.intensity, whyBother, justDoIt, 
-			                                               &chosenAction, dp);
+			                            &chosenAction, dp, errorsCounter_ptr);
 	}
 	
 	return chosenAction;
@@ -500,15 +547,16 @@ int getTotalScoresLA(LA::stateData_t* state_ptr, int neighbors) {
 }
 
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions_t* np,
-	                                     LA::readsOnNeighbor_t* rp, int totalNeighbors) {
+	                           LA::readsOnNeighbor_t* refReads_ptr, int totalNeighbors,
+							           AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 	int totalNotionsSelf = (int)AS::Decisions::notionsSelf::TOTAL;
 
 	for (int notion = 0; notion < totalNotionsSelf; notion++) {
 
 		np->self[notion] = 
-			AS::Decisions::calculateNotionSelf((AS::Decisions::notionsSelf)notion, 
-											          AS::scope::LOCAL, agent, dp);
+			AS::Decisions::calculateNotionSelfLA((AS::Decisions::notionsSelf)notion, 
+									                        agent, dp, refReads_ptr);
 	}
 
 	int totalNotionsNeighbor = (int)AS::Decisions::notionsNeighbor::TOTAL;
@@ -517,8 +565,37 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 		for(int notion = 0; notion < totalNotionsNeighbor; notion++){
 			
 			np->neighbors[neighbor][notion] =
-				AS::Decisions::calculateNotionNeighbor((AS::Decisions::notionsNeighbor)notion, 
-					                                    AS::scope::LOCAL, neighbor, agent, dp);
+				AS::Decisions::calculateNotionNeighborLA((AS::Decisions::notionsNeighbor)notion, 
+					                                      neighbor, agent, dp, refReads_ptr);
+		}
+	}
+	
+	//We also have the np->averages to populate.
+	for(int notion = 0; notion < totalNotionsNeighbor; notion++){	
+		
+		np->averages[notion] = 0;
+
+		//We'll actually compute the RMS of each neighbors contribution:
+		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+			np->averages[notion] += 
+				(np->neighbors[neighbor][notion] * np->neighbors[neighbor][notion]);
+		}
+		if (!std::isfinite(np->averages[notion])) {
+			
+			errorsCounter_ptr->incrementWarning(AS::warnings::DS_LA_NOTIONS_RMS_BLEW_UP);
+			
+			//Anyway, if the squaring blew things up, we go back to a simple average:
+			np->averages[notion] = 0;
+
+			for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+				np->averages[notion] += np->neighbors[neighbor][notion];
+			}
+			np->averages[notion] /= totalNeighbors;
+		}
+		else {
+			//Otherwise, we keep going with the original RMS plan:
+			np->averages[notion] /= totalNeighbors;
+			np->averages[notion] = sqrt(np->averages[notion]); //notions are bounded to [0,1]
 		}
 	}
 }
@@ -533,15 +610,16 @@ int getTotalScoresGA(GA::stateData_t* state_ptr, int neighbors) {
 }
 
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions_t* np,
-                                         GA::readsOnNeighbor_t* rp, int totalNeighbors) {
+                               GA::readsOnNeighbor_t* refReads_ptr, int totalNeighbors,
+							           AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 	int totalNotionsSelf = (int)AS::Decisions::notionsSelf::TOTAL;
 
 	for (int notion = 0; notion < totalNotionsSelf; notion++) {
 
 		np->self[notion] = 
-			AS::Decisions::calculateNotionSelf((AS::Decisions::notionsSelf)notion, 
-											         AS::scope::GLOBAL, agent, dp);
+			AS::Decisions::calculateNotionSelfGA((AS::Decisions::notionsSelf)notion, 
+									                        agent, dp, refReads_ptr);
 	}
 
 	int totalNotionsNeighbor = (int)AS::Decisions::notionsNeighbor::TOTAL;
@@ -550,8 +628,37 @@ void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 		for(int neighbor = 0; neighbor < totalNeighbors; neighbor++){
 			
 			np->neighbors[neighbor][notion] =
-				AS::Decisions::calculateNotionNeighbor((AS::Decisions::notionsNeighbor)notion, 
-					                                   AS::scope::GLOBAL, neighbor, agent, dp);
+				AS::Decisions::calculateNotionNeighborGA((AS::Decisions::notionsNeighbor)notion, 
+					                                      neighbor, agent, dp, refReads_ptr);
+		}
+	}
+	
+	//We also have the np->averages to populate.
+	for(int notion = 0; notion < totalNotionsNeighbor; notion++){	
+		
+		np->averages[notion] = 0;
+
+		//We'll actually compute the RMS of each neighbors contribution:
+		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+			np->averages[notion] += 
+				(np->neighbors[neighbor][notion] * np->neighbors[neighbor][notion]);
+		}
+		if (!std::isfinite(np->averages[notion])) {
+			
+			errorsCounter_ptr->incrementWarning(AS::warnings::DS_GA_NOTIONS_RMS_BLEW_UP);
+			
+			//Anyway, if the squaring blew things up, we go back to a simple average:
+			np->averages[notion] = 0;
+
+			for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+				np->averages[notion] += np->neighbors[neighbor][notion];
+			}
+			np->averages[notion] /= totalNeighbors;
+		}
+		else {
+			//Otherwise, we keep going with the original RMS plan:
+			np->averages[notion] /= totalNeighbors;
+			np->averages[notion] = sqrt(np->averages[notion]); //notions are bounded to [0,1]
 		}
 	}
 }
