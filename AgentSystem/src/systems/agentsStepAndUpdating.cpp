@@ -18,17 +18,19 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 				  AS::dataControllerPointers_t* agentDataPtrs_ptr, float timeMultiplier,
 		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
-void makeDecisionLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-					  LA::stateData_t* state_ptr, AS::PRNserver* prnServer_ptr, 
-									 LA::readsOnNeighbor_t* referenceReads_ptr, 
-		                       AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
-	              const float secondsSinceLastDecisionStep, int currentActions);
+//Action returns as innactive in case no decision is made
+AS::actionData_t makeDecisionLA(int agent, 
+	             AS::dataControllerPointers_t* agentDataPtrs_ptr,
+				 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
+		         AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
+				 const float secondsSinceLastDecisionStep, int currentActions);
 
-void makeDecisionGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
-					  GA::stateData_t* state_ptr, AS::PRNserver* prnServer_ptr, 
-					                 GA::readsOnNeighbor_t* referenceReads_ptr,
-		                       AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
-	              const float secondsSinceLastDecisionStep, int currentActions);
+//Action returns as innactive in case no decision is made
+AS::actionData_t makeDecisionGA(int agent, 
+				 AS::dataControllerPointers_t* agentDataPtrs_ptr,
+				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,
+				 AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
+				 const float secondsSinceLastDecisionStep, int currentActions);
 
 LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp);
 GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPointers_t* dp);
@@ -59,7 +61,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 		                             WarningsAndErrorsCounter* errorsCounter_ptr,
 	                                                AS::PRNserver* prnServer_ptr,
 	                                          float secondsSinceLastDecisionStep) {
-
+	
 	g_errorsCounter_ptr = errorsCounter_ptr;
 	g_secondsSinceLastDecisionStep = secondsSinceLastDecisionStep;
 
@@ -103,9 +105,14 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 			int currentActions = AS::getQuantityOfCurrentActions(AS::scope::LOCAL, agent,
 				                                    actionSystem_cptr, errorsCounter_ptr);
 
-			makeDecisionLA(agent, dp, state_ptr, prnServer_ptr, &referenceReads, 
-		                      errorsCounter_ptr, g_secondsSinceLastDecisionStep, 
-				                                                 currentActions);
+			actionData_t chosenAction = 
+					makeDecisionLA(agent, dp, state_ptr, &referenceReads, errorsCounter_ptr, 
+						                     g_secondsSinceLastDecisionStep, currentActions);
+
+			//In case no decision is made, makeDecisionLA returns an innactive action, so:
+			if(chosenAction.ids.active){
+				chargeForAndSpawnAction(chosenAction, dp, errorsCounter_ptr);
+			}
 
 			updatedLastDispositionsLA(state_ptr);
 		}
@@ -133,9 +140,14 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 			int currentActions = AS::getQuantityOfCurrentActions(AS::scope::GLOBAL, agent,
 				                                    actionSystem_cptr, errorsCounter_ptr);
 
-			makeDecisionGA(agent , dp, state_ptr, prnServer_ptr, &referenceReads,
-				               errorsCounter_ptr, g_secondsSinceLastDecisionStep, 
-																  currentActions);
+			actionData_t chosenAction = 
+					makeDecisionGA(agent , dp, state_ptr, &referenceReads, errorsCounter_ptr, 
+						                      g_secondsSinceLastDecisionStep, currentActions);
+
+			//In case no decision is made, makeDecisionGA returns an innactive action, so:
+			if(chosenAction.ids.active){
+				chargeForAndSpawnAction(chosenAction, dp, errorsCounter_ptr);
+			}
 
 			updatedLastDispositionsGA(state_ptr);			
 		}
