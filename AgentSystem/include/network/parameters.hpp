@@ -41,6 +41,7 @@ and data sizes static.
 //Network size (these will change array sizes):
 #define MAX_LA_NEIGHBOURS 10
 #define MAX_GA_QUANTITY 16 //NOTE: last one is reserved to "belongs to no GA"
+#define MAX_NEIGHBORS (std::max(MAX_LA_NEIGHBOURS, MAX_GA_QUANTITY))
 #define MAX_LA_QUANTITY 128
 #define MAX_AGENTS (MAX_GA_QUANTITY + MAX_LA_QUANTITY)
 #define MAX_ACTIONS_PER_AGENT 10
