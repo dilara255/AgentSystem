@@ -18,12 +18,12 @@ This file:
 namespace AS {
 
 	enum class actCategories { STRENGHT, RESOURCES, ATTACK, GUARD,
-						          SPY, SABOTAGE, DIPLOMACY, CONQUEST,
-							      TOTAL };
+						       SPY, SABOTAGE, DIPLOMACY, CONQUEST,
+							   TOTAL };
 	//TODO: brief description of each
 
-	enum class actModes { IMMEDIATE, REQUEST, SELF,
-		                     TOTAL };
+	enum class actModes { SELF, IMMEDIATE, REQUEST,
+		                  TOTAL };
 	//TODO: brief description of each
 
 	enum class scope { LOCAL, GLOBAL,

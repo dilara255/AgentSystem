@@ -183,7 +183,7 @@ namespace AS {
 			return availableVariations[category][mode][scope];
 		}
 
-		static constexpr int totalLocals() {
+		static constexpr int totalLocalVariations() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
@@ -194,7 +194,7 @@ namespace AS {
 			return amount;
 		}
 
-		static constexpr int totalGlobals() {
+		static constexpr int totalGlobalVariations() {
 			int amount = 0;
 
 			for (int i = 0; i < TOTAL_CATEGORIES; i++) {
@@ -203,6 +203,11 @@ namespace AS {
 				}
 			}
 			return amount;
+		}
+
+		static constexpr int mostVariationsOnEitherScope() {
+
+			return std::max(totalLocalVariations(), totalGlobalVariations());
 		}
 
 		//Standard actions with different mode and/or scope, no matter what category
@@ -287,27 +292,12 @@ namespace AS {
 
 	namespace Decisions {
 		
-		typedef struct actionScore_st {
-			int32_t actID = -1;
-			int32_t neighbor = -1;
-			float score = 0;
-		} AS_API actionScore_t;
-
-
-		inline bool ascendingScoreCompare(actionScore_st scoreA, actionScore_st scoreB) {
-			return (scoreA.score < scoreB.score);
-		}
-
-		inline bool descendingScoreCompare(actionScore_st scoreA, actionScore_st scoreB) {
-			return (scoreA.score > scoreB.score);
-		}
-
 		enum class notionsSelf { S0, S1, S2, S3, S4, S5, S6, S7,
-													 TOTAL };
+													     TOTAL };
 		typedef	float AS_API notionsSelf_t[(int)notionsSelf::TOTAL];
 		
 		enum class notionsNeighbor { N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11,
-		                                                                   TOTAL };
+		                                                                       TOTAL };
 		typedef	float AS_API notionsNeighbor_t[(int)notionsNeighbor::TOTAL];
 
 		constexpr int TOTAL_NOTIONS = (int)notionsSelf::TOTAL + (int)notionsNeighbor::TOTAL;
@@ -315,22 +305,62 @@ namespace AS {
 		typedef struct notions_st {
 
 			notionsSelf_t self;
-			notionsNeighbor_t neighbors[MAX_LA_NEIGHBOURS];
+			notionsNeighbor_t averages;
+			notionsNeighbor_t neighbors[MAX_NEIGHBORS];
 
 			enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
 		} AS_API notions_t;
 
+		#define NEIGHBOR_ID_FOR_SELF (-1)
+		typedef struct actionScore_st {
+			int32_t actCategory = NEIGHBOR_ID_FOR_SELF;
+			int32_t actMode = NEIGHBOR_ID_FOR_SELF;
+			int32_t neighbor = NEIGHBOR_ID_FOR_SELF;
+			float score = 0;
+		} AS_API actionScore_t;
+
 		using namespace ActionVariations;
+		
+		static constexpr int maxScoresNeeded() {
+			constexpr int globalNonSelfVariations = 
+				howManyActionsOfKind(AS::actModes::IMMEDIATE, AS::scope::GLOBAL)
+				+ howManyActionsOfKind(AS::actModes::REQUEST, AS::scope::GLOBAL);
+
+			constexpr int globalMax = howManyActionsOfKind(AS::actModes::SELF, AS::scope::GLOBAL)
+				                           + MAX_GA_QUANTITY * globalNonSelfVariations;
+
+			constexpr int localNonSelfVariations = 
+				howManyActionsOfKind(AS::actModes::IMMEDIATE, AS::scope::LOCAL)
+				+ howManyActionsOfKind(AS::actModes::REQUEST, AS::scope::LOCAL);
+
+			constexpr int localMax = howManyActionsOfKind(AS::actModes::SELF, AS::scope::LOCAL)
+				                        + MAX_LA_NEIGHBOURS * localNonSelfVariations;
+
+			return std::max(localMax, globalMax);
+		}
+
+		typedef struct decisionScores_st {
+				actionScore_t ambitions, worries, overallUtility;
+		} AS_API decisionScores_t;
+
+		inline bool ascendingWorriesCompare(decisionScores_st scoreA, decisionScores_st scoreB) {
+			return (scoreA.worries.score < scoreB.worries.score);
+		}
+
+		inline bool descendingAmbitionsCompare(decisionScores_st scoreA, decisionScores_st scoreB) {
+			return (scoreA.ambitions.score > scoreB.ambitions.score);
+		}
+
+		inline bool descendingOverallUtilityCompare(decisionScores_st scoreA, decisionScores_st scoreB) {
+			return (scoreA.overallUtility.score > scoreB.overallUtility.score);
+		}
+
+		typedef struct allScoresAnyScope_st {
+			decisionScores_t allScores[maxScoresNeeded()];
+			int actualTotalScores;
+		} AS_API allScoresAnyScope_t;		
 
 		namespace LA {
-
-			typedef actionScore_t AS_API allScoresThisScope_t[totalLocals()];
-
-			typedef struct decisionScores_st {
-				allScoresThisScope_t inFavor, against, overall;
-				int totalScores = 0;
-			} AS_API decisionScores_t;
-
 			//TODO: scores by mode bellow not currently in use: should we even keep them?
 			typedef	float AS_API 
 				scoresSelf_t[howManyActionsOfKind(actModes::SELF, scope::LOCAL)];
@@ -351,14 +381,6 @@ namespace AS {
 		}		
 
 		namespace GA {
-
-			typedef actionScore_t AS_API allScoresThisScope_t[totalGlobals()];
-
-			typedef struct decisionScores_st {
-				allScoresThisScope_t ambitions, worries, overallUtility;
-				int totalScores = 0;
-			} AS_API decisionScores_t;
-
 			//TODO: scores by mode bellow not currently in use: should we even keep them?
 			typedef	float AS_API 
 				scoresSelf_t[howManyActionsOfKind(actModes::SELF, scope::GLOBAL)];
@@ -370,13 +392,15 @@ namespace AS {
 			typedef struct actionScoresByMode_st {
 
 				scoresSelf_t self;
-				scoresRequest_t request[MAX_LA_NEIGHBOURS];
-				scoresImmediate_t immediate[MAX_LA_NEIGHBOURS];
+				scoresRequest_t request[MAX_GA_QUANTITY];
+				scoresImmediate_t immediate[MAX_GA_QUANTITY];
 
 				enum class fields { SELF, REQUEST, IMMEDIATE, 
 									  TOTAL_LA_SCORE_FIELDS };
 			} AS_API actionScoresByMode_t;
 		}
+
+		typedef float notionWeights_t[TOTAL_NOTIONS];
 
 		typedef std::array<std::array<std::array<float, TOTAL_NOTIONS>, TOTAL_MODES>, TOTAL_CATEGORIES>
 			notionsWeightsArray_t;

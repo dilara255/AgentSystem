@@ -19,6 +19,7 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
 //Action returns as innactive in case no decision is made
+//TODO-CRITICAL: BUG: scores + notions WILL overflow the stack for larger networks
 AS::actionData_t makeDecisionLA(int agent, 
 	             AS::dataControllerPointers_t* agentDataPtrs_ptr,
 				 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
@@ -26,6 +27,7 @@ AS::actionData_t makeDecisionLA(int agent,
 				 const float secondsSinceLastDecisionStep, int currentActions);
 
 //Action returns as innactive in case no decision is made
+//TODO-CRITICAL: BUG: scores + notions WILL overflow the stack for larger networks
 AS::actionData_t makeDecisionGA(int agent, 
 				 AS::dataControllerPointers_t* agentDataPtrs_ptr,
 				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,

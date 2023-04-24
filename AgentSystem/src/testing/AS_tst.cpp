@@ -139,8 +139,8 @@ namespace AS {
 		int totalTotal = totalValid + totalNots;
 		bool validPlusNotEqualsTotal = (totalTotal == expectedTotalTotal);
 		
-		int localVariations = ActionVariations::totalLocals();
-		int globalVariations = ActionVariations::totalGlobals();
+		int localVariations = ActionVariations::totalLocalVariations();
+		int globalVariations = ActionVariations::totalGlobalVariations();
 		int localPlusGlobal = localVariations + globalVariations;
 		bool localPlusGlobalEqualsValids = (totalValid == localPlusGlobal);
 		

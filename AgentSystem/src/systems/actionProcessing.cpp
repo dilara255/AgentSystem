@@ -31,9 +31,32 @@ namespace AS{
 	void setActionDetails(float score, float whyBother, float JustDoIt,
 		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp) {
 	
+		//First we change the target info so it stores the target's actual ID:
+		int agent = action_ptr->ids.origin;
+		int neighborIndexOnAgent = action_ptr->ids.target;
+
+		if (neighborIndexOnAgent == NEIGHBOR_ID_FOR_SELF) {
+			action_ptr->ids.target = agent;
+		}
+		else {
+			if (action_ptr->ids.scope == (int)AS::scope::LOCAL) {
+
+				auto agent_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent));
+
+				action_ptr->ids.target = 
+						agent_ptr->locationAndConnections.neighbourIDs[neighborIndexOnAgent];
+			}
+			else if (action_ptr->ids.scope == (int)AS::scope::GLOBAL) {
+
+				auto agent_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agent));
+
+				action_ptr->ids.target = agent_ptr->neighbourIDs[neighborIndexOnAgent];
+			}
+		}
+
 		float desiredIntensityMultiplier =
 			calculateDesiredIntensityMultiplier(score, whyBother, JustDoIt);
-			
+
 		dispatchActionDetailSetting(desiredIntensityMultiplier, action_ptr, dp);		
 	}
 
@@ -116,6 +139,11 @@ namespace AS{
 			return ACT_INTENSITY_JUST_DO_IT + 
 					(ACT_INTENSITY_DIFFERENCE_TO_SCORE_1 * proportionOnRange);
 		}	
+
+		//we should never get here, so:
+		float wtf = 0;
+		assert(wtf != 0);
+		return wtf;
 	}
 
 	//TODO: this is temporary. We'll have these for different variations, elsewehere
