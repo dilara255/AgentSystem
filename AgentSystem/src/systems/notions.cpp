@@ -12,11 +12,34 @@ namespace PURE_GA = GA;
 
 namespace AS::Decisions::LA {
 
-	//STUB: pretend this is something like "I'm afraid I have too much upkeep / income"
+	//STUB: too much str/income
 	float calcNotionS0(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
-		return 1.0f;
+		auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentID));
+
+		float upkeep = state_ptr->parameters.strenght.currentUpkeep;
+		float effectiveIncome = NOTION_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY 
+								* state_ptr->parameters.resources.updateRate;
+
+		float maximumProportion = 2.0f;
+		float proportion = maximumProportion;
+
+		if (effectiveIncome > 0) {
+			proportion = upkeep/effectiveIncome;
+		}
+		
+		float notion = (proportion * proportion * proportion); //cubed: 2 -> 8, 0.5 -> 0.125
+
+		float maximumProportionCubed = 
+			maximumProportion * maximumProportion * maximumProportion;
+
+		notion = std::clamp(notion, 0.0f, maximumProportionCubed)/maximumProportionCubed;
+
+		assert(std::isfinite(notion));
+
+		//Will be on [0,1], with proportion == 2 -> 1, proportion == 1 -> 0.125
+		return notion;
 	}
 
 	float calcNotionS1(int agentID, AS::dataControllerPointers_t* dp, 
@@ -75,11 +98,54 @@ namespace AS::Decisions::LA {
 		return 1.0f;
 	}
 
-
+	//STUB: neighbor has a lot of cash and little defenses
 	float calcNotionN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		return 1.0f;
+		//The higher the current resources are compared to the reference, the higher this is
+		//The lower the guard is compared to the reference, the higher this is
+		
+		int strenghtIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
+		float refStrenght = refReads_ptr->readOf[strenghtIndex];
+
+		int guardIndex = (int)PURE_LA::readsOnNeighbor_t::fields::GUARD;
+		float refGuard = refReads_ptr->readOf[guardIndex] + refStrenght;
+
+		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
+		float refResources = refReads_ptr->readOf[resourcesIndex];
+
+		auto readsOfNeighbor_ptr = 
+				&(dp->LAdecision_ptr->getDataCptr()->at(agentID).reads[neighbor]);
+
+		float neighborGuard = readsOfNeighbor_ptr->readOf[guardIndex]
+							  + readsOfNeighbor_ptr->readOf[strenghtIndex];
+
+		float guardProportion = 1.0f;
+		if (refGuard > 0) {
+			guardProportion = neighborGuard / refGuard;
+		}
+
+		float neighborResources = readsOfNeighbor_ptr->readOf[resourcesIndex];
+
+		float resourcesProportion = 1.0f;
+		if (refResources > 0) {
+			resourcesProportion = neighborResources / refResources;
+		}
+
+		float proportion = resourcesProportion / guardProportion;
+		
+		float notion = (proportion * proportion * proportion); //cubed: 2 -> 8, 0.5 -> 0.125
+
+		float maximumProportion = 2;
+		float maximumProportionCubed = 
+			maximumProportion * maximumProportion * maximumProportion;
+
+		notion = std::clamp(notion, 0.0f, maximumProportionCubed)/maximumProportionCubed;
+
+		assert(std::isfinite(notion));
+
+		//Will be on [0,1], with proportion == 2 -> 1, proportion == 1 -> 0.125
+		return notion;
 	}
 
 	float calcNotionN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
@@ -173,11 +239,44 @@ namespace AS::Decisions::LA {
 
 namespace AS::Decisions::GA {
 
-	//STUB: pretend this is something like "I'm afraid I have too much upkeep / income"
+	//STUB: too much str/income (when compared to reference reads)
 	float calcNotionS0(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 
-		return 1.0f;
+		auto state_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agentID));
+
+		int strIndex = (int)PURE_GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
+		float refStrenght = refReads_ptr->readOf[strIndex];
+
+		float strenght = state_ptr->parameters.LAstrenghtTotal;
+		float strenghtRatio = 1.0f;
+		
+		if (refStrenght > 0) {
+			strenghtRatio = strenght / refStrenght;
+		}		
+		
+		int taxIndex = (int)PURE_GA::readsOnNeighbor_t::fields::TAX_INCOME;
+		float refTax = refReads_ptr->readOf[taxIndex];
+
+		float tax = state_ptr->parameters.lastTaxIncome;
+		float taxRatio = 1.0f;
+		
+		if (refTax > 0) {
+			strenghtRatio = tax / refTax;
+		}			
+
+		float effectiveTaxRatio = NOTION_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY * taxRatio;
+
+		float proportion = strenghtRatio/effectiveTaxRatio;
+		float notion = (proportion * proportion * proportion); //cubed: 2 -> 8, 0.5 -> 0.125
+
+		float maximumProportionCubed = 8.0f;
+		notion = std::clamp(notion, 0.0f, maximumProportionCubed)/maximumProportionCubed;
+
+		assert(std::isfinite(notion));
+
+		//Will be on [0,1], with proportion == 2 -> 1, proportion == 1 -> 0.125
+		return notion;
 	}
 
 	float calcNotionS1(int agentID, AS::dataControllerPointers_t* dp, 
@@ -236,11 +335,54 @@ namespace AS::Decisions::GA {
 		return 1.0f;
 	}
 
-
+	//STUB: neighbor has a lot of cash and little defenses compared to others
 	float calcNotionN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		return 1.0f;
+		//The higher the current resources are compared to the reference, the higher this is
+		//The lower the guard is compared to the reference, the higher this is
+		
+		int strenghtIndex = (int)PURE_GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
+		float refStrenght = refReads_ptr->readOf[strenghtIndex];
+
+		int guardIndex = (int)PURE_GA::readsOnNeighbor_t::fields::GUARD_LAS;
+		float refGuard = refReads_ptr->readOf[guardIndex] + refStrenght;
+
+		int resourcesIndex = (int)PURE_GA::readsOnNeighbor_t::fields::GA_RESOURCES;
+		float refResources = refReads_ptr->readOf[resourcesIndex];
+
+		auto readsOfNeighbor_ptr = 
+				&(dp->GAdecision_ptr->getDataCptr()->at(agentID).reads[neighbor]);
+
+		float neighborGuard = readsOfNeighbor_ptr->readOf[guardIndex]
+							  + readsOfNeighbor_ptr->readOf[strenghtIndex];
+
+		float guardProportion = 1.0f;
+		if (refGuard > 0) {
+			guardProportion = neighborGuard / refGuard;
+		}
+
+		float neighborResources = readsOfNeighbor_ptr->readOf[resourcesIndex];
+
+		float resourcesProportion = 1.0f;
+		if (refResources > 0) {
+			resourcesProportion = neighborResources / refResources;
+		}
+
+		float proportion = resourcesProportion / guardProportion;
+		
+		float notion = (proportion * proportion * proportion); //cubed: 2 -> 8, 0.5 -> 0.125
+
+		float maximumProportion = 2;
+		float maximumProportionCubed = 
+			maximumProportion * maximumProportion * maximumProportion;
+
+		notion = std::clamp(notion, 0.0f, maximumProportionCubed)/maximumProportionCubed;
+
+		assert(std::isfinite(notion));
+
+		//Will be on [0,1], with proportion == 2 -> 1, proportion == 1 -> 0.125
+		return notion;
 	}
 
 	float calcNotionN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
