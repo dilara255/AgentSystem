@@ -13,6 +13,7 @@ This file:
 
 #include "core.hpp"
 
+#include "miscDefines.hpp"
 #include "miscStdHeaders.h"
 
 namespace AS {
@@ -48,17 +49,21 @@ namespace AS {
 	} AS_API ids_t;
 
 	//TODO: WARNING: MAY NOT BE PORTABLE?
+	//Used to pack scope, agent and action number in a uint32_t for transfering from client
+	//NOTE: this is *NOT* meant to be used with ids_t
 	enum class actionIDtoUnsigned: uint32_t {SCOPE_SHIFT = 31, SCOPE_MASK = 2147483648, 
 										     AGENT_SHIFT = 15, AGENT_MASK = 2147450880,
 											 ACTION_SHIFT = 0, ACTION_MASK = 32767 };
 
+	typedef uint32_t uint32_tenthsOfMilli_t;
+
 	typedef struct {
-		uint32_t initial;
-		uint32_t lastProcessed;
+		uint32_tenthsOfMilli_t elapsed;
+		uint32_tenthsOfMilli_t total;
 
 		enum class fields { INITIAL, LAST_PROCESSED,
 			                TOTAL_ACTION_FIELDS };
-	} AS_API tickInfo_t;
+	} AS_API timeInfo_t;
 
 	typedef struct {
 		float intensity;
@@ -70,7 +75,7 @@ namespace AS {
 
 	typedef struct {
 		ids_t ids;
-		tickInfo_t ticks;
+		timeInfo_t phaseTiming;
 		details_t details;
 
 		enum class fields { IDS, TICKS, DETAILS,

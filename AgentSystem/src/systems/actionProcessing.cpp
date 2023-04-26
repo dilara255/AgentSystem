@@ -68,11 +68,7 @@ namespace AS{
 		return ACT_INTENSITY_COST_MULTIPLIER * action.details.intensity;
 	}
 
-	bool spawnAction(actionData_t action, ActionSystem* actionSystem_ptr, uint32_t tick) {
-
-		action.ids.phase = 0;
-		action.ticks.initial = tick;
-		action.ticks.lastProcessed = action.ticks.initial;
+	bool spawnAction(actionData_t action, ActionSystem* actionSystem_ptr, uint32_t tick) {		
 
 		return actionSystem_ptr->getDataDirectPointer()->addActionData(action);
 	}
@@ -108,11 +104,17 @@ namespace AS{
 		}
 	}
 
+	
 	void setActionDetails(float score, float whyBother, float JustDoIt,
 		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 							                 WarningsAndErrorsCounter* errorsCounter_ptr) {
-	
-		//First we change the target info so it stores the target's actual ID:
+		
+		//We're creating the action, so:
+		action_ptr->ids.phase = 0;
+		action_ptr->phaseTiming.elapsed = 0;
+		//the phase total is set through dispatchActionDetailSetting
+
+		//Next, we change the target info so it stores the target's actual ID:
 		int agent = action_ptr->ids.origin;
 		int neighborIndexOnAgent = action_ptr->ids.target;
 
@@ -182,69 +184,45 @@ namespace AS{
 		return wtf;
 	}
 
-	//TODO: this is temporary. We'll have these for different variations, elsewehere
-	//NOTE: the stub I made makes no sense for SELF actions, but I'll ignore that
-	void setActionDetailsVarSTUB(float desiredIntensityMultiplier,
+	//This decides the attack strenght and sets action intensity accordingly.
+	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
+	//The final intensity depends on the desied intensity (stored in the action's intensity)
+	//and relative strenghts.
+	//TODO: this a placeholder / stub, mostly for load testing and some initial exploration
+	void setActionDetails_L_I_Attack(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
 		
-		//Temporary way of setting the details of an action:
 		int agent = action_ptr->ids.origin;
 		int scope = action_ptr->ids.scope;
 
 		float agentStrenght;
 		float enemyStrenght;
 
-		if (scope == (int)AS::scope::LOCAL) {
-
-			const auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent));
-			agentStrenght = state_ptr->parameters.strenght.current;
+		const auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent));
+		agentStrenght = state_ptr->parameters.strenght.current;
 			
-			int targetsIndexOnAgent = 
-					getNeighborsIndexOnLA(action_ptr->ids.target, state_ptr);
+		int targetsIndexOnAgent = 
+				getNeighborsIndexOnLA(action_ptr->ids.target, state_ptr);
 
-			if (targetsIndexOnAgent == NATURAL_RETURN_ERROR) {
-				if (action_ptr->ids.mode != (uint32_t)AS::actModes::SELF) {
-					errorsCounter_pt->incrementError(AS::errors::DS_FAILED_TO_FIND_NEIGHBORS_INDEX);
-				}
-				enemyStrenght = 0;
+		if (targetsIndexOnAgent == NATURAL_RETURN_ERROR) {
+			if (action_ptr->ids.mode != (uint32_t)AS::actModes::SELF) {
+				errorsCounter_pt->incrementError(AS::errors::DS_FAILED_TO_FIND_NEIGHBORS_INDEX);
 			}
-			else {
-				const auto& decision_ptr = dp->LAdecision_ptr->getDataCptr()->at(agent);
-				int strenghtIndex = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
-
-				enemyStrenght = 
-						decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
-			}
-		}
-		else if (scope == (int)AS::scope::GLOBAL) {
-		
-			const auto state_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agent));		
-			agentStrenght = state_ptr->parameters.LAstrenghtTotal;
-			
-			int targetsIndexOnAgent = 
-					getNeighborsIndexOnGA(action_ptr->ids.target, state_ptr);
-			
-			if (targetsIndexOnAgent == NATURAL_RETURN_ERROR) {
-				if (action_ptr->ids.mode != (uint32_t)AS::actModes::SELF) {
-					errorsCounter_pt->incrementError(AS::errors::DS_FAILED_TO_FIND_NEIGHBORS_INDEX);
-				}
-				enemyStrenght = 0;
-			}
-			else {
-				const auto& decision_ptr = dp->GAdecision_ptr->getDataCptr()->at(agent);
-				int strenghtIndex = (int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
-
-				enemyStrenght = 
-						decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
-			}
+			enemyStrenght = 0;
 		}
 		else {
-			assert(false);
+			const auto& decision_ptr = dp->LAdecision_ptr->getDataCptr()->at(agent);
+			int strenghtIndex = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
+
+			enemyStrenght = 
+					decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
 		}
 		
+		float desiredIntensity = action_ptr->details.intensity;
+
 		float attackMarginProportion = 
-			ACT_INTENS_ATTACK_MARGIN_PROPORTION * action_ptr->details.intensity;
+			ACT_INTENS_ATTACK_MARGIN_PROPORTION * desiredIntensity;
 
 		float attackSize;
 
@@ -252,27 +230,107 @@ namespace AS{
 			attackSize = enemyStrenght * (1 + attackMarginProportion);
 		}
 		else {
+			//since the agent is not as strong as the enemy and score is between 0 and 1:
+			//the attack size will be (score * strenght). This is accomplished by:
 			attackSize = 
-				agentStrenght * (action_ptr->details.intensity / (ACT_INTENSITY_SCORE_1/2.0f));
+				agentStrenght * (desiredIntensity / (ACT_INTENSITY_SCORE_1/2.0f));
 		}
 		
 		attackSize = std::clamp(attackSize, 0.0f, agentStrenght);
 		action_ptr->details.intensity = attackSize;
 
 		//More troops = longer preparation phase, which is stored on aux (in ms):
-		float effectiveAttackSize = sqrt(attackSize/DEFAULT_LA_STRENGHT);
+		double effectiveAttackSize = sqrt(attackSize/DEFAULT_LA_STRENGHT);
 
-		action_ptr->details.processingAux = 
-					ACT_BASE_ATTACK_PREP_SECS_PER_DEFAULT_STR * effectiveAttackSize;
+		double preparationTime = effectiveAttackSize *
+									ACT_BASE_ATTACK_L_I_PREP_TENTHS_OF_MS_PER_DEFAULT_STR;			                     
+
+		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
 	}
 
+	//This decides gow aggresivelly the GA will sugest LAs to attack the targeted GA:
+	//this will be set as the intensity.
+	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
+	//The final intensity depends on the desied intensity (stored in the action's intensity)
+	//and relative strenghts.
+	//TODO: this a placeholder / stub, mostly for load testing and some initial exploration
+	void setActionDetails_G_S_Attack(float desiredIntensityMultiplier,
+							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+		
+		int agent = action_ptr->ids.origin;
+		int scope = action_ptr->ids.scope;
+
+		float agentStrenght;
+		float enemyStrenght;
+
+		const auto state_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agent));		
+		agentStrenght = state_ptr->parameters.LAstrenghtTotal;
+			
+		int targetsIndexOnAgent = 
+				getNeighborsIndexOnGA(action_ptr->ids.target, state_ptr);
+			
+		if (targetsIndexOnAgent == NATURAL_RETURN_ERROR) {
+			if (action_ptr->ids.mode != (uint32_t)AS::actModes::SELF) {
+				errorsCounter_pt->incrementError(AS::errors::DS_FAILED_TO_FIND_NEIGHBORS_INDEX);
+			}
+			enemyStrenght = 0;
+		}
+		else {
+			const auto& decision_ptr = dp->GAdecision_ptr->getDataCptr()->at(agent);
+			int strenghtIndex = (int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
+
+			enemyStrenght = 
+					decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
+		}
+		
+		float desiredIntensity = action_ptr->details.intensity;
+
+		float attackMarginProportion = 
+			ACT_INTENS_ATTACK_MARGIN_PROPORTION * desiredIntensity;
+
+		float suggestionIntensity;
+
+		if (agentStrenght > enemyStrenght) {
+			suggestionIntensity = 1 + attackMarginProportion;
+		}
+		else {
+			//since the agent is not as strong as the enemy and score is between 0 and 1:
+			//the intensity will be the same as the action's score, which is given by:
+			suggestionIntensity = desiredIntensity / (ACT_INTENSITY_SCORE_1/2.0f);
+		}
+		
+		suggestionIntensity = std::clamp(suggestionIntensity, 0.0f, 
+			                             ACT_MAX_SUGESTION_INTENSITY);
+
+		action_ptr->details.intensity = suggestionIntensity;
+
+		double preparationTime = suggestionIntensity *
+									ACT_ATTACK_G_S_SUGESTION_PREP_TENTHS_OF_MS_PER_INTENSITY;
+
+		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
+	}
+
+	//Takes an action and dispatches it to the appropriate function to set it's details
+	//This will set: phaseTime.total, details.intensity and details.aux, as needed
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
 
-		//We'll need a different dispatcher for each unique variation : )
-		
-		//BUT for now we set all actions details with a single temp function:
-		setActionDetailsVarSTUB(desiredIntensityMultiplier, action_ptr, dp, errorsCounter_pt);
+		//The idea is for this to be pretty much a dispatcher:
+		//it validates that the variation exists (or raises an error), then dispatches
+		//to a function which sets intensity and if processing aux for that variation
+
+		//TODO: the validation, plus a couple more stubs (and review the GS_ATTACK stub)
+
+		//FOR NOW: we treat all actions as if they were a L_I or G_S attack:
+		if (action_ptr->ids.scope == (uint32_t)AS::scope::LOCAL) {
+			setActionDetails_L_I_Attack(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+		}
+		else { //GLOBAL
+			setActionDetails_G_S_Attack(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+		}
 	}
 }

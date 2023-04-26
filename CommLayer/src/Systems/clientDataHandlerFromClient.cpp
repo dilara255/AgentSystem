@@ -243,7 +243,7 @@ namespace CL{
 
 //ACTION_TICK_INFO
 
-	bool CL_API ClientData::ActionTickInfoHandler::changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::tickInfo_t newValue)
+	bool CL_API ClientData::ActionTickInfoHandler::changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::timeInfo_t newValue)
 		{
 			return false;
 		}

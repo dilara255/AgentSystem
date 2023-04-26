@@ -406,7 +406,7 @@ int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE
     
     for (int i = 0; i < totalGlobalActions; i++) {
         resultAux = fprintf(fp, GAaction, i, i / (maxActions),
-                                    actionID, DEFAULT_FIRST_TICK, DEFAULT_LAST_TICK,
+                                    actionID, 0, DEFAULT_PHASE_TOTAL,
                                     DEFAULT_INTENSITY, DEFAULT_ACTION_AUX);
         if (resultAux < 0) result = 0;
     }
@@ -421,7 +421,7 @@ int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE
 
     for (int i = 0; i < totalLocalActions; i++) {
         resultAux = fprintf(fp, LAaction, i, i / (maxActions),
-                                    actionID, DEFAULT_FIRST_TICK, DEFAULT_LAST_TICK,
+                                    actionID, 0, DEFAULT_PHASE_TOTAL,
                                     DEFAULT_INTENSITY, DEFAULT_ACTION_AUX);
         if (resultAux < 0) result = 0;
     }
@@ -690,7 +690,8 @@ bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         if (!ap->getAction(AS::scope::GLOBAL, i, &action)) { return false; }
 
         resultAux = fprintf(fp, GAaction, i, i / (pp->maxActions),
-                                action.ids, action.ticks.initial, action.ticks.lastProcessed,
+                                action.ids, action.phaseTiming.elapsed, 
+                                action.phaseTiming.total,
                                 action.details.intensity, action.details.processingAux);
         if (resultAux < 0) result = 0;
     }
@@ -705,7 +706,8 @@ bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         ap->getAction(AS::scope::LOCAL, i, &action);
 
         resultAux = fprintf(fp, LAaction, i, i / (pp->maxActions),
-                                action.ids, action.ticks.initial, action.ticks.lastProcessed,
+                                action.ids, action.phaseTiming.elapsed, 
+                                action.phaseTiming.total,
                                 action.details.intensity, action.details.processingAux);
         if (resultAux < 0) result = 0;
     }
