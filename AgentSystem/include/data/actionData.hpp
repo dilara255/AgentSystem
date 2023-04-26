@@ -18,6 +18,9 @@ This file:
 
 namespace AS {
 
+	enum class scope { LOCAL, GLOBAL,
+		               TOTAL};
+
 	enum class actCategories { STRENGHT, RESOURCES, ATTACK, GUARD,
 						       SPY, SABOTAGE, DIPLOMACY, CONQUEST,
 							   TOTAL };
@@ -27,8 +30,9 @@ namespace AS {
 		                  TOTAL };
 	//TODO: brief description of each
 
-	enum class scope { LOCAL, GLOBAL,
-		               TOTAL};
+	enum class actPhases { PREPARATION, TRAVEL, EFFECT, RETURN, CONCLUSION,
+		                   TOTAL };
+	//TODO: brief description of each
 
 	//Wether action variation - ie: strenght, immediate, local - exists, and it's "kind":
     //NOT: "no". SPC: "yes, and is specific to this action". STD: "yes, and is the standard".

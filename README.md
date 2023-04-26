@@ -10,8 +10,8 @@ Progress overview (may be a few days old):
 v0.1   -Project scafolding (done);<br />
 v0.2   -Basic data structures, loading and exporting (done);<br />
 v0.3   -Data manipulation (sytem done, but not implemented for all fields);<br />
-v0.4   -Runtime loop (90% done);<br />
-v0.5.1 -Simplified decisions and actions (85% done);<br />
+v0.4   -Runtime loop (95% done);<br />
+v0.5.1 -Simplified decisions and actions (90% done);<br />
 v0.5.4 -Inspection and tooling;<br />
 v0.7 -Vertical Slice (refined decision making and actions for a couple cases);<br />
 v1.0 -Actual behaviours, targeted prototype and final testing.
