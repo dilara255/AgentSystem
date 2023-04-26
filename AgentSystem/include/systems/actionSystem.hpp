@@ -288,6 +288,20 @@ namespace AS {
 		static constexpr int totalPossible() {
 			return (int)AS::actCategories::TOTAL*(int)AS::actModes::TOTAL*(int)AS::scope::TOTAL;
 		}
+
+		//These are the data structures to hold the functions which will process Actions:
+		typedef std::function<void(actionData_t*)> onSpawnFunction_t;
+		typedef std::function<uint32_t(uint32_t, actionData_t*)> tickFunction_t;
+		typedef std::function<void(uint32_t, actionData_t*)> phaseEndFunction_t;
+
+		typedef struct variationProcessingFunctions_st {
+			onSpawnFunction_t onSpawm;
+			tickFunction_t onTick[(int)actPhases::TOTAL];
+			tickFunction_t onEnd[(int)actPhases::TOTAL];
+		} variationProcessingFunctions_t;
+
+		typedef variationProcessingFunctions_t modeProcessingFunctions_t[(int)actModes::TOTAL];
+		typedef variationProcessingFunctions_t actionProcessingFunctions_t[(int)actCategories::TOTAL];
 	};
 
 	namespace Decisions {
