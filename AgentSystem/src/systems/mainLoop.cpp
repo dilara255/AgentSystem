@@ -191,11 +191,12 @@ void step(AS::chopControl_st chopControl, float timeMultiplier, float decisionTi
 	int numGAs = chopControl.quantityEffectiveGAs;
 
 
-	AS::stepActions(AS::g_actionSystem_ptr, numLAs, numGAs, timeMultiplier, 
-		                      AS::g_errorsCounter_ptr, AS::g_prnServer_ptr);
+	AS::stepActions(AS::g_actionSystem_ptr, timeMultiplier, AS::g_errorsCounter_ptr, 
+		                     AS::g_agentDataControllerPtrs_ptr, AS::g_prnServer_ptr);
 
 	bool makeDecisions = AS::g_currentNetworkParams_ptr->makeDecisions;
 	uint32_t tick = (uint32_t)AS::g_currentNetworkParams_ptr->mainLoopTicks;
+	
 	AS::stepAgents(chopControl.LAdecisionsToMake, chopControl.GAdecisionsToMake, 
                       AS::g_agentDataControllerPtrs_ptr, AS::g_actionSystem_ptr,
 						timeMultiplier, numLAs, numGAs, AS::g_errorsCounter_ptr, 

@@ -248,7 +248,7 @@ namespace AS{
 		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
 	}
 
-	//This decides gow aggresivelly the GA will sugest LAs to attack the targeted GA:
+	//This decides how aggresivelly the GA will sugest LAs to attack the targeted GA:
 	//this will be set as the intensity.
 	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
 	//The final intensity depends on the desied intensity (stored in the action's intensity)
