@@ -134,6 +134,9 @@ and data sizes static.
 #define ACT_WHY_BOTHER_THRESOLD (0.2f)
 #define ACT_JUST_DO_IT_THRESOLD (0.8f)
 
+//Notion Calculation:
+#define NOTION_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY (0.8f)
+
 //Actions (general):
 #define PRNS_PER_ACT 5
 #define MAX_ACT_PRNS_PER_AGENT (PRNS_PER_ACT * MAX_ACTIONS_PER_AGENT)
@@ -146,11 +149,13 @@ and data sizes static.
 
 //Spefic Action details:
 #define ACT_INTENS_ATTACK_MARGIN_PROPORTION (0.2f)
-#define ACT_BASE_ATTACK_PREP_SECS_PER_DEFAULT_STR (10.0f)
+#define ACT_MAX_SUGESTION_INTENSITY (3.0f)
+#define ACT_BASE_ATTACK_L_I_PREP_SECS_PER_DEFAULT_STR (10.0f)
+#define ACT_ATTACK_G_S_SUGESTION_PREP_SECS_PER_INTENSITY (10.0f)
 
-//Notion Calculation:
-#define NOTION_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY (0.8f)
-
+//Spefic Action details (calculated from the above):
+#define ACT_BASE_ATTACK_L_I_PREP_TENTHS_OF_MS_PER_DEFAULT_STR (ACT_BASE_ATTACK_L_I_PREP_SECS_PER_DEFAULT_STR * TENTHS_OF_MS_IN_A_SECOND)
+#define ACT_ATTACK_G_S_SUGESTION_PREP_TENTHS_OF_MS_PER_INTENSITY (ACT_ATTACK_G_S_SUGESTION_PREP_SECS_PER_INTENSITY * TENTHS_OF_MS_IN_A_SECOND)
 //*************************************************************************
 
 //--> DEFAULT values for new network creation:
@@ -177,8 +182,7 @@ and data sizes static.
 #define DEFAULT_LA_OFFSET (-0.1f)
 #define DEFAULT_REINFORCEMENT (0.1f)
 #define DEFAULT_ACTION_ID 0
-#define DEFAULT_FIRST_TICK 853
-#define DEFAULT_LAST_TICK 1
+#define DEFAULT_PHASE_TOTAL 853
 #define DEFAULT_INTENSITY (-3.0f)
 #define DEFAULT_ACTION_AUX (99.0f)
 #define DEFAULT_REQUESTS (5.5f)

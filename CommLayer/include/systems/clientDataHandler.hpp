@@ -202,7 +202,7 @@ namespace CL::ClientData {
 		class ActionTickInfoHandler: public BaseSubHandler {
 		public:
 			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
-			bool CL_API changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::tickInfo_t newValue);
+			bool CL_API changeAll(bool isGlobal, uint32_t agentID, uint32_t actionID, AS::timeInfo_t newValue);
 		
 			//(AS::ids_t)agentID. origin -> agent, target -> action, scope -> (int)"bool isGlobal"
 			bool CL_API changeInitialTo(bool isGlobal, uint32_t agentID, uint32_t actionID, uint32_t newValue);
