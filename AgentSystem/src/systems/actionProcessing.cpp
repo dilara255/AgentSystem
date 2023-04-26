@@ -4,7 +4,7 @@
 *		-> See actionPreProcessing.cpp
 * 
 * Each phase of each action variaton has two related functions:
-* - tick, which updates the remaining time and applies any other continuous change;
+* - tick, which updates the remaining phase time and applies any other continuous change;
 * - endPhase, which applies any end-of-phase effects and sets the action to the next phase.
 * 
 * -> g_processingFunctions holds which funtions will be used for each phase of each variation.
@@ -18,11 +18,11 @@
 #include "miscStdHeaders.h"
 
 #include "systems/actionSystem.hpp"
-#include "data/agentDataStructures.hpp"
-
-#include "data/agentDataControllers.hpp"
-
+#include "systems/PRNserver.hpp"
 #include "systems/warningsAndErrorsCounter.hpp"
+
+#include "data/agentDataStructures.hpp"
+#include "data/agentDataControllers.hpp"
 
 //These are forward declarations of the actual processing functions
 //(so they can be used on initializeProcessingFunctions, bellow)
@@ -45,34 +45,41 @@ namespace AS {
 //Here's the meat of this file: entry-point, initialization and processing actions
 namespace AS {
 
-	static ActionVariations::variationProcessingFunctions_t g_processingFunctions;
+	static ActionVariations::variationProcessingFunctions_t g_processingFunctionsLA;
+	static ActionVariations::variationProcessingFunctions_t g_processingFunctionsGA;
 	static bool g_processingFunctionsInitialized = false;
 
 	static dataControllerPointers_t* agentDataControllers_ptr = NULL;
 	static ActionSystem* g_actionSystem_ptr = NULL; 
 	static WarningsAndErrorsCounter* g_errors_ptr = NULL;
+	static PRNserver* g_prnServer_ptr = NULL;
 
 	//This is the ONLY entrypoint for this file.
 	//Here we set the pointers to the system's data (globals on this file and scope).
 	//After that, we forward the action to the appropriate function.
 	//In case the processing actions structure is not initialized, this also initializes it.
-	void dispatchActionProcessing(actionData_t* action_ptr, uint32_t timeElapsed,
+	void dispatchActionProcessing(actionData_t* action_ptr, float timeMultiplier,
 								  dataControllerPointers_t* agentDataControllers_ptr,
-								  ActionSystem* actionSystem_ptr,
+								  ActionSystem* actionSystem_ptr, PRNserver* prnServer_ptr,
 								  WarningsAndErrorsCounter* errors_ptr) {
 
-		//First we check and set the system pointers:
-		if ((action_ptr == NULL) || (actionSystem_ptr == NULL)
-			|| (agentDataControllers_ptr == NULL) || (errors_ptr == NULL)) {
-			
-			//taca erro
+		if (action_ptr == NULL) {
+			errors_ptr->incrementError(AS::errors::AC_RECEIVED_BAD_ACTION_PTR);
 			return;
 		}
+
+		if (action_ptr->ids.active == 0) {
+			//nothing to do here:
+			return;
+		}
+
+		//stepActions checks these before we get here, so we trust the system pointers:
 		agentDataControllers_ptr = agentDataControllers_ptr;
 		g_actionSystem_ptr = actionSystem_ptr;
-		g_errors_ptr = errors_ptr;
+		g_prnServer_ptr = prnServer_ptr;
+		g_errors_ptr = errors_ptr;		
 
-		//Then we make sure the processing functions are initialized:
+		//we do need to make sure the processing functions are initialized:
 		if (!g_processingFunctionsInitialized) {
 
 			initializeProcessingFunctions();
@@ -81,7 +88,9 @@ namespace AS {
 			}
 		}
 
-		//Finally, we dispatch the action processing 
+		//timeMultiplier has to be changed into a uint32_tenthsOfMilli_t for processing:
+
+		//Finally, we dispatch the action processing:
 		//(loop pq pode ir várias fases de uma vez)
 	}
 

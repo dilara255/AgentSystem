@@ -27,6 +27,7 @@ namespace AS {
 					   DS_NEIGHBOR_MARKED_SELF_WRONG_MODE_ON_LEAST_HARM,
 					   DS_NEIGHBOR_MARKED_SELF_WRONG_MODE_ON_TRY_BEST,
 		               DS_FAILED_TO_FIND_NEIGHBORS_INDEX,
+					   AC_RECEIVED_BAD_SYSTEM_POINTERS, AC_RECEIVED_BAD_ACTION_PTR,
 		               TOTAL};
 	//PS: Preparation Step; RS: Receive/Send; DS: Decision Step; AC: Action; AS: Agent Step;
 	//DP: Diplomacy; DS: Decision Step

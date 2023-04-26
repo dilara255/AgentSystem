@@ -14,8 +14,8 @@ This file declares the classes:
 
 #include "miscStdHeaders.h"
 
-#include "../include/data/actionData.hpp"
 #include "../include/network/parameters.hpp"
+#include "../include/data/actionData.hpp"
 
 namespace AS {	
 
@@ -89,7 +89,7 @@ namespace AS {
 		bool initializeDataController(const networkParameters_t* pp,
 			                     const ActionDataController** actionDataController_cptr_ptr);
 
-		int stepActions(float timeMultiplier);
+		void stepActions(ActionSystem* ap, float timeMultiplier);
 
 		ActionDataController* getDataDirectPointer() {
 			if(!data.isInitialized()){return NULL;}
