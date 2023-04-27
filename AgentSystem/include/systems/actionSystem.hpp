@@ -297,11 +297,11 @@ namespace AS {
 		typedef struct variationProcessingFunctions_st {
 			onSpawnFunction_t onSpawm;
 			tickFunction_t onTick[(int)actPhases::TOTAL];
-			tickFunction_t onEnd[(int)actPhases::TOTAL];
+			phaseEndFunction_t onEnd[(int)actPhases::TOTAL];
 		} variationProcessingFunctions_t;
 
 		typedef variationProcessingFunctions_t modeProcessingFunctions_t[(int)actModes::TOTAL];
-		typedef variationProcessingFunctions_t actionProcessingFunctions_t[(int)actCategories::TOTAL];
+		typedef modeProcessingFunctions_t actionProcessingFunctions_t[(int)actCategories::TOTAL];
 	};
 
 	namespace Decisions {
