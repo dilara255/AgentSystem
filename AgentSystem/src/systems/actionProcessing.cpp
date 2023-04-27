@@ -44,9 +44,9 @@ namespace AS {
 
 //Here's the meat of this file: entry-point, initialization and processing actions
 namespace AS {
-
-	static ActionVariations::variationProcessingFunctions_t g_processingFunctionsLA;
-	static ActionVariations::variationProcessingFunctions_t g_processingFunctionsGA;
+	
+	static ActionVariations::actionProcessingFunctions_t g_processingFunctionsLA;
+	static ActionVariations::actionProcessingFunctions_t g_processingFunctionsGA;
 	static bool g_processingFunctionsInitialized = false;
 
 	static dataControllerPointers_t* agentDataControllers_ptr = NULL;
@@ -94,13 +94,54 @@ namespace AS {
 		//(loop pq pode ir várias fases de uma vez)
 	}
 
+	void setProcessingFunctionsToDefaults();
+
 	//This is where the functions used for each phase of each action variation
 	//are selected. Changing this will change their behavior.
 	void initializeProcessingFunctions() {
 
-		//initialize
+		setProcessingFunctionsToDefaults();		
+
+		g_processingFunctionsInitialized = true;
 	}
 
+	//Sets all processing functions to default versions
+	void setProcessingFunctionsToDefaults(){
+		for (int cat = 0; cat < (int)actCategories::TOTAL; cat++) {
+			for (int mode = 0; mode < (int)actModes::TOTAL; mode++) {
+
+				g_processingFunctionsLA[cat][mode].onSpawm = defaultOnSpawn;
+				g_processingFunctionsGA[cat][mode].onSpawm = defaultOnSpawn;
+
+				for (int phase = 0; phase < (int)actPhases::TOTAL; phase++) {
+					
+					g_processingFunctionsLA[cat][mode].onTick[phase] = defaultTick;
+					g_processingFunctionsGA[cat][mode].onTick[phase] = defaultTick;
+				}
+
+				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::PREPARATION] = 
+																		defaultPrepEnd;
+				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::PREPARATION] = 
+																		defaultPrepEnd;
+				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::TRAVEL] = 
+																		defaultTravelEnd;
+				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::TRAVEL] = 
+																		defaultTravelEnd;
+				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::EFFECT] = 
+																		defaultEffectEnd;
+				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::EFFECT] = 
+																		defaultEffectEnd;
+				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::RETURN] = 
+																		defaultReturnEnd;
+				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::RETURN] = 
+																		defaultReturnEnd;
+				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::CONCLUSION] = 
+																		defaultConclusionEnd;
+				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::CONCLUSION] = 
+																		defaultConclusionEnd;
+			}
+		}
+	}
 
 	void defaultOnSpawn(actionData_t* action_ptr) {
 
