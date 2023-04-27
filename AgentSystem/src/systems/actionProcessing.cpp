@@ -16,6 +16,7 @@
 /***********************************************************************/
 
 #include "miscStdHeaders.h"
+#include "miscDefines.hpp"
 
 #include "systems/actionSystem.hpp"
 #include "systems/PRNserver.hpp"
@@ -35,18 +36,17 @@ namespace AS {
 	uint32_t defaultTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 	void defaultPhaseEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 
-	void defaultPrepEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
-	void defaultTravelEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
-	void defaultEffectEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
-	void defaultReturnEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
-	void defaultConclusionEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
+	void defaultPrepEnd(actionData_t* action_ptr);
+	void defaultTravelEnd(actionData_t* action_ptr);
+	void defaultEffectEnd(actionData_t* action_ptr);
+	void defaultReturnEnd(actionData_t* action_ptr);
+	void defaultConclusionEnd(actionData_t* action_ptr);
 }
 
 //Here's the meat of this file: entry-point, initialization and processing actions
 namespace AS {
 	
-	static ActionVariations::actionProcessingFunctions_t g_processingFunctionsLA;
-	static ActionVariations::actionProcessingFunctions_t g_processingFunctionsGA;
+	static ActionVariations::actionProcessingFunctions_t g_processingFunctions[(int)AS::scope::TOTAL];
 	static bool g_processingFunctionsInitialized = false;
 
 	static dataControllerPointers_t* agentDataControllers_ptr = NULL;
@@ -88,10 +88,33 @@ namespace AS {
 			}
 		}
 
-		//timeMultiplier has to be changed into a uint32_tenthsOfMilli_t for processing:
-
+		//timeMultiplier is in seconds, and has to be changed into a uint32_tenthsOfMilli_t:
+		double tenthsOfMillisThisStep = (double)timeMultiplier * TENTHS_OF_MS_IN_A_SECOND;
+		uint32_tenthsOfMilli_t timeElapsedThisStep = (uint32_t)tenthsOfMillisThisStep;	
+		
 		//Finally, we dispatch the action processing:
-		//(loop pq pode ir várias fases de uma vez)
+		int cat = action_ptr->ids.category;
+		int mode = action_ptr->ids.mode;
+		int phase = action_ptr->ids.phase;
+		int scope = action_ptr->ids.scope;
+		uint32_tenthsOfMilli_t timeRemainingToProcess = timeElapsedThisStep;
+
+		//since a phase may end and spawn another phase, this is done in a loop:
+		while ( (timeRemainingToProcess > 0) && (action_ptr->ids.active == 1) ) {
+
+			//first we tick the action and receive any time still to be processed:
+			timeRemainingToProcess = 
+				g_processingFunctions[scope][cat][mode].onTick[phase](timeRemainingToProcess,
+					                                                              action_ptr);
+			//if that is larger then zero, we've reached a phase end and must process that
+			if (timeRemainingToProcess > 0) {
+				//which will do any end-of-phase effect and advance phase or deactivate action
+				g_processingFunctions[scope][cat][mode].onEnd[phase](action_ptr);
+				//since there's timeRemainingToProcess, we'll loop after this
+			}
+		}	
+		
+		//Done, the action was processed until it consumed all the step time or was deactivated
 	}
 
 	void setProcessingFunctionsToDefaults();
@@ -106,38 +129,41 @@ namespace AS {
 	}
 
 	//Sets all processing functions to default versions
+	int local = (int)AS::scope::LOCAL;
+	int global = (int)AS::scope::GLOBAL;
+
 	void setProcessingFunctionsToDefaults(){
 		for (int cat = 0; cat < (int)actCategories::TOTAL; cat++) {
 			for (int mode = 0; mode < (int)actModes::TOTAL; mode++) {
 
-				g_processingFunctionsLA[cat][mode].onSpawm = defaultOnSpawn;
-				g_processingFunctionsGA[cat][mode].onSpawm = defaultOnSpawn;
+				g_processingFunctions[local][cat][mode].onSpawm = defaultOnSpawn;
+				g_processingFunctions[global][cat][mode].onSpawm = defaultOnSpawn;
 
 				for (int phase = 0; phase < (int)actPhases::TOTAL; phase++) {
 					
-					g_processingFunctionsLA[cat][mode].onTick[phase] = defaultTick;
-					g_processingFunctionsGA[cat][mode].onTick[phase] = defaultTick;
+					g_processingFunctions[local][cat][mode].onTick[phase] = defaultTick;
+					g_processingFunctions[global][cat][mode].onTick[phase] = defaultTick;
 				}
 
-				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::PREPARATION] = 
+				g_processingFunctions[local][cat][mode].onEnd[(int)actPhases::PREPARATION] = 
 																		defaultPrepEnd;
-				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::PREPARATION] = 
+				g_processingFunctions[global][cat][mode].onEnd[(int)actPhases::PREPARATION] = 
 																		defaultPrepEnd;
-				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::TRAVEL] = 
+				g_processingFunctions[local][cat][mode].onEnd[(int)actPhases::TRAVEL] = 
 																		defaultTravelEnd;
-				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::TRAVEL] = 
+				g_processingFunctions[global][cat][mode].onEnd[(int)actPhases::TRAVEL] = 
 																		defaultTravelEnd;
-				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::EFFECT] = 
+				g_processingFunctions[local][cat][mode].onEnd[(int)actPhases::EFFECT] = 
 																		defaultEffectEnd;
-				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::EFFECT] = 
+				g_processingFunctions[global][cat][mode].onEnd[(int)actPhases::EFFECT] = 
 																		defaultEffectEnd;
-				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::RETURN] = 
+				g_processingFunctions[local][cat][mode].onEnd[(int)actPhases::RETURN] = 
 																		defaultReturnEnd;
-				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::RETURN] = 
+				g_processingFunctions[global][cat][mode].onEnd[(int)actPhases::RETURN] = 
 																		defaultReturnEnd;
-				g_processingFunctionsLA[cat][mode].onEnd[(int)actPhases::CONCLUSION] = 
+				g_processingFunctions[local][cat][mode].onEnd[(int)actPhases::CONCLUSION] = 
 																		defaultConclusionEnd;
-				g_processingFunctionsGA[cat][mode].onEnd[(int)actPhases::CONCLUSION] = 
+				g_processingFunctions[global][cat][mode].onEnd[(int)actPhases::CONCLUSION] = 
 																		defaultConclusionEnd;
 			}
 		}
@@ -152,32 +178,32 @@ namespace AS {
 		return 0;
 	}
 
-	void defaultPhaseEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
+	void defaultPhaseEnd(actionData_t* action_ptr) {
 
 	}
 
-	void defaultPrepEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
+	void defaultPrepEnd(actionData_t* action_ptr) {
 
-		defaultPhaseEnd(tickTenthsOfMs, action_ptr);
+		defaultPhaseEnd(action_ptr);
 	}
 
-	void defaultTravelEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
+	void defaultTravelEnd(actionData_t* action_ptr) {
 
-		defaultPhaseEnd(tickTenthsOfMs, action_ptr);
+		defaultPhaseEnd(action_ptr);
 	}
 
-	void defaultEffectEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
+	void defaultEffectEnd(actionData_t* action_ptr) {
 
-		defaultPhaseEnd(tickTenthsOfMs, action_ptr);
+		defaultPhaseEnd(action_ptr);
 	}
 
-	void defaultReturnEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
+	void defaultReturnEnd(actionData_t* action_ptr) {
 
-		defaultPhaseEnd(tickTenthsOfMs, action_ptr);
+		defaultPhaseEnd(action_ptr);
 	}
 
-	void defaultConclusionEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
+	void defaultConclusionEnd(actionData_t* action_ptr) {
 
-		defaultPhaseEnd(tickTenthsOfMs, action_ptr);
+		defaultPhaseEnd(action_ptr);
 	}
 }
