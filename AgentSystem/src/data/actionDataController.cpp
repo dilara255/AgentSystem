@@ -14,6 +14,8 @@ per agent, so the size of all data structures is fixed for a given network.
 #include "data/agentDataControllers.hpp"
 #include "systems/actionSystem.hpp"
 
+#include "data/dataMisc.hpp"
+
 namespace AS {
 	bool ActionSystem::initializeDataController(const networkParameters_t* pp,
 								const ActionDataController** actionDataController_cptr_ptr) {
@@ -59,15 +61,15 @@ namespace AS {
 		dataLAs.reserve(m_numberLAs * m_maxActionsPerAgent);
 		dataGAs.reserve(m_numberGAs * m_maxActionsPerAgent);
 
-		actionData_t emptyAction;
-		emptyAction.ids.slotIsUsed = 0;
+		actionData_t emptyLocalAction = AS::getDefaultAction(AS::scope::LOCAL);
+		actionData_t emptyGlobalAction = AS::getDefaultAction(AS::scope::GLOBAL);
 
 		for (int i = 0; i < m_maxActionsPerAgent; i++) {
 			for (int j = 0; j < m_numberLAs; j++) {
-				dataLAs.push_back(emptyAction);
+				dataLAs.push_back(emptyLocalAction);
 			}
 			for (int j = 0; j < m_numberGAs; j++) {
-				dataGAs.push_back(emptyAction);
+				dataGAs.push_back(emptyGlobalAction);
 			}
 		}
 

@@ -2,11 +2,9 @@
 
 #include "data/dataMisc.hpp"
 
-#include "data/agentDataStructures.hpp"
-
 //Returns neighbor's index on this agent's state data. Returns NATURAL_RETURN_ERROR on failure
 //WARNING: WILL fail if agent is passed to itlself (agentID = neighborID) 
-AS_API int AS::getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_ptr) {
+int AS::getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_ptr) {
 
 	int totalNeighbors = 
 			ThisState_ptr->connectedGAs.howManyAreOn();
@@ -27,7 +25,7 @@ AS_API int AS::getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* This
 
 //Returns neighbor's index on this agent's state data. Returns NATURAL_RETURN_ERROR on failure
 //WARNING: WILL fail if agent is passed to itlself (agentID = neighborID)
-AS_API int AS::getNeighborsIndexOnLA(int neighborID, const LA::stateData_t* ThisState_ptr) {
+int AS::getNeighborsIndexOnLA(int neighborID, const LA::stateData_t* ThisState_ptr) {
 
 	int totalNeighbors = 
 			ThisState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
@@ -155,4 +153,29 @@ bool AS::defaultNetworkParameters(networkParameters_t* destination) {
 	destination->makeDecisions = DEFAULT_SYSTEM_WIDE_PROCESS_ACTIONS;
 	
 	return true;
+}
+
+//WARNING: BUG: this will break on platforms with different endian-nes due to union abuse
+//TODO-CRITICAL: FIX
+AS::actionData_t AS::getDefaultAction(AS::scope scope) {
+
+	actionData_t data;
+	
+	data.details.intensity = 0.0f;
+	data.details.processingAux = 0.0f;
+	data.phaseTiming.elapsed = 0;
+	data.phaseTiming.total = 0;
+	
+	union ids_u {
+		AS::ids_t data;
+		uint32_t allFields;
+	};
+	union ids_u ids;
+
+	ids.allFields = 0;
+	data.ids = ids.data;
+
+	data.ids.scope = (uint32_t)scope;
+	
+	return data;
 }

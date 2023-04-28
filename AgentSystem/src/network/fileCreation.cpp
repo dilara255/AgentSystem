@@ -26,6 +26,8 @@ reevaluated once the actual format and save system needs are known.
 #include "network/parameters.hpp"
 #include "network/fileFormat.hpp"
 
+#include "data/dataMisc.hpp"
+
 #include "fileHelpers.h"
 #include "prng.hpp"
 
@@ -399,15 +401,13 @@ int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE
 
     int totalGlobalActions = (numberGAs - 1) * maxActions;
 
-    AS::ids_t actionID; //this is a bitfield
-    uint32_t* actionID_ptr = (uint32_t*)&actionID;
-    *actionID_ptr = 0; //makes sure sampleID is all zeroes to start
-    actionID.scope = (int)AS::scope::GLOBAL; //turns the scope bit to global
-    
+    AS::actionData_t action = AS::getDefaultAction(AS::scope::GLOBAL);
+        
     for (int i = 0; i < totalGlobalActions; i++) {
         resultAux = fprintf(fp, GAaction, i, i / (maxActions),
-                                    actionID, 0, DEFAULT_PHASE_TOTAL,
-                                    DEFAULT_INTENSITY, DEFAULT_ACTION_AUX);
+                            action.ids, action.phaseTiming.elapsed, 
+                            action.phaseTiming.total, action.details.intensity,
+                            action.details.processingAux);
         if (resultAux < 0) result = 0;
     }
 
@@ -416,16 +416,16 @@ int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE
     
     int totalLocalActions = (numberLAs)*maxActions;
 
-    *actionID_ptr = 0; //makes sure sampleID is all zeroes to start
-    actionID.scope = (uint32_t)AS::scope::LOCAL; //turns the scope bit to local
+    action = AS::getDefaultAction(AS::scope::LOCAL);
 
     for (int i = 0; i < totalLocalActions; i++) {
         resultAux = fprintf(fp, LAaction, i, i / (maxActions),
-                                    actionID, 0, DEFAULT_PHASE_TOTAL,
-                                    DEFAULT_INTENSITY, DEFAULT_ACTION_AUX);
+                            action.ids, action.phaseTiming.elapsed, 
+                            action.phaseTiming.total, action.details.intensity,
+                            action.details.processingAux);
         if (resultAux < 0) result = 0;
     }
-
+   
     return result;
 }
 
