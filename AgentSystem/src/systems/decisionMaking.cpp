@@ -32,7 +32,8 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 					 const float secondsSinceLastDecisionStep, int currentActions) {
 	
 	AS::actionData_t nullAction;
-	nullAction.ids.active = 0;
+	nullAction.ids.slotIsUsed = 0; //not an actual action
+	nullAction.ids.active = 0; //just to be sure	
 
 	if (!dp->LAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return nullAction;
@@ -66,10 +67,10 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	//TODO: add more sanity checks
 	if ( (choice.ids.target >= (uint32_t)neighbors) 
 		  && (choice.ids.mode != (uint32_t)AS::actModes::SELF) 
-		  && (choice.ids.active == 1) ) {
+		  && (choice.ids.slotIsUsed == 1) ) {
 		
 		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_LA_TARGET);
-		choice.ids.active = 0; //invalidate choice so we don't blow stuff up
+		choice.ids.slotIsUsed = 0; //invalidate choice so we don't blow stuff up
 	}
 
 	return choice;
@@ -87,7 +88,7 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 				 const float secondsSinceLastDecisionStep, int currentActions) {
 
 	AS::actionData_t nullAction;
-	nullAction.ids.active = 0;
+	nullAction.ids.slotIsUsed = 0;
 
 	if (!dp->GAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return nullAction;
@@ -121,10 +122,10 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 	//TODO: add more sanity checks
 	if ( (choice.ids.target >= (uint32_t)neighbors)
 		  && (choice.ids.mode != (uint32_t)AS::actModes::SELF)
-		  && (choice.ids.active == 1) ) {
+		  && (choice.ids.slotIsUsed == 1) ) {
 		
 		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_GA_TARGET);
-		choice.ids.active = 0; //invalidate choice so we don't blow stuff up
+		choice.ids.slotIsUsed = 0; //invalidate choice so we don't blow stuff up
 	}
 
 	return choice;
@@ -275,12 +276,13 @@ AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr,
 	auto decision_ptr = &(allScores_ptr->allScores[i].overallUtility);
 	if (chose) {
 		choice.ids.active = 1;
+		choice.ids.slotIsUsed = 1;
 
 		if ( (decision_ptr->neighbor == NEIGHBOR_ID_FOR_SELF)
 			  && (decision_ptr->actMode != (int)AS::actModes::SELF) ) {
 
 			errorsCounter_ptr->incrementError(AS::errors::DS_NEIGHBOR_MARKED_SELF_WRONG_MODE_ON_LEAST_HARM);
-			choice.ids.active = 0; //invalidate
+			choice.ids.slotIsUsed = 0; //invalidate
 		}
 
 		choice.ids.category = decision_ptr->actCategory;
@@ -291,7 +293,7 @@ AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr,
 		choice.details.intensity = decision_ptr->score;
 	}
 	else {
-		choice.ids.active = 0; //Marks as "doNothing"
+		choice.ids.slotIsUsed = 0; //Marks as "doNothing"
 	}
 
 	return choice;
@@ -426,6 +428,7 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 	                                  AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 	AS::actionData_t chosenAction;
+	chosenAction.ids.slotIsUsed = 0;
 	chosenAction.ids.active = 0;
 
 	//We'll try to make a choice. If the most desired action passes a treshold, we do that
@@ -480,14 +483,15 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 		//the best score is good enough, so let's build and return that action!
 		AS::actionData_t choice;
 		auto decision_ptr = &(allScores_ptr->allScores[0].overallUtility);
-		                    
+		                  
+		choice.ids.slotIsUsed = 1; //we do expect to choose something
 		choice.ids.active = 1;
 
 		if ( (decision_ptr->neighbor == NEIGHBOR_ID_FOR_SELF) 
 			  && (decision_ptr->actMode != (int)AS::actModes::SELF) ) {
 				
 			errorsCounter_ptr->incrementError(AS::errors::DS_NEIGHBOR_MARKED_SELF_WRONG_MODE_ON_TRY_BEST);
-			choice.ids.active = 0; //invalidate
+			choice.ids.slotIsUsed = 0; //invalidate
 		}
 
 		choice.ids.category = decision_ptr->actCategory;
@@ -528,8 +532,8 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope, errorsCounter_ptr);
 	}
 	
-	//If we choose to doNothing, chosenAction.ids.active will be 0, else, 1, so:
-	if(chosenAction.ids.active) {
+	//If we choose to doNothing, chosenAction.ids.slotIsUsed will be 0, else, 1, so:
+	if(chosenAction.ids.slotIsUsed) {
 
 		setActionDetails(chosenAction.details.intensity, whyBother, justDoIt, 
 			                            &chosenAction, dp, errorsCounter_ptr);

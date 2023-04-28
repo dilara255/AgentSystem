@@ -139,11 +139,11 @@ bool AS::defaultNetworkParameters(networkParameters_t* destination) {
 	destination->mainLoopTicks = 0;
 	destination->accumulatedMultiplier = DEFAULT_TOTAL_MULTIPLIER;
 	destination->lastStepTimeMicros = std::chrono::microseconds(0);
-	destination->maxActions = 0;
+	destination->maxActions = MAX_ACTIONS_PER_AGENT;
 	destination->maxLAneighbours = 0;
 	strcpy(destination->name, "");
-	destination->numberGAs = 0;
-	destination->numberLAs = 0;
+	destination->numberGAs = DEFAULT_NUMBER_GAS;
+	destination->numberLAs = DEFAULT_NUMBER_LAS;
 
 	//TODO: this is kinda icky if we change the number of seeds
 	destination->seeds[0] = DEFAULT_PRNG_SEED0;

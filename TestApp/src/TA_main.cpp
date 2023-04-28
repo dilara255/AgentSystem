@@ -1315,6 +1315,9 @@ bool testReadingCLdataFromTA(void) {
 	AS::actionData_t lastLAaction =
 		CL::ASmirrorData_cptr->actionMirror.dataLAs[(TST_NUMBER_LAS * MAX_ACTIONS_PER_AGENT) - 1];
 
+	LOG_CRITICAL("WILL_TEST_ACTIONS",2);
+	GETCHAR_PAUSE;
+
 	bool resultAux = (firstGAaction.phaseTiming.elapsed == 0);
 	resultAux &= (lastLAaction.details.processingAux == DEFAULT_ACTION_AUX);
 	if (!resultAux) {
@@ -1380,30 +1383,31 @@ bool testFromTAifCLhasInitialized(void) {
 
 	int failed = 0;
 
-	int GAquantity = CL::ASmirrorData_cptr->networkParams.numberGAs; //already corrected
+	int GAquantity = CL::ASmirrorData_cptr->networkParams.numberGAs - 1; //last doesn't count
 	int LAquantity = CL::ASmirrorData_cptr->networkParams.numberLAs;
 	int maxActions = CL::ASmirrorData_cptr->networkParams.maxActions;
 
-	failed += capLAact != (LAquantity * maxActions * sizeLAact);
-	failed += capGAact != (GAquantity * maxActions * sizeGAact);
+	failed += 1*(capLAact != (LAquantity * maxActions * sizeLAact));
+	failed += 2*(capGAact != (GAquantity * maxActions * sizeGAact));
 
 	//TODO-CRITICAL: GA's are counting the "phantom" last one
-	failed += capLAcold != (MAX_LA_QUANTITY* sizeLAcold);
-	failed += capGAcold != (MAX_GA_QUANTITY* sizeGAcold);
-	failed += capLAstate != (MAX_LA_QUANTITY* sizeLAstate);
-	failed += capGAstate != (MAX_GA_QUANTITY*sizeGAstate);
-	failed += capLAdecs != (MAX_LA_QUANTITY* sizeLAdecs);
-	failed += capGAdecs != (MAX_GA_QUANTITY* sizeGAdecs);
+	failed += 4*(capLAcold != (MAX_LA_QUANTITY* sizeLAcold));
+	failed += 8*(capGAcold != (MAX_GA_QUANTITY* sizeGAcold));
+	failed += 16*(capLAstate != (MAX_LA_QUANTITY* sizeLAstate));
+	failed += 32*(capGAstate != (MAX_GA_QUANTITY*sizeGAstate));
+	failed += 64*(capLAdecs != (MAX_LA_QUANTITY* sizeLAdecs));
+	failed += 128*(capGAdecs != (MAX_GA_QUANTITY* sizeGAdecs));
 
 	if (failed) {
 		LOG_ERROR("Some CL data controller capacities don't match the expected!");
 
 		#if (defined AS_DEBUG) || VERBOSE_RELEASE
-			printf("Failed on %d out of 8 checks\nsizeLAact; %zi, sizeGAact: %zi\n", 
+			printf("Failed some of the 8 checks. Failures id: %d\nsizeLAact; %zi, sizeGAact: %zi\n", 
 															failed, sizeLAact, sizeGAact);
 			printf("capLAact: %zi, expected: %zi - capGAact: %zi, expected: %zi\n",
-				capLAact, (MAX_LA_QUANTITY * MAX_ACTIONS_PER_AGENT * sizeLAact), capGAact,
-				(MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT* sizeLAact));
+				capLAact, (LAquantity * maxActions * sizeLAact), capGAact,
+				(GAquantity * maxActions * sizeGAact));
+			printf("Note: may have failed some other test related to agent data instead\n");
 		#endif // AS_DEBUG
 
 		GETCHAR_PAUSE;
@@ -1416,7 +1420,7 @@ bool testFromTAifCLhasInitialized(void) {
 
 bool testMockData(void) {
 
-	LOG_WARN("Sanity checks for the communication between APP and DLLs (with mock initialization");
+	LOG_WARN("Sanity checks for the communication between APP and DLLs (with mock initialization)");
 
 	AS::CLsanityTest();
 

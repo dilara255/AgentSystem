@@ -22,13 +22,13 @@ namespace CL {
 		bool replaceDataGAs(const std::vector <actionData_t>& newData) { dataGAs = newData; }
 
 		bool getAction(int localOrGlobal, uint32_t actionID, actionData_t* recepient) const;
-		bool getAgentData(int localOrGlobal, uint32_t agentID, int actionNumber,
+		bool getAgentsAction(int localOrGlobal, uint32_t agentID, int actionNumber,
 			              actionData_t* recepient) const;
 
 		size_t sizeOfDataInBytesLAs() const {return dataLAs.size() * sizeof(dataLAs[0]);}
 		size_t sizeOfDataInBytesGAs() const {return dataLAs.size() * sizeof(dataLAs[0]);}
 		size_t capacityForDataInBytesLAs() const {return dataLAs.capacity() * sizeof(dataLAs[0]); }
-		size_t capacityForDataInBytesGAs() const {return dataGAs.capacity()*sizeof(dataGAs[0]);}
+		size_t capacityForDataInBytesGAs() const {return dataGAs.capacity() * sizeof(dataGAs[0]);}
 
 		void clearData() { dataLAs.clear(); dataGAs.clear(); }
 

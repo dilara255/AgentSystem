@@ -15,7 +15,8 @@ namespace AS{
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 							                   WarningsAndErrorsCounter* errorsCounter_ptr);
 
-	//TODO: test
+	//TODO: Test
+	//TODO: Make this into a method on ActionDataController
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
 		                               AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
@@ -46,7 +47,7 @@ namespace AS{
 		int currentActions = 0;
 		for(int i = startingIndexOnActionsVector; i < startingIndexNextAgent; i++){
 		
-			currentActions += actionDataVec_cptr->at(i).ids.active;
+			currentActions += actionDataVec_cptr->at(i).ids.slotIsUsed;
 		}
 
 		return currentActions;

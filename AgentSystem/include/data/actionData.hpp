@@ -40,20 +40,22 @@ namespace AS {
 
 	//TODO-CRITICAL: WARNING: (possible) BUG: MAY NOT BE PORTABLE?
 	typedef struct {
+		//We still have 1 bit free for use
+		uint32_t slotIsUsed : 1;
 		uint32_t active : 1;
-		uint32_t origin : 11;
-		uint32_t target : 11;
-		uint32_t category : 3;
+		uint32_t origin : 10; //max LAs <= 1024
+		uint32_t target : 10;
 		uint32_t scope : 1;
+		uint32_t category : 3;
 		uint32_t mode : 2;
-		uint32_t phase : 2;
+		uint32_t phase : 3;
 
-		enum class fields { ACTIVE, ORIGIN, TARGET, CATEGORY, SCOPE, MODE, PHASE,
+		enum class fields { ACTIVE, ORIGIN, TARGET, SCOPE, CATEGORY, MODE, PHASE,
 			                TOTAL_ACTION_FIELDS };
 	} AS_API ids_t;
 
 	//TODO: WARNING: MAY NOT BE PORTABLE?
-	//Used to pack scope, agent and action number in a uint32_t for transfering from client
+	//Used to pack scope, agentID and action number in a uint32_t for transfering from client
 	//NOTE: this is *NOT* meant to be used with ids_t
 	enum class actionIDtoUnsigned: uint32_t {SCOPE_SHIFT = 31, SCOPE_MASK = 2147483648, 
 										     AGENT_SHIFT = 15, AGENT_MASK = 2147450880,
