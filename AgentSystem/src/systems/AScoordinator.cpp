@@ -66,8 +66,9 @@ bool AS::quit() {
 	return result;
 }
 
+//TODO: action system uses defaultNetworkParameters as basis for container sizes
+//while agent data uses the maximums. Do the same for both?
 bool AS::initializeASandCL() {
-//TODO: possibly extract functions
 
 	if (isInitialized) {
 		LOG_ERROR("AS already initialized. Aborting initialization.");
@@ -227,7 +228,9 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 		}
 	}
 
-	clearNetwork(); //in order to load the new one
+	//in order to load the new data:
+	clearNetwork(); //this also re-initializes the action system with appropriate sizes
+
 	strcpy(currentNetworkParams.name, name.c_str());
 	LOG_TRACE("File Acquired and of compatiple version. Network cleared and new name set");
 

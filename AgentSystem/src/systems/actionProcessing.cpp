@@ -34,7 +34,7 @@ namespace AS {
 
 	void defaultOnSpawn(actionData_t* action_ptr);
 	uint32_t defaultTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
-	void defaultPhaseEnd(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
+	void defaultPhaseEnd(actionData_t* action_ptr);
 
 	void defaultPrepEnd(actionData_t* action_ptr);
 	void defaultTravelEnd(actionData_t* action_ptr);
@@ -68,7 +68,7 @@ namespace AS {
 			return;
 		}
 
-		if (action_ptr->ids.active == 0) {
+		if ( (action_ptr->ids.active == 0) || (action_ptr->ids.slotIsUsed == 0) ) {
 			//nothing to do here:
 			return;
 		}
@@ -100,7 +100,8 @@ namespace AS {
 		uint32_tenthsOfMilli_t timeRemainingToProcess = timeElapsedThisStep;
 
 		//since a phase may end and spawn another phase, this is done in a loop:
-		while ( (timeRemainingToProcess > 0) && (action_ptr->ids.active == 1) ) {
+		while ( (timeRemainingToProcess > 0) 
+			     && (action_ptr->ids.active == 1) && (action_ptr->ids.slotIsUsed == 1) ) {
 
 			//first we tick the action and receive any time still to be processed:
 			timeRemainingToProcess = 

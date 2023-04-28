@@ -54,7 +54,7 @@ namespace CL {
     }
 
     //TODO: BUG: NOT IMPLEMENTED AND BROKEN
-    bool ActionMirrorController::getAgentData(int localOrGlobal, uint32_t agentID,
+    bool ActionMirrorController::getAgentsAction(int localOrGlobal, uint32_t agentID,
                                         int actionNumber, actionData_t* recepient) const {
 
         LOG_WARN("This function is not implemented yet - returning false...");

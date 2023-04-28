@@ -19,9 +19,12 @@ namespace AS {
 								const ActionDataController** actionDataController_cptr_ptr) {
 
 		LOG_TRACE("Will initialize Action Data controllers for LAs and GAs");
-
+		
 		*actionDataController_cptr_ptr = (const ActionDataController*)&(this->data);
-		this->data.initialize(pp->maxActions, pp->numberLAs, pp->numberGAs);
+
+		int effectiveGAs = pp->numberGAs - 1;
+
+		this->data.initialize(pp->maxActions, pp->numberLAs, effectiveGAs);
 
 		if (!(*actionDataController_cptr_ptr)->isInitialized()) {
 			LOG_CRITICAL("Couldn't initialize Action Data Controllers!");
@@ -31,51 +34,111 @@ namespace AS {
 		return true;
 	}
 
-	bool ActionDataController::initialize(int maxActionsPerAgent, int numberLas, int numberGAs) {
+	//Populates the action data vectors with actions with slotIsUsed set to 0 
+	//Expects the number of EFFECTIVE GAs
+	bool ActionDataController::initialize(int maxActionsPerAgent, int numberLAs, int numberGAs) {
 
 		LOG_TRACE("Initializing LA and GA Action Data Controllers and setting capacity");
 
-		if (numberLas > MAX_LA_QUANTITY) numberLas = MAX_LA_QUANTITY;
+		if (numberLAs > MAX_LA_QUANTITY) numberLAs = MAX_LA_QUANTITY;
 		if (numberGAs > MAX_GA_QUANTITY) numberGAs = MAX_GA_QUANTITY;
 		if (maxActionsPerAgent > MAX_ACTIONS_PER_AGENT) maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
 		
 		m_maxActionsPerAgent = maxActionsPerAgent;
+		m_numberLAs = numberLAs;
+		m_numberGAs = numberGAs; //we expect to receive the number of effective GAs
 
-		dataLAs.reserve(numberLas * maxActionsPerAgent);
-		dataGAs.reserve(numberGAs * maxActionsPerAgent);
+		//In case we had already initialized before, the old data is cleared:
+		if (m_hasData) {
+			dataLAs.clear();
+			dataGAs.clear();
+
+			m_hasData = false;
+		}
+
+		dataLAs.reserve(m_numberLAs * m_maxActionsPerAgent);
+		dataGAs.reserve(m_numberGAs * m_maxActionsPerAgent);
+
+		actionData_t emptyAction;
+		emptyAction.ids.slotIsUsed = 0;
+
+		for (int i = 0; i < m_maxActionsPerAgent; i++) {
+			for (int j = 0; j < m_numberLAs; j++) {
+				dataLAs.push_back(emptyAction);
+			}
+			for (int j = 0; j < m_numberGAs; j++) {
+				dataGAs.push_back(emptyAction);
+			}
+		}
 
 		m_isInitialized = true;
+		m_hasData = true;
+
+		LOG_INFO("Action system initialized!");
+
 		return true;
 	}
 
+	//Sets the agent's first unnocupied action slot to actionData
+	//returns false if no slots are available
 	bool ActionDataController::addActionData(actionData_t actionData) {
 
-		if (actionData.ids.scope == (uint32_t)scope::LOCAL) {
-			if (dataLAs.size() >= (MAX_LA_QUANTITY*MAX_ACTIONS_PER_AGENT) ) {
-				LOG_ERROR("Couldn't add LA action: maximum reached");
-				return false;
-			}
+		if (!m_isInitialized) {
+			LOG_ERROR("Action system not initialized: can't add action data");
+			return false;
+		}
 
-			dataLAs.push_back(actionData);
-			return true;
+		std::vector<AS::actionData_t>* data_ptr = NULL;
+
+		if (actionData.ids.scope == (uint32_t)scope::LOCAL) {
+			data_ptr = getDirectLAdataPtr();
 		}
 		else if (actionData.ids.scope == (uint32_t)scope::GLOBAL) {
-			if (dataGAs.size() >= (MAX_GA_QUANTITY * MAX_ACTIONS_PER_AGENT)) {
-				LOG_ERROR("Couldn't add GA action: maximum reached");
-				return false;
-			}
-
-			dataGAs.push_back(actionData);
-			return true;
+			data_ptr = getDirectGAdataPtr();
 		}
 		else {
 			LOG_ERROR("Tried to add malformed action, aborted...");
+			return false;
+		}
+		if (data_ptr == NULL) {
+			LOG_ERROR("Failed to acquire action data pointer");
+			return false;
+		}
+
+		int startingIndex = actionData.ids.origin * m_maxActionsPerAgent;
+		int nextAgentsStartingIndex = (actionData.ids.origin + 1) * m_maxActionsPerAgent;
+
+		bool emptySlotFound = false;
+		int possibleEmptySlot = startingIndex;
+
+		while ((possibleEmptySlot < nextAgentsStartingIndex) && !emptySlotFound) {
+			
+			emptySlotFound = (data_ptr->at(possibleEmptySlot).ids.slotIsUsed == 0);
+			possibleEmptySlot++;
+		}
+
+		if (emptySlotFound) {
+
+			int slot = possibleEmptySlot - 1;
+
+			data_ptr->at(slot) = actionData;
+
+			return true;
+		}
+		else {
+
 			return false;
 		}
 	}
 
 	bool ActionDataController::getAction(AS::scope localOrGlobal, uint32_t actionID,
 												       actionData_t* recepient) const {
+		
+		if (!m_hasData) {
+			LOG_ERROR("Tried to get action, but action system has no data");
+			return false;
+		}
+
 		if (localOrGlobal == scope::LOCAL) {
 			if (actionID < dataLAs.size()) {
 				*recepient = dataLAs[actionID];
@@ -114,8 +177,14 @@ namespace AS {
 		}
 	}
 
-	bool ActionDataController::getAgentData(AS::scope localOrGlobal, uint32_t agentID, 
-		                                     int actionNumber, actionData_t* recepient) const {
+	bool ActionDataController::getAgentsAction(AS::scope localOrGlobal, uint32_t agentID, 
+		                                       int actionNumber, actionData_t* recepient) const {
+		
+		if (!m_hasData) {
+			LOG_ERROR("Tried to get agent's action, but action system has no data");
+			return false;
+		}
+
 		if (actionNumber > (m_maxActionsPerAgent - 1)) {
 			LOG_ERROR("Tried to get agent Action Data which is out of range. Aborting.");
 			return false;
@@ -127,7 +196,7 @@ namespace AS {
 				return false;
 			}
 
-			*recepient = dataLAs[ (agentID*m_maxActionsPerAgent) + actionNumber];
+			*recepient = dataLAs[(agentID * m_maxActionsPerAgent) + actionNumber];
 			return true;
 		}
 		else if (localOrGlobal == scope::GLOBAL) {
@@ -166,11 +235,15 @@ namespace AS {
 		return dataGAs.capacity() * sizeof(dataGAs[0]);
 	}
 
+	//clears all data but keeps the system initialized
 	void ActionDataController::clearData() {
 		dataLAs.clear();
 		dataGAs.clear();
 
 		m_hasData = false;
+
 		LOG_TRACE("All Action Data cleared!");
+
+		initialize(m_maxActionsPerAgent, m_numberLAs, m_numberGAs);
 	}
 }

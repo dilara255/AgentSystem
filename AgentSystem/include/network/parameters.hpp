@@ -161,6 +161,8 @@ and data sizes static.
 //--> DEFAULT values for new network creation:
 
 #define DEFAULT_ONOFF (true)
+#define DEFAULT_NUMBER_LAS 15
+#define DEFAULT_NUMBER_GAS 5 //but last one doesn't count
 #define DEFAULT_GA_RESOURCES (0.0f)
 #define DEFAULT_GA_STANCE 2
 #define DEFAULT_GA_DISPOSITION (0.0f)
@@ -191,8 +193,8 @@ and data sizes static.
 #define DEFAULT_SYSTEM_WIDE_PROCESS_ACTIONS (true)
 
 //--> TEST-related defines:
-#define TST_NUMBER_LAS 15
-#define TST_NUMBER_GAS 5
+#define TST_NUMBER_LAS DEFAULT_NUMBER_LAS
+#define TST_NUMBER_GAS DEFAULT_NUMBER_GAS
 #define TST_GA_ID 2
 #define TST_GA_CONNECTIONS 2
 #define TST_LA_REINFORCEMENT (5.5)

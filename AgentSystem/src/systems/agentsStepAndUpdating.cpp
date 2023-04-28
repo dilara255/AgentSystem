@@ -105,7 +105,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 						                     g_secondsSinceLastDecisionStep, currentActions);
 
 			//In case no decision is made, makeDecisionLA returns an innactive action, so:
-			if(chosenAction.ids.active){
+			if(chosenAction.ids.slotIsUsed){
 				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
 					                                           errorsCounter_ptr);
 			}
@@ -141,7 +141,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 						                      g_secondsSinceLastDecisionStep, currentActions);
 
 			//In case no decision is made, makeDecisionGA returns an innactive action, so:
-			if(chosenAction.ids.active){
+			if(chosenAction.ids.slotIsUsed){
 				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
 					                                           errorsCounter_ptr);
 			}

@@ -20,6 +20,7 @@ This file declares the classes:
 namespace AS {	
 
 	//TODO: add description
+	//TODO: pass errorCounter to methods
 	class ActionDataController {
 	public:
 		bool initialize(int maxActionsPerAgent, int numberLas, int numberGAs);
@@ -32,7 +33,7 @@ namespace AS {
 			return (const std::vector <AS::actionData_t>*) & dataGAs; }
 
 		bool getAction(AS::scope localOrGlobal, uint32_t actionID, actionData_t* recepient) const;
-		bool getAgentData(AS::scope localOrGlobal, uint32_t agentID, int actionNumber, 
+		bool getAgentsAction(AS::scope localOrGlobal, uint32_t agentID, int actionNumber, 
 			                                                  actionData_t* recepient) const;
 
 		void pushBackLAaction(actionData_t action) { dataLAs.push_back(action); }
@@ -53,6 +54,7 @@ namespace AS {
 		std::vector <actionData_t>* getDirectGAdataPtr() { return &dataGAs; }
 
 		int getMaxActionsPerAgent() const { return m_maxActionsPerAgent; }
+
 		bool setMaxActionsPerAgent(int newMax) {
 			if ( (newMax > 0) && (newMax <= MAX_ACTIONS_PER_AGENT) ) {
 				m_maxActionsPerAgent = newMax;
@@ -71,6 +73,8 @@ namespace AS {
 		bool m_isInitialized = false;
 		bool m_hasData = false;
 		int m_maxActionsPerAgent = 0;
+		int m_numberLAs = 0;
+		int m_numberGAs = 0; //effective GAs
 	};
 
 	//Used to prepare and hold the ActionDataController
@@ -79,10 +83,17 @@ namespace AS {
 		bool initialize(const ActionSystem** actionSystem_cptr_ptr, 
 						const ActionDataController** actionDataController_cptr_ptr,
 			            const networkParameters_t* networkParams_cptr) {
+
 			LOG_TRACE("Initializing Action System");
-			m_isInitialized = true;
+			
 			bool result = initializeDataController(networkParams_cptr, actionDataController_cptr_ptr);
-			(*actionSystem_cptr_ptr) = (const ActionSystem*)this;
+
+			m_isInitialized = result;
+
+			if(result) {
+				(*actionSystem_cptr_ptr) = (const ActionSystem*)this;
+			}
+
 			return result;
 		}
 
