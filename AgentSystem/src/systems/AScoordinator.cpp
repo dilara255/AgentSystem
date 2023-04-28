@@ -178,7 +178,8 @@ namespace AS {
 	}
 }
 
-bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
+bool AS::loadNetworkFromFile(std::string name, bool runNetwork, 
+	                         bool disableDecisions, bool blockActions) {
 	
 	bool shouldBlockClientFromIssuingData = CL::isClintDataInitialized();
 	std::mutex* clientDataMutex_ptr = NULL;
@@ -236,7 +237,8 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork) {
 
 	result = loadNetworkFromFileToDataControllers(fp, agentDataControllerPtrs, 
 		                                          currentNetworkParams_ptr,
-		                                          actionSystem.getDataDirectPointer());
+		                                          actionSystem.getDataDirectPointer(),
+		                                          disableDecisions, blockActions);
 
 	fclose(fp);
 	LOG_TRACE("File closed");

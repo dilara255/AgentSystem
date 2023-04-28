@@ -19,17 +19,20 @@ namespace AS {
 	// 
 	//WARNING: CLEARS active Network and Client Data Handler, no confirmation needed! 
 	//Any logic to save current network first and etc should be handled by the CLIENT.
-	AS_API bool loadNetworkFromFile(std::string name, bool runNetwork = false);
+	AS_API bool loadNetworkFromFile(std::string name, bool runNetwork = false,
+		                            bool disableDecisions = false, bool blockActions = false);
 
+	#define RUN_INDEFINETELY (-1)
 	//Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id.
 	//Checks some conditions before initializing, and returns false if any are not met.
 	//AS has to be initialized and a network must have been loaded.
 	//If fixedTimestep, treats each step as having taken the target time, always.
-	//If stepsToRun < 1, will run until stopped by another command.
 	//If stepsToRun >= 1, will give this many steps and then pause.
+	//If stepsToRun < 1, will run until stopped by another command.
 	// 
 	//WARNING: This WILL consume any Client issued changes BEFORE running the network.
-	AS_API bool run(bool fixedTimeStep = false, int stepsToRun = -1);
+	AS_API bool run(bool fixedTimeStep = false, int stepsToRun = RUN_INDEFINETELY,
+		                 bool disableDecisions = false, bool blockActions = false);
 
 	//Stops AS execution thread, marks it as stopped and clears the stored thread::id;
 	//Returns false if this fails or if the Main Loop found errors while running.
@@ -40,14 +43,17 @@ namespace AS {
 
 	//Pausing already paused loop has no effect. Effectively starts at the END of mainLoop.
 	//Pause sleeps in cycles of targetStepTime until unpaused.
+	//Can pause before mainLoop is created, affecting how the loop will behave on creation.
 	AS_API void pauseMainLoop();
 
 	//Unpausing already unpaused loop has no effect. Resumes after up to half target step time.
+	//Can unspause before mainLoop is created, affecting how the loop will behave on creation.
 	AS_API void unpauseMainLoop();
 
 	//Steps the mainLoop for "steps" steps and then pauses. If steps < 1, will treat as 1.
 	//Steps are checked right before pausing: a single step is the same as unpause + pause.
 	//Sequential calling of this will overwrite the effects of the previous calls.
+	//Can set step before mainLoop is created, affecting how the loop will behave on creation.
 	AS_API void stepMainLoopFor(int steps = 1);
 
 	AS_API bool chekIfMainLoopShouldBePaused();

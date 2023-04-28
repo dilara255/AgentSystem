@@ -18,7 +18,8 @@ namespace AS{
     bool loadNetworkFromFileToDataControllers(FILE* fp, 
                                            dataControllerPointers_t agentDataControllers,
                                            networkParameters_t* currentNetworkParams_ptr,
-                                           ActionDataController* actionDataController_ptr);
+                                           ActionDataController* actionDataController_ptr, 
+	                                       bool disableDecisions = false, bool blockActions = false);
 
     bool fileIsCompatible(FILE* fp);
 }
