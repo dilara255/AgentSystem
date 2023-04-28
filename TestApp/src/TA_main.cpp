@@ -1315,9 +1315,6 @@ bool testReadingCLdataFromTA(void) {
 	AS::actionData_t lastLAaction =
 		CL::ASmirrorData_cptr->actionMirror.dataLAs[(TST_NUMBER_LAS * MAX_ACTIONS_PER_AGENT) - 1];
 
-	LOG_CRITICAL("WILL_TEST_ACTIONS",2);
-	GETCHAR_PAUSE;
-
 	bool resultAux = (firstGAaction.phaseTiming.elapsed == 0);
 	resultAux &= (lastLAaction.details.processingAux == DEFAULT_ACTION_AUX);
 	if (!resultAux) {
