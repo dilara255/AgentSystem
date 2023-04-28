@@ -25,7 +25,8 @@ TODO: should get the file name into the "network name" from the parameters file.
 
 #pragma warning(push) //pop at end of file
 #pragma warning(disable : 4996) //TODO: change for safe functions
-bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
+bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp, bool disableDecisions = false,
+                                                                 bool blockActions = false) {
     
     LOG_TRACE("Will load the information from file's header...");
     int version;
@@ -43,9 +44,8 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp) {
     result &= (tokensRead == 13);
 
     pp->accumulatedMultiplier = mult;
-    pp->makeDecisions = (bool)makeDecisions;
-    pp->processActions = (bool)processActions;
-
+    pp->makeDecisions = (bool)makeDecisions && !disableDecisions;
+    pp->processActions = (bool)processActions && !blockActions;
 
     LOG_TRACE("Will load the comment line...");
 
@@ -644,11 +644,14 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
 bool AS::loadNetworkFromFileToDataControllers(FILE* fp, 
                                 dataControllerPointers_t agentDataControllers, 
                                 networkParameters_t* currentNetworkParams_ptr, 
-                                ActionDataController* actionDataController_ptr) {    
+                                ActionDataController* actionDataController_ptr, 
+	                            bool disableDecisions, bool blockActions) {    
+
     LOG_TRACE("Will rewind the file pointer to begin loading");
     rewind(fp);
 
-    bool result = loadHeaderFromFp(fp, currentNetworkParams_ptr);
+    bool result = loadHeaderFromFp(fp, currentNetworkParams_ptr, 
+                                   disableDecisions, blockActions);
     if (!result) {
         LOG_ERROR("Couldn't read all tokens from the file header area. Aborting load");
         return false;
@@ -658,7 +661,7 @@ bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
     actionDataController_ptr->setMaxActionsPerAgent(currentNetworkParams_ptr->maxActions);
 
     result = loadDataFromFp(fp, currentNetworkParams_ptr, &agentDataControllers,
-                                                          actionDataController_ptr);
+                                                       actionDataController_ptr);
     if (!result) {
         LOG_ERROR("Couldn't load data, loading aborted");
         return false;

@@ -156,7 +156,7 @@ bool AS::defaultNetworkParameters(networkParameters_t* destination) {
 }
 
 //WARNING: BUG: this will break on platforms with different endian-nes due to union abuse
-//TODO-CRITICAL: FIX
+//TODO-CRITICAL: FIX (check endian-ness and avoid union type-punning)
 AS::actionData_t AS::getDefaultAction(AS::scope scope) {
 
 	actionData_t data;
@@ -171,7 +171,7 @@ AS::actionData_t AS::getDefaultAction(AS::scope scope) {
 		uint32_t allFields;
 	};
 	union ids_u ids;
-
+	
 	ids.allFields = 0;
 	data.ids = ids.data;
 

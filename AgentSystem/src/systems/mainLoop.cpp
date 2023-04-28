@@ -190,9 +190,10 @@ void step(AS::chopControl_st chopControl, float timeMultiplier, float decisionTi
 	int numLAs = chopControl.quantityLAs;
 	int numGAs = chopControl.quantityEffectiveGAs;
 
-
-	AS::stepActions(AS::g_actionSystem_ptr, timeMultiplier, AS::g_errorsCounter_ptr, 
-		                     AS::g_agentDataControllerPtrs_ptr, AS::g_prnServer_ptr);
+	if(AS::g_currentNetworkParams_ptr->processActions) {
+		AS::stepActions(AS::g_actionSystem_ptr, timeMultiplier, AS::g_errorsCounter_ptr, 
+								 AS::g_agentDataControllerPtrs_ptr, AS::g_prnServer_ptr);
+	}
 
 	bool makeDecisions = AS::g_currentNetworkParams_ptr->makeDecisions;
 	uint32_t tick = (uint32_t)AS::g_currentNetworkParams_ptr->mainLoopTicks;
@@ -491,7 +492,8 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 }
 
 //TODO: maybe rename? This is creating the thread, not just "making it run"
-bool AS::run(bool fixedTimeStep, int stepsToRun) {
+bool AS::run(bool fixedTimeStep, int stepsToRun,
+		     bool disableDecisions, bool blockActions) {
 	LOG_TRACE("Starting Main Loop Thread...");
 	
 	if (*g_shouldMainLoopBeRunning_ptr) {
@@ -533,6 +535,10 @@ bool AS::run(bool fixedTimeStep, int stepsToRun) {
 	g_shouldMainLoopBePaused = false;
 	g_currentNetworkParams_ptr->lastMainLoopStartingTick = 
 												g_currentNetworkParams_ptr->mainLoopTicks;
+
+	g_currentNetworkParams_ptr->makeDecisions &= !disableDecisions;
+	g_currentNetworkParams_ptr->processActions &= !blockActions;
+
 	if (stepsToRun > 0) { stepMainLoopFor(stepsToRun); }
 	*g_mainLoopThread_ptr = std::thread(mainLoop, fixedTimeStep);
 	*g_mainLoopId_ptr = g_mainLoopThread_ptr->get_id();

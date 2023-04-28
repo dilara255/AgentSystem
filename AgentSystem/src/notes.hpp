@@ -19,9 +19,11 @@
 * - Versions increment when complete (that is, we start at v0.0.0 working on 0.1.1);
 * - Build #s will be the incremental commits in a given Sub;
 * 
-* - Current Version: 0.2.0
-* - Working on: finishing 0.3.1
+* - Current Version: 0.4.0
+* - Working on: 0.5.1
 *
+* ***** Major 0. First iteration *****
+* 
 * ***** Minor 1. Basic Setup *****
 *
 * 1. Initial setup:
@@ -107,7 +109,7 @@
 *
 * Cleanup and bug-fixing
 * 
-* ***** > Minor 4. AS loop *****
+* ***** Minor 4. AS loop *****
 *
 * -Understand why x86 versions are getting crazy tick values;
 * -Understand why saving can sometimes take a while (but don't loose sleep over it);
@@ -149,27 +151,35 @@
 * 
 * 6. "MVP":
 * 
-* >-Stubs of decisions and actions (no actual logic);
+* -Stubs of decisions and actions (no actual logic);
 *  
 * Some cleanup
 *
-* ***** Minor 5. Tooling: inspection *****
+* ***** > Minor 5. Tooling: inspection *****
 *
-* 1. Decisions and actions for inspection:
+* > 1. Tests for inspecting decision-making and action processing:
+* - Create a dummy notion which always returns 1;
+* - Set an four action's weights so that their scores "s" are:
+* -- s = -1 , 0 < s < whyBother, whyBother < s < justDoIt, s > justDoIt;
+* - Create a test with open actions and loads of money:
+* -- Test passes if no errors are thrown;
+* -- Test logs hot micros x active actions;
+*	
+* 2. Decisions and actions for inspection:
 * -Couple of simplified decisions and actions (and watever is necessary for that);
 * --Should just run their course and have a simple resolution; 
 * 
-* 2. Text-mode visualization of a couple agents running.
+* 3. Text-mode visualization of a couple to a few agents running.
 * 
-* 3. Quick system review and any pending groundwork:
+* 4. Quick system review and any pending groundwork:
 * - Also do some benchmarking;
 * 
-* 4. basic GUI tool to inspect the system:
+* 5. basic GUI tool to inspect the system:
 * - Client inuput limited by whats already implemented (focus on reading/output);
 * -- May later be extended as a network authoring tool;
 * - General testing;
 *
-* * ***** Minor 6. More groundwork, Technical Debt/future refactor organization*****
+* * ***** Minor 6. More groundwork and Technical Debt/future refactor organization*****
 *
 * - Quick technical debt organization pass and refactor planning;
 * -- Take a look at technical debt and TODOs (especially CRITICALs);
@@ -197,7 +207,7 @@
 * - A last pass on TODO's, documenting any left behind;
 * - A last cleanup and comments pass;
 * - A last pass on tests and possible bugs;
-* - Fresh clone+compile, plus testing on other pcs;
+* - Fresh clone+compile, plus testing on other systems;
 * - Updated specification, diagrams and results;
 * - Video with overview of results;
 * - Delivery;
