@@ -189,11 +189,15 @@ namespace AS{
 	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
 	//The final intensity depends on the desied intensity (stored in the action's intensity)
 	//and relative strenghts.
+	//Aux is just set to zero.
 	//TODO: this a placeholder / stub, mostly for load testing and some initial exploration
 	void setActionDetails_L_I_Attack(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
-		
+
+		//nothing to hold on aux:
+		action_ptr->details.processingAux = 0;
+
 		int agent = action_ptr->ids.origin;
 		int scope = action_ptr->ids.scope;
 
@@ -240,7 +244,7 @@ namespace AS{
 		attackSize = std::clamp(attackSize, 0.0f, agentStrenght);
 		action_ptr->details.intensity = attackSize;
 
-		//More troops = longer preparation phase, which is stored on aux (in ms):
+		//More troops = longer preparation phase
 		double effectiveAttackSize = sqrt(attackSize/DEFAULT_LA_STRENGHT);
 
 		double preparationTime = effectiveAttackSize *
@@ -254,11 +258,14 @@ namespace AS{
 	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
 	//The final intensity depends on the desied intensity (stored in the action's intensity)
 	//and relative strenghts.
+	//Aux is just set to zero.
 	//TODO: this a placeholder / stub, mostly for load testing and some initial exploration
 	void setActionDetails_G_S_Attack(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
 		
+		action_ptr->details.processingAux = 0;
+
 		int agent = action_ptr->ids.origin;
 		int scope = action_ptr->ids.scope;
 
@@ -320,7 +327,7 @@ namespace AS{
 
 		//The idea is for this to be pretty much a dispatcher:
 		//it validates that the variation exists (or raises an error), then dispatches
-		//to a function which sets intensity and if processing aux for that variation
+		//to a function which sets intensity and if necessary processing aux for that variation
 
 		//TODO: the validation, plus a couple more stubs (and review the GS_ATTACK stub)
 

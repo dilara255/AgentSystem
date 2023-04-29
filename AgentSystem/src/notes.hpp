@@ -157,7 +157,7 @@
 *
 * ***** > Minor 5. Tooling: inspection *****
 *
-* > 1. Tests for inspecting decision-making and action processing:
+* 1. Tests for inspecting decision-making and action processing:
 * - On different tests, set an action's weights so that it's scores "s" are:
 * -- s = -1 , 0 < s < whyBother, whyBother < s < justDoIt, s > justDoIt;
 * -- note that these weights won't be kept, they're just for initial testing;
@@ -165,7 +165,7 @@
 * -- Test passes if no errors are thrown;
 * -- Test logs hot micros x active actions;
 *	
-* 2. Decisions and actions for inspection:
+* > 2. Decisions and actions for inspection:
 * -Couple of simplified decisions and actions (and watever is necessary for that);
 * --Should just run their course and have a simple resolution; 
 * 
