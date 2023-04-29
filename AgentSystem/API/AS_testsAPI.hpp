@@ -12,6 +12,8 @@ static const char* updateTestFilename = fileNameWithDefaults;
 static const char* updateTestOutputFilename = "updateTestOut.txt";
 static const char* readUpdatingTestFilename = "readInfoDump.txt";
 static const char* inNetworkReadsTest = "networkReadsTest.txt";
+static const char* decisionsAndActionsTimingFilename = "decisionsAndActionsTiming.txt";
+static const char* decisionsAndActionsTestNetworkFilename = "decisionsAndActionsTestNetwork.txt";
 
 namespace AS {
 	AS_API void CLsanityTest();

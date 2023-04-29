@@ -1,5 +1,6 @@
 #include "miscStdHeaders.h"
 #include "miscDefines.hpp"
+#include "fileHelpers.h"
 #include "core.hpp"
 
 #include "AS_API.hpp"
@@ -24,6 +25,7 @@ bool testPause(bool printLog = false, int pauseUnpauseCycles = 5);
 bool testMainLoopErrors(std::string filename);
 bool testAgentsUpdating(bool printLog, bool fixedAndStepped = false);
 bool testReads(bool printLog, float secondsToRun = 1);
+bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool printLog, bool dump);
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
@@ -31,7 +33,7 @@ bool testReads(bool printLog, float secondsToRun = 1);
 #define HELPER_FUNC_TESTS 7
 #define BASIC_INIT_COMM_TESTS 4
 #define SPECIFIC_DATA_FUNCTIONALITY_TESTS 11
-#define SPECIFIC_THREADED_LOOP_TESTS 12
+#define SPECIFIC_THREADED_LOOP_TESTS 13
 #define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
 
 std::thread reader;//to test realtime reading of data trough CL as AS runs
@@ -162,6 +164,10 @@ int main(void) {
 	resultsBattery3 += (int)testAgentsUpdating(printSteps, true); GETCHAR_PAUSE;
 
 	resultsBattery3 += (int)testReads(printSteps); GETCHAR_PAUSE;
+
+	resultsBattery3 += 
+		(int)testDecisionsAndActionsForThrownErrorsAndCalculateTiming(printSteps, true);
+	GETCHAR_PAUSE;
 	
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
@@ -242,12 +248,12 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 	for (int agent = 0; agent < numberLAs; agent++) {
 		cldh_ptr->LAstate.parameters.resources.changeCurrentTo(agent, infiniteResources);
 	}
-	for (int agent = 0; agent < numberLAs; agent++) {
+	for (int agent = 0; agent < numberGAs; agent++) {
 		cldh_ptr->GAstate.parameters.changeGAresourcesTo(agent, infiniteResources);
 	}
 	
 	//We want to run enough steps so that all action slots could be exhausted
-	int stepsToRun = ((maxActionsPerAgent + 1)) * AS_TOTAL_CHOPS;
+	int stepsToRun = ((maxActionsPerAgent + 1)) * AS_TOTAL_CHOPS * 2;
 
 	//And we'll need to check often to get the data we want:
 	int stepTimeMicros = AS_MILLISECONDS_PER_STEP * MICROS_IN_A_MILLI;
@@ -357,9 +363,85 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 		LOG_INFO("Main loop found no errors during the test");
 	}
 	
+	//Now we calculate some indicators from our data  and display/dump as requested:
 
-	//- dump the log into a file (option);
+	int leastActions = maxActionsPerAgent * (numberGAs + numberLAs) * 2; //so, too many
+	int mostActions = -1;
+	int64_t shortestHotMicros = AS_MILLISECONDS_PER_STEP * MICROS_IN_A_MILLI * 2; //too long
+	int64_t longestHotMicros = 0;
 
+	int idLeastActions = -1;
+	int idMostActions = -1;
+	int idShortest = -1;
+	int idLongest = -1;
+
+	for (int i = 0; i < stepsToRun; i++) {
+		int actions = ticks.at(i).totalActions;
+		int64_t micros = ticks.at(i).hotMicros.count();
+
+		if(actions < leastActions) { leastActions = actions; idLeastActions = i;}
+		if(actions > mostActions) { mostActions = actions; idMostActions = i; }
+		if(micros < shortestHotMicros) { shortestHotMicros = micros; idShortest = i;}
+		if(micros > longestHotMicros) { longestHotMicros = micros; idLongest = i;}
+	}
+	if ((idLeastActions == -1) || (idMostActions == -1)
+		|| (idShortest == -1) || (idLongest == -1)) {
+		LOG_WARN("Something went wrong calculating the data extremes. Results may be bogus");
+	}
+
+	if (print) {
+		printf("Steps: %d MaxTotalActions: %d (maxActs: %d, LAs: %d, GAs: %d)\n\n",
+						stepsToRun, maxActionsPerAgent * (numberLAs + numberGAs), 
+						maxActionsPerAgent, numberLAs, numberGAs );
+		printf("Least Actions: %d at step %d (%lld hot micros)\n",
+			leastActions, idLeastActions, ticks.at(idLeastActions).hotMicros.count());
+		printf("Most Actions: %d at step %d (%lld hot micros)\n",
+			mostActions, idMostActions, ticks.at(idMostActions).hotMicros.count());
+		printf("Shortest step: %lld micros at step %d (%d actions)\n",
+			shortestHotMicros, idShortest, ticks.at(idShortest).totalActions);
+		printf("Longest step: %lld micros at step %d (%d actions)\n",
+			longestHotMicros, idLongest, ticks.at(idLongest).totalActions);
+	}
+
+	if (dump) {
+
+		aux = AS::saveNetworkToFile(decisionsAndActionsTestNetworkFilename, 
+												        false, false, true);
+		if (!aux) {
+			LOG_ERROR("Failed to save network. Will try to dump timing data, but test will fail");
+		}
+		result &= aux;
+
+		FILE* fp = AZ::acquireFilePointerToSave(decisionsAndActionsTimingFilename, false, 
+																		 defaultFilePath);
+
+		if (fp == NULL) {
+			LOG_WARN("Couldn't acquire file pointer to save test data, so won't");
+		}
+		else {
+			fprintf(fp, "Steps: %d MaxTotalActions: %d (maxActs: %d, LAs: %d, GAs: %d)\n\n",
+					stepsToRun, maxActionsPerAgent * (numberLAs + numberGAs), 
+					maxActionsPerAgent, numberLAs, numberGAs );
+
+			fprintf(fp, "Least Actions: %d at step %d (%lld hot micros)\n",
+				leastActions, idLeastActions, ticks.at(idLeastActions).hotMicros.count());
+			fprintf(fp, "Most Actions: %d at step %d (%lld hot micros)\n",
+				mostActions, idMostActions, ticks.at(idMostActions).hotMicros.count());
+			fprintf(fp, "Shortest step: %lld micros at step %d (%d actions)\n",
+				shortestHotMicros, idShortest, ticks.at(idShortest).totalActions);
+			fprintf(fp, "Longest step: %lld micros at step %d (%d actions)\n\n",
+				longestHotMicros, idLongest, ticks.at(idLongest).totalActions);
+
+			fprintf(fp, "Step\tActions\tMicros\n\n");
+
+			for (int i = 0; i < stepsToRun; i++) {
+				fprintf(fp, "%d\t%d\t%lld\n", i, ticks.at(i).totalActions, 
+					                       ticks.at(i).hotMicros.count() );
+			}
+		}
+	}
+
+	//Now we show the overall result:
 	if (!result) {
 		LOG_ERROR("Test failed");
 	}
@@ -367,8 +449,8 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 		LOG_INFO("Test passed");
 	}
 
+	//and walk away : )
 	return result;
-
 }
 
 //Tests that reads are happening, have reasonable values, and save and load as expected.
