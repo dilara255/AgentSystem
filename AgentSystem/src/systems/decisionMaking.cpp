@@ -174,30 +174,44 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 
 	assert(allScores_ptr->actualTotalScores > 0);
 
-	//We will first calculate the scores of actions in SELF mode, then the others
-	//Actions in SELF mode will leave neighbor = -1, others will also set the neighbor
+	//We will first calculate the scores of actions in SELF mode, then the others.
+	//Actions in SELF mode will leave neighbor = -1 (the others will also set the neighbor).
+	//Invalid variations will have score = -1
 	
-	//TODO-CRITICAL: WARNING: all of the following pressupposes SELF = 0!
+	//TODO-CRITICAL: WARNING: all of the following pressupposes SELF == 0!
 	assert((int)AS::actModes::SELF == 0);
 
 	float maxAmbition = -1;
 	//For self, both neighbor (-1) and mode (SELF, 0) are fixed, so:
 	int totalActionsSelf = AS::ActionVariations::TOTAL_CATEGORIES;
+
 	for (int cat = 0; cat < totalActionsSelf; cat++) {		
+
+		bool valid = AD::isValid(cat, (int)AS::actModes::SELF, (int)scope);
 
 		auto sp = &(allScores_ptr->allScores[cat]);
 
 		sp->ambitions.neighbor = NEIGHBOR_ID_FOR_SELF;
 		sp->ambitions.actCategory = cat;
 		sp->ambitions.actMode = (int)AS::actModes::SELF;
-		setScore(&(sp->ambitions), np, &AD::notionWeightsInFavor);
+		if(valid) {
+			setScore(&(sp->ambitions), np, &AD::notionWeightsInFavor);
+		}
+		else {
+			sp->ambitions.score = BAD_AMBITION; //variation is invalid
+		}
 				
 		maxAmbition = std::max(maxAmbition, sp->ambitions.score);
 				
 		sp->worries.neighbor = NEIGHBOR_ID_FOR_SELF;
 		sp->worries.actCategory = cat;
 		sp->worries.actMode = (int)AS::actModes::SELF;
-		setScore(&(sp->worries), np, &AD::notionWeightsAgainst);
+		if(valid) {
+			setScore(&(sp->worries), np, &AD::notionWeightsAgainst);
+		}
+		else {
+			sp->worries.score = BAD_WORRY;
+		}
 
 		sp->overallUtility.neighbor = NEIGHBOR_ID_FOR_SELF;
 		sp->overallUtility.actCategory = cat;

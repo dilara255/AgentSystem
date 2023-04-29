@@ -158,9 +158,9 @@
 * ***** > Minor 5. Tooling: inspection *****
 *
 * > 1. Tests for inspecting decision-making and action processing:
-* - Create a dummy notion which always returns 1;
-* - Set an four action's weights so that their scores "s" are:
+* - On different tests, set an action's weights so that it's scores "s" are:
 * -- s = -1 , 0 < s < whyBother, whyBother < s < justDoIt, s > justDoIt;
+* -- note that these weights won't be kept, they're just for initial testing;
 * - Create a test with open actions and loads of money:
 * -- Test passes if no errors are thrown;
 * -- Test logs hot micros x active actions;
