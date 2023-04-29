@@ -56,7 +56,9 @@ namespace AS{
 		int64_t largestSleepMicros = 0;
 		int64_t totalSnoozedMicros = 0; //time spent sleeping more then expected (or less)
 		int64_t largestSnoozeMicros = 0;
-		
+
+		int64_t lastStepHotMicros = 0;
+
 		std::chrono::steady_clock::time_point startFirstStep;
 		std::chrono::steady_clock::time_point startLastStep;
 		std::chrono::steady_clock::time_point startThisStep;
@@ -251,6 +253,8 @@ void timeAndSleep(AS::timing_st* timing_ptr, int chopIndex, bool fixedTimeStep) 
 	auto hotTime = bedTime - timing_ptr->startLastStep;
 	int64_t hotTimeMicros = 
 		        std::chrono::duration_cast<std::chrono::microseconds>(hotTime).count();
+	timing_ptr->lastStepHotMicros = hotTimeMicros;
+
 	timing_ptr->totalHotMicros += hotTimeMicros;
 	if (hotTimeMicros > timing_ptr->largestHotMicros) {
 		timing_ptr->largestHotMicros = hotTimeMicros;
@@ -296,6 +300,8 @@ void timeAndSleep(AS::timing_st* timing_ptr, int chopIndex, bool fixedTimeStep) 
 	AS::g_currentNetworkParams_ptr->lastStepTimeMicros = 
 		       std::chrono::duration_cast<std::chrono::microseconds>(
 									timing_ptr->startThisStep - timing_ptr->startLastStep);
+	AS::g_currentNetworkParams_ptr->lastStepHotMicros =
+				std::chrono::microseconds(timing_ptr->lastStepHotMicros);
 	AS::g_currentNetworkParams_ptr->accumulatedMultiplier += timing_ptr->timeMultiplier;
 	AS::g_currentNetworkParams_ptr->mainLoopTicks++;
 

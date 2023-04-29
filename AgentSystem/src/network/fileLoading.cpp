@@ -671,6 +671,7 @@ bool AS::loadNetworkFromFileToDataControllers(FILE* fp,
         return true;
     }   
     currentNetworkParams_ptr->lastStepTimeMicros = std::chrono::microseconds(0);
+    currentNetworkParams_ptr->lastStepHotMicros = std::chrono::microseconds(0);
 }
 
 FILE* AS::acquireFilePointerToLoad(std::string name, std::string filePath) {

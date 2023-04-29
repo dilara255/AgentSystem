@@ -98,6 +98,7 @@ bool AS::copyNetworkParameters(networkParameters_t * destination,
 	destination->mainLoopTicks = source->mainLoopTicks;
 	destination->accumulatedMultiplier = source->accumulatedMultiplier;
 	destination->lastStepTimeMicros = source->lastStepTimeMicros;
+	destination->lastStepHotMicros = source->lastStepHotMicros;
 	destination->maxActions = source->maxActions;
 	destination->maxLAneighbours = source->maxLAneighbours;
 	int nameCpy = strcpy_s(destination->name, nameSize, source->name);
@@ -137,6 +138,7 @@ bool AS::defaultNetworkParameters(networkParameters_t* destination) {
 	destination->mainLoopTicks = 0;
 	destination->accumulatedMultiplier = DEFAULT_TOTAL_MULTIPLIER;
 	destination->lastStepTimeMicros = std::chrono::microseconds(0);
+	destination->lastStepHotMicros = std::chrono::microseconds(0);
 	destination->maxActions = MAX_ACTIONS_PER_AGENT;
 	destination->maxLAneighbours = 0;
 	strcpy(destination->name, "");
@@ -150,7 +152,7 @@ bool AS::defaultNetworkParameters(networkParameters_t* destination) {
 	destination->seeds[3] = DEFAULT_PRNG_SEED3;
 
 	destination->makeDecisions = DEFAULT_SYSTEM_WIDE_MAKE_DECISIONS;
-	destination->makeDecisions = DEFAULT_SYSTEM_WIDE_PROCESS_ACTIONS;
+	destination->processActions = DEFAULT_SYSTEM_WIDE_PROCESS_ACTIONS;
 	
 	return true;
 }

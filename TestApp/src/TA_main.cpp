@@ -226,10 +226,15 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 		return false;
 	}
 
+	if (CL::ASmirrorData_cptr->networkParams.mainLoopTicks != 0) {
+		LOG_ERROR("This tests expects a network with mainLoopTicks == 0. Aborting");
+		return false;
+	}
+
 	int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
 	int numberGAs = CL::ASmirrorData_cptr->networkParams.numberGAs - 1; //effective GAs
 	int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
-
+	
 	//Set resources on all agents as infinite, to facilitate decisions:
 	constexpr float infiniteResources = std::numeric_limits<float>::infinity();
 	auto cldh_ptr = CL::getClientDataHandlerPtr();
@@ -240,22 +245,130 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 	for (int agent = 0; agent < numberLAs; agent++) {
 		cldh_ptr->GAstate.parameters.changeGAresourcesTo(agent, infiniteResources);
 	}
+	
+	//We want to run enough steps so that all action slots could be exhausted
+	int stepsToRun = ((maxActionsPerAgent + 1)) * AS_TOTAL_CHOPS;
 
-	/*
-	- sets initial conditions: default, except for agents with loads of resources;
-	-- make sure initial ticksRan == 0;
-	- runs mainLoop for a given amount of steps: ((max_actions + 1) * AS_TOTAL_CHOPS);
-	- while the mainLoop runs, loop, logging step's hotMicros for each ticksRan (initialize all to zero);
-	-- also record how many actions are on in the mirror;
-	-- but only log if ticksRan is different from last recorded;
-	-- and error out on ticksRan < 0 or > expected;
-	-- check at half AS_MILLISECONDS_PER_STEP (or maybe just sleep a little under that);
-	- after mainLoop is stopped, run through the looging array and count how many are still zero;
-	-- If too many steps were lost, fail test. Otherwise, set steps to average of neighbors;
-	--- careful at the edges;
-	- Fail if mainLoop found errors/warnings;
-	- dump the log into a file (option);
-	*/
+	//And we'll need to check often to get the data we want:
+	int stepTimeMicros = AS_MILLISECONDS_PER_STEP * MICROS_IN_A_MILLI;
+	std::chrono::microseconds testStepTime = std::chrono::microseconds(stepTimeMicros / 3);
+
+	//As the network runs, we'll want to log some data:
+	struct tickData_st {
+		int totalActions = 0;
+		std::chrono::microseconds hotMicros = std::chrono::microseconds(0);
+	};
+
+	std::vector<tickData_st> ticks;
+
+	tickData_st tickData;
+	ticks.reserve(stepsToRun);
+	for(int i = 0; i < stepsToRun; i++) { ticks.push_back(tickData); }
+
+	//We're now ready to run the network
+	result = AS::run(true, stepsToRun);
+
+	if (!result) {
+		LOG_ERROR("Failed to run network. Aborting test");
+		return false;
+	}
+
+	//And log the data we want:
+	bool hasPaused = false;
+	uint64_t nextTickToRecord = 0;
+	auto params_ptr = &(CL::ASmirrorData_cptr->networkParams);
+	auto LAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataLAs);
+	auto GAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataGAs);
+	while (!hasPaused) {
+
+		uint64_t tickOnMirror = params_ptr->mainLoopTicks;
+		if ( (tickOnMirror >= nextTickToRecord) && (tickOnMirror < stepsToRun) ) {
+
+			nextTickToRecord = tickOnMirror + 1;
+
+			//record the data:
+			tickData.hotMicros = params_ptr->lastStepHotMicros;
+
+			int activeActions = 0;
+			for (int i = 0; i < maxActionsPerAgent; i++) {
+
+				for (int j = 0; j < numberLAs; j++) {
+
+					int index = (i * numberLAs) + j;
+					activeActions += (LAactions_ptr->at(index).ids.active == 1);
+				}
+				for (int j = 0; j < numberGAs; j++) {
+
+					int index = (i * numberGAs) + j;
+					activeActions += (GAactions_ptr->at(index).ids.active == 1);
+				}
+			}
+			tickData.totalActions = activeActions;
+
+			ticks.at(tickOnMirror) = tickData;
+		}
+		
+		AZ::hybridBusySleepForMicros(testStepTime);
+		hasPaused = AS::checkIfMainLoopIsPaused();
+	}
+
+	//We'll now check how many ticks, if any, we missed:
+	int missedTicks = 0;
+
+	for (int i = 0; i < stepsToRun; i++) {
+		missedTicks += (ticks.at(i).hotMicros.count() == 0);
+	}
+
+	//If we lost too many ticks, this is an error:
+	float maxMissProportion = 0.05f;
+	int maxMisses = (int)(stepsToRun * (float)maxMissProportion);
+
+	result = (missedTicks < maxMisses);
+
+	if (!result) {
+		LOG_ERROR("Test logging missed too many ticks. Will fail, but return from main will still be checked");
+	}
+	else {
+		//let's interpolate any missing data (we hope there are no sequences of missing data):
+		for (int i = 0; i < stepsToRun; i++) {
+			if (ticks.at(i).hotMicros.count() == 0) {
+				if(i == 0) { ticks.at(0) = ticks.at(1); }
+				else if(i == (stepsToRun-1)) { ticks.at(stepsToRun-1) = ticks.at(stepsToRun-2); }
+				else {
+					ticks.at(i).hotMicros = 
+						(ticks.at(i - 1).hotMicros + ticks.at(i + 1).hotMicros) / 2;
+					ticks.at(i).totalActions = 
+						(ticks.at(i - 1).totalActions + ticks.at(i + 1).totalActions) / 2;
+				}
+			}
+		}
+
+	}
+
+	//The mainLoop has stepped and is now paused and we have our data.
+	//Let's stop the main loop and check for errors:
+	bool aux = AS::stop();
+	
+	result &= aux;
+	if (!aux) {
+		LOG_ERROR("Main loop found errors during the test... will fail");
+	}
+	else {
+		LOG_INFO("Main loop found no errors during the test");
+	}
+	
+
+	//- dump the log into a file (option);
+
+	if (!result) {
+		LOG_ERROR("Test failed");
+	}
+	else {
+		LOG_INFO("Test passed");
+	}
+
+	return result;
+
 }
 
 //Tests that reads are happening, have reasonable values, and save and load as expected.

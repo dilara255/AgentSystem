@@ -100,6 +100,11 @@ namespace CL{
 	{
 		return false;
 	}
+
+	bool CL_API ClientData::NetworkParameterDataHandler::changeLastStepHotMicrosTo(std::chrono::microseconds newValue)
+	{
+		return false;
+	}
 	
 	bool CL_API ClientData::NetworkParameterDataHandler::changeMainLoopTicksTo(uint64_t newValue)
 	{
