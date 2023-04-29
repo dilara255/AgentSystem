@@ -65,10 +65,13 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 			                                                 errorsCounter_ptr);
 
 	//TODO: add more sanity checks
-	if ( (choice.ids.target >= (uint32_t)neighbors) 
-		  && (choice.ids.mode != (uint32_t)AS::actModes::SELF) 
+	if ( (choice.ids.target >= (uint32_t)dp->LAstate_ptr->getDataCptr()->size()) 
 		  && (choice.ids.slotIsUsed == 1) ) {
 		
+		LOG_CRITICAL("AAA",2);
+		printf("targ: %d (%d neighs), agent: %d, mode: %d (cat: %d)\n",
+			choice.ids.target, neighbors, choice.ids.origin, choice.ids.mode, choice.ids.category);
+
 		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_LA_TARGET);
 		choice.ids.slotIsUsed = 0; //invalidate choice so we don't blow stuff up
 	}
@@ -120,8 +123,7 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 			                                                  errorsCounter_ptr);
 	
 	//TODO: add more sanity checks
-	if ( (choice.ids.target >= (uint32_t)neighbors)
-		  && (choice.ids.mode != (uint32_t)AS::actModes::SELF)
+	if ( (choice.ids.target >= (uint32_t)dp->GAstate_ptr->getDataCptr()->size())
 		  && (choice.ids.slotIsUsed == 1) ) {
 		
 		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_GA_TARGET);
@@ -229,17 +231,19 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 
 	for(int neighbor = 0; neighbor < totalNeighbors; neighbor++){
 		for (int cat = 0; cat < AS::ActionVariations::TOTAL_CATEGORIES; cat++) {
-			//mode will start at 1 so we exclude SELF
 			for (int mode = 0; mode < modesRegardingNeighbors; mode++) {
-			
-				bool valid = AD::isValid(cat, mode, (int)scope);
+				//mode should start at 1 to exclude SELF, so:
+				int actualMode = mode + 1;
+
+				bool valid = AD::isValid(cat, actualMode, (int)scope);
 
 				int index = totalActionsSelf
-							+ (neighbor * widthPerNeighbor) + (cat * widthPerCategory) + mode;
+							+ (neighbor * widthPerNeighbor) 
+					        + (cat * widthPerCategory) + mode;
 				auto sp = &(allScores_ptr->allScores[index]);
 
 				sp->ambitions.actCategory = cat;
-				sp->ambitions.actMode = mode + 1; //to account for SELF
+				sp->ambitions.actMode = actualMode;
 				sp->ambitions.neighbor = neighbor;
 				if(valid) {
 					setScore(&(sp->ambitions), np, &AD::notionWeightsInFavor);
@@ -251,7 +255,7 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 				maxAmbition = std::max(maxAmbition, sp->ambitions.score);
 				
 				sp->worries.actCategory = cat;
-				sp->worries.actMode =  mode + 1; //to account for SELF
+				sp->worries.actMode = actualMode; 
 				sp->worries.neighbor = neighbor;
 				if(valid){
 					setScore(&(sp->worries), np, &AD::notionWeightsAgainst);
