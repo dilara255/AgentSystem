@@ -214,6 +214,50 @@ bool testSnooze(bool printLog) {
 	return passed;
 }
 
+//If print, will print a digest of the results. If dump, will save to a file all the
+//timing data, including amount of active actions for each tick.
+//Fails in case mainLoop finds errors or updating of the timing data doesn't work.
+bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool dump) {
+	LOG_WARN("Will load a network, run it with decisions and actions and check for errors, while logging performance");
+	
+	bool result = AS::loadNetworkFromFile(fileNameWithDefaults, false);
+	if (!result) {
+		LOG_ERROR("Failed to load network. Aborting test");
+		return false;
+	}
+
+	int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
+	int numberGAs = CL::ASmirrorData_cptr->networkParams.numberGAs - 1; //effective GAs
+	int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
+
+	//Set resources on all agents as infinite, to facilitate decisions:
+	constexpr float infiniteResources = std::numeric_limits<float>::infinity();
+	auto cldh_ptr = CL::getClientDataHandlerPtr();
+	
+	for (int agent = 0; agent < numberLAs; agent++) {
+		cldh_ptr->LAstate.parameters.resources.changeCurrentTo(agent, infiniteResources);
+	}
+	for (int agent = 0; agent < numberLAs; agent++) {
+		cldh_ptr->GAstate.parameters.changeGAresourcesTo(agent, infiniteResources);
+	}
+
+	/*
+	- sets initial conditions: default, except for agents with loads of resources;
+	-- make sure initial ticksRan == 0;
+	- runs mainLoop for a given amount of steps: ((max_actions + 1) * AS_TOTAL_CHOPS);
+	- while the mainLoop runs, loop, logging step's hotMicros for each ticksRan (initialize all to zero);
+	-- also record how many actions are on in the mirror;
+	-- but only log if ticksRan is different from last recorded;
+	-- and error out on ticksRan < 0 or > expected;
+	-- check at half AS_MILLISECONDS_PER_STEP (or maybe just sleep a little under that);
+	- after mainLoop is stopped, run through the looging array and count how many are still zero;
+	-- If too many steps were lost, fail test. Otherwise, set steps to average of neighbors;
+	--- careful at the edges;
+	- Fail if mainLoop found errors/warnings;
+	- dump the log into a file (option);
+	*/
+}
+
 //Tests that reads are happening, have reasonable values, and save and load as expected.
 //Loads a network, sets some values, runs it, checks new values, saves, loads, checks again
 //TODO: check all fields, better sanity checking
@@ -462,8 +506,6 @@ bool testReads(bool print, float secondsToRun) {
 	return result;
 }
 
-//TODO-CRITICAL: this test needs to somehow guarantee no actions change the incomes and etc
-//UPDATE when actions are implemented
 //TODO: make a more interesting test-case using clientDataHandler (include war/attrition)
 //TODO: this is really brittle : /
 bool testAgentsUpdating(bool print, bool fixedAndStepped) {

@@ -49,7 +49,7 @@ void updatedLastDispositionsGA(GA::stateData_t* agentState_ptr);
 void updateInfiltrationAndRelationsFromLAs(int agent, AS::dataControllerPointers_t* dp, 
            GA::stateData_t* state_ptr, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
-//WARNING: This is the only entrypoint to this file, and should remain so!
+//WARNING: This is the only entry point to this file, and should remain so!
 void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop, 
                     dataControllerPointers_t* dp, ActionSystem* actionSystem_ptr,
 	                 float timeMultiplier, int numberLAs, int numberEffectiveGAs,

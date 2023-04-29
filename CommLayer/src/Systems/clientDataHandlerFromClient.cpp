@@ -818,9 +818,31 @@ namespace CL{
 	}
 
 
-	bool CL_API ClientData::GAparametersHandler::changeGAresources(uint32_t agentID, float newValue)
+	bool CL_API ClientData::GAparametersHandler::changeGAresourcesTo(uint32_t agentID, float newValue)
 	{
-		return false;
+		//This defines the functions to be used to tansfer the data to the AS:
+		auto boundTransferFunction = 
+			std::bind(&CL::ClientData::GAparametersHandler::transferGAresources,
+			this, std::placeholders::_1, std::placeholders::_2);
+
+		//This prepares the change data. It shouldn't need to be changed:
+		std::mutex* mutex_ptr;
+		#pragma warning(push)
+		#pragma warning(disable : 4267) //TODO: try to understand the warning : p
+		bool result = buildAndPushChangeAndAcquireMutex(0, 1,
+			m_changesVector_ptr, &mutex_ptr, m_parentHandlerPtr, boundTransferFunction);
+		#pragma warning(pop)
+
+		//Actually changes the value:
+		if (result) {
+			m_data_ptr->data[agentID].parameters.GAresources = newValue;
+		}
+
+		//Then we clean up and exit:
+		if (mutex_ptr != NULL) {
+			mutex_ptr->unlock();
+		}
+		return result;
 	}
 
 	bool CL_API ClientData::GAparametersHandler::changeLAstrenghtTotal(uint32_t agentID, float newValue)
