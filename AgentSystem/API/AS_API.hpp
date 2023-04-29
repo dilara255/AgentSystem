@@ -27,7 +27,7 @@ namespace AS {
 	//Checks some conditions before initializing, and returns false if any are not met.
 	//AS has to be initialized and a network must have been loaded.
 	//If fixedTimestep, treats each step as having taken the target time, always.
-	//If stepsToRun >= 1, will give this many steps and then pause.
+	//If stepsToRun >= 1, will give this many steps and then PAUSE.
 	//If stepsToRun < 1, will run until stopped by another command.
 	// 
 	//WARNING: This WILL consume any Client issued changes BEFORE running the network.

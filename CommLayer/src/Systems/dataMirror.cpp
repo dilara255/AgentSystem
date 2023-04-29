@@ -24,6 +24,8 @@ namespace CL {
 		strcpy(data.networkParams.comment, params_cptr->comment);
 		data.networkParams.isNetworkInitialized = params_cptr->isNetworkInitialized;
 		data.networkParams.lastMainLoopStartingTick = params_cptr->lastMainLoopStartingTick;
+		data.networkParams.lastStepTimeMicros = params_cptr->lastStepTimeMicros;
+		data.networkParams.lastStepHotMicros = params_cptr->lastStepHotMicros;
 		data.networkParams.mainLoopTicks = params_cptr->mainLoopTicks;
 		data.networkParams.accumulatedMultiplier = params_cptr->accumulatedMultiplier;
 		data.networkParams.maxActions = params_cptr->maxActions;
@@ -31,6 +33,12 @@ namespace CL {
 		strcpy(data.networkParams.name, params_cptr->name);
 		data.networkParams.numberGAs = params_cptr->numberGAs;
 		data.networkParams.numberLAs = params_cptr->numberLAs;
+		data.networkParams.makeDecisions = params_cptr->makeDecisions;
+		data.networkParams.processActions = params_cptr->processActions;
+
+		for(int i = 0; i < DRAW_WIDTH; i++){
+			data.networkParams.seeds[i] = params_cptr->seeds[i];
+		}
 
 		bool result = data.actionMirror.initialize(params_cptr);
 		if (!result) {
@@ -186,8 +194,14 @@ namespace CL {
 		data.networkParams.mainLoopTicks = params_cptr->mainLoopTicks;
 		data.networkParams.accumulatedMultiplier = params_cptr->accumulatedMultiplier;
 		data.networkParams.lastMainLoopStartingTick = params_cptr->lastMainLoopStartingTick;
+		data.networkParams.lastStepTimeMicros = params_cptr->lastStepTimeMicros;
+		data.networkParams.lastStepHotMicros = params_cptr->lastStepHotMicros;
 		data.networkParams.makeDecisions = params_cptr->makeDecisions;
 		data.networkParams.processActions = params_cptr->processActions;
+
+		for(int i = 0; i < DRAW_WIDTH; i++){
+			data.networkParams.seeds[i] = params_cptr->seeds[i];
+		}
 
 		size_t nameSize = NAME_LENGHT * sizeof(char);
 

@@ -116,6 +116,7 @@ namespace CL::ClientData {
 		bool CL_API changeLastMainLoopStartingTickTo(uint64_t newValue);
 		bool CL_API changeAccumulatedMultiplierTo(double newValue);
 		bool CL_API changeLastStepTimeMicrosTo(std::chrono::microseconds newValue);
+		bool CL_API changeLastStepHotMicrosTo(std::chrono::microseconds newValue);
 		bool CL_API changeNumberLAsTo(int newValue);
 		bool CL_API changeNumberGAsTo(int newValue);
 		bool CL_API changeMaxLAneighboursTo(int newValue);
@@ -139,6 +140,7 @@ namespace CL::ClientData {
 		bool transferLastMainLoopStartingTick(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transAccumulatedMultiplier(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transLastStepTimeMicros(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transLastStepHotMicros(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferNumberLAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferNumberGAs(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferMaxLAneighbours(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
@@ -605,7 +607,7 @@ namespace CL::ClientData {
 			
 			StateControllerGA* m_data_ptr;
 		};
-
+			//TODO: is this about the LAtotals? If so, rename, if not, what is it about?
 			class GAresourcesHandler: public BaseSubHandler {
 			public:
 

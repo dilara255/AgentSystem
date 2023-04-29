@@ -142,6 +142,11 @@ namespace CL {
 		return false;
 	}
 
+	bool ClientData::NetworkParameterDataHandler::transLastStepHotMicros(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
+
 	bool ClientData::NetworkParameterDataHandler::transferMainLoopTicks(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
 		return false;

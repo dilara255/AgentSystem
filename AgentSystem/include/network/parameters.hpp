@@ -231,6 +231,7 @@ namespace AS {
 		uint64_t lastMainLoopStartingTick;
 		double accumulatedMultiplier;
 		std::chrono::microseconds lastStepTimeMicros;
+		std::chrono::microseconds lastStepHotMicros;
 		int numberLAs;
 		int numberGAs;
 		int maxLAneighbours;
