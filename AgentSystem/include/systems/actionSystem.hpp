@@ -138,20 +138,20 @@ namespace AS {
 			//Innermost Order is: { LOCAL, GLOBAL }
 			
 			            //STRENGHT                            //RESOURCES                
-		      //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, SPC}, {SPC, STD}, {SPC, STD}},  {{SPC, SPC}, {SPC, STD}, {SPC, STD}}, 
+		      //SELF        IMMED.     REQUEST         SELF       IMMED.      REQUEST           
+			{{SPC, STD}, {SPC, STD}, {SPC, SPC}},  {{SPC, STD}, {SPC, SPC}, {SPC, STD}}, 
 
 		 	              //ATTACK                               //GUARD
-			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, STD}, {STD, STD}, {NOT, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
+			  //SELF       IMMED.      REQUEST        SELF        IMMED.      REQUEST        
+			{{NOT, STD}, {SPC, STD}, {STD, STD}},  {{NOT, STD}, {SPC, STD}, {STD, STD}}, 
 
 		 	               //SPY                               //SABOTAGE
-			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, SPC}, {SPC, SPC}, {SPC, STD}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}, 
+			  //SELF       IMMED.      REQUEST         SELF       IMMED.     REQUEST     
+			{{SPC, STD}, {SPC, SPC}, {SPC, SPC}},  {{NOT, STD}, {SPC, STD}, {STD, STD}}, 
 
 		 	            //DIPLOMACY                            //CONQUEST
-			  //IMMED.    REQUEST       SELF          IMMED.     REQUEST       SELF    
-			{{SPC, SPC}, {SPC, SPC}, {NOT, SPC}},  {{SPC, STD}, {STD, STD}, {NOT, STD}}
+			  //SELF       IMMED.    REQUEST           SELF        IMMED.    REQUEST        
+			{{NOT, SPC}, {SPC, SPC}, {SPC, SPC}},  {{NOT, STD}, {SPC, STD}, {STD, STD}}
 		};
 
 		constexpr uint32_t actionIDonScope(int category, int mode) {
@@ -436,92 +436,92 @@ namespace AS {
 			//For each variation, first row is notionsSelf, second notionsNeighbor.
 
 			{{                         //STRENGHT  
-				//IMMEDIATE:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
-				//REQUEST:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
 				//SELF:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
 			}},
 			{{                         //RESOURCES 
-				//IMMEDIATE:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
-				//REQUEST:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
 				//SELF:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
 			}},	
 			{{                         //ATTACK       
-				//IMMEDIATE:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
-				//REQUEST:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
 				//SELF:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+				{0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//IMMEDIATE:
+				{0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
 			}},	
 			{{                         //GUARD       
-				//IMMEDIATE:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
-				//REQUEST:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
 				//SELF:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
 			}},	
 			{{                         //SPY       
-				//IMMEDIATE:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
-				//REQUEST:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
 				//SELF:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
 			}},	
 			{{                         //SABOTAGE       
-				//IMMEDIATE:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
-				//REQUEST:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
 				//SELF:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
 			}},
 			{{                         //DIPLOMACY       
-				//IMMEDIATE:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
-				//REQUEST:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
 				//SELF:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
 			}},
 			{{                         //CONQUEST       
-				//IMMEDIATE:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                     
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
-				//REQUEST:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                 
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f},
 				//SELF:
-				{-1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f,                          
-				 -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f, -1.f}
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
+				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
 			}}		
 		}};
 

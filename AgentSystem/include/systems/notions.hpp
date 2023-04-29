@@ -5,8 +5,8 @@
 
 #include "data/agentDataStructures.hpp"
 
-#define BAD_AMBITION -1000;
-#define BAD_WORRY 1000;
+#define BAD_AMBITION 0;
+#define BAD_WORRY 0;
 
 namespace PURE_LA = LA;
 namespace PURE_GA = GA;
