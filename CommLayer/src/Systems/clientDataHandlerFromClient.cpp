@@ -834,7 +834,7 @@ namespace CL{
 		std::mutex* mutex_ptr;
 		#pragma warning(push)
 		#pragma warning(disable : 4267) //TODO: try to understand the warning : p
-		bool result = buildAndPushChangeAndAcquireMutex(0, 1,
+		bool result = buildAndPushChangeAndAcquireMutex(agentID, m_data_ptr->data.size(),
 			m_changesVector_ptr, &mutex_ptr, m_parentHandlerPtr, boundTransferFunction);
 		#pragma warning(pop)
 

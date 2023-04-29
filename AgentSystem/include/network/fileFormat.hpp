@@ -7,6 +7,7 @@
 *TODO: Write Brief Description of the Format and of this file */
 
 #include "miscStdHeaders.h"
+#include "AS_API.hpp"
 
 #define FILE_FORMAT_VERSION 1
 #define MAX_LINE_LENGHT 500
@@ -17,7 +18,6 @@
 
 static const char* defaultGAnamePrefix = "GA_";
 static const char* defaultLAnamePrefix = "LA_";
-static const char* defaultFilePath = "networkFiles\\";
 
 int insertGAsWithDefaults(int numberGAs, FILE* fp);
 int insertGAsWithoutDefaults(int numberGAs, FILE* fp);

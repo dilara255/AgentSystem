@@ -8,6 +8,9 @@
 
 #include "core.hpp"
 
+//TODO: pull into namespace, fix wathever that breaks
+static const char* defaultFilePath = "networkFiles\\";
+
 namespace AS {
 	
 	AS_API bool initializeASandCL();
