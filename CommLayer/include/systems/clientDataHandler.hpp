@@ -634,7 +634,7 @@ namespace CL::ClientData {
 		
 			bool CL_API changeAll(uint32_t agentID, AS::GAparameterTotals_t newValue);
 				
-			bool CL_API changeGAresources(uint32_t agentID, float newValue);
+			bool CL_API changeGAresourcesTo(uint32_t agentID, float newValue);
 			bool CL_API changeLAstrenghtTotal(uint32_t agentID, float newValue);
 
 			GAresourcesHandler LAresourceTotals;

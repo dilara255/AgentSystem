@@ -100,7 +100,6 @@ namespace CL {
 			return false;
 		}
 
-		//TODO-CITICAL: Check that this works, considering the fptr is to a private method
 		return change.getNewData_fptr(change.agentID, recepientPtrs);
 	}
 
@@ -747,7 +746,24 @@ namespace CL {
 
 	bool ClientData::GAparametersHandler::transferGAresources(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
-		return false;
+		//TODO: extract functions
+		if (agentID > m_data_ptr->data.size()) {
+			LOG_ERROR("Trying to get changes from agent outside of Client Data range");
+			return false;
+		}
+		if (agentID > recepientPtrs.agentData_ptr->GAstate_ptr->getDirectDataPtr()->size()) {
+			LOG_ERROR("Trying to get changes from agent outside of AS Data range");
+			return false;
+		}
+
+		GA::StateController* GAdata_ptr = recepientPtrs.agentData_ptr->GAstate_ptr;
+		std::vector <GA::stateData_t>* dataVector_ptr = GAdata_ptr->getDirectDataPtr();
+		GA::stateData_t* agentData_ptr = &(dataVector_ptr->at(agentID));
+		
+		agentData_ptr->parameters.GAresources =
+					m_data_ptr->data.at(agentID).parameters.GAresources;
+		
+		return true;
 	}
 
 	bool ClientData::GAparametersHandler::transferLAstrenghtTotal(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
