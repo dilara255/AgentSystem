@@ -232,6 +232,8 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 			//mode will start at 1 so we exclude SELF
 			for (int mode = 0; mode < modesRegardingNeighbors; mode++) {
 			
+				bool valid = AD::isValid(cat, mode, (int)scope);
+
 				int index = totalActionsSelf
 							+ (neighbor * widthPerNeighbor) + (cat * widthPerCategory) + mode;
 				auto sp = &(allScores_ptr->allScores[index]);
@@ -239,14 +241,24 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 				sp->ambitions.actCategory = cat;
 				sp->ambitions.actMode = mode + 1; //to account for SELF
 				sp->ambitions.neighbor = neighbor;
-				setScore(&(sp->ambitions), np, &AD::notionWeightsInFavor);
+				if(valid) {
+					setScore(&(sp->ambitions), np, &AD::notionWeightsInFavor);
+				}
+				else {
+					sp->ambitions.score = BAD_AMBITION;
+				}
 				
 				maxAmbition = std::max(maxAmbition, sp->ambitions.score);
 				
 				sp->worries.actCategory = cat;
 				sp->worries.actMode =  mode + 1; //to account for SELF
 				sp->worries.neighbor = neighbor;
-				setScore(&(sp->worries), np, &AD::notionWeightsAgainst);
+				if(valid){
+					setScore(&(sp->worries), np, &AD::notionWeightsAgainst);
+				}
+				else {
+					sp->worries.score = BAD_WORRY;
+				}
 
 				sp->overallUtility.actCategory = cat;
 				sp->overallUtility.actMode =  mode + 1; //to account for SELF
