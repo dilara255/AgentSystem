@@ -390,8 +390,8 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 	}
 
 	if (print) {
-		printf("Steps: %d MaxTotalActions: %d (maxActs: %d, LAs: %d, GAs: %d)\n\n",
-						stepsToRun, maxActionsPerAgent * (numberLAs + numberGAs), 
+		printf("Steps: %d (missed %d) MaxTotalActions: %d (maxActs: %d, LAs: %d, GAs: %d)\n\n",
+						stepsToRun, missedTicks, maxActionsPerAgent * (numberLAs + numberGAs), 
 						maxActionsPerAgent, numberLAs, numberGAs );
 		printf("Least Actions: %d at step %d (%lld hot micros)\n",
 			leastActions, idLeastActions, ticks.at(idLeastActions).hotMicros.count());
@@ -419,8 +419,8 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 			LOG_WARN("Couldn't acquire file pointer to save test data, so won't");
 		}
 		else {
-			fprintf(fp, "Steps: %d MaxTotalActions: %d (maxActs: %d, LAs: %d, GAs: %d)\n\n",
-					stepsToRun, maxActionsPerAgent * (numberLAs + numberGAs), 
+			fprintf(fp, "Steps: %d (%d interpolated) MaxTotalActions: %d (maxActs: %d, LAs: %d, GAs: %d)\n\n",
+					stepsToRun, missedTicks, maxActionsPerAgent * (numberLAs + numberGAs), 
 					maxActionsPerAgent, numberLAs, numberGAs );
 
 			fprintf(fp, "Least Actions: %d at step %d (%lld hot micros)\n",

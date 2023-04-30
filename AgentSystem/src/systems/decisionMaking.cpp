@@ -348,11 +348,9 @@ void prepareForMitigationRound(AD::notionWeights_t wp, AD::notions_t* np,
 		wp[notion] = 0;
 	}
 	
-	//scoreAfavorAção/scoreAfavorGoalActions * quantoAnocaoAtrapalhaEssaAção
-
 	//Now for each action on the shortlist we will, for each notion:
 	//- See how much it adds worry to this action;
-	//- Add to it's weight the more it adds worry and the higher ambition score for this action
+	//- Add to it's weight, based on that and on the action's ambition score.
 	for (int action = 0; action < goalShortlistSize; action++) {
 	
 		int cat = allScores_ptr->allScores[action].ambitions.actCategory;
@@ -362,7 +360,7 @@ void prepareForMitigationRound(AD::notionWeights_t wp, AD::notions_t* np,
 		float relativeAmbition =
 				allScores_ptr->allScores[action].ambitions.score / totalAmbitionScoreForGoals;
 
-		//First we check the effect of the notions about ourselves:
+		//Let's check the effect of the notions about ourselves:
 		int notionsSelf = (int)AD::notionsSelf::TOTAL;
 		for (int notion = 0; notion < notionsSelf; notion++) {
 
@@ -372,7 +370,7 @@ void prepareForMitigationRound(AD::notionWeights_t wp, AD::notions_t* np,
 			wp[notion] =+ relativeAmbition * howMuchThisNotionIsAworryForThisAction;
 		}
 
-		//Now we have to choose between using average or spefici neighbor notions:
+		//Now we have to choose between using average or speficic neighbor notions:
 		float* notionsNeighbor_ptr;
 		if (mode == (int)AS::actModes::SELF) {
 			notionsNeighbor_ptr = np->averages;
@@ -395,7 +393,7 @@ void prepareForMitigationRound(AD::notionWeights_t wp, AD::notions_t* np,
 	}
 }
 
-//Mitigation uses the weights on wp to award extra score to actions which might
+//Mitigation uses the mitigation weights to award extra score to actions which might
 //mitigate the worries which are blocking us from executing the highest ambition actions
 void mitigate(AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np,
 	                                AD::allScoresAnyScope_t* allScores_ptr) {
@@ -406,8 +404,8 @@ void mitigate(AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np,
 
 	for (int action = 0; action < choiceShortlistSize; action++) {
 		
-		int cat = allScores_ptr->allScores[action].ambitions.actCategory;
-		int mode = allScores_ptr->allScores[action].ambitions.actMode;
+		int cat = allScores_ptr->allScores[action].overallUtility.actCategory;
+		int mode = allScores_ptr->allScores[action].overallUtility.actMode;
 		
 		float extraScore = 0;
 
@@ -415,11 +413,12 @@ void mitigate(AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np,
 		int notionsSelf = (int)AD::notionsSelf::TOTAL;
 		for (int notion = 0; notion < notionsSelf; notion++) {
 
-			float weightInFavorThisAction =
-				AD::notionWeightsInFavor.at(cat).at(mode).at(notion);
+			float overallNotionWeightForThisAction =
+					AD::notionWeights.at(cat).at(mode).at(notion);
 
 			extraScore += 
-				np->self[notion] * weightInFavorThisAction * mitigationWeights_arr[notion];
+				np->self[notion] * overallNotionWeightForThisAction 
+								 * mitigationWeights_arr[notion];
 		}
 
 		//For notions related to neighbors, we choose wheter to use averages or not:
@@ -436,11 +435,11 @@ void mitigate(AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np,
 		for (int notion = 0; notion < (int)AD::notionsNeighbor::TOTAL; notion++) {
 
 			int notionWeightID = notion + notionsSelf;
-			float weightInFavorThisAction =
-				AD::notionWeightsInFavor.at(cat).at(mode).at(notionWeightID);
+			float overallNotionWeightForThisAction =
+				AD::notionWeights.at(cat).at(mode).at(notionWeightID);
 			
 			extraScore += 
-				notionsNeighbor_ptr[notion] * weightInFavorThisAction 
+				notionsNeighbor_ptr[notion] * overallNotionWeightForThisAction 
 										    * mitigationWeights_arr[notionWeightID];
 		}	
 
@@ -481,6 +480,9 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 	AD::notionWeights_t inconvennienceWeightsForExtraScoring; //for mitigation rounds
 
 	//Now for the loop:
+	//Note that on first pass scores are sorted by ambition;
+	//On subsequent passes, they're sorted by overallUtility;
+	//This affects the loop condition as well as wich actions get extra score via mitigation.
 	while( (allScores_ptr->allScores[0].overallUtility.score < justDoIt)
 				       && (mitigationAttempts < maxMitigationAttempts) ) { 
 	
@@ -488,14 +490,15 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 			prepareForMitigationRound(&inconvennienceWeightsForExtraScoring[0], np, allScores_ptr);
 		}
 
+		//choice shortlist for first pass is arranged by ambition; for later passes, by utility
 		mitigate(&inconvennienceWeightsForExtraScoring[0], np, allScores_ptr);
 
 		//sort from highest overallUtility to smallest. The maximum will be at allScores[0]
-		//Note: since mitigation only affects the choices shortlist, and only positivelly,
-		//after the first round we only need to sort the top actions. So:
+		//Note: since mitigation only affects the choices shortlist,
+		//after the first round we only need to sort 2 times as many as the top actions. So:
 		int scoresToSort = allScores_ptr->actualTotalScores;
 		if(mitigationAttempts > 0){
-			scoresToSort = choiceShortlistSize;
+			scoresToSort = 2 * choiceShortlistSize;
 		}
 		std::sort(&allScores_ptr->allScores[0], &allScores_ptr->allScores[scoresToSort - 1], 
 		                                                AD::descendingOverallUtilityCompare);
