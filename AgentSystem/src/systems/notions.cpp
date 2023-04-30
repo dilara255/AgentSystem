@@ -12,7 +12,7 @@ namespace PURE_GA = GA;
 
 namespace AS::Decisions::LA {
 
-	//STUB: too much str/income
+	//LOW_INCOME_TO_STR
 	float calcNotionS0(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
@@ -42,6 +42,7 @@ namespace AS::Decisions::LA {
 		return notion;
 	}
 
+	//LOW_DEFENSE_TO_RESOURCES
 	float calcNotionS1(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
@@ -50,6 +51,7 @@ namespace AS::Decisions::LA {
 		return 1.0f;
 	}
 
+	//LOW_CURRENCY
 	float calcNotionS2(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -98,7 +100,7 @@ namespace AS::Decisions::LA {
 		return 1.0f;
 	}
 
-	//STUB: neighbor has a lot of cash and little defenses
+	//LOW_DEFENSE_TO_RESOURCES
 	float calcNotionN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -148,6 +150,7 @@ namespace AS::Decisions::LA {
 		return notion;
 	}
 
+	//IS_STRONG
 	float calcNotionN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -156,6 +159,7 @@ namespace AS::Decisions::LA {
 		return 1.0f;
 	}
 
+	//WORRIES_ME
 	float calcNotionN2(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -164,6 +168,7 @@ namespace AS::Decisions::LA {
 		return 1.0f;
 	}
 
+	//I_TRUST_THEM
 	float calcNotionN3(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		

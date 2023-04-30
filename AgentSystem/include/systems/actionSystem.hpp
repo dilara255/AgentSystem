@@ -317,12 +317,14 @@ namespace AS {
 
 	namespace Decisions {
 		
-		enum class notionsSelf { S0, S1, S2, S3, S4, S5, S6, S7,
-													     TOTAL };
+		enum class notionsSelf { LOW_INCOME_TO_STR, LOW_DEFENSE_TO_RESOURCES, LOW_CURRENCY, 
+								 S3, S4, S5, S6, S7,
+								 TOTAL };
 		typedef	float AS_API notionsSelf_t[(int)notionsSelf::TOTAL];
 		
-		enum class notionsNeighbor { N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11,
-		                                                                       TOTAL };
+		enum class notionsNeighbor { LOW_DEFENSE_TO_RESOURCES, IS_STRONG, WORRIES_ME, 
+			                         I_TRUST_THEM, N4, N5, N6, N7, N8, N9, N10, N11,
+		                             TOTAL };
 		typedef	float AS_API notionsNeighbor_t[(int)notionsNeighbor::TOTAL];
 
 		constexpr int TOTAL_NOTIONS = (int)notionsSelf::TOTAL + (int)notionsNeighbor::TOTAL;
@@ -437,8 +439,8 @@ namespace AS {
 
 			{{                         //STRENGHT  
 				//SELF:
-				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				{-0.8f, 0.6f, -0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.3f, 0.3f, 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				//IMMEDIATE:
 				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
 				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
@@ -448,8 +450,8 @@ namespace AS {
 			}},
 			{{                         //RESOURCES 
 				//SELF:
-				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				{0.8f, -0.8f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.2f, 0.0f, -0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				//IMMEDIATE:
 				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
 				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
@@ -459,11 +461,11 @@ namespace AS {
 			}},	
 			{{                         //ATTACK       
 				//SELF:
-				{0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				{0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
 				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				//IMMEDIATE:
-				{0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				{0.4f, -0.4f, 0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 0.4f, -0.6f, 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				//REQUEST:
 				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
 				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
