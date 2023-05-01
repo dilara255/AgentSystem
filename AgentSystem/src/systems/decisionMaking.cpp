@@ -1,3 +1,5 @@
+//Cat => (action variation) category. Not a feline.
+
 #include "miscStdHeaders.h"
 #include "miscDefines.hpp"
 
@@ -20,11 +22,20 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 								 	     AS::scope scope, int totalNeighbors,
 	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
+int getTotalPossibleActualScores(int neighbors) {
+
+	int possibleActionsSelf = (int)AS::actCategories::TOTAL;
+	int possibleActionsNeighbors = neighbors 
+						* ((int)AS::actModes::TOTAL - 1) * (int)AS::actCategories::TOTAL;
+
+	return possibleActionsSelf + possibleActionsNeighbors;
+}
+
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
              AD::notions_t* notions_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
                int totalNeighbors, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
-int getTotalScoresLA(LA::stateData_t* state_ptr, int neighbors);
+
 
 AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
 					 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
@@ -58,17 +69,17 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	calculateNotionsLA(agent, dp, &notions, referenceReads_ptr, neighbors, errorsCounter_ptr);
 
 	AD::allScoresAnyScope_t scores;
-	scores.actualTotalScores = getTotalScoresLA(state_ptr, neighbors);
+	scores.actualTotalScores = getTotalPossibleActualScores(neighbors);
 	
 	AS::actionData_t choice =
 		chooseAction(&notions, &scores, agent, dp, AS::scope::LOCAL, neighbors,
 			                                                 errorsCounter_ptr);
 
 	//TODO: add more sanity checks
-	if ( (choice.ids.target >= (uint32_t)dp->LAstate_ptr->getDataCptr()->size()) 
-		  && (choice.ids.slotIsUsed == 1) ) {
+	bool isTargetValid = (choice.ids.target >= 0)
+				&& (choice.ids.target < (uint32_t)dp->LAstate_ptr->getDataCptr()->size());
+	if ( !isTargetValid && (choice.ids.slotIsUsed == 1) ) {
 		
-		LOG_CRITICAL("AAA",2);
 		printf("targ: %d (%d neighs), agent: %d, mode: %d (cat: %d)\n",
 			choice.ids.target, neighbors, choice.ids.origin, choice.ids.mode, choice.ids.category);
 
@@ -82,8 +93,6 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_ptr,
              AD::notions_t* notions_ptr, GA::readsOnNeighbor_t* referenceReads_ptr, 
                int totalNeighbors, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
-
-int getTotalScoresGA(GA::stateData_t* state_ptr, int neighbors);
 
 AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,
@@ -116,15 +125,16 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 	calculateNotionsGA(agent, dp, &notions, referenceReads_ptr, neighbors, errorsCounter_ptr);
 
 	AD::allScoresAnyScope_t scores;
-	scores.actualTotalScores = getTotalScoresGA(state_ptr, neighbors);
+	scores.actualTotalScores = getTotalPossibleActualScores(neighbors);
 
 	AS::actionData_t choice = 
 		chooseAction(&notions, &scores, agent, dp, AS::scope::GLOBAL, neighbors, 
 			                                                  errorsCounter_ptr);
 	
 	//TODO: add more sanity checks
-	if ( (choice.ids.target >= (uint32_t)dp->GAstate_ptr->getDataCptr()->size())
-		  && (choice.ids.slotIsUsed == 1) ) {
+	bool isTargetValid = (choice.ids.target >= 0)
+				&& (choice.ids.target < (uint32_t)dp->GAstate_ptr->getDataCptr()->size());
+	if ( !isTargetValid && (choice.ids.slotIsUsed == 1) ) {
 		
 		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_GA_TARGET);
 		choice.ids.slotIsUsed = 0; //invalidate choice so we don't blow stuff up
@@ -172,8 +182,10 @@ void setScore(AD::actionScore_t* actionScore_ptr, AD::notions_t* np,
 
 //TODO: throughly test this (note loop index calculation, also test callees):
 float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr, 
-							                 AS::scope scope, int totalNeighbors) {
+							                 AS::scope scope, int totalNeighbors,
+								 AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
+	assert(allScores_ptr->actualTotalScores != UNINITIALIZED_ACTUAL_TOTAL_SCORES);
 	assert(allScores_ptr->actualTotalScores > 0);
 
 	//We will first calculate the scores of actions in SELF mode, then the others.
@@ -221,13 +233,11 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 				
 		sp->overallUtility.score = sp->ambitions.score - sp->worries.score;
 	}
-
-	//Now we'll deal with the scores regarding neighbors:
-	int widthPerNeighbor = 
-				AS::ActionVariations::TOTAL_CATEGORIES * AS::ActionVariations::TOTAL_MODES;
-	int widthPerCategory = AS::ActionVariations::TOTAL_MODES - 1; //SELF excluded
 	
-	int modesRegardingNeighbors = AS::ActionVariations::TOTAL_MODES - 1;
+	//Now we'll deal with the scores regarding neighbors:
+	int modesRegardingNeighbors = AS::ActionVariations::TOTAL_MODES - 1; //SELF excluded
+	int widthPerCategory = modesRegardingNeighbors; 
+	int widthPerNeighbor = AS::ActionVariations::TOTAL_CATEGORIES * widthPerCategory;	
 
 	for(int neighbor = 0; neighbor < totalNeighbors; neighbor++){
 		for (int cat = 0; cat < AS::ActionVariations::TOTAL_CATEGORIES; cat++) {
@@ -237,6 +247,7 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 
 				bool valid = AD::isValid(cat, actualMode, (int)scope);
 
+				//also, we should start from where the actions about self left off, so:
 				int index = totalActionsSelf
 							+ (neighbor * widthPerNeighbor) 
 					        + (cat * widthPerCategory) + mode;
@@ -265,7 +276,7 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 				}
 
 				sp->overallUtility.actCategory = cat;
-				sp->overallUtility.actMode =  mode + 1; //to account for SELF
+				sp->overallUtility.actMode =  actualMode;
 				sp->overallUtility.neighbor = neighbor;
 				
 				sp->overallUtility.score =
@@ -274,6 +285,45 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 		}
 	}
 
+	//Nota that in general allScores_ptr's actualTotalScores < sizeOfArrays;
+	//So let's initialize whatever is left. But first, sanity check:
+	int lastIndexWhichShouldBeInitialized =  allScores_ptr->actualTotalScores - 1;
+	int firstUninitializedIndex = allScores_ptr->actualTotalScores;
+
+	int lastGoodCat = 
+		allScores_ptr->allScores[lastIndexWhichShouldBeInitialized].overallUtility.actCategory;
+	int lastGoodMode = 
+		allScores_ptr->allScores[lastIndexWhichShouldBeInitialized].overallUtility.actMode;
+	int lastGoodScope = (int)scope;
+	bool isValid = AD::isValid(lastGoodCat, lastGoodMode, lastGoodScope);
+
+	if (!isValid) {
+		errorsCounter_ptr->incrementError(AS::errors::DS_LAST_ACTION_SCORED_IS_INVALID);
+	}
+
+	int firstBadCat = 
+		allScores_ptr->allScores[firstUninitializedIndex].overallUtility.actCategory;
+	int firstBadMode = 
+		allScores_ptr->allScores[firstUninitializedIndex].overallUtility.actMode;
+
+	bool badCatModeAreAsExpected = (firstBadCat == firstBadMode) 
+								&& (firstBadCat == SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT);
+
+	if (!badCatModeAreAsExpected) {
+		errorsCounter_ptr->incrementError(AS::errors::DS_FIRST_UNSCORED_ACTION_NOT_AS_EXPECTED);
+	}
+
+	//now we can safely initialize what's left:
+	for (int i = firstUninitializedIndex; i < allScores_ptr->sizeOfArrays; i++ ) {
+		
+		//We'll actually leave their bad categories and modes untouched,
+		//to make sure there's no mix up. Instead, we will bomb their scores:
+		allScores_ptr->allScores[i].ambitions.score = BAD_AMBITION;
+		allScores_ptr->allScores[i].worries.score = BAD_WORRY;
+		allScores_ptr->allScores[i].overallUtility.score = BAD_AMBITION - BAD_WORRY;
+	}
+	
+	//Finally, we return the hightest ambition value:
 	return maxAmbition;
 }
 
@@ -485,7 +535,7 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 	//This affects the loop condition as well as wich actions get extra score via mitigation.
 	while( (allScores_ptr->allScores[0].overallUtility.score < justDoIt)
 				       && (mitigationAttempts < maxMitigationAttempts) ) { 
-	
+
 		if(mitigationAttempts == 0){
 			prepareForMitigationRound(&inconvennienceWeightsForExtraScoring[0], np, allScores_ptr);
 		}
@@ -498,12 +548,15 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 		//after the first round we only need to sort 2 times as many as the top actions. So:
 		int scoresToSort = allScores_ptr->actualTotalScores;
 		if(mitigationAttempts > 0){
-			scoresToSort = 2 * choiceShortlistSize;
+			scoresToSort = std::min(allScores_ptr->actualTotalScores, 2*choiceShortlistSize);
 		}
-		std::sort(&allScores_ptr->allScores[0], &allScores_ptr->allScores[scoresToSort - 1], 
+		int lastToSort = scoresToSort - 1;
+		assert(lastToSort >= 0);
+		std::sort(&allScores_ptr->allScores[0], &allScores_ptr->allScores[lastToSort], 
 		                                                AD::descendingOverallUtilityCompare);
 
 		mitigationAttempts++;
+
 	}
 
 	//We've either found something nice to do or gave up trying. Is anything good enough?
@@ -553,7 +606,7 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 	float justDoIt = ACT_JUST_DO_IT_THRESOLD;
 
 	//choose action:
-	float maxAmbition = calculateScores(np, sp, scope, totalNeighbors);
+	float maxAmbition = calculateScores(np, sp, scope, totalNeighbors, errorsCounter_ptr);
 	
 	AS::actionData_t chosenAction;
 	if(maxAmbition < whyBother){ 
@@ -568,22 +621,23 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 	//If we choose to doNothing, chosenAction.ids.slotIsUsed will be 0, else, 1, so:
 	if(chosenAction.ids.slotIsUsed) {
 
-		setActionDetails(chosenAction.details.intensity, whyBother, justDoIt, 
-			                            &chosenAction, dp, errorsCounter_ptr);
+		bool isValid = AD::isValid(chosenAction.ids.category, 
+								   chosenAction.ids.mode, chosenAction.ids.scope);
+
+		if(isValid) {
+			setActionDetails(chosenAction.details.intensity, whyBother, justDoIt, 
+											&chosenAction, dp, errorsCounter_ptr);
+		}
+		else {
+			errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_VARIATION);
+			chosenAction.ids.slotIsUsed = false; //invalidate bad choice
+		}
 	}
-	
+
 	return chosenAction;
 }
 
 //LA:
-int getTotalScoresLA(LA::stateData_t* state_ptr, int neighbors) {
-
-	return AV::howManyActionsOfKind(AS::actModes::SELF, AS::scope::LOCAL)
-		+ (neighbors * (
-				AV::howManyActionsOfKind(AS::actModes::IMMEDIATE, AS::scope::LOCAL)
-			  + AV::howManyActionsOfKind(AS::actModes::REQUEST, AS::scope::LOCAL) ) );
-}
-
 void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions_t* np,
 	                           LA::readsOnNeighbor_t* refReads_ptr, int totalNeighbors,
 							           AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
@@ -636,15 +690,6 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 			np->averages[notion] = sqrt(np->averages[notion]); //notions are bounded to [0,1]
 		}
 	}
-}
-
-//GA:
-int getTotalScoresGA(GA::stateData_t* state_ptr, int neighbors) {
-
-	return AV::howManyActionsOfKind(AS::actModes::SELF, AS::scope::GLOBAL)
-		+ (neighbors * (
-				AV::howManyActionsOfKind(AS::actModes::IMMEDIATE, AS::scope::GLOBAL)
-			  + AV::howManyActionsOfKind(AS::actModes::REQUEST, AS::scope::GLOBAL) ) );
 }
 
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions_t* np,

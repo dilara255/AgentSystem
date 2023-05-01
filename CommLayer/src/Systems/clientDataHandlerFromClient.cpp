@@ -1,3 +1,6 @@
+
+//TODO: BUG: CRITICAL: FIX: Proper bounds checking everywhere
+
 #include "systems/clientDataHandler.hpp"
 
 namespace CL{
@@ -15,7 +18,7 @@ namespace CL{
 		CL::ClientData::transferFunc_t boundTransferFunction) {
 
 		//Some sanity checking:
-		if (agentID >= (uint32_t)size) {
+		if ( (agentID >= (uint32_t)size) || (agentID < 0) ) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			return false;
 		}
@@ -443,7 +446,7 @@ namespace CL{
 	bool ClientData::LAresourcesHandler::changeCurrentTo(uint32_t agentID, float newValue) {
 		
 		//TODO: extract
-		if (agentID >= m_data_ptr->data.size()) {
+		if ( (agentID >= m_data_ptr->data.size()) || (agentID < 0) ) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
@@ -510,7 +513,7 @@ namespace CL{
 	bool CL_API ClientData::LAstrenghtHandler::changeGuard(uint32_t agentID, float newValue)
 	{
 		//TODO: extract
-		if (agentID >= m_data_ptr->data.size()) {
+		if ( (agentID >= m_data_ptr->data.size())  || (agentID < 0)) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
@@ -630,7 +633,7 @@ namespace CL{
 	bool CL_API CL::ClientData::LApersonalityHandler::changeGAoffsets(uint32_t agentID, AS::LAdecisionOffsets_t * newValue_ptr)
 	{
 		//TODO: extract
-		if (agentID >= m_data_ptr->data.size()) {
+		if ( (agentID >= m_data_ptr->data.size()) || (agentID < 0) ) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
@@ -693,7 +696,7 @@ namespace CL{
 	bool CL_API ClientData::GAcoldDataHandler::changeID(uint32_t agentID, uint32_t newValue)
 	{
 		//TODO: extract
-		if (agentID >= m_data_ptr->data.size()) {
+		if ( (agentID >= m_data_ptr->data.size()) || (agentID < 0) ) {
 			LOG_ERROR("Tried to change data for agentID out of range");
 			
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
@@ -753,6 +756,7 @@ namespace CL{
 	bool CL_API ClientData::GAstateHandler::changeConnectedGAs(uint32_t agentID, 
 		                                        AS::GAflagField_t* newValue_ptr)
 	{
+		//TODO: BUG: CRITICAL: FIX: Bounds checking
 		//This defines the functions to be used to tansfer the data to the AS:
 		auto boundTransferFunction = 
 			std::bind(&CL::ClientData::GAstateHandler::transferConnectedGAs,
@@ -825,6 +829,8 @@ namespace CL{
 
 	bool CL_API ClientData::GAparametersHandler::changeGAresourcesTo(uint32_t agentID, float newValue)
 	{
+		//TODO: BUG: CRITICAL: BOUNDS CHECKING
+		
 		//This defines the functions to be used to tansfer the data to the AS:
 		auto boundTransferFunction = 
 			std::bind(&CL::ClientData::GAparametersHandler::transferGAresources,

@@ -1,3 +1,5 @@
+//TODO: This file is pretty ugly : )
+
 #include "miscStdHeaders.h"
 #include "miscDefines.hpp"
 #include "fileHelpers.h"
@@ -26,15 +28,59 @@ bool testMainLoopErrors(std::string filename);
 bool testAgentsUpdating(bool printLog, bool fixedAndStepped = false);
 bool testReads(bool printLog, float secondsToRun = 1);
 bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool printLog, bool dump);
+void quickTestInit(bool run, bool disableDecisions, bool blockActions) {
+	AS::initializeASandCL();
+	AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults);
+	AS::loadNetworkFromFile(fileNameWithDefaults, run, disableDecisions, blockActions);
+}
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
-//TODO: the names of the test categories do not make sense any more
-#define HELPER_FUNC_TESTS 7
-#define BASIC_INIT_COMM_TESTS 4
-#define SPECIFIC_DATA_FUNCTIONALITY_TESTS 11
-#define SPECIFIC_THREADED_LOOP_TESTS 13
+#define TEST_BATTERIES 4
+//TODO: the names of the test categories do not make complete sense any more
+enum batterySizes { HELPER_FUNC_TESTS = 7, BASIC_INIT_COMM_TESTS = 4,
+				    SPECIFIC_DATA_FUNCTIONALITY_TESTS = 11,
+					SPECIFIC_THREADED_LOOP_TESTS = 13 };
+
+int batterySizes[TEST_BATTERIES] = {HELPER_FUNC_TESTS, BASIC_INIT_COMM_TESTS, 
+									SPECIFIC_DATA_FUNCTIONALITY_TESTS, 
+									SPECIFIC_THREADED_LOOP_TESTS };
+
+//these are mostly to avoid changing a lot of old code : p
+#define HELPER_FUNC_TESTS batterySizes::HELPER_FUNC_TESTS
+#define BASIC_INIT_COMM_TESTS batterySizes::BASIC_INIT_COMM_TESTS
+#define SPECIFIC_DATA_FUNCTIONALITY_TESTS batterySizes::SPECIFIC_DATA_FUNCTIONALITY_TESTS
+#define SPECIFIC_THREADED_LOOP_TESTS batterySizes::SPECIFIC_THREADED_LOOP_TESTS
 #define TOTAL_TESTS (HELPER_FUNC_TESTS+BASIC_INIT_COMM_TESTS+SPECIFIC_DATA_FUNCTIONALITY_TESTS+SPECIFIC_THREADED_LOOP_TESTS)
+
+//These will hold the test results:
+bool battery0[HELPER_FUNC_TESTS];
+bool battery1[BASIC_INIT_COMM_TESTS];
+bool battery2[SPECIFIC_DATA_FUNCTIONALITY_TESTS];
+bool battery3[SPECIFIC_THREADED_LOOP_TESTS];
+
+bool* battery_ptrs[TEST_BATTERIES] = { &battery0[0], &battery1[0], 
+								       &battery2[0], &battery3[0] };
+
+void printFailedTests() {
+	for (int i = 0; i < TEST_BATTERIES; i++) {
+		
+		auto results_arr = battery_ptrs[i];
+		int failed = 0;
+
+		printf("Battery %d Failed tests: ", i);
+		for (int j = 0; j < batterySizes[i]; j++) {
+			if (results_arr[j] == false) {
+				printf("%d; ",j);
+				failed++;
+			}
+		}
+		if (!failed) {
+			printf("none");
+		}
+		printf("\n");
+	}
+}
 
 std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
@@ -49,21 +95,26 @@ int main(void) {
 	LOG_INFO("Will first test some helper functionality:"); GETCHAR_PAUSE;
 
 	LOG_TRACE("Drawing many PRNs, one at a time:");
-	int resultsBattery0 = (int)AZ::testDraw1spcg32(); GETCHAR_PAUSE;
+	battery0[0] = AZ::testDraw1spcg32(); GETCHAR_PAUSE;
 
 	LOG_TRACE("Drawing many PRNs, four at a time:");
-	resultsBattery0 += (int)AZ::testDraw4spcg32s(); GETCHAR_PAUSE;
+	battery0[1] = AZ::testDraw4spcg32s(); GETCHAR_PAUSE;
 
-	resultsBattery0 += (int)testSnooze(printSteps); GETCHAR_PAUSE;
+	battery0[2] = testSnooze(printSteps); GETCHAR_PAUSE;
 
 	LOG_TRACE("Will test Flag Field functionality...");
-	resultsBattery0 += (int)AZ::testFlagFields(printSteps); GETCHAR_PAUSE;
+	battery0[3] = AZ::testFlagFields(printSteps); GETCHAR_PAUSE;
 
-	resultsBattery0 += (int)AS::testActionVariationsInfo(printSteps); GETCHAR_PAUSE;
+	battery0[4] = AS::testActionVariationsInfo(printSteps); GETCHAR_PAUSE;
 
-	resultsBattery0 += (int)AS::testMultipleAgentChopCalculations(printSteps); GETCHAR_PAUSE;
+	battery0[5] = AS::testMultipleAgentChopCalculations(printSteps); GETCHAR_PAUSE;
 
-	resultsBattery0 += (int)AS::testWarningAndErrorCountingAndDisplaying(printSteps); GETCHAR_PAUSE;
+	battery0[6] = AS::testWarningAndErrorCountingAndDisplaying(printSteps); GETCHAR_PAUSE;
+
+	int resultsBattery0 = 0;
+	for(int i = 0; i < HELPER_FUNC_TESTS; i++) { 
+		resultsBattery0 += (int)battery0[i]; 
+	}
 
 	if (resultsBattery0 != HELPER_FUNC_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
@@ -80,15 +131,20 @@ int main(void) {
 	LOG_TRACE("This will run a few batteries of tests..."); GETCHAR_PAUSE;
 
 	LOG_INFO("Basic App, AS and CL communicaton and data storage tests:\n",1); GETCHAR_PAUSE;
-	int resultsBattery1 = (int)testMockData(); GETCHAR_PAUSE;
+	battery1[0] = testMockData(); GETCHAR_PAUSE;
 	
 	LOG_TRACE("Actual initialization tests...");
 
-	resultsBattery1 += (int)AS::initializeASandCL(); GETCHAR_PAUSE;
+	battery1[1] = AS::initializeASandCL(); GETCHAR_PAUSE;
 
-	resultsBattery1 += (int)AS::testContainersAndAgentObjectCreation(); GETCHAR_PAUSE;
+	battery1[2] = AS::testContainersAndAgentObjectCreation(); GETCHAR_PAUSE;
 
-	resultsBattery1 += (int)testFromTAifCLhasInitialized(); GETCHAR_PAUSE;
+	battery1[3] = testFromTAifCLhasInitialized(); GETCHAR_PAUSE;
+
+	int resultsBattery1 = 0;
+	for(int i = 0; i < BASIC_INIT_COMM_TESTS; i++) { 
+		resultsBattery1 += (int)battery1[i]; 
+	}
 
 	if (resultsBattery1 != BASIC_INIT_COMM_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
@@ -101,31 +157,36 @@ int main(void) {
 
 	LOG_INFO("Specific functionality tests (DATA manipulation):\n",1); GETCHAR_PAUSE;
 	
-	int resultsBattery2 = (int)AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
+	battery2[0] = AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
 	GETCHAR_PAUSE;
 
 	LOG_WARN("Will test loading network from a File and then saving it back with network name");
-	resultsBattery2 += (int)AS::loadNetworkFromFile(fileNameWithDefaults); GETCHAR_PAUSE;
+	battery2[1] = AS::loadNetworkFromFile(fileNameWithDefaults); GETCHAR_PAUSE;
 	
-	resultsBattery2 += (int)AS::saveNetworkToFile(); GETCHAR_PAUSE;
+	battery2[2] = AS::saveNetworkToFile(); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE;
+	battery2[3] = AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE;
 	
-	resultsBattery2 += (int)testReadingCLdataFromTA(); GETCHAR_PAUSE;
+	battery2[4] = testReadingCLdataFromTA(); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE;
+	battery2[5] = testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE;
 
 	//TODO: why does this take a while to start? Other saves are fast
 	//Seems to only be the case in debug. Idk, really weird
-	resultsBattery2 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
+	battery2[6] = AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::testNeighbourIDsetting(); GETCHAR_PAUSE;
+	battery2[7] = AS::testNeighbourIDsetting(); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::testChoppedPRNdrawing(printSteps, true); GETCHAR_PAUSE;
+	battery2[8] = AS::testChoppedPRNdrawing(printSteps, true); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::testDecisionStepTiming(printSteps); GETCHAR_PAUSE;
+	battery2[9] = AS::testDecisionStepTiming(printSteps); GETCHAR_PAUSE;
 
-	resultsBattery2 += (int)AS::testUpdateRead(true, false, readUpdatingTestFilename); GETCHAR_PAUSE;
+	battery2[10] = AS::testUpdateRead(true, false, readUpdatingTestFilename); GETCHAR_PAUSE;
+
+	int resultsBattery2 = 0;
+	for(int i = 0; i < SPECIFIC_DATA_FUNCTIONALITY_TESTS; i++) { 
+		resultsBattery2 += (int)battery2[i]; 
+	}
 
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
@@ -139,36 +200,41 @@ int main(void) {
 	
 	LOG_INFO("Specific functionality tests involving main loop thread:\n",1); GETCHAR_PAUSE;
 
-	int resultsBattery3 = (int)testMainLoopErrors(customFilename); GETCHAR_PAUSE;
+	battery3[0] = testMainLoopErrors(customFilename); GETCHAR_PAUSE;
 
 	LOG_WARN("Will re-load the previously modified network for further testing");
-	resultsBattery3 += (int)AS::loadNetworkFromFile(customFilename, true); GETCHAR_PAUSE;
+	battery3[1] = AS::loadNetworkFromFile(customFilename, true); GETCHAR_PAUSE;
 
-	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_start(); GETCHAR_PAUSE;
+	battery3[2] = testReadingTickDataWhileASmainLoopRuns_start(); GETCHAR_PAUSE;
 	
-	resultsBattery3 += (int)testReadingTickDataWhileASmainLoopRuns_end(); GETCHAR_PAUSE;
+	battery3[3] = testReadingTickDataWhileASmainLoopRuns_end(); GETCHAR_PAUSE;
 
-	resultsBattery3 += (int)AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
+	battery3[4] = AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
 
 	//Also saves another network, with steps, and resumes it:
-	resultsBattery3 += (int)testClientDataHAndlerInitialization(); GETCHAR_PAUSE;
+	battery3[5] = testClientDataHAndlerInitialization(); GETCHAR_PAUSE;
 
-	resultsBattery3 += (int)testSendingClientDataAndSaving(); GETCHAR_PAUSE;
+	battery3[6] = testSendingClientDataAndSaving(); GETCHAR_PAUSE;
 
-	resultsBattery3 += (int)testPause(printSteps); GETCHAR_PAUSE;
+	battery3[7] = testPause(printSteps); GETCHAR_PAUSE;
 
-	resultsBattery3 += (int)AS::quit(); GETCHAR_PAUSE;
+	battery3[8] = AS::quit(); GETCHAR_PAUSE;
+
+	battery3[9] = testAgentsUpdating(printSteps); GETCHAR_PAUSE;
 	
-	resultsBattery3 += (int)testAgentsUpdating(printSteps); GETCHAR_PAUSE;
-	
-	resultsBattery3 += (int)testAgentsUpdating(printSteps, true); GETCHAR_PAUSE;
+	battery3[10] = testAgentsUpdating(printSteps, true); GETCHAR_PAUSE;
 
-	resultsBattery3 += (int)testReads(printSteps); GETCHAR_PAUSE;
+	battery3[11] = testReads(printSteps); GETCHAR_PAUSE;
 
-	resultsBattery3 += 
-		(int)testDecisionsAndActionsForThrownErrorsAndCalculateTiming(printSteps, true);
+	battery3[12] = 
+			testDecisionsAndActionsForThrownErrorsAndCalculateTiming(printSteps, true);
 	GETCHAR_PAUSE;
 	
+	int resultsBattery3 = 0;
+	for(int i = 0; i < SPECIFIC_THREADED_LOOP_TESTS; i++) { 
+		resultsBattery3 += (int)battery3[i]; 
+	}
+
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
 		LOG_CRITICAL("Not all of these tests passed:");
 		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery3,
@@ -188,6 +254,9 @@ int main(void) {
 	else {
 		LOG_CRITICAL("Not all tests were passed (as far as we checked)!");
 		printf("%d out of %d failed\n", TOTAL_TESTS - totalPassed, TOTAL_TESTS);
+
+		printFailedTests();
+
 		GETCHAR_PAUSE;
 	}
 
@@ -203,7 +272,6 @@ int main(void) {
 	GETCHAR_FORCE_PAUSE;
 
 	LOG_INFO("Done! Enter to exit"); GETCHAR_FORCE_PAUSE;
-
 	return (1 + (totalPassed - TOTAL_TESTS));
 }
 
@@ -1079,12 +1147,19 @@ bool testMainLoopErrors(std::string filename) {
 bool testPause(bool printLog, int pauseUnpauseCycles) {
 	LOG_WARN("Will test pausing and resuming the main loop");
 
+
+	if (!AS::isMainLoopRunning()) {
+		LOG_ERROR("This test needs main loop to already be running. Aborting");
+		return false;
+	}
+
+	const CL::mirror_t* mp = CL::ASmirrorData_cptr;
+	if (mp == NULL) {
+		LOG_ERROR("Failed to acquire const pointer to mirror Data");
+		return false;
+	}
+
 	for(int i = 0; i < pauseUnpauseCycles; i++){
-		const CL::mirror_t* mp = CL::ASmirrorData_cptr;
-		if (mp == NULL) {
-			LOG_ERROR("Failed to acquire const pointer to mirror Data");
-			return false;
-		}
 
 		uint64_t ticksBeforePause = mp->networkParams.mainLoopTicks;
 
@@ -1160,6 +1235,7 @@ bool testPause(bool printLog, int pauseUnpauseCycles) {
 		uint64_t ticksNow = mp->networkParams.mainLoopTicks;
 		if (ticksNow == ticksAfterPause) {
 			LOG_ERROR("AS isn't ticking after unpausing");
+			printf("Cycle: %d\n", i);
 			return false;
 		}
 		else if ((ticksNow - ticksAfterPause) < (periodsToWaitAfterUnpause/pauseGraceFactor)) {
@@ -1197,6 +1273,11 @@ bool testPause(bool printLog, int pauseUnpauseCycles) {
 bool testSendingClientDataAndSaving(void) {
 	LOG_WARN("Will try to send data through CL's Client Data Handler");
 
+	if (!AS::isMainLoopRunning()) {
+		LOG_ERROR("This test expects the mainLoop to be running");
+		return false;
+	}
+
 	uint32_t id = CL::ASmirrorData_cptr->networkParams.numberLAs - 1;
 	
 	LOG_TRACE("Calculated last LA's ID from AS mirror data");
@@ -1210,23 +1291,25 @@ bool testSendingClientDataAndSaving(void) {
 
 	bool result = cdHandler_ptr->LAstate.parameters.resources.changeCurrentTo(id,
 		(float)TST_RES_CHANGE);
-
+		
 	if (!result) {
 		LOG_ERROR("Test failed issuing change!");
 		return false;
 	}
 
 	LOG_INFO("Change issued. Will save. Check that the last LA's current resources are changed");
-
+	
 	std::string fileName = std::string("ClientDataHandler_") + customFilename;
-	if (!AS::saveNetworkToFile(fileName, false)) {
+
+	result = AS::saveNetworkToFile(fileName, false);
+	if (!result) {
 		LOG_ERROR("Failed to save network. Test will pass, but fix this to actually check changes");
 	}
 	else {
 		LOG_INFO("Network saved to ClientDataHandler_*customFilename*");
 	}
 
-	return true;
+	return result;
 }
 
 bool testClientDataHAndlerInitialization(void) {

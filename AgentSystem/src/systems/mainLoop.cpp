@@ -562,12 +562,12 @@ bool AS::stop() {
 		return false;
 	}
 
-	*g_shouldMainLoopBeRunning_ptr = false;
-
 	if (!isMainLoopRunning()) {
 		LOG_ERROR("Main Loop Thread was supposed to be active, but was not!");
 		return false;
 	}
+
+	*g_shouldMainLoopBeRunning_ptr = false;
 
 	if (chekIfMainLoopShouldBePaused()) {
 		//Needs to unpause to end step

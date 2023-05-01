@@ -323,8 +323,6 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite, bool willResu
 	}
 
 	//In case we're quitting, let's not loose any issued data changes:
-	FILE* fp = NULL; //in case of failure, this has to be checked
-	std::mutex* clientDataMutex_ptr = NULL;
 	if(!willResumeAfterSave){
 		if (CL::isClintDataInitialized()) {
 			//Make sure any dangling data issued by the Client is captured:
@@ -350,7 +348,7 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite, bool willResu
 
 	}
 
-	fp = acquireFilePointerToSave(name, shouldOverwrite);
+	FILE* fp = acquireFilePointerToSave(name, shouldOverwrite);
 	
 	if (fp == NULL) {
 		LOG_ERROR("Failed to create new file, aborting save.");
@@ -389,10 +387,6 @@ returnWithError:
 	if (fp != NULL) {
 		fclose(fp);
 		if(!silent) { LOG_TRACE("File closed"); }
-	}
-	if (clientDataMutex_ptr != NULL) {
-		clientDataMutex_ptr->unlock();
-		if(!silent) { LOG_TRACE("Mutex Released"); }
 	}
 
 	return false;
