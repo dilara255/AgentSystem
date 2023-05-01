@@ -561,10 +561,30 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 
 	//We've either found something nice to do or gave up trying. Is anything good enough?
 
+	int choiceIndex = 0; //index zero is the highest overall score
+
+	//But if the best score is really high, let's try to prioritize by ambition!
+	if (allScores_ptr->allScores[0].overallUtility.score >= justDoIt) {
+		float maxElegibleAmbition = 0;
+
+		//between the top picks...
+		for (int i = 0; i < choiceShortlistSize; i++) {
+			//and so long as the overall score is still above justDoIt:
+			if (allScores_ptr->allScores[i].overallUtility.score >= justDoIt) {
+				if (allScores_ptr->allScores[0].ambitions.score > maxElegibleAmbition) {
+
+					maxElegibleAmbition = allScores_ptr->allScores[0].ambitions.score;
+					choiceIndex = i;
+				}
+			}
+		}		
+	}
+
 	//TODO-CRITICAL: This will be part of agent's personalities in the future: FIX then
 	float whyBother = ACT_WHY_BOTHER_THRESOLD;
 
-	if(allScores_ptr->allScores[0].overallUtility.score >= whyBother) { 
+	//Either way, our preferred choice is at choiceIndex now, so if it's interesting:
+	if(allScores_ptr->allScores[choiceIndex].overallUtility.score >= whyBother) { 
 		
 		//the best score is good enough, so let's build and return that action!
 		AS::actionData_t choice;
@@ -591,7 +611,7 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 	}
 	else {
 		
-		//We didn't find anything interesting enough, so let's play safe:
+		//We didn't find anything interesting enough, so let's play it safe:
 		return doLeastHarmful(allScores_ptr, agent, scope, errorsCounter_ptr);
    }
 }
