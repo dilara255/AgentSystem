@@ -393,7 +393,16 @@ namespace AS {
 			decisionScores_t allScores[maxScoresNeeded()];
 			int actualTotalScores = UNINITIALIZED_ACTUAL_TOTAL_SCORES;
 			int sizeOfArrays = maxScoresNeeded();
-		} AS_API allScoresAnyScope_t;		
+		} AS_API allScoresAnyScope_t;	
+
+		typedef struct extraScore_st {
+			float score;
+			int actionIdOnChoiceShortlist;
+		} extraScore_t;
+
+		inline bool descendingExtraScoreCompare(extraScore_t scoreA, extraScore_t scoreB) {
+			return (scoreA.score > scoreB.score);
+		}
 
 		namespace LA {
 			//TODO: scores by mode bellow not currently in use: should we even keep them?

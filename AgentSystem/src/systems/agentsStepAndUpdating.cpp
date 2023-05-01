@@ -85,7 +85,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	static int nextDecisionLAindex = 0;	
 	int finalDecisionLAindex = nextDecisionLAindex + LAdecisionsToTakeThisChop - 1;
 
-	while ( makeDecisions && (nextDecisionLAindex <= finalDecisionLAindex) ) {
+	while ( nextDecisionLAindex <= finalDecisionLAindex ) {
 		//Note that finalDecisionLAindex may be larger than the index of the last LA...
 		//so we modulo it in here:
 		int agent = nextDecisionLAindex % numberLAs;
@@ -96,18 +96,20 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 			LA::readsOnNeighbor_t referenceReads =  calculateLAreferences(agent, dp);
 			updateReadsLA(agent, dp, state_ptr, &referenceReads, prnServer_ptr);
 
-			
-			int currentActions = AS::getQuantityOfCurrentActions(AS::scope::LOCAL, agent,
-				                                     actionSystem_ptr, errorsCounter_ptr);
+			if(makeDecisions) {
+				int currentActions = AS::getQuantityOfCurrentActions(AS::scope::LOCAL, agent,
+														 actionSystem_ptr, errorsCounter_ptr);
 
-			actionData_t chosenAction = 
-					makeDecisionLA(agent, dp, state_ptr, &referenceReads, errorsCounter_ptr, 
-						                     g_secondsSinceLastDecisionStep, currentActions);
+				actionData_t chosenAction = 
+						makeDecisionLA(agent, dp, state_ptr, &referenceReads, 
+							           errorsCounter_ptr, g_secondsSinceLastDecisionStep, 
+									                                      currentActions);
 
-			//In case no decision is made, makeDecisionLA returns an innactive action, so:
-			if(chosenAction.ids.slotIsUsed){
-				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
-					                                           errorsCounter_ptr);
+				//In case no decision is made, makeDecisionLA returns an innactive action, so:
+				if(chosenAction.ids.slotIsUsed){
+					chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
+																   errorsCounter_ptr);
+				}
 			}
 
 			updatedLastDispositionsLA(state_ptr);
@@ -121,7 +123,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	static int nextDecisionGAindex = 0;	
 	int finalDecisionGAindex = nextDecisionGAindex + GAdecisionsToTakeThisChop - 1;
 
-	while ( makeDecisions && (nextDecisionGAindex <= finalDecisionGAindex) ) {	
+	while ( nextDecisionGAindex <= finalDecisionGAindex ) {	
 		//for the same reason we modulo the index here as well:
 		int agent = nextDecisionGAindex % numberEffectiveGAs;
 		GA::stateData_t* state_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(agent));
@@ -133,17 +135,20 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 			GA::readsOnNeighbor_t referenceReads =  calculateGAreferences(agent, dp);
 			updateReadsGA(agent, dp, state_ptr, &referenceReads, prnServer_ptr);
 
-			int currentActions = AS::getQuantityOfCurrentActions(AS::scope::GLOBAL, agent,
-				                                      actionSystem_ptr, errorsCounter_ptr);
+			if(makeDecisions) {
+				int currentActions = AS::getQuantityOfCurrentActions(AS::scope::GLOBAL, agent,
+														  actionSystem_ptr, errorsCounter_ptr);
 
-			actionData_t chosenAction = 
-					makeDecisionGA(agent , dp, state_ptr, &referenceReads, errorsCounter_ptr, 
-						                      g_secondsSinceLastDecisionStep, currentActions);
+				actionData_t chosenAction = 
+						makeDecisionGA(agent , dp, state_ptr, &referenceReads, 
+									   errorsCounter_ptr, g_secondsSinceLastDecisionStep, 
+																		  currentActions);
 
-			//In case no decision is made, makeDecisionGA returns an innactive action, so:
-			if(chosenAction.ids.slotIsUsed){
-				chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
-					                                           errorsCounter_ptr);
+				//In case no decision is made, makeDecisionGA returns an innactive action, so:
+				if(chosenAction.ids.slotIsUsed){
+					chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
+																   errorsCounter_ptr);
+				}
 			}
 
 			updatedLastDispositionsGA(state_ptr);			
@@ -607,7 +612,8 @@ GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPoint
 #define BIAS EXPC_MIN_PROPORTIONAL_ERROR_TO_CORRECT
 #define S EXPC_ERROR_CORRECTION_SHARPNESS
 
-//TODO: document the math and for this and it's tets use the same order for the difference
+//TODO: document the math
+//TODO: use the same order for the difference between real and read for this and its tets
 //TODO: this sorta supposes real values are almost always positive. Either make that so, or fix this
 void updateRead(float* read_ptr, float real, float reference, float infiltration, 
 										 float prnFrom0to1, float timeMultiplier) {
