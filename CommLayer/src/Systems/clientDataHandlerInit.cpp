@@ -17,7 +17,7 @@ namespace CL {
 		if(m_GAquantity < 0) m_GAquantity = 0;
 
 		m_maxActions = params.maxActions;
-		m_referenceNetworkSize = ((m_GAquantity) + m_LAquantity) * m_maxActions;
+		m_referenceNetworkSize = (m_GAquantity + m_LAquantity) * m_maxActions;
 		m_changes.reserve(m_referenceNetworkSize);
 
 		LOG_TRACE("Changes vector size set. Will initialize Handlers for each Data Category...");

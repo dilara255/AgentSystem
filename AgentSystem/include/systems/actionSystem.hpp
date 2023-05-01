@@ -154,6 +154,15 @@ namespace AS {
 			{{NOT, SPC}, {SPC, SPC}, {SPC, SPC}},  {{NOT, STD}, {SPC, STD}, {STD, STD}}
 		};
 
+		static constexpr bool isInBounds(int category, int mode, int scope) {
+
+			bool inBounds = (category < TOTAL_CATEGORIES) && (category >= 0);
+			inBounds &= (mode < TOTAL_MODES) && (mode >= 0);
+			inBounds &= (scope < TOTAL_SCOPES) && (scope >= 0);
+
+			return inBounds;
+		}
+
 		constexpr uint32_t actionIDonScope(int category, int mode) {
 			return (category * TOTAL_MODES) + mode;
 		}
@@ -177,19 +186,13 @@ namespace AS {
 		}
 
 		static constexpr bool isValid(int category, int mode, int scope) {
-			bool inBounds = (category < TOTAL_CATEGORIES);
-			inBounds &= (mode < TOTAL_MODES);
-			inBounds &= (scope < TOTAL_SCOPES);
-			if(!inBounds) {return false;}
+			if(!isInBounds(category, mode, scope)) {return false;}
 
 			return (availableVariations[category][mode][scope] != NOT);
 		}	
 
 		static constexpr actExists getExistence(int category, int mode, int scope) {
-			bool inBounds = (category < TOTAL_CATEGORIES);
-			inBounds &= (mode < TOTAL_MODES);
-			inBounds &= (scope < TOTAL_SCOPES);
-			if(!inBounds) {return NOT;}
+			if(!isInBounds(category, mode, scope)) {return NOT;}
 
 			return availableVariations[category][mode][scope];
 		}
@@ -337,13 +340,16 @@ namespace AS {
 
 			enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
 		} AS_API notions_t;
-
+		
 		#define NEIGHBOR_ID_FOR_SELF (-1)
+		#define SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT (-1)
+		#define DEFAULT_AWFUL_SCORE (-999999) //should be negative : )
+
 		typedef struct actionScore_st {
-			int32_t actCategory = NEIGHBOR_ID_FOR_SELF;
-			int32_t actMode = NEIGHBOR_ID_FOR_SELF;
+			int32_t actCategory = SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT;
+			int32_t actMode = SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT;
 			int32_t neighbor = NEIGHBOR_ID_FOR_SELF;
-			float score = 0;
+			float score = DEFAULT_AWFUL_SCORE;
 		} AS_API actionScore_t;
 
 		using namespace ActionVariations;
@@ -382,9 +388,11 @@ namespace AS {
 			return (scoreA.overallUtility.score > scoreB.overallUtility.score);
 		}
 
+		#define UNINITIALIZED_ACTUAL_TOTAL_SCORES (-1)
 		typedef struct allScoresAnyScope_st {
 			decisionScores_t allScores[maxScoresNeeded()];
-			int actualTotalScores;
+			int actualTotalScores = UNINITIALIZED_ACTUAL_TOTAL_SCORES;
+			int sizeOfArrays = maxScoresNeeded();
 		} AS_API allScoresAnyScope_t;		
 
 		namespace LA {

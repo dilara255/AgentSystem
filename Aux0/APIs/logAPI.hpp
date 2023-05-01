@@ -59,7 +59,7 @@ namespace az {
 
 //MACROS for user interaction
 
-
+//TODO: BUG: FIX: this is using getchar() withouth taking care to exausting the buffer!
 #if (defined AS_DEBUG && !DONT_ASK_KEYPRESS_DEBUG) || (defined AS_RELEASE && ASK_KEYPRESS_ON_RELEASE)
 	#define GETCHAR_PAUSE getchar()
 #else

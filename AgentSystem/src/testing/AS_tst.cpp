@@ -503,7 +503,7 @@ namespace AS {
 			return false;
 		}
 
-		LOG_INFO("Members modified by the Client read back from the CL as expected and updated on AS (see saved file to check this)");
+		LOG_INFO("Members modified by the Client read back from the CL as expected and updated on AS");
 		return true;
 	}
 
