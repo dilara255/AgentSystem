@@ -1,3 +1,35 @@
+/***********************************************************************************
+* In this file we define:
+* - the "routing" of the notionBase calculations;
+* - the calculations themselves, for each notion, for LAs and GAs; and
+* - the delinearization and clamping process to map from bases to notions.
+* 
+* The meat of the file is dedicated to the different notionBase calculations.
+* Ideally, these calculations should all express a kind of linear "relation".
+* The delinearization will then use externally defined parameters to get the
+* final value. After that, weights will be applied to each notion for each action.
+* 
+* So there are three degrees of controls to the effect of different notions:
+* 
+* 1) The base calculations, defined here, ideally expressing "linear"* relations;
+* 2) The paremeters for the delinearization, defined elsewhere:
+* -- these affect how much changes in notionBase affect the final notion, as well
+* -- as how high a notionBase has to go to saturate the final notion;
+* 3) The weights, which say how much and in what direction each final notion affects
+* each action variation. These are also defined elsewhere.
+* 
+* The rationale behind this organization is to make each of these parts as
+* straight-forward and independent as possible. Also, weights and delinearization
+* parameters can eventually be moved to a loaded config file, giving more freedom
+* to adjust behavior without recompilation. 
+* In the same vein, as long as the calculations defined here still carry the same 
+* meaning and remain "linear", reasonable changes to them (eg, to reflect a change 
+* in the available data), shouldn't break the behavior too badly.
+* 
+* *"linear", with sacry quotes, because that's not necessarily well defined for all
+* notions. But it's the spirit that counts : p
+***********************************************************************************/
+
 #include "miscStdHeaders.h"
 
 #include "systems/actionSystem.hpp"
@@ -10,30 +42,11 @@
 namespace PURE_LA = LA;
 namespace PURE_GA = GA;
 
-namespace AS::Decisions {
-
-	//This first raises the notion (limited by maximumEffectiveBase), to the smallExponent;
-	//Then, it casts the value back to the [0,1] range, making it non-linear.
-	//Has parameter-based defaults for effectiveMaxBase and smallExponent.
-	// 
-	//NOTE: baseNotion is *assumed* to be >= 0;
-	//NOTE: effectiveMaxBase is *assumed* to be > 0;
-	//NOTE: If smallExponent == 0, all values will be cast to 1;
-	// 
-	//WARNING: Large *small*Exponents may break things : )
-	float delinearizeAndClampNotion(float baseNotion, 
-								float effectiveMaxBase = NTN_STD_MAX_EFFECTIVE_NOTION_BASE, 
-								uint8_t smallExponent = NTN_STD_DELINEARIZATION_EXPONENT);
-}
-
 namespace AS::Decisions::LA {
 
 	//S0: LOW_INCOME_TO_STR
-	//This notion is based on the upkeep/income ratio
-	//There's a maximum value above which all ratios will map to notion = 1
-	//The notion is not linear with the ratio - it's raised to some power and remmaped to [0,1]
-	//TODO: extract some parameters
-	float calcNotionS0(int agentID, AS::dataControllerPointers_t* dp, 
+	//This is based on the upkeep/income ratio
+	float calcNotionBaseS0(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
 		auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentID));
@@ -45,69 +58,74 @@ namespace AS::Decisions::LA {
 
 		float small = 0.1f; //to avoid blowups and worries about small quantities
 		
-		float proportion = NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
+		float notionBase = NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
+		
+		//If possible, we want the notionBase to be this proportion:
 		if (effectiveIncome > small) {
-			proportion = upkeep/effectiveIncome;
+			notionBase = upkeep/effectiveIncome;
 		}
 		
-		//To make things more interesting and keep the notion in the [0,1] range:
-		return delinearizeAndClampNotion(proportion);
+		//Since we've sanitized the terms before, we expect that:
+		assert(std::isfinite(notionBase));
+		assert(notionBase >= 0);
+
+		return notionBase;
 	}
 
 	//S1: LOW_DEFENSE_TO_RESOURCES
-	float calcNotionS1(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS1(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
 	//S2: LOW_CURRENCY
-	float calcNotionS2(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS2(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS3(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS3(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS4(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS4(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS5(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS5(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS6(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS6(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS7(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS7(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -116,8 +134,7 @@ namespace AS::Decisions::LA {
 	//The neighbor has low defences compared to their resources:
 	//- The higher the current resources are compared to the reference, the higher this is;
 	//- The lower the guard is compared to the reference, the higher this is;
-	//TODO: extract some parameters
-	float calcNotionN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
 		//We use proportions to the references as a way to normalize,
@@ -169,104 +186,103 @@ namespace AS::Decisions::LA {
 			resourcesProportion = small;
 		}
 
-		//Finally, this is the proportion we want:
-		float proportion = resourcesProportion / defenceProportion;
+		//Finally, this proportion is the notionBase we want:
+		float notionBase = resourcesProportion / defenceProportion;
 
 		//Since we've sanitized the terms before, we expect that:
-		assert(std::isfinite(proportion));
-		assert(proportion > 0);
+		assert(std::isfinite(notionBase));
+		assert(notionBase >= 0);
 
-		//To make things more interesting and keep the notion in the [0,1] range:
-		return delinearizeAndClampNotion(proportion);
+		return notionBase;
 	}
 
 	//N1: IS_STRONG
-	float calcNotionN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
 	//N2: WORRIES_ME
-	float calcNotionN2(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN2(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
 	//N3: I_TRUST_THEM
-	float calcNotionN3(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN3(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN4(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN4(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN5(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN5(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN6(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN6(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN7(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN7(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN8(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN8(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN9(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN9(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN10(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN10(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										   PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN11(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN11(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										   PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -276,7 +292,7 @@ namespace AS::Decisions::GA {
 
 	//S0: STUB: too much str/income (when compared to reference reads)
 	//TODO: overhaul (like on LA::S0)
-	float calcNotionS0(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS0(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 
 		auto state_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agentID));
@@ -315,64 +331,64 @@ namespace AS::Decisions::GA {
 		return notion;
 	}
 
-	float calcNotionS1(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS1(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS2(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS2(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS3(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS3(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS4(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS4(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS5(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS5(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS6(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS6(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionS7(int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseS7(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
 	//N0: STUB: neighbor has a lot of cash and little defenses compared to others
-	float calcNotionN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
 		//The higher the current resources are compared to the reference, the higher this is
@@ -421,90 +437,90 @@ namespace AS::Decisions::GA {
 		return notion;
 	}
 
-	float calcNotionN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN2(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN2(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN3(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN3(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN4(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN4(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN5(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN5(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN6(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN6(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN7(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN7(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN8(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN8(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN9(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN9(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN10(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
+	float calcNotionBaseN10(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                   PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
 
-	float calcNotionN11(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
+	float calcNotionBaseN11(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 						                   PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -513,150 +529,153 @@ namespace AS::Decisions::GA {
 
 namespace AS::Decisions {
 
-	float calculateNotionSelfLA(notionsSelf notion, int agentID, 
+	float calculateNotionBaseSelfLA(notionsSelf notion, int agentID, 
 		                      AS::dataControllerPointers_t* dp,
 		                      PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
 		switch ((int)notion)
 		{
 		case 0:
-			return LA::calcNotionS0(agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseS0(agentID, dp, refReads_ptr);
 		case 1:
-			return LA::calcNotionS1(agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseS1(agentID, dp, refReads_ptr);
 		case 2:
-			return LA::calcNotionS2(agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseS2(agentID, dp, refReads_ptr);
 		case 3:
-			return LA::calcNotionS3(agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseS3(agentID, dp, refReads_ptr);
 		case 4:
-			return LA::calcNotionS4(agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseS4(agentID, dp, refReads_ptr);
 		case 5:
-			return LA::calcNotionS5(agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseS5(agentID, dp, refReads_ptr);
 		case 6:
-			return LA::calcNotionS6(agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseS6(agentID, dp, refReads_ptr);
 		case 7:
-			return LA::calcNotionS7(agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseS7(agentID, dp, refReads_ptr);
 		default:
 			return 0.0f;
 		}
 	}
 
-	float calculateNotionNeighborLA(notionsNeighbor notion, int neighbor, 
+	float calculateNotionBaseNeighborLA(notionsNeighbor notion, int neighbor, 
 		                          int agentID, AS::dataControllerPointers_t* dp,
 		                          PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
 		switch ((int)notion)
 		{
 		case 0:
-			return LA::calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 		case 1:
-			return LA::calcNotionN1(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN1(neighbor, agentID, dp, refReads_ptr);
 		case 2:
-			return LA::calcNotionN2(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 		case 3:
-			return LA::calcNotionN3(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN3(neighbor, agentID, dp, refReads_ptr);
 		case 4:
-			return LA::calcNotionN4(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN4(neighbor, agentID, dp, refReads_ptr);
 		case 5:
-			return LA::calcNotionN5(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN5(neighbor, agentID, dp, refReads_ptr);
 		case 6:
-			return LA::calcNotionN6(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN6(neighbor, agentID, dp, refReads_ptr);
 		case 7:
-			return LA::calcNotionN7(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN7(neighbor, agentID, dp, refReads_ptr);
 		case 8:
-			return LA::calcNotionN8(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN8(neighbor, agentID, dp, refReads_ptr);
 		case 9:
-			return LA::calcNotionN9(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN9(neighbor, agentID, dp, refReads_ptr);
 		case 10:
-			return LA::calcNotionN10(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN10(neighbor, agentID, dp, refReads_ptr);
 		case 11:
-			return LA::calcNotionN11(neighbor, agentID, dp, refReads_ptr);
+			return LA::calcNotionBaseN11(neighbor, agentID, dp, refReads_ptr);
 		default:
 			return 0.0f;
 		}
 	}
 
-	float calculateNotionSelfGA(notionsSelf notion, int agentID, 
+	float calculateNotionBaseSelfGA(notionsSelf notion, int agentID, 
 		                      AS::dataControllerPointers_t* dp,
 		                      PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 
 		switch ((int)notion)
 		{
 		case 0:
-			return GA::calcNotionS0(agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseS0(agentID, dp, refReads_ptr);
 		case 1:
-			return GA::calcNotionS1(agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseS1(agentID, dp, refReads_ptr);
 		case 2:
-			return GA::calcNotionS2(agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseS2(agentID, dp, refReads_ptr);
 		case 3:
-			return GA::calcNotionS3(agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseS3(agentID, dp, refReads_ptr);
 		case 4:
-			return GA::calcNotionS4(agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseS4(agentID, dp, refReads_ptr);
 		case 5:
-			return GA::calcNotionS5(agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseS5(agentID, dp, refReads_ptr);
 		case 6:
-			return GA::calcNotionS6(agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseS6(agentID, dp, refReads_ptr);
 		case 7:
-			return GA::calcNotionS7(agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseS7(agentID, dp, refReads_ptr);
 		default:
 			return 0.0f;
 		}
 	}
 
-	float calculateNotionNeighborGA(notionsNeighbor notion, int neighbor, 
+	float calculateNotionBaseNeighborGA(notionsNeighbor notion, int neighbor, 
 		                          int agentID, AS::dataControllerPointers_t* dp,
 		                          PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 
 		switch ((int)notion)
 		{
 		case 0:
-			return GA::calcNotionN0(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
 		case 1:
-			return GA::calcNotionN1(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN1(neighbor, agentID, dp, refReads_ptr);
 		case 2:
-			return GA::calcNotionN2(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 		case 3:
-			return GA::calcNotionN3(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN3(neighbor, agentID, dp, refReads_ptr);
 		case 4:
-			return GA::calcNotionN4(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN4(neighbor, agentID, dp, refReads_ptr);
 		case 5:
-			return GA::calcNotionN5(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN5(neighbor, agentID, dp, refReads_ptr);
 		case 6:
-			return GA::calcNotionN6(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN6(neighbor, agentID, dp, refReads_ptr);
 		case 7:
-			return GA::calcNotionN7(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN7(neighbor, agentID, dp, refReads_ptr);
 		case 8:
-			return GA::calcNotionN8(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN8(neighbor, agentID, dp, refReads_ptr);
 		case 9:
-			return GA::calcNotionN9(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN9(neighbor, agentID, dp, refReads_ptr);
 		case 10:
-			return GA::calcNotionN10(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN10(neighbor, agentID, dp, refReads_ptr);
 		case 11:
-			return GA::calcNotionN11(neighbor, agentID, dp, refReads_ptr);
+			return GA::calcNotionBaseN11(neighbor, agentID, dp, refReads_ptr);
 		default:
 			return 0.0f;
 		}
 	}
 
 	float delinearizeAndClampNotion(float baseNotion, float effectiveMaxBase, 
-													   uint8_t smallExponent) {
+													     float smallExponent) {
 
-		assert(baseNotion >= 0);
+		//sanity check:
 		assert(effectiveMaxBase > 0);
 
-		float raisedNotion = powf(baseNotion, smallExponent);
-		float raisedEffectiveMaxBase =  powf(effectiveMaxBase, smallExponent);
+		//sanitizing:
+		if (baseNotion < 0) {
+			//TODO: add warning after error handling is implemented here
+			assert(false); //for now, just crash if in debug
+		}
 
-		//sanity checks:
-		assert(std::isfinite(raisedNotion));
-		assert(effectiveMaxBase > 0);
-		assert(std::isfinite(raisedEffectiveMaxBase)); 
+		//effectiveMaxBase is the limit, so:
+		if (baseNotion > effectiveMaxBase) {
+			return 1;
+		}
 
-		float finalNotion = 
-				std::clamp(raisedNotion, 0.0f, raisedEffectiveMaxBase)
-													/ raisedEffectiveMaxBase;
+		//Otherwise, we do the actual math:
+		float effectiveProportion = baseNotion / effectiveMaxBase; //in [0 , 1] range
+		float finalNotion = powf(effectiveProportion, smallExponent); //also in [0 , 1] range
 
 		assert(std::isfinite(finalNotion));
-
+		
 		return finalNotion;
 	}
 }

@@ -459,8 +459,8 @@ void updateWeightsForMitigation(AD::notionWeights_t wp, AD::notions_t* np,
 		totalExtraScore += extraScoreReceived_ptr[action].score;
 	}
 
-	float tooSmall = 0.1;
-	if (totalExtraScore < tooSmall) {
+	float small = 0.1f;
+	if (totalExtraScore < small) {
 		return; //nothing to do here : )
 	}
 
@@ -581,7 +581,7 @@ void mitigate(AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np,
 		//TODO-CRITICAL: This will be part of agent's personalities in the future: FIX then
 		float dampeningBase = ACT_SUCESSIVE_MITIGATION_DAMPENNING_MULTIPLIER;
 
-		float dampeningFactor = powf(dampeningBase, mitigationRoundsDone);
+		float dampeningFactor = powf(dampeningBase, (float)mitigationRoundsDone);
 		
 		extraScore *= dampeningFactor;
 
@@ -775,23 +775,46 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 	                           LA::readsOnNeighbor_t* refReads_ptr, int totalNeighbors,
 							           AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
-	int totalNotionsSelf = (int)AS::Decisions::notionsSelf::TOTAL;
+	int totalNotionsSelf = (int)AD::notionsSelf::TOTAL;
 
 	for (int notion = 0; notion < totalNotionsSelf; notion++) {
 
-		np->self[notion] = 
-			AS::Decisions::calculateNotionSelfLA((AS::Decisions::notionsSelf)notion, 
-									                        agent, dp, refReads_ptr);
+		float notionBase =
+			AD::calculateNotionBaseSelfLA( (AD::notionsSelf)notion, agent, dp, refReads_ptr);
+
+		//This base will then be delinearized and clamped to the [0 , 1] range:
+
+		float delinearizationExpo = 
+				AD::getDelinearizationExpoSelf((AD::notionsSelf)notion, AS::scope::LOCAL);
+		float effectiveMaxBase = 
+				AD::getEffectiveMaxBaseSelf((AD::notionsSelf)notion, AS::scope::LOCAL);
+
+			np->self[notion] =
+						AD::delinearizeAndClampNotion(notionBase, effectiveMaxBase, 
+															   delinearizationExpo);
 	}
 
-	int totalNotionsNeighbor = (int)AS::Decisions::notionsNeighbor::TOTAL;
+	int totalNotionsNeighbor = (int)AD::notionsNeighbor::TOTAL;
 	
 	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
 		for(int notion = 0; notion < totalNotionsNeighbor; notion++){
 			
+			float notionBase =
+				AD::calculateNotionBaseNeighborLA( (AD::notionsNeighbor)notion, neighbor, 
+					                                             agent, dp, refReads_ptr);
+			
+			//This base will then be delinearized and clamped to the [0 , 1] range:
+
+			float delinearizationExpo = 
+				AD::getDelinearizationExpoNeighbor((AD::notionsNeighbor)notion, 
+					                                          AS::scope::LOCAL);
+			float effectiveMaxBase = 
+				AD::getEffectiveMaxBaseNeighbor((AD::notionsNeighbor)notion, 
+					                                       AS::scope::LOCAL);
+
 			np->neighbors[neighbor][notion] =
-				AS::Decisions::calculateNotionNeighborLA((AS::Decisions::notionsNeighbor)notion, 
-					                                      neighbor, agent, dp, refReads_ptr);
+						AD::delinearizeAndClampNotion(notionBase, effectiveMaxBase, 
+															   delinearizationExpo);
 		}
 	}
 	
@@ -829,23 +852,46 @@ void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions
                                GA::readsOnNeighbor_t* refReads_ptr, int totalNeighbors,
 							           AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
-	int totalNotionsSelf = (int)AS::Decisions::notionsSelf::TOTAL;
+	int totalNotionsSelf = (int)AD::notionsSelf::TOTAL;
 
 	for (int notion = 0; notion < totalNotionsSelf; notion++) {
 
-		np->self[notion] = 
-			AS::Decisions::calculateNotionSelfGA((AS::Decisions::notionsSelf)notion, 
-									                        agent, dp, refReads_ptr);
+		float notionBase =
+			AD::calculateNotionBaseSelfGA( (AD::notionsSelf)notion, agent, dp, refReads_ptr);
+
+		//This base will then be delinearized and clamped to the [0 , 1] range:
+
+		float delinearizationExpo = 
+				AD::getDelinearizationExpoSelf((AD::notionsSelf)notion, AS::scope::GLOBAL);
+		float effectiveMaxBase = 
+				AD::getEffectiveMaxBaseSelf((AD::notionsSelf)notion, AS::scope::GLOBAL);
+
+			np->self[notion] =
+						AD::delinearizeAndClampNotion(notionBase, effectiveMaxBase, 
+															   delinearizationExpo);
 	}
 
-	int totalNotionsNeighbor = (int)AS::Decisions::notionsNeighbor::TOTAL;
+	int totalNotionsNeighbor = (int)AD::notionsNeighbor::TOTAL;
 	
 	for (int notion = 0; notion < totalNotionsNeighbor; notion++) {
 		for(int neighbor = 0; neighbor < totalNeighbors; neighbor++){
 			
+			float notionBase =
+				AD::calculateNotionBaseNeighborGA( (AD::notionsNeighbor)notion, neighbor, 
+					                                             agent, dp, refReads_ptr);
+
+				//This base will then be delinearized and clamped to the [0 , 1] range:
+
+			float delinearizationExpo = 
+				AD::getDelinearizationExpoNeighbor((AD::notionsNeighbor)notion, 
+					                                          AS::scope::GLOBAL);
+			float effectiveMaxBase = 
+				AD::getEffectiveMaxBaseNeighbor((AD::notionsNeighbor)notion, 
+					                                       AS::scope::GLOBAL);
+
 			np->neighbors[neighbor][notion] =
-				AS::Decisions::calculateNotionNeighborGA((AS::Decisions::notionsNeighbor)notion, 
-					                                      neighbor, agent, dp, refReads_ptr);
+						AD::delinearizeAndClampNotion(notionBase, effectiveMaxBase, 
+															   delinearizationExpo);
 		}
 	}
 	

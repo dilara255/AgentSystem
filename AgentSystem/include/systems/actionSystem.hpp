@@ -578,6 +578,92 @@ namespace AS {
 
 		static constexpr notionsWeightsArray_t notionWeightsInFavor = getWeightsInFavor();
 		static constexpr notionsWeightsArray_t notionWeightsAgainst = getWeightsAgainst();
+
+		//Notions are "delinearized" and cast to the [0 , 1] range after base calculation
+		//These are the parameters used for that:
+
+		//The exponents set the shapness of the effect. They should be small, positive numbers
+
+		const float dfExp = NTN_STD_DELINEARIZATION_EXPONENT;
+
+		//For LA's:
+		static constexpr float notionsDelinearizationExposLA[TOTAL_NOTIONS] = {
+			//Notions Self:
+			dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp,
+			//Notions Neighbors:
+			dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp
+		};
+		//For GA's:
+		static constexpr float notionsDelinearizationExposGA[TOTAL_NOTIONS] = {
+			//Notions Self:
+			dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp,
+			//Notions Neighbors:
+			dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp
+		};
+
+		static constexpr float getDelinearizationExpoSelf(notionsSelf notion, 
+														     AS::scope scope) {
+			if (scope == AS::scope::LOCAL) {
+				return notionsDelinearizationExposLA[(int)notion];
+			}
+			else {
+				return notionsDelinearizationExposGA[(int)notion];
+			}
+		}
+
+		static constexpr float getDelinearizationExpoNeighbor(notionsNeighbor notion, 
+														         AS::scope scope) {
+			int index = (int)notionsSelf::TOTAL + (int)notion;
+
+			if (scope == AS::scope::LOCAL) {
+				return notionsDelinearizationExposLA[index];
+			}
+			else {
+				return notionsDelinearizationExposGA[index];
+			}
+		}
+
+		//The maximum effective bases are the saturation point for the base calculations;
+		//Any base >= these will be mapped to 1;
+
+		const float maxBs = NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
+
+		//For LA's:
+		static constexpr float notionsMaxEffectiveBasesLA[TOTAL_NOTIONS] = {
+			//Notions Self:
+			maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs,
+			//Notions Neighbors:
+			maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs
+		};
+		//For GA's:
+		static constexpr float notionsMaxEffectiveBasesGA[TOTAL_NOTIONS] = {
+			//Notions Self:
+			maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs,
+			//Notions Neighbors:
+			maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs
+		};
+
+		static constexpr float getEffectiveMaxBaseSelf(notionsSelf notion, 
+														     AS::scope scope) {
+			if (scope == AS::scope::LOCAL) {
+				return notionsMaxEffectiveBasesLA[(int)notion];
+			}
+			else {
+				return notionsMaxEffectiveBasesGA[(int)notion];
+			}
+		}
+
+		static constexpr float getEffectiveMaxBaseNeighbor(notionsNeighbor notion, 
+														         AS::scope scope) {
+			int index = (int)notionsSelf::TOTAL + (int)notion;
+
+			if (scope == AS::scope::LOCAL) {
+				return notionsMaxEffectiveBasesLA[index];
+			}
+			else {
+				return notionsMaxEffectiveBasesGA[index];
+			}
+		}
 	}
 }
 

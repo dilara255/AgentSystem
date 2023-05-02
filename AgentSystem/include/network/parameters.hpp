@@ -138,8 +138,9 @@ and data sizes static.
 
 //Notion Calculation:
 #define NTN_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY (0.8f)
-#define NTN_STD_DELINEARIZATION_EXPONENT (2) //should be a small positive integer
-#define NTN_STD_MAX_EFFECTIVE_NOTION_BASE (3.0f) //should be > 0
+//Notions will be delinearized, with baseNotion = maxEffectiveBase mapping to 1, so:
+#define NTN_STD_DELINEARIZATION_EXPONENT (2.0f) //should be a small positive integer
+#define NTN_STD_MAX_EFFECTIVE_NOTION_BASE (10.0f) //should be > 0
 
 //Actions (general):
 #define PRNS_PER_ACT 5
