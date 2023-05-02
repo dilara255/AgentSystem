@@ -19,6 +19,7 @@ reevaluated once the actual format and save system needs are known.
 
 #include "systems/AScoordinator.hpp"
 #include "data/agentDataControllers.hpp"
+#include "systems/actionSystem.hpp"
 
 #include "network/fileManager.hpp"
 

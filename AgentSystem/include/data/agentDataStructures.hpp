@@ -93,14 +93,6 @@ namespace AS {
 	typedef	float AS_API GAinfiltrationOnNeighbors_t[MAX_GA_QUANTITY];
 
 	typedef int AS_API GApersonality[GA_PERSONALITY_TRAITS];
-	//TODO: "fuse" GApersonality and the traits bellow:
-	//Possibly rethink this to follow the same logic of the notions
-	//Maybe personality, notions, and score weights should all be in one place?
-	//TODO: enum class?
-	enum gaPersonalityTraits {
-		GA_PERS_0, GA_PERS_1, GA_PERS_2, GA_PERS_3,
-		GA_PERS_4, GA_PERS_5, GA_PERS_6, GA_PERS_7,
-									TOTAL_GA_PERS };
 
 	typedef AZ::FlagField128 LAflagField_t;
 	typedef AZ::FlagField32 GAflagField_t;

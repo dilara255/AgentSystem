@@ -326,6 +326,40 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 	return maxAmbition;
 }
 
+void applyPersonalityOffsets(AD::allScoresAnyScope_t* sp, int agent, AS::scope scope, 
+	                                                AS::dataControllerPointers_t* dp, 
+									 AS::WarningsAndErrorsCounter* errorsCounter_ptr){
+
+	for (int score = 0; score < sp->actualTotalScores; score++) {
+		
+		auto score_ptr = &(sp->allScores[score].overallUtility);
+		int cat = score_ptr->actCategory;
+		int mode = score_ptr->actMode;
+
+		float offset = 0;
+
+		if (scope == AS::scope::LOCAL) {
+
+			auto offsets_ptr = &(dp->LAdecision_ptr->getDataCptr()->at(agent).offsets);
+
+			offset += offsets_ptr->incentivesAndConstraintsFromGA[cat][mode];
+			offset += offsets_ptr->personality[cat][mode];
+		}
+		else { //Global
+			for (int traitIndex = 0; traitIndex < GA_PERSONALITY_TRAITS; traitIndex++) {
+
+				auto personality_arr = 
+					&(dp->GAdecision_ptr->getDataCptr()->at(agent).personality[0]);
+
+				int trait = personality_arr[traitIndex];
+
+				offset += AD::getOffsetFromGApersonality( (AD::gaPersonalityTraits)trait,
+					                          (AS::actCategories)cat, (AS::actModes)mode);								  
+			}
+		}
+	}	
+}
+
 //If doNothing, returns innactive action. Else, score is recorded on action's intensity
 //Also returns innactive action in case of error.
 //TODO: full testing (including the sorting)
@@ -738,21 +772,26 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 	float whyBother = ACT_WHY_BOTHER_THRESOLD;
 	float justDoIt = ACT_JUST_DO_IT_THRESOLD;
 
-	//choose action:
+	//We start out by calculating the scores:
 	float maxAmbition = calculateScores(np, sp, scope, totalNeighbors, errorsCounter_ptr);
 	
-	AS::actionData_t chosenAction;
-	if(maxAmbition < whyBother){ 
+	//For the overall utility scores, we want to apply any personality offsets:
+	applyPersonalityOffsets(sp, agent, scope, dp, errorsCounter_ptr);
 
+	//Then we make a choice:
+	AS::actionData_t chosenAction;
+	//Out strategy will depend on how ambitious we're feeling:
+	if(maxAmbition < whyBother){ 
+		//nothing stands out, so just:
 		chosenAction = doLeastHarmful(sp, agent, scope, errorsCounter_ptr);
 	}
 	else {
-
+		//some ideas sound nice, so:
 		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope, errorsCounter_ptr);
 	}
 	
-	//If we choose to doNothing, chosenAction.ids.slotIsUsed will be 0, else, 1, so:
-	if(chosenAction.ids.slotIsUsed) {
+	//If we choose to do nothing, chosenAction.ids.slotIsUsed will be 0, else, 1, so:
+	if(chosenAction.ids.slotIsUsed) { //we have actually chosen to do something!
 
 		bool isValid = AD::isValid(chosenAction.ids.category, 
 								   chosenAction.ids.mode, chosenAction.ids.scope);

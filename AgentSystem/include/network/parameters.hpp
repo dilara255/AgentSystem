@@ -182,10 +182,10 @@ and data sizes static.
 #define DEFAULT_LA_NEIGHBOUR_QUOTIENT 2 //Default connections = max/this
 #define DEFAULT_GA_INFILTRATION (0.0f)
 #define DEFAULT_LA_INFILTRATION (0.0f)
-#define DEFAULT_GA_PERSONA_0 (AS::GA_PERS_0)
-#define DEFAULT_GA_PERSONA_1 (AS::GA_PERS_1)
-#define DEFAULT_GA_PERSONA_2 (AS::GA_PERS_2)
-#define DEFAULT_GA_PERSONA_3 (AS::GA_PERS_3)
+#define DEFAULT_GA_PERSONA_0 ((int)AS::Decisions::gaPersonalityTraits::GA_PERS_0)
+#define DEFAULT_GA_PERSONA_1 ((int)AS::Decisions::gaPersonalityTraits::GA_PERS_1)
+#define DEFAULT_GA_PERSONA_2 ((int)AS::Decisions::gaPersonalityTraits::GA_PERS_2)
+#define DEFAULT_GA_PERSONA_3 ((int)AS::Decisions::gaPersonalityTraits::GA_PERS_3)
 #define DEFAULT_LA_OFFSET (-0.1f)
 #define DEFAULT_REINFORCEMENT (0.1f)
 #define DEFAULT_ACTION_ID 0

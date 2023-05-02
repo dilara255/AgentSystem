@@ -1,6 +1,6 @@
 #pragma once
 
-//TODO: Pull some definitions into a .cpp?
+//TODO: Reorganize and possibly rename this file
 
 /*
 //TODO: review/update this:
@@ -9,7 +9,9 @@ This file declares the classes:
 - The ActionSystem itself, which includes:
 -- ActionDataController class, with two bundles of action data: for LAs and GAs;
 -- Action Variations class, wich warps information about which action variations are possible;
-- TODO: the base ActionCategoy class.
+
+It also has a bunch of decision related stuff:
+//TODO: extract those into another file;
 */
 
 #include "miscStdHeaders.h"
@@ -318,6 +320,7 @@ namespace AS {
 		typedef modeProcessingFunctions_t actionProcessingFunctions_t[(int)actCategories::TOTAL];
 	};
 
+	//TODO: Move these?
 	namespace Decisions {
 		
 		enum class notionsSelf { LOW_INCOME_TO_STR, LOW_DEFENSE_TO_RESOURCES, LOW_CURRENCY, 
@@ -584,7 +587,7 @@ namespace AS {
 
 		//The exponents set the shapness of the effect. They should be small, positive numbers
 
-		const float dfExp = NTN_STD_DELINEARIZATION_EXPONENT;
+		static constexpr float dfExp = NTN_STD_DELINEARIZATION_EXPONENT;
 
 		//For LA's:
 		static constexpr float notionsDelinearizationExposLA[TOTAL_NOTIONS] = {
@@ -626,7 +629,7 @@ namespace AS {
 		//The maximum effective bases are the saturation point for the base calculations;
 		//Any base >= these will be mapped to 1;
 
-		const float maxBs = NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
+		static constexpr float maxBs = NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
 
 		//For LA's:
 		static constexpr float notionsMaxEffectiveBasesLA[TOTAL_NOTIONS] = {
@@ -664,6 +667,91 @@ namespace AS {
 				return notionsMaxEffectiveBasesGA[index];
 			}
 		}
+
+		//These are the GA personalities:
+			enum class gaPersonalityTraits { GA_PERS_0, GA_PERS_1, GA_PERS_2, GA_PERS_3,
+											 GA_PERS_4, GA_PERS_5, GA_PERS_6, GA_PERS_7,
+											 TOTAL_GA_PERS };
+			#define TOTAL_GA_PERS ((int)gaPersonalityTraits::TOTAL_GA_PERS)
+
+			//They'll consist each of a set of offsets for each action variation
+			//So TOTAL_GA_PERS x Modes offsets x Action Categories
+			typedef std::array<std::array<std::array<float, TOTAL_CATEGORIES>, TOTAL_MODES>, TOTAL_GA_PERS>
+				gaPersonalityOffsets_arr;
+
+			static constexpr gaPersonalityOffsets_arr gaPersonalityOffsets = {{
+			
+				{{                         //GA_PERS_0  
+					//SELF:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//IMMEDIATE:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//REQUEST:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				}},
+				{{                         //GA_PERS_1 
+					//SELF:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//IMMEDIATE:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//REQUEST:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				}},	
+				{{                         //GA_PERS_2       
+					//SELF:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//IMMEDIATE:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//REQUEST:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				}},	
+				{{                         //GA_PERS_3       
+					//SELF:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//IMMEDIATE:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//REQUEST:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				}},	
+				{{                         //GA_PERS_4       
+					//SELF:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//IMMEDIATE:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//REQUEST:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				}},	
+				{{                         //GA_PERS_5       
+					//SELF:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//IMMEDIATE:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//REQUEST:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				}},
+				{{                         //GA_PERS_6       
+					//SELF:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//IMMEDIATE:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//REQUEST:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				}},
+				{{                         //GA_PERS_7       
+					//SELF:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//IMMEDIATE:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+					//REQUEST:
+					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				}}		
+			}};
+
+			static constexpr float getOffsetFromGApersonality(gaPersonalityTraits trait,
+										  AS::actCategories category, AS::actModes mode) {
+
+				return gaPersonalityOffsets[(int)trait][(int)mode][(int)category];
+			}
 	}
 }
 
