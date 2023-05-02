@@ -73,12 +73,68 @@ namespace AS::Decisions::LA {
 	}
 
 	//S1: LOW_DEFENSE_TO_RESOURCES
+	//This agent has low defences compared to it's resources:
+	//- The higher the current resources are compared to the reference, the higher this is;
+	//- The lower the defences are compared to the reference, the higher this is;
 	float calcNotionBaseS1(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
-		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
+		//We use proportions to the references as a way to normalize,
+		//since defence and resources don't necessarely have a direct convertion
 
-		return 1.0f;
+		//Defence is defined as strenght + guard, so to calculate the refDefenf:
+		int strenghtIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
+		float refStrenght = refReads_ptr->readOf[strenghtIndex];
+
+		int guardIndex = (int)PURE_LA::readsOnNeighbor_t::fields::GUARD;
+		float refGuard = refReads_ptr->readOf[guardIndex];
+		
+		float refDefense = refGuard + refStrenght;
+
+		//And these are the refResources:
+		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
+		float refResources = refReads_ptr->readOf[resourcesIndex];
+
+		auto agentParameters_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentID).parameters);
+		
+		//Now we get the actual value of our defenses:
+		float agentsDefense = agentParameters_ptr->strenght.current
+							  + agentParameters_ptr->strenght.externalGuard;
+
+		float small = 0.1f; //to avoid blowups on division : )
+
+		if (refDefense < small) {
+			refDefense = small;
+		}
+		float defenceProportion = agentsDefense / refDefense;		
+
+		//defenceProportion will be a divident later, so:
+		if (defenceProportion < small) {
+			defenceProportion = small;
+		}
+
+		//Same idea, for resources:
+		float agentsResources = agentParameters_ptr->resources.current;
+
+		if (refResources < small) {
+			refResources = small;
+		}
+		float resourcesProportion = agentsResources / refResources;
+
+		//Since we may have increased the defenceProportion a bit, 
+		//let's extend resourcesProportion the same courtesy:
+		if (resourcesProportion < small) {
+			resourcesProportion = small;
+		}
+
+		//Finally, this proportion is the notionBase we want:
+		float notionBase = resourcesProportion / defenceProportion;
+
+		//Since we've sanitized the terms before, we expect that:
+		assert(std::isfinite(notionBase));
+		assert(notionBase >= 0);
+
+		return notionBase;
 	}
 
 	//S2: LOW_CURRENCY
@@ -133,7 +189,7 @@ namespace AS::Decisions::LA {
 	//N0: LOW_DEFENSE_TO_RESOURCES
 	//The neighbor has low defences compared to their resources:
 	//- The higher the current resources are compared to the reference, the higher this is;
-	//- The lower the guard is compared to the reference, the higher this is;
+	//- The lower the defences are compared to the reference, the higher this is;
 	float calcNotionBaseN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
