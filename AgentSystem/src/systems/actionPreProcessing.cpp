@@ -248,7 +248,7 @@ namespace AS{
 		double effectiveAttackSize = sqrt(attackSize/DEFAULT_LA_STRENGHT);
 
 		double preparationTime = effectiveAttackSize *
-									ACT_BASE_ATTACK_L_I_PREP_TENTHS_OF_MS_PER_DEFAULT_STR;			                     
+									ACT_BASE_ATTACK_L_I_PREP_TENTHS_OF_MS_PER_REF_STR;			                     
 
 		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
 	}

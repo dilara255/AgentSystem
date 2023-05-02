@@ -138,12 +138,57 @@ namespace AS::Decisions::LA {
 	}
 
 	//S2: LOW_CURRENCY
+	//Are our current resources low when compared to our references and our upkeep?
+	//We check both things and use the worst value D :
+	//- To compare to upkeep, we compare how long we could go with no extra income with
+	//a (parametrized) reference time.
 	float calcNotionBaseS2(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
+		//We first calculate how our resources compare to our reference resources:
+		
+		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
+		float refResources = refReads_ptr->readOf[resourcesIndex];
 
-		return 1.0f;
+		float small = 0.1f;
+		if (refResources < small) { //we don't want to deal wih negatives
+			refResources = small;
+		}
+
+		auto agentParameters_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentID).parameters);
+		
+		float agentsResources = agentParameters_ptr->resources.current;	
+		if (agentsResources < small) { ///we also don't want to deal with zeros
+			agentsResources = small;
+		}
+
+		float resourcesProportion = refResources / agentsResources; //Higher when we're poorer
+
+		//We now check how long we could go with no income:
+		//TODO: make sure that external guard is being taken in account
+		float upkeep = agentParameters_ptr->strenght.currentUpkeep;
+		if (upkeep < small) { 
+			upkeep = small;
+		}
+
+		float secondsToBankrup = refResources / upkeep;
+
+		assert(secondsToBankrup > 0);
+
+		float referenceBankruptTime = NTN_REFERENCE_BANKRUPT_PERIODS 
+									  * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS;
+
+		//If we can't keep up for too long, this will be high:
+		float bankruptTimeProportion = referenceBankruptTime / secondsToBankrup;
+
+		//Finally, the notionBase will be the worst (highest) proportion:
+		float notionBase = std::max(resourcesProportion, referenceBankruptTime);
+
+		//Since we've sanitized the terms before, we expect that:
+		assert(std::isfinite(notionBase));
+		assert(notionBase >= 0);
+
+		return notionBase;
 	}
 
 	float calcNotionBaseS3(int agentID, AS::dataControllerPointers_t* dp, 
