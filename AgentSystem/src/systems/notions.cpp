@@ -298,6 +298,8 @@ namespace AS::Decisions::LA {
 	}
 
 	//N1: IS_STRONG
+	//Is their strenght is above my defenses? Or is it higher than the reference?
+	//We choose the worst propotion as the base for this notions
 	float calcNotionBaseN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -307,6 +309,14 @@ namespace AS::Decisions::LA {
 	}
 
 	//N2: WORRIES_ME
+	//Do they seem shady and treatening?
+	//First we evaluate how much we distrust them:
+	//- Bad disposition: distrust;
+	//- Low absolute infiltration level: distrust;
+	//- WAR: distrust;
+	//- WAR between GAs: distrust;
+	//Then we chek how strong they are, but our distrust ADDS to that for an effective value;
+	//Finally, we compare this effective strenght to our own.
 	float calcNotionBaseN2(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -316,6 +326,8 @@ namespace AS::Decisions::LA {
 	}
 
 	//N3: I_TRUST_THEM
+	//High disposition and high absolute infiltration = high trust;
+	//Alliances and trade between the agents or their GA's also help;
 	float calcNotionBaseN3(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
