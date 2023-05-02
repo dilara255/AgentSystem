@@ -12,37 +12,33 @@ namespace PURE_GA = GA;
 
 namespace AS::Decisions::LA {
 
-	//LOW_INCOME_TO_STR
+	//S0: LOW_INCOME_TO_STR
+	//This notion is based on the upkeep/income ratio
+	//There's a maximum value above which all ratios will map to notion = 1
+	//The notion is not linear with the ratio - it's raised to some power and remmaped to [0,1]
+	//TODO: extract some parameters
 	float calcNotionS0(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
 		auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentID));
 
 		float upkeep = state_ptr->parameters.strenght.currentUpkeep;
-		float effectiveIncome = NOTION_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY 
+
+		float effectiveIncome = NTN_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY 
 								* state_ptr->parameters.resources.updateRate;
 
-		float maximumProportion = 2.0f;
-		float proportion = maximumProportion;
-
-		if (effectiveIncome > 0) {
+		float small = 0.1; //to avoid blowups and worries about small quantities
+		
+		float proportion = NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
+		if (effectiveIncome > small) {
 			proportion = upkeep/effectiveIncome;
 		}
 		
-		float notion = (proportion * proportion * proportion); //cubed: 2 -> 8, 0.5 -> 0.125
-
-		float maximumProportionCubed = 
-			maximumProportion * maximumProportion * maximumProportion;
-
-		notion = std::clamp(notion, 0.0f, maximumProportionCubed)/maximumProportionCubed;
-
-		assert(std::isfinite(notion));
-
-		//Will be on [0,1], with proportion == 2 -> 1, proportion == 1 -> 0.125
-		return notion;
+		//To make things more interesting and keep the notion in the [0,1] range:
+		return delinearizeAndClampNotion(proportion);
 	}
 
-	//LOW_DEFENSE_TO_RESOURCES
+	//S1: LOW_DEFENSE_TO_RESOURCES
 	float calcNotionS1(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
@@ -51,7 +47,7 @@ namespace AS::Decisions::LA {
 		return 1.0f;
 	}
 
-	//LOW_CURRENCY
+	//S2: LOW_CURRENCY
 	float calcNotionS2(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -100,57 +96,75 @@ namespace AS::Decisions::LA {
 		return 1.0f;
 	}
 
-	//LOW_DEFENSE_TO_RESOURCES
+	//N0: LOW_DEFENSE_TO_RESOURCES
+	//The neighbor has low defences compared to their resources:
+	//- The higher the current resources are compared to the reference, the higher this is;
+	//- The lower the guard is compared to the reference, the higher this is;
+	//TODO: extract some parameters
 	float calcNotionN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		//The higher the current resources are compared to the reference, the higher this is
-		//The lower the guard is compared to the reference, the higher this is
-		
+		//We use proportions to the references as a way to normalize,
+		//since defence and resources don't necessarely have a direct convertion
+
+		//Defence is defined as strenght + guard, so to calculate the refDefenf:
 		int strenghtIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
 		float refStrenght = refReads_ptr->readOf[strenghtIndex];
 
 		int guardIndex = (int)PURE_LA::readsOnNeighbor_t::fields::GUARD;
-		float refGuard = refReads_ptr->readOf[guardIndex] + refStrenght;
+		float refGuard = refReads_ptr->readOf[guardIndex];
+		
+		float refDefense = refGuard + refStrenght;
 
+		//And these are the refResources:
 		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
 		float refResources = refReads_ptr->readOf[resourcesIndex];
 
+		//Now we get the reads on the defenses:
 		auto readsOfNeighbor_ptr = 
 				&(dp->LAdecision_ptr->getDataCptr()->at(agentID).reads[neighbor]);
 
-		float neighborGuard = readsOfNeighbor_ptr->readOf[guardIndex]
+		float neighborDefense = readsOfNeighbor_ptr->readOf[guardIndex]
 							  + readsOfNeighbor_ptr->readOf[strenghtIndex];
 
-		float guardProportion = 1.0f;
-		if (refGuard > 0) {
-			guardProportion = neighborGuard / refGuard;
+		float small = 0.1; //to avoid blowups on division : )
+
+		if (refDefense < small) {
+			refDefense = small;
+		}
+		float defenceProportion = neighborDefense / refDefense;		
+
+		//defenceProportion will be a divident later, so:
+		if (defenceProportion < small) {
+			defenceProportion = small;
 		}
 
+		//Same idea, for resources:
 		float neighborResources = readsOfNeighbor_ptr->readOf[resourcesIndex];
 
-		float resourcesProportion = 1.0f;
-		if (refResources > 0) {
-			resourcesProportion = neighborResources / refResources;
+		if (refResources < small) {
+			refResources = small;
+		}
+		float resourcesProportion = neighborResources / refResources;
+
+		//Since we may have increased the defenceProportion a bit, 
+		//let's extend resourcesProportion the same courtesy:
+		if (resourcesProportion < small) {
+			resourcesProportion = small;
 		}
 
-		float proportion = resourcesProportion / guardProportion;
-		
-		float notion = (proportion * proportion * proportion); //cubed: 2 -> 8, 0.5 -> 0.125
+		//Finally, this is the proportion we want:
+		float proportion = resourcesProportion / defenceProportion;
 
-		float maximumProportion = 2;
-		float maximumProportionCubed = 
-			maximumProportion * maximumProportion * maximumProportion;
+		//Since we've sanitized the terms before, we expect that:
+		assert(std::isfinite(proportion));
+		assert(proportion > 0);
 
-		notion = std::clamp(notion, 0.0f, maximumProportionCubed)/maximumProportionCubed;
-
-		assert(std::isfinite(notion));
-
-		//Will be on [0,1], with proportion == 2 -> 1, proportion == 1 -> 0.125
-		return notion;
+		//To make things more interesting and keep the notion in the [0,1] range:
+		return delinearizeAndClampNotion(proportion);
 	}
 
-	//IS_STRONG
+	//N1: IS_STRONG
 	float calcNotionN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -159,7 +173,7 @@ namespace AS::Decisions::LA {
 		return 1.0f;
 	}
 
-	//WORRIES_ME
+	//N2: WORRIES_ME
 	float calcNotionN2(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -168,7 +182,7 @@ namespace AS::Decisions::LA {
 		return 1.0f;
 	}
 
-	//I_TRUST_THEM
+	//N3: I_TRUST_THEM
 	float calcNotionN3(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -244,7 +258,8 @@ namespace AS::Decisions::LA {
 
 namespace AS::Decisions::GA {
 
-	//STUB: too much str/income (when compared to reference reads)
+	//S0: STUB: too much str/income (when compared to reference reads)
+	//TODO: overhaul (like on LA::S0)
 	float calcNotionS0(int agentID, AS::dataControllerPointers_t* dp, 
 		                    PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 
@@ -270,7 +285,7 @@ namespace AS::Decisions::GA {
 			strenghtRatio = tax / refTax;
 		}			
 
-		float effectiveTaxRatio = NOTION_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY * taxRatio;
+		float effectiveTaxRatio = NTN_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY * taxRatio;
 
 		float proportion = strenghtRatio/effectiveTaxRatio;
 		float notion = (proportion * proportion * proportion); //cubed: 2 -> 8, 0.5 -> 0.125
@@ -340,7 +355,7 @@ namespace AS::Decisions::GA {
 		return 1.0f;
 	}
 
-	//STUB: neighbor has a lot of cash and little defenses compared to others
+	//N0: STUB: neighbor has a lot of cash and little defenses compared to others
 	float calcNotionN0(int neighbor, int agentID, AS::dataControllerPointers_t* dp,
 						                  PURE_GA::readsOnNeighbor_t* refReads_ptr) {
 		
@@ -604,5 +619,37 @@ namespace AS::Decisions {
 		default:
 			return 0.0f;
 		}
+	}
+
+	//This first raises the notion (limited by maximumEffectiveBase), to the smallExponent;
+	//Then, it casts the value back to the [0,1] range, making it non-linear.
+	// 
+	//NOTE: baseNotion is *assumed* to be >= 0;
+	//NOTE: effectiveMaxBase is *assumed* to be > 0;
+	//NOTE: If smallExponent == 0, all values will be cast to 1;
+	// 
+	//WARNING: Large *small*Exponents may break things : )
+	float delinearizeAndClampNotion(float baseNotion, 
+								float effectiveMaxBase = NTN_STD_MAX_EFFECTIVE_NOTION_BASE, 
+								uint8_t smallExponent = NTN_STD_DELINEARIZATION_EXPONENT) {
+
+		assert(baseNotion >= 0);
+		assert(effectiveMaxBase > 0);
+
+		float raisedNotion = powf(baseNotion, smallExponent);
+		float raisedEffectiveMaxBase =  powf(effectiveMaxBase, smallExponent);
+
+		//sanity checks:
+		assert(std::isfinite(raisedNotion));
+		assert(effectiveMaxBase > 0);
+		assert(std::isfinite(raisedEffectiveMaxBase)); 
+
+		float finalNotion = 
+				std::clamp(raisedNotion, 0.0f, raisedEffectiveMaxBase)
+													/ raisedEffectiveMaxBase;
+
+		assert(std::isfinite(finalNotion));
+
+		return finalNotion;
 	}
 }

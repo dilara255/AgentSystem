@@ -36,7 +36,6 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_p
                int totalNeighbors, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
 
-
 AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
 					 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
 	                 AS::WarningsAndErrorsCounter* errorsCounter_ptr,

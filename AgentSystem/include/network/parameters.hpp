@@ -47,6 +47,7 @@ and data sizes static.
 #define MAX_ACTIONS_PER_AGENT 10
 #define NAME_LENGHT 30
 #define COMMENT_LENGHT 250
+#define MAX_ACT_CHOICE_SHORTLIST_SIZE 20
 
 //TODO: The following parameters can sort-of-easily be turned into load-time parameters
 //TODO: A few of the following parameters are really other systems' limits : split them
@@ -115,7 +116,6 @@ and data sizes static.
 #define GA_PERSONALITY_TRAITS 4
 #define MAX_MITIGATION_ROUNDS 3
 #define MAX_ACT_GOAL_SHORTLIST_SIZE 10
-#define MAX_ACT_CHOICE_SHORTLIST_SIZE 20
 #define MIN_DECISION_THRESHOLD_SEPARATIONS (0.1f)
 #define MIN_ACT_WHY_BOTHER_THRESOLD (MIN_DECISION_THRESHOLD_SEPARATIONS)
 #define MIN_ACT_JUST_DO_IT_THRESOLD (MIN_ACT_WHY_BOTHER_THRESOLD - MIN_DECISION_THRESHOLD_SEPARATIONS)
@@ -137,7 +137,9 @@ and data sizes static.
 #define ACT_JUST_DO_IT_THRESOLD (0.8f)
 
 //Notion Calculation:
-#define NOTION_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY (0.8f)
+#define NTN_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY (0.8f)
+#define NTN_STD_DELINEARIZATION_EXPONENT (2) //should be a small positive integer
+#define NTN_STD_MAX_EFFECTIVE_NOTION_BASE (3.0f) //should be > 0
 
 //Actions (general):
 #define PRNS_PER_ACT 5
