@@ -310,14 +310,16 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 	int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
 	
 	//Set resources on all agents as infinite, to facilitate decisions:
-	constexpr float infiniteResources = std::numeric_limits<float>::infinity();
+	constexpr float hugeResources = ACT_REFERENCE_RESOURCES * NANOS_IN_A_SECOND;
+	assert(std::isfinite(hugeResources));
+
 	auto cldh_ptr = CL::getClientDataHandlerPtr();
 	
 	for (int agent = 0; agent < numberLAs; agent++) {
-		cldh_ptr->LAstate.parameters.resources.changeCurrentTo(agent, infiniteResources);
+		cldh_ptr->LAstate.parameters.resources.changeCurrentTo(agent, hugeResources);
 	}
 	for (int agent = 0; agent < numberGAs; agent++) {
-		cldh_ptr->GAstate.parameters.changeGAresourcesTo(agent, infiniteResources);
+		cldh_ptr->GAstate.parameters.changeGAresourcesTo(agent, hugeResources);
 	}
 	
 	//We want to run enough steps so that all action slots could be exhausted
