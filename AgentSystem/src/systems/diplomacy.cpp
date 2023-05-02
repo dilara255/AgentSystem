@@ -46,9 +46,9 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 			
 			//lower relations and infiltration because of war:
 			state_ptr->relations.dispositionToNeighbors[neighbor] -=
-					MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+					INFILTRATION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
 			decision_ptr->infiltration[neighbor] -=
-				    MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+				    INFILTRATION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
 		}
 
 		//Ally with trade receives the effects from trade and from Alliance:
@@ -172,9 +172,9 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 		else if (stance == AS::diploStance::WAR) {
 			//Lower relations and infiltration because of war:
 			state_ptr->relations.dispositionToNeighbors[neighbor] -=
-					MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+					INFILTRATION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
 			decision_ptr->infiltration[neighbor] -=
-				    MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+				    INFILTRATION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
 		}
 
 		if ((stance == AS::diploStance::ALLY) ||

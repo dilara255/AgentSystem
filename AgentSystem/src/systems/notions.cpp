@@ -194,7 +194,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseS3(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS2(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -202,7 +202,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseS4(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS2(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -210,7 +210,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseS5(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS2(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -218,7 +218,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseS6(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS2(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -226,7 +226,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseS7(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseS0(agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseS2(agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -298,48 +298,301 @@ namespace AS::Decisions::LA {
 	}
 
 	//N1: IS_STRONG
-	//Is their strenght is above my defenses? Or is it higher than the reference?
+	//Is their strenght above my defenses? Or is it higher than the reference?
 	//We choose the worst propotion as the base for this notions
 	float calcNotionBaseN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		//Defence is defined as strenght + guard, so to calculate our defenses:
+		auto agentsStrenght_ptr 
+					= (&dp->LAstate_ptr->getDataCptr()->at(agentID).parameters.strenght);
 
-		return 1.0f;
+		float agentsDefenses = 
+					agentsStrenght_ptr->current + agentsStrenght_ptr->externalGuard;
+
+		//Now we read the neighbor's and the reference strenght:
+		int strenghtIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
+		float refStrenght = refReads_ptr->readOf[strenghtIndex];
+
+		auto readsOfNeighbor_ptr = 
+				&(dp->LAdecision_ptr->getDataCptr()->at(agentID).reads[neighbor]);
+
+		float neighborStrenght = readsOfNeighbor_ptr->readOf[strenghtIndex];
+
+		float small = 0.1f; 
+		//to avoid blowups on division:
+		if (agentsDefenses < small) {
+			agentsDefenses = small;
+		}
+		if (refStrenght < small) {
+			refStrenght = small;
+		}
+		//and just to be fair (and keep values positive):
+		if (neighborStrenght < small) {
+			neighborStrenght = small;
+		}
+
+		//Now we can calculate the proportions we want:
+		float neighborsStrenghtToAgentsDefenses = neighborStrenght / agentsDefenses;
+		float neighborsStrenghtToReference = neighborStrenght / refStrenght;
+
+		//The worst (highest) proportion will be our notion base:
+		float notionBase = 
+			std::max(neighborsStrenghtToAgentsDefenses, neighborsStrenghtToReference);
+
+		//Since we've sanitized the terms before, we expect that:
+		assert(std::isfinite(notionBase));
+		assert(notionBase >= 0);
+
+		return notionBase;
 	}
 
 	//N2: WORRIES_ME
 	//Do they seem shady and treatening?
 	//First we evaluate how much we distrust them:
 	//- Bad disposition: distrust;
+	//- Lost disposition: distrust; 
 	//- Low absolute infiltration level: distrust;
 	//- WAR: distrust;
-	//- WAR between GAs: distrust;
 	//Then we chek how strong they are, but our distrust ADDS to that for an effective value;
 	//Finally, we compare this effective strenght to our own.
+	//TODO: should we care about the relation between our GAs? THis feels complex enough tho.
 	float calcNotionBaseN2(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		auto ourDecisionData_ptr = (&dp->LAdecision_ptr->getDataCptr()->at(agentID));
+		auto ourState_ptr = (&dp->LAstate_ptr->getDataCptr()->at(agentID));
+		auto relations_ptr = &(ourState_ptr->relations);
+		
+		//first we gather the diplomacy data from our agent:
+		float disposition = relations_ptr->dispositionToNeighbors[neighbor];
+		float lastDisposition = relations_ptr->dispositionToNeighborsLastStep[neighbor];
+		AS::diploStance stance = relations_ptr->diplomaticStanceToNeighbors[neighbor];
+		
+		float dispositionChange = disposition - lastDisposition;
+		float referenceDecisionTimeMs = AS_TOTAL_CHOPS * AS_MILLISECONDS_PER_STEP;
 
-		return 1.0f;
+		//We project our future disposition:
+		float projectedDispositionChange =
+			std::max(NTN_MAX_ABSOLUTE_DISPOSITION_EXTRAPOLATION, 
+						(dispositionChange * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS 
+														    * MILLIS_IN_A_SECOND) );
+		
+		float effectiveDisposition = disposition + projectedDispositionChange;			
+		
+		//War breeds distrust:
+		float stanceImpactFactorFromWar = PROPORTIONAL_WEIGHT_OF_WAR_COMPARED_TO_TRADE 
+										  * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND 
+										  * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS
+										  * NTN_DIPLO_STANCE_WEIGHT_PROPORTION_TO_REFS;
+
+		float changeFromStance = 0;
+		if (stance == AS::diploStance::WAR) {
+			changeFromStance = stanceImpactFactorFromWar 
+				               * NTN_MULTIPLIER_OF_WAR_EFFECT_ON_DISTRUST;
+		}
+
+		//This is our effective disposition:
+		effectiveDisposition += changeFromStance;
+
+		//Now let's look at our infiltration level:
+		float absolutInfiltration = std::abs(ourDecisionData_ptr->infiltration[neighbor]);
+		float uncertainty = 1 - absolutInfiltration;
+
+		assert(uncertainty >= 0);
+
+		uncertainty *= uncertainty; //to not over-penalize reasonable levels
+
+		//From effectiveDisposition and uncertainty, we calculate mistrustStrenghtMultiplier:
+		float dislike = std::max(0.0f, -effectiveDisposition);
+
+		float mistrustStrenghtMultiplier = 
+						NTN_MISTRUST_THREATH_MULTIPLIER * (dislike + uncertainty);
+
+		//Now to compare the strenghts:
+		float ourStrenght = ourState_ptr->parameters.strenght.current;
+		float small = 0.1f;
+		if (ourStrenght < small) {
+			ourStrenght = small;
+		}
+
+		float theirStrenght = 
+			dp->LAstate_ptr->getDataCptr()->at(neighbor).parameters.strenght.current;
+		if (theirStrenght < small) {
+			theirStrenght = small;
+		}
+
+		float strenghtProportion = theirStrenght / ourStrenght;
+
+		//We don't want to freak out because of a strong agent we don't particularly distrust:
+		float maxStrenghtProportion = NTN_MISTRUST_THREATH_OVERSHOOT_FACTOR
+			* (NTN_STD_MAX_EFFECTIVE_NOTION_BASE / NTN_MISTRUST_THREATH_MULTIPLIER);
+
+		strenghtProportion = std::min(strenghtProportion, maxStrenghtProportion);
+			
+		//Finally:
+		return (strenghtProportion * mistrustStrenghtMultiplier);
 	}
 
 	//N3: I_TRUST_THEM
 	//High disposition and high absolute infiltration = high trust;
 	//Alliances and trade between the agents or their GA's also help;
+	//Improving relations also contribute;
 	float calcNotionBaseN3(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		auto ourState_ptr = (&dp->LAstate_ptr->getDataCptr()->at(agentID));
+		auto relations_ptr = &(ourState_ptr->relations);
+		
+		//first we gather the data from our agent:
+		float disposition = relations_ptr->dispositionToNeighbors[neighbor];
+		float lastDisposition = relations_ptr->dispositionToNeighborsLastStep[neighbor];
+		AS::diploStance stance = relations_ptr->diplomaticStanceToNeighbors[neighbor];
+	
+		float dispositionChange = disposition - lastDisposition;
+		float referenceDecisionTimeMs = AS_TOTAL_CHOPS * AS_MILLISECONDS_PER_STEP;
 
-		return 1.0f;
+		//We project our future disposition:
+		float projectedDispositionChange =
+			std::max(NTN_MAX_ABSOLUTE_DISPOSITION_EXTRAPOLATION, 
+						(dispositionChange * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS 
+														    * MILLIS_IN_A_SECOND) );
+		
+		float effectiveDisposition = disposition + projectedDispositionChange;			
+		
+		//And then add the impact from the diplomatic stance:
+		//These will be used to convert diplomatic stance in impact for this notionBase:
+		float stanceImpactFactorFromTrade = 
+			MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS
+												 * NTN_DIPLO_STANCE_WEIGHT_PROPORTION_TO_REFS;
+		float stanceImpactFactorFromAlliance = 
+			PROPORTIONAL_WEIGHT_OF_ALLIANCE_COMPARED_TO_TRADE * stanceImpactFactorFromTrade;
+
+		float stanceImpactFactorFromWar =
+			PROPORTIONAL_WEIGHT_OF_WAR_COMPARED_TO_TRADE * stanceImpactFactorFromTrade;
+
+		float changeFromStance = 0;
+		if (stance == AS::diploStance::WAR) {
+
+			changeFromStance += stanceImpactFactorFromWar;
+		}
+		if ( (stance == AS::diploStance::TRADE) || 
+			 (stance == AS::diploStance::ALLY_WITH_TRADE) ) {
+
+			changeFromStance += stanceImpactFactorFromTrade;
+		}
+		if ( (stance == AS::diploStance::ALLY) || 
+			 (stance == AS::diploStance::ALLY_WITH_TRADE) ) {
+
+			changeFromStance += stanceImpactFactorFromAlliance;
+		}
+
+		//This is our effective LOCAL disposition
+		effectiveDisposition += changeFromStance;
+
+		//Now we do the same, but for the GAs:
+		//But for that we first need to find their IDs : )
+		
+		//TODO-CRITICAL: extract this to dataMisc (and eventually together with the data structures)
+
+		int neighborIndex = ourState_ptr->locationAndConnections.neighbourIDs[neighbor];
+		uint32_t neighborsGA = dp->LAstate_ptr->getDataCptr()->at(neighborIndex).GAid;
+
+		auto GAstates_ptr = dp->GAstate_ptr->getDataCptr();
+		auto ourGAstate_ptr = &(GAstates_ptr->at(ourState_ptr->GAid));
+
+		int ourGAsTotalNeighbors = ourGAstate_ptr->connectedGAs.howManyAreOn();
+
+		int notFound = -1;
+		uint32_t neighborsGAidOnOurGA = notFound;
+		
+		for (int GAneighbor = 0; GAneighbor < ourGAsTotalNeighbors; GAneighbor++) {
+			if (ourGAstate_ptr->neighbourIDs[GAneighbor] == neighborsGA) {
+				neighborsGAidOnOurGA = GAneighbor;
+			}
+		}
+
+		bool GAsAreNeighbors = (neighborsGAidOnOurGA != notFound);
+		
+		//Now we can get the GA info:
+		float GAdisposition = 0;
+		float GAlastDisposition = 0;
+		AS::diploStance GAstance = AS::diploStance::NEUTRAL;
+
+		if (GAsAreNeighbors) {
+			GAdisposition = 
+				ourGAstate_ptr->relations.dispositionToNeighbors[neighborsGAidOnOurGA];
+			GAlastDisposition = 
+				ourGAstate_ptr->relations.dispositionToNeighborsLastStep[neighborsGAidOnOurGA];
+			GAstance = 
+				ourGAstate_ptr->relations.diplomaticStanceToNeighbors[neighborsGAidOnOurGA];
+		}
+
+		float changeInGAdisposition = GAlastDisposition - GAdisposition;
+
+		float effectiveGAdisposition = GAdisposition;
+		if (GAsAreNeighbors) {
+
+			//We project their future disposition:
+			float projectedDispositionChange =
+				std::max(NTN_MAX_ABSOLUTE_DISPOSITION_EXTRAPOLATION,
+							(changeInGAdisposition * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS 
+																	* MILLIS_IN_A_SECOND) );
+			
+			effectiveGAdisposition += projectedDispositionChange;
+			//And then add the impact from the diplomatic stance:
+
+			float changeFromGAstance = 0;
+			if (stance == AS::diploStance::WAR) {
+
+				changeFromGAstance += stanceImpactFactorFromWar;
+			}
+			if ( (stance == AS::diploStance::TRADE) || 
+				 (stance == AS::diploStance::ALLY_WITH_TRADE) ) {
+
+				changeFromGAstance += stanceImpactFactorFromTrade;
+			}
+			if ( (stance == AS::diploStance::ALLY) || 
+				 (stance == AS::diploStance::ALLY_WITH_TRADE) ) {
+
+				changeFromGAstance += stanceImpactFactorFromAlliance;
+			}
+
+			effectiveGAdisposition += changeFromGAstance;
+		}
+		
+		//Now we add the effectiveGAdisposition, with a weight, to our effectiveDisposition
+		//But only if the GAs are actually neighbors:
+		float GAweight = GAsAreNeighbors * NTN_GA_DIPLOMACY_WEIGHT_FOR_LAS;
+			
+		assert(GAweight >= 0);
+		assert(GAweight <= 1);
+
+		effectiveDisposition *= (1 - GAweight);
+		effectiveDisposition += GAweight * effectiveGAdisposition;
+
+		//Finally, we'll weight in our infiltration level:
+		float absoluteInfiltration = 
+			std::abs(dp->LAdecision_ptr->getDataCptr()->at(agentID).infiltration[neighbor]);
+
+		float uncertainty = 1 - absoluteInfiltration;
+
+		assert(uncertainty >= 0);
+
+		uncertainty *= uncertainty; //so a little uncertainty doesn't matter as much;
+
+		//The more uncertain we are, the less weight we will give to our disposition:
+		float notionBase = effectiveDisposition * (1 - uncertainty);
+
+		//Finally, we'll stretch this so that very high values map the notion to 1;
+		//Also, the base should be at or above zero, so:
+		return std::max(0.0f, (notionBase * NTN_STD_MAX_EFFECTIVE_NOTION_BASE) );
 	}
 
 	float calcNotionBaseN4(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -347,7 +600,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseN5(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -355,7 +608,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseN6(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -363,7 +616,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseN7(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -371,7 +624,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseN8(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -379,7 +632,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseN9(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -387,7 +640,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseN10(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										   PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
@@ -395,7 +648,7 @@ namespace AS::Decisions::LA {
 	float calcNotionBaseN11(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										   PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
-		float timeWaster = calcNotionBaseN0(neighbor, agentID, dp, refReads_ptr);
+		float timeWaster = calcNotionBaseN2(neighbor, agentID, dp, refReads_ptr);
 
 		return 1.0f;
 	}
