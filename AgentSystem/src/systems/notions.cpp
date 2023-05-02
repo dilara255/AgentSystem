@@ -10,6 +10,22 @@
 namespace PURE_LA = LA;
 namespace PURE_GA = GA;
 
+namespace AS::Decisions {
+
+	//This first raises the notion (limited by maximumEffectiveBase), to the smallExponent;
+	//Then, it casts the value back to the [0,1] range, making it non-linear.
+	//Has parameter-based defaults for effectiveMaxBase and smallExponent.
+	// 
+	//NOTE: baseNotion is *assumed* to be >= 0;
+	//NOTE: effectiveMaxBase is *assumed* to be > 0;
+	//NOTE: If smallExponent == 0, all values will be cast to 1;
+	// 
+	//WARNING: Large *small*Exponents may break things : )
+	float delinearizeAndClampNotion(float baseNotion, 
+								float effectiveMaxBase = NTN_STD_MAX_EFFECTIVE_NOTION_BASE, 
+								uint8_t smallExponent = NTN_STD_DELINEARIZATION_EXPONENT);
+}
+
 namespace AS::Decisions::LA {
 
 	//S0: LOW_INCOME_TO_STR
@@ -27,7 +43,7 @@ namespace AS::Decisions::LA {
 		float effectiveIncome = NTN_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY 
 								* state_ptr->parameters.resources.updateRate;
 
-		float small = 0.1; //to avoid blowups and worries about small quantities
+		float small = 0.1f; //to avoid blowups and worries about small quantities
 		
 		float proportion = NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
 		if (effectiveIncome > small) {
@@ -127,7 +143,7 @@ namespace AS::Decisions::LA {
 		float neighborDefense = readsOfNeighbor_ptr->readOf[guardIndex]
 							  + readsOfNeighbor_ptr->readOf[strenghtIndex];
 
-		float small = 0.1; //to avoid blowups on division : )
+		float small = 0.1f; //to avoid blowups on division : )
 
 		if (refDefense < small) {
 			refDefense = small;
@@ -621,17 +637,8 @@ namespace AS::Decisions {
 		}
 	}
 
-	//This first raises the notion (limited by maximumEffectiveBase), to the smallExponent;
-	//Then, it casts the value back to the [0,1] range, making it non-linear.
-	// 
-	//NOTE: baseNotion is *assumed* to be >= 0;
-	//NOTE: effectiveMaxBase is *assumed* to be > 0;
-	//NOTE: If smallExponent == 0, all values will be cast to 1;
-	// 
-	//WARNING: Large *small*Exponents may break things : )
-	float delinearizeAndClampNotion(float baseNotion, 
-								float effectiveMaxBase = NTN_STD_MAX_EFFECTIVE_NOTION_BASE, 
-								uint8_t smallExponent = NTN_STD_DELINEARIZATION_EXPONENT) {
+	float delinearizeAndClampNotion(float baseNotion, float effectiveMaxBase, 
+													   uint8_t smallExponent) {
 
 		assert(baseNotion >= 0);
 		assert(effectiveMaxBase > 0);
