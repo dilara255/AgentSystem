@@ -1,3 +1,5 @@
+//TODO: Much of the detail setting will be based around some core ideas: Extract that
+
 #include "miscStdHeaders.h"
 #include "miscDefines.hpp"
 
@@ -215,7 +217,7 @@ namespace AS{
 	//Preparation time will depend on the EXTRA troops being made (sublinear);
 	//Aux is set to how much the agent will have to pay for the production;
 	//(in case they don't have enough, they'll have to pay during the action, wich
-	//will affect it's progress.
+	//will affect its progress).
 	void setActionDetails_STR_S_L(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
@@ -244,12 +246,40 @@ namespace AS{
 		action_ptr->phaseTiming.total = (uint32_t)preparationTime;
 	}
 
+	//Resources will be invested to raise income
+	//How much the agent will raise it's income will be proportional to
+	//their current income as well as the desiredIntensityMultiplier
+	//The income raise is stored as the intensity, while the total
+	//investment cost is stored in the aux.
+	//(in case they don't have enough, they'll have to pay during the action, wich
+	//will affect its progress).
+	//Preparation time will depend on the increase in income (sublinear);
 	void setActionDetails_RES_S_L(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
 	
-		setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+		int agent = action_ptr->ids.origin;
+		auto agentParams_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent).parameters);
+
+		//We want extra income proportional to our current one and desiredIntensityMultiplier:
+
+		float income = agentParams_ptr->resources.updateRate;
+		float effectiveIncome = std::max(income, ACT_RES_S_L_REF_SMALL_INCOME);
+
+		float raise = 
+			income * ACT_RES_S_L_REF_PROPORTION_OF_INCOME * desiredIntensityMultiplier;
+
+		//This is the funding necessary to raise the income:
+		action_ptr->details.processingAux = 
+					(raise / ACT_REF_INCOME) * ACT_RES_S_L_COST_PER_REF_INCOME;
+
+		//And now for the preparation time:
+		double effectiveRaiseForTiming = std::sqrt(raise / ACT_REF_INCOME);
+
+		double preparationTime = 
+			ACT_RES_S_L_BASE_PREP_TENTHS_OF_MS_PER_REF_INCOME * effectiveRaiseForTiming;
+
+		action_ptr->phaseTiming.total = (uint32_t)preparationTime;
 	}
 
 	//This decides the attack strenght and sets action intensity accordingly.
