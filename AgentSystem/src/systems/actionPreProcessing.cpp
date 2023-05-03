@@ -185,13 +185,15 @@ namespace AS{
 		return wtf;
 	}
 
+	//Bellow we define the functions to set the action details for each LOCAL variation (WIP):
+
 	//This decides the attack strenght and sets action intensity accordingly.
 	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
 	//The final intensity depends on the desied intensity (stored in the action's intensity)
 	//and relative strenghts.
 	//Aux is just set to zero.
 	//TODO: this a placeholder / stub, mostly for load testing and some initial exploration
-	void setActionDetails_L_I_Attack(float desiredIntensityMultiplier,
+	void setActionDetails_ATT_I_L(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
 
@@ -253,6 +255,26 @@ namespace AS{
 		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
 	}
 
+	//TODO: These two should come before the one above:
+
+	void setActionDetails_STR_S_L(float desiredIntensityMultiplier,
+							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+	
+		setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+	}
+
+	void setActionDetails_RES_S_L(float desiredIntensityMultiplier,
+							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+	
+		setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+	}
+
+	//Bellow we define the functions to set the action details for each GLOBAL variation (WIP):
+
 	//This decides how aggresivelly the GA will sugest LAs to attack the targeted GA:
 	//this will be set as the intensity.
 	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
@@ -260,7 +282,7 @@ namespace AS{
 	//and relative strenghts.
 	//Aux is just set to zero.
 	//TODO: this a placeholder / stub, mostly for load testing and some initial exploration
-	void setActionDetails_G_S_Attack(float desiredIntensityMultiplier,
+	void setActionDetails_ATT_S_G(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
 		
@@ -319,26 +341,263 @@ namespace AS{
 		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
 	}
 
+	//This is the dispatcher: pretty much just a big switch : )
 	//Takes an action and dispatches it to the appropriate function to set it's details
-	//This will set: phaseTime.total, details.intensity and details.aux, as needed
+	//Those will set: phaseTime.total, details.intensity and details.aux, as needed
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+	
+		int cat = action_ptr->ids.category;
+		int mode = action_ptr->ids.mode;
+		int scope = action_ptr->ids.scope;
 
-		//The idea is for this to be pretty much a dispatcher:
-		//it validates that the variation exists (or raises an error), then dispatches
-		//to a function which sets intensity and if necessary processing aux for that variation
+		//The validity of the variation should have been checked before getting here, so:
+		assert(AS::ActionVariations::isValid(cat, mode, scope)); 
 
-		//TODO: the validation, plus a couple more stubs (and review the GS_ATTACK stub)
+		//This is really just rerouting the call to the appropriate function and returning:
+		if (scope == (int)AS::scope::LOCAL) {
 
-		//FOR NOW: we treat all actions as if they were a L_I or G_S attack:
-		if (action_ptr->ids.scope == (uint32_t)AS::scope::LOCAL) {
-			setActionDetails_L_I_Attack(desiredIntensityMultiplier, action_ptr, dp, 
+			if (mode == (int)AS::actModes::SELF) {
+				switch (cat)
+				{
+				case (int)AS::actCategories::STRENGHT:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
-		}
-		else { //GLOBAL
-			setActionDetails_G_S_Attack(desiredIntensityMultiplier, action_ptr, dp, 
+					return;
+				case (int)AS::actCategories::RESOURCES:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::ATTACK:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::GUARD:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::SPY:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::SABOTAGE:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::DIPLOMACY:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::CONQUEST:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				default:
+					assert(false); //all expected categories are already described
+				}
+			}
+			else if (mode == (int)AS::actModes::IMMEDIATE) {
+				switch (cat)
+				{
+				case (int)AS::actCategories::STRENGHT:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::RESOURCES:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::ATTACK:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::GUARD:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::SPY:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::SABOTAGE:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::DIPLOMACY:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::CONQUEST:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				default:
+					assert(false); //all expected categories are already described
+				}
+			}
+			else if (mode == (int)AS::actModes::REQUEST) {
+				switch (cat)
+				{
+				case (int)AS::actCategories::STRENGHT:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::RESOURCES:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::ATTACK:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::GUARD:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::SPY:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::SABOTAGE:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::DIPLOMACY:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::CONQUEST:
+					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				default:
+					assert(false); //all expected categories are already described
+				}
+			}
+			else { assert(false); } //there really shouldn't be other modes
 		}
+		else if (scope == (int)AS::scope::GLOBAL) {
+
+			if (mode == (int)AS::actModes::SELF) {
+				switch (cat)
+				{
+				case (int)AS::actCategories::STRENGHT:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::RESOURCES:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::ATTACK:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::GUARD:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::SPY:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::SABOTAGE:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::DIPLOMACY:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::CONQUEST:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				default:
+					assert(false); //all expected categories are already described
+				}
+			}
+			else if (mode == (int)AS::actModes::IMMEDIATE) {
+				switch (cat)
+				{
+				case (int)AS::actCategories::STRENGHT:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::RESOURCES:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::ATTACK:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::GUARD:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::SPY:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::SABOTAGE:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::DIPLOMACY:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::CONQUEST:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				default:
+					assert(false); //all expected categories are already described
+				}
+			}
+			else if (mode == (int)AS::actModes::REQUEST) {
+				switch (cat)
+				{
+				case (int)AS::actCategories::STRENGHT:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::RESOURCES:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::ATTACK:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::GUARD:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::SPY:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::SABOTAGE:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				case (int)AS::actCategories::DIPLOMACY:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+					return;
+				case (int)AS::actCategories::CONQUEST:
+					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+				return;
+				default:
+					assert(false); //all expected categories are already described
+				}
+			}
+			else { assert(false); } //there really shouldn't be other modes
+		}
+		else { assert(false); } //there really shouldn't be other scopes
 	}
 }

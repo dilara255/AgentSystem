@@ -4,7 +4,7 @@
 #include "data/dataMisc.hpp"
 
 #include "systems/actionSystem.hpp"
-#include "systems/actionHelpers.hpp"
+#include "systems/actionCreation.hpp"
 
 namespace {
 	static AS::WarningsAndErrorsCounter* g_errorsCounter_ptr;
@@ -504,7 +504,7 @@ GA::readsOnNeighbor_t getRealValuesGA(AS::dataControllerPointers_t* dp, int neig
 
 LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp) {
 	
-	/*ref[i] = D * (SUM_viz(expec[viz][i] * abs(inf[viz]) / SUM_viz(abs(inf[viz])
+	/*ref[i] = D * (SUM_viz(expec[viz][i] * abs(inf[viz]) / SUM_viz(abs(inf[viz]))
 	         + E * GA[i]/#LAs
 	*/
 	

@@ -10,6 +10,7 @@
 #include "data/actionData.hpp"
 #include "systems/warningsAndErrorsCounter.hpp"
 
+//TODO: the way I ended up organizing this makes these global variables redundant
 static AS::WarningsAndErrorsCounter* g_errorsCounter_ptr = NULL;
 static AS::dataControllerPointers_t* g_agentDataControllers_ptr = NULL;
 static AS::PRNserver* g_prnServer_ptr = NULL;
@@ -29,7 +30,7 @@ void AS::stepActions(ActionSystem* ap, float timeMultiplier,
 		}
 		else {
 			//screw it, we'll have to log directly
-			LOG_CRITICAL("Action Step received bad error counter pointer!");
+			LOG_CRITICAL("Action Step found an error AND received bad error counter pointer!");
 			return;
 		}
 	}
@@ -38,7 +39,7 @@ void AS::stepActions(ActionSystem* ap, float timeMultiplier,
 	g_agentDataControllers_ptr = agentDataControllers_ptr;
 	g_prnServer_ptr = prnServer_ptr;
 
-	//and finally we step the actions:
+	//and finally we actually step the actions:
 	ap->stepActions(ap, timeMultiplier);
 }
 

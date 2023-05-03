@@ -20,6 +20,8 @@ namespace AS {
 	//Sets initial and last tick, and phase = 0, and tries to add the action (true if so)
 	bool spawnAction(actionData_t action, ActionSystem* actionSystem_ptr, uint32_t tick);
 
+	//TODO: Split these into another file so I can use it to check stuff
+	//TODO: Possibly add to API as well, as a pack of helper funtionality
 	float actionCostFromIntensity(AS::actionData_t action);
 	float nextActionsCost(int currentActions);
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
