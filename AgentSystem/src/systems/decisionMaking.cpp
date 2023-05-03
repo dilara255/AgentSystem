@@ -77,10 +77,8 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	//TODO: add more sanity checks
 	bool isTargetValid = (choice.ids.target >= 0)
 				&& (choice.ids.target < (uint32_t)dp->LAstate_ptr->getDataCptr()->size());
+	
 	if ( !isTargetValid && (choice.ids.slotIsUsed == 1) ) {
-		
-		printf("targ: %d (%d neighs), agent: %d, mode: %d (cat: %d)\n",
-			choice.ids.target, neighbors, choice.ids.origin, choice.ids.mode, choice.ids.category);
 
 		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_LA_TARGET);
 		choice.ids.slotIsUsed = 0; //invalidate choice so we don't blow stuff up
@@ -797,7 +795,7 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 								   chosenAction.ids.mode, chosenAction.ids.scope);
 
 		if(isValid) {
-			setActionDetails(chosenAction.details.intensity, whyBother, justDoIt, 
+			setChoiceDetails(chosenAction.details.intensity, whyBother, justDoIt, 
 											&chosenAction, dp, errorsCounter_ptr);
 		}
 		else {
