@@ -9,7 +9,7 @@
 namespace AS {
 
 	//Sets neighbor ids.target and details (based on desired intensity from score)
-	void setActionDetails(float score, float whyBother, float JustDoIt, 
+	void setChoiceDetails(float score, float whyBother, float JustDoIt, 
 		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 							                 WarningsAndErrorsCounter* errorsCounter_ptr);
 

@@ -11,6 +11,10 @@
 namespace AS{
 		
 	float calculateDesiredIntensityMultiplier(float score, float whyBother, float JustDoIt);
+	
+	//This is the dispatcher: pretty much just a big switch : )
+	//Takes an action and dispatches it to the appropriate function to set it's details
+	//Those will set: phaseTime.total, details.intensity and details.aux, as needed
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier, 
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 							                   WarningsAndErrorsCounter* errorsCounter_ptr);
@@ -106,14 +110,14 @@ namespace AS{
 	}
 
 	
-	void setActionDetails(float score, float whyBother, float JustDoIt,
+	void setChoiceDetails(float score, float whyBother, float JustDoIt,
 		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 							                 WarningsAndErrorsCounter* errorsCounter_ptr) {
 		
 		//We're creating the action, so:
 		action_ptr->ids.phase = 0;
 		action_ptr->phaseTiming.elapsed = 0;
-		//the phase total is set through dispatchActionDetailSetting
+		//phase total will be set via the call to dispatchActionDetailSetting further down
 
 		//Next, we change the target info so it stores the target's actual ID:
 		int agent = action_ptr->ids.origin;
@@ -138,32 +142,40 @@ namespace AS{
 			}
 		}
 
+		//Now we'll set the actual details, as well as the first phases duration.
+		//For this, we first calculate an intensity multiplier:
 		float desiredIntensityMultiplier =
 			calculateDesiredIntensityMultiplier(score, whyBother, JustDoIt);
 
+		//And then dispatch the action to the proper function to the rest of the work:
 		dispatchActionDetailSetting(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                 errorsCounter_ptr);		
 	}
 
 	//Todo: test
 	float calculateDesiredIntensityMultiplier(float score, float whyBother, float JustDoIt) {
+		
 		//first we make sure that whyBother and JustDoIt are on a valid range:
 		whyBother = 
 			std::clamp(whyBother, MIN_ACT_WHY_BOTHER_THRESOLD, MAX_ACT_WHY_BOTHER_THRESOLD);
 
-		float minimumJustDoIt = 
-			std::max(whyBother + MIN_DECISION_THRESHOLD_SEPARATIONS, 
-				                        MIN_ACT_JUST_DO_IT_THRESOLD);
+
+		float minimumJustDoIt = std::max(MIN_ACT_JUST_DO_IT_THRESOLD,
+							             (whyBother + MIN_DECISION_THRESHOLD_SEPARATIONS) );
+			
 		JustDoIt = std::clamp(JustDoIt, minimumJustDoIt, MAX_ACT_JUST_DO_IT_THRESOLD);
 		
 		//then we calculate the desiredIntensityMultiplier:
 		float opinionWidth = JustDoIt - whyBother;
 
 		//The ranges are:
-		//[0, ACT_INTENSITY_WHY_BOTHER], score <= whyBother
-		//(ACT_INTENSITY_WHY_BOTHER, ACT_INTENSITY_JUST_DO_IT), score in-between
-		//[ACT_INTENSITY_JUST_DO_IT, ACT_INTENSITY_SCORE_1+), score above JustDoIt
+
+		//[0, ACT_INTENSITY_WHY_BOTHER], for score <= whyBother
+		//(ACT_INTENSITY_WHY_BOTHER, ACT_INTENSITY_JUST_DO_IT), for score in-between
+		//[ACT_INTENSITY_JUST_DO_IT, ACT_INTENSITY_SCORE_1+), for score above JustDoIt
+
 		//NOTE: if score > 1, intensity > ACT_INTENSITY_SCORE_1 (expected)
+
 		if (score <= whyBother) {
 			float proportionOnRange = (score/whyBother);
 			return ACT_INTENSITY_WHY_BOTHER * proportionOnRange;
@@ -178,14 +190,21 @@ namespace AS{
 			return ACT_INTENSITY_JUST_DO_IT + 
 					(ACT_INTENSITY_DIFFERENCE_TO_SCORE_1 * proportionOnRange);
 		}	
-
-		//we should never get here, so:
-		float wtf = 0;
-		assert(wtf != 0);
-		return wtf;
 	}
 
-	//Bellow we define the functions to set the action details for each LOCAL variation (WIP):
+
+	/***************************************************************************************
+	*                             DETAIL SETTING
+	****************************************************************************************/
+
+
+	/****************************************************************************************
+	//                                LOCAL:
+	// 
+	//            Bellow we define the functions to set the action details 
+	//                      for each LOCAL variation (WIP):
+	*****************************************************************************************/
+
 
 	//This decides the attack strenght and sets action intensity accordingly.
 	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
@@ -203,55 +222,61 @@ namespace AS{
 		int agent = action_ptr->ids.origin;
 		int scope = action_ptr->ids.scope;
 
-		float agentStrenght;
-		float enemyStrenght;
-
+		//how strong are we?
 		const auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent));
-		agentStrenght = state_ptr->parameters.strenght.current;
+		float agentStrenght = state_ptr->parameters.strenght.current;
 			
+		//and what's the target's strenght?
+
 		int targetsIndexOnAgent = 
 				getNeighborsIndexOnLA(action_ptr->ids.target, state_ptr);
 
-		if (targetsIndexOnAgent == NATURAL_RETURN_ERROR) {
-			if (action_ptr->ids.mode != (uint32_t)AS::actModes::SELF) {
-				errorsCounter_pt->incrementError(AS::errors::DS_FAILED_TO_FIND_NEIGHBORS_INDEX);
-			}
-			enemyStrenght = 0;
-		}
-		else {
-			const auto& decision_ptr = dp->LAdecision_ptr->getDataCptr()->at(agent);
-			int strenghtIndex = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
+		assert(targetsIndexOnAgent != NATURAL_RETURN_ERROR); //bad target for this variation
 
-			enemyStrenght = 
-					decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
-		}
-		
-		float desiredIntensity = action_ptr->details.intensity;
+		const auto& decision_ptr = dp->LAdecision_ptr->getDataCptr()->at(agent);
+		int strenghtIndex = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
 
-		float attackMarginProportion = 
-			ACT_INTENS_ATTACK_MARGIN_PROPORTION * desiredIntensity;
-
+		float enemyStrenght = 
+				decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
+				
+		//We'll set the action's intensty to be the attack size
 		float attackSize;
 
+		//There are two cases: either we are stronger, or not:
+
 		if (agentStrenght > enemyStrenght) {
-			attackSize = enemyStrenght * (1 + attackMarginProportion);
+
+			float attackExtraProportionalMargin = 
+					ACT_INTENS_ATTACK_MARGIN_PROPORTION * desiredIntensityMultiplier;
+
+			//We are stronger, so we will attack with more strenght than they have,
+			//and the more we want to attack, the more extra forces we'll commit:
+			attackSize = enemyStrenght * (1 + attackExtraProportionalMargin);
 		}
 		else {
-			//since the agent is not as strong as the enemy and score is between 0 and 1:
-			//the attack size will be (score * strenght). This is accomplished by:
+
+			//We're not stronger. We'll commit a portion of our strenght proportional
+			//to how high our desiredIntensityMultiplier was compared to what it would
+			//be if we had made this choice with a score of 1.
+			//IE: if our desire is the same as the desire of a score 1 action,
+			//then we throw all our forces on this attack:
 			attackSize = 
-				agentStrenght * (desiredIntensity / (ACT_INTENSITY_SCORE_1/2.0f));
+				agentStrenght * (desiredIntensityMultiplier / ACT_INTENSITY_SCORE_1);
 		}
 		
+		//In case we got carried away and chose an attack larger than our strenght:
 		attackSize = std::clamp(attackSize, 0.0f, agentStrenght);
+
+		//We can now set the intensity:
 		action_ptr->details.intensity = attackSize;
 
-		//More troops = longer preparation phase
+		//Also, more troops = longer preparation phase (but not linearly)
 		double effectiveAttackSize = sqrt(attackSize/DEFAULT_LA_STRENGHT);
 
 		double preparationTime = effectiveAttackSize *
 									ACT_BASE_ATTACK_L_I_PREP_TENTHS_OF_MS_PER_REF_STR;			                     
 
+		//Finally we can set how many tenths of MS the preparation phase will take:
 		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
 	}
 
@@ -273,7 +298,14 @@ namespace AS{
 			                                                      errorsCounter_pt);
 	}
 
-	//Bellow we define the functions to set the action details for each GLOBAL variation (WIP):
+
+	/****************************************************************************************
+	//                                 GLOBAL:
+	// 
+	//            Bellow we define the functions to set the action details 
+	//                      for each GLOBAL variation (WIP):
+	*****************************************************************************************/
+
 
 	//This decides how aggresivelly the GA will sugest LAs to attack the targeted GA:
 	//this will be set as the intensity.
@@ -314,10 +346,8 @@ namespace AS{
 					decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
 		}
 		
-		float desiredIntensity = action_ptr->details.intensity;
-
 		float attackMarginProportion = 
-			ACT_INTENS_ATTACK_MARGIN_PROPORTION * desiredIntensity;
+			ACT_INTENS_ATTACK_MARGIN_PROPORTION * desiredIntensityMultiplier;
 
 		float suggestionIntensity;
 
@@ -325,9 +355,8 @@ namespace AS{
 			suggestionIntensity = 1 + attackMarginProportion;
 		}
 		else {
-			//since the agent is not as strong as the enemy and score is between 0 and 1:
-			//the intensity will be the same as the action's score, which is given by:
-			suggestionIntensity = desiredIntensity / (ACT_INTENSITY_SCORE_1/2.0f);
+			//since the agent is not as strong as the enemy:
+			suggestionIntensity = desiredIntensityMultiplier / ACT_INTENSITY_SCORE_1;
 		}
 		
 		suggestionIntensity = std::clamp(suggestionIntensity, 0.0f, 
@@ -335,15 +364,12 @@ namespace AS{
 
 		action_ptr->details.intensity = suggestionIntensity;
 
-		double preparationTime = suggestionIntensity *
+		double preparationTime = (double)suggestionIntensity *
 									ACT_ATTACK_G_S_SUGESTION_PREP_TENTHS_OF_MS_PER_INTENSITY;
 
 		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
 	}
 
-	//This is the dispatcher: pretty much just a big switch : )
-	//Takes an action and dispatches it to the appropriate function to set it's details
-	//Those will set: phaseTime.total, details.intensity and details.aux, as needed
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
