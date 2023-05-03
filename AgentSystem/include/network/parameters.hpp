@@ -165,6 +165,8 @@ and data sizes static.
 #define ACT_INTENSITY_COST_MULTIPLIER (5.0f)
 #define ACT_SUPERLINEAR_WEIGHT (1.0f)
 #define ACT_SUPERLINEAR_EXPO (2)
+#define ACT_SCORE_PENALTY_EXACT_REPEAT (0.8f)
+#define ACT_SCORE_PENALTY_DIFFERENT_TARGET_REPEAT (0.05f)
 
 //Spefic Action details:
 #define ACT_REF_STRENGHT (50.0f)

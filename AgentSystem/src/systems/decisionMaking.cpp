@@ -5,6 +5,7 @@
 
 #include "systems/AScoordinator.hpp"
 #include "systems/actionSystem.hpp"
+#include "systems/actionHelpers.hpp"
 #include "systems/actionCreation.hpp"
 #include "systems/notions.hpp"
 
@@ -184,13 +185,19 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 
 	assert(allScores_ptr->actualTotalScores != UNINITIALIZED_ACTUAL_TOTAL_SCORES);
 	assert(allScores_ptr->actualTotalScores > 0);
+	//Also, all of the following pressupposes (int)AS::actModes::SELF == 0, so:
+	assert((int)AS::actModes::SELF == 0);
 
 	//We will first calculate the scores of actions in SELF mode, then the others.
 	//Actions in SELF mode will leave neighbor = -1 (the others will also set the neighbor).
 	//Invalid variations will have score = -1
 	
-	//TODO-CRITICAL: WARNING: all of the following pressupposes SELF == 0!
-	assert((int)AS::actModes::SELF == 0);
+	//When we calculate the scores, we also want to apply penalties for repeat actions
+	//So we'll first gather the data on what actions the agent has active
+
+
+
+	//Now for the actual scoring:
 
 	float maxAmbition = -1;
 	//For self, both neighbor (-1) and mode (SELF, 0) are fixed, so:
