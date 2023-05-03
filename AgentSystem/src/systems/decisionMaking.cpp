@@ -21,6 +21,7 @@ namespace AV = AS::ActionVariations;
 AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 							     int agent, AS::dataControllerPointers_t* dp, 
 								 	     AS::scope scope, int totalNeighbors,
+	                               const AS::ActionSystem* actionSystem_cptr,
 	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
 int getTotalPossibleActualScores(int neighbors) {
@@ -40,6 +41,7 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_p
 AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
 					 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
 	                 AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+					 const AS::ActionSystem* actionSystem_cptr,
 					 const float secondsSinceLastDecisionStep, int currentActions) {
 	
 	AS::actionData_t nullAction;
@@ -72,8 +74,8 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	scores.actualTotalScores = getTotalPossibleActualScores(neighbors);
 	
 	AS::actionData_t choice =
-		chooseAction(&notions, &scores, agent, dp, AS::scope::LOCAL, neighbors,
-			                                                 errorsCounter_ptr);
+		chooseAction(&notions, &scores, agent, dp, AS::scope::LOCAL, neighbors, 
+			                              actionSystem_cptr, errorsCounter_ptr);
 
 	//TODO: add more sanity checks
 	bool isTargetValid = (choice.ids.target >= 0)
@@ -95,6 +97,7 @@ void calculateNotionsGA(int agent, AS::dataControllerPointers_t* agentDataPtrs_p
 AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,
 	             AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+				 const AS::ActionSystem* actionSystem_cptr,
 				 const float secondsSinceLastDecisionStep, int currentActions) {
 
 	AS::actionData_t nullAction;
@@ -127,7 +130,7 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 
 	AS::actionData_t choice = 
 		chooseAction(&notions, &scores, agent, dp, AS::scope::GLOBAL, neighbors, 
-			                                                  errorsCounter_ptr);
+										   actionSystem_cptr, errorsCounter_ptr);
 	
 	//TODO: add more sanity checks
 	bool isTargetValid = (choice.ids.target >= 0)
@@ -181,6 +184,7 @@ void setScore(AD::actionScore_t* actionScore_ptr, AD::notions_t* np,
 //TODO: throughly test this (note loop index calculation, also test callees):
 float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr, 
 							                 AS::scope scope, int totalNeighbors,
+								       const AS::ActionSystem* actionSystem_cptr,
 								 AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 	assert(allScores_ptr->actualTotalScores != UNINITIALIZED_ACTUAL_TOTAL_SCORES);
@@ -771,6 +775,7 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 							     int agent, AS::dataControllerPointers_t* dp, 
 							             AS::scope scope, int totalNeighbors,
+	                               const AS::ActionSystem* actionSystem_cptr,
  	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
 	//TODO-CRITICAL: use agent's values after that's implemented
@@ -778,7 +783,8 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 	float justDoIt = ACT_JUST_DO_IT_THRESOLD;
 
 	//We start out by calculating the scores:
-	float maxAmbition = calculateScores(np, sp, scope, totalNeighbors, errorsCounter_ptr);
+	float maxAmbition = calculateScores(np, sp, scope, totalNeighbors, actionSystem_cptr,
+																       errorsCounter_ptr);
 	
 	//For the overall utility scores, we want to apply any personality offsets:
 	applyPersonalityOffsets(sp, agent, scope, dp, errorsCounter_ptr);
