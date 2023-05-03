@@ -190,6 +190,9 @@ namespace AS{
 			return ACT_INTENSITY_JUST_DO_IT + 
 					(ACT_INTENSITY_DIFFERENCE_TO_SCORE_1 * proportionOnRange);
 		}	
+
+		assert(false); //we should never get here but the compiler was complaining : p
+		return -1;
 	}
 
 
@@ -205,6 +208,49 @@ namespace AS{
 	//                      for each LOCAL variation (WIP):
 	*****************************************************************************************/
 
+
+	//This decides how much we want to invest in making more troops;
+	//The larger the desiredIntensityMultiplier, the more we'll try to invest;
+	//This will be proportional to our current strenght;
+	//Preparation time will depend on the EXTRA troops being made (sublinear);
+	//Aux is set to how much the agent will have to pay for the production;
+	//(in case they don't have enough, they'll have to pay during the action, wich
+	//will affect it's progress.
+	void setActionDetails_STR_S_L(float desiredIntensityMultiplier,
+							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+	
+		int agent = action_ptr->ids.origin;
+		auto agentParams_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent).parameters);
+
+		//We want extra troops proportional to our current ones and desiredIntensityMultiplier:
+
+		float strenght = agentParams_ptr->strenght.current;
+		float effectiveStrenght = std::max(strenght, ACT_STR_S_L_REF_SMALL_STR);
+
+		float newTroops = 
+			effectiveStrenght * ACT_STR_S_L_REF_PROPORTION_OF_STR * desiredIntensityMultiplier;
+
+		//This is the funding necessary to raise these troops:
+		action_ptr->details.processingAux = 
+					(newTroops / ACT_REF_STRENGHT) * ACT_STR_S_L_COST_PER_REF_STR;
+
+		//And now for the preparation time:
+		double effectiveNewTroopsForTiming = std::sqrt(newTroops / ACT_REF_STRENGHT);
+
+		double preparationTime = 
+			ACT_STR_S_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR * effectiveNewTroopsForTiming;
+
+		action_ptr->phaseTiming.total = (uint32_t)preparationTime;
+	}
+
+	void setActionDetails_RES_S_L(float desiredIntensityMultiplier,
+							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+	
+		setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
+			                                                      errorsCounter_pt);
+	}
 
 	//This decides the attack strenght and sets action intensity accordingly.
 	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
@@ -271,31 +317,13 @@ namespace AS{
 		action_ptr->details.intensity = attackSize;
 
 		//Also, more troops = longer preparation phase (but not linearly)
-		double effectiveAttackSize = sqrt(attackSize/DEFAULT_LA_STRENGHT);
+		double effectiveAttackSize = sqrt(attackSize / ACT_REF_STRENGHT);
 
 		double preparationTime = effectiveAttackSize *
-									ACT_BASE_ATTACK_L_I_PREP_TENTHS_OF_MS_PER_REF_STR;			                     
+									ACT_ATT_I_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR;			                     
 
 		//Finally we can set how many tenths of MS the preparation phase will take:
 		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
-	}
-
-	//TODO: These two should come before the one above:
-
-	void setActionDetails_STR_S_L(float desiredIntensityMultiplier,
-							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
-		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
-	
-		setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
-	}
-
-	void setActionDetails_RES_S_L(float desiredIntensityMultiplier,
-							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
-		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
-	
-		setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
 	}
 
 
@@ -365,7 +393,7 @@ namespace AS{
 		action_ptr->details.intensity = suggestionIntensity;
 
 		double preparationTime = (double)suggestionIntensity *
-									ACT_ATTACK_G_S_SUGESTION_PREP_TENTHS_OF_MS_PER_INTENSITY;
+									ACT_ATT_S_G_SUGESTION_PREP_TENTHS_OF_MS_PER_INTENSITY;
 
 		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);
 	}
@@ -388,35 +416,35 @@ namespace AS{
 				switch (cat)
 				{
 				case (int)AS::actCategories::STRENGHT:
-					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
 					return;
 				case (int)AS::actCategories::RESOURCES:
-					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+					setActionDetails_RES_S_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
 				return;
 				case (int)AS::actCategories::ATTACK:
-					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
 					return;
 				case (int)AS::actCategories::GUARD:
-					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
 				return;
 				case (int)AS::actCategories::SPY:
-					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
 					return;
 				case (int)AS::actCategories::SABOTAGE:
-					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
 				return;
 				case (int)AS::actCategories::DIPLOMACY:
-					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
 					return;
 				case (int)AS::actCategories::CONQUEST:
-					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
+					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
 			                                                      errorsCounter_pt);
 				return;
 				default:
