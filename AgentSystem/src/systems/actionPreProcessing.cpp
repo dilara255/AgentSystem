@@ -16,17 +16,21 @@ namespace AS{
 	
 	//This is the dispatcher: pretty much just a big switch : )
 	//Takes an action and dispatches it to the appropriate function to set it's details
-	//Those will set: phaseTime.total, details.intensity and details.aux, as needed
+	//Those will set: phaseTime.total and details' intensity and processingAux, as needed
+	//NOTE: details.processingAux will hold costs to be charged onSpawn or paid later
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier, 
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 							                   WarningsAndErrorsCounter* errorsCounter_ptr);
 	
+	//Sets phase and elapsed time to 0, stes the target, calculates an intensity multiplier
+	//and them dispatches the action to have it's other details set: 
+	//intensity, processingAux and total phase time for the preparation phase
 	void setChoiceDetails(float score, float whyBother, float JustDoIt,
 		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 							                 WarningsAndErrorsCounter* errorsCounter_ptr) {
 		
 		//We're creating the action, so:
-		action_ptr->ids.phase = 0;
+		action_ptr->ids.phase = (int)actPhases::SPAWN;
 		action_ptr->phaseTiming.elapsed = 0;
 		//phase total will be set via the call to dispatchActionDetailSetting further down
 
@@ -60,7 +64,9 @@ namespace AS{
 
 		//And then dispatch the action to the proper function to the rest of the work:
 		dispatchActionDetailSetting(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                 errorsCounter_ptr);		
+			                                                 errorsCounter_ptr);
+
+		return;
 	}
 
 	//Todo: test
@@ -109,6 +115,9 @@ namespace AS{
 
 	/***************************************************************************************
 	*                             DETAIL SETTING
+	* 
+	* NOTE: processingAux should be used ONLY for costs to be payed before spawning
+	*    or later as the action runs (it can have other uses later, but not here)
 	****************************************************************************************/
 
 
@@ -159,7 +168,7 @@ namespace AS{
 	//How much the agent will raise it's income will be proportional to
 	//their current income as well as the desiredIntensityMultiplier
 	//The income raise is stored as the intensity, while the total
-	//investment cost is stored in the aux.
+	//investment cost is stored in the processingAux.
 	//(in case they don't have enough, they'll have to pay during the action, wich
 	//will affect its progress).
 	//Preparation time will depend on the increase in income (sublinear);
@@ -195,14 +204,11 @@ namespace AS{
 	//The action's phaseTiming.total is also set to an intensity-dependent preparation time.
 	//The final intensity depends on the desied intensity (stored in the action's intensity)
 	//and relative strenghts.
-	//Aux is just set to zero.
+	//Aux is not used.
 	//TODO: this a placeholder / stub, mostly for load testing and some initial exploration
 	void setActionDetails_ATT_I_L(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
-
-		//nothing to hold on aux:
-		action_ptr->details.processingAux = 0;
 
 		int agent = action_ptr->ids.origin;
 		int scope = action_ptr->ids.scope;
@@ -344,6 +350,11 @@ namespace AS{
 		int cat = action_ptr->ids.category;
 		int mode = action_ptr->ids.mode;
 		int scope = action_ptr->ids.scope;
+
+		//For spawning, processingAux holds the intensity-dependent "investment",
+		//wich will be charged for when the action is created (not on it's onSpawn)
+		//the default is zero, so:
+		action_ptr->details.processingAux = 0;
 
 		//The validity of the variation should have been checked before getting here, so:
 		assert(AS::ActionVariations::isValid(cat, mode, scope)); 

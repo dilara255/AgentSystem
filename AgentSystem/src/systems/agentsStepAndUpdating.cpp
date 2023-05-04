@@ -432,8 +432,8 @@ void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t*
 
 			//this is the payload:
 			updateRead(&readsOnNeighbor_ptr->readOf[field], realValues.readOf[field], 
-		                        refs_ptr->readOf[field], infiltration, 
-		          prnServer_ptr->getNext(), g_secondsSinceLastDecisionStep);
+		             refs_ptr->readOf[field], infiltration, prnServer_ptr->getNext(), 
+													  g_secondsSinceLastDecisionStep);
 		}
 	}	
 }
@@ -460,8 +460,8 @@ void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t*
 
 			//this is the payload:
 			updateRead(&(readsOnNeighbor_ptr->readOf[field]), realValues.readOf[field], 
-		                                    refs_ptr->readOf[field], infiltration, 
-				  prnServer_ptr->getNext(), g_secondsSinceLastDecisionStep);
+		               refs_ptr->readOf[field], infiltration, prnServer_ptr->getNext(), 
+				                                        g_secondsSinceLastDecisionStep);
 		}
 	}	
 }
