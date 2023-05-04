@@ -31,6 +31,6 @@ namespace AS {
 	//These are helper functionality for specific action variations.
 	//Their main goal is to help maintain parity between action processing and pre processing.
 	
-	float RES_S_L_necessaryFunding(float intensity);
 	float STR_S_L_necessaryFunding(float intensity);
+	float RES_S_L_necessaryFunding(float intensity);
 }
