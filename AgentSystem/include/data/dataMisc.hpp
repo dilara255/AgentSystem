@@ -20,6 +20,8 @@ namespace AS {
 
 	AS_API actionData_t getDefaultAction(AS::scope scope);
 
+	AS_API float calculateDistance(AS::pos_t posA, AS::pos_t posB);
+
 	//TODO: action id_t to and from uint32_t
 	//TODO: packing/unpacking of scope, agent ID and action ID (for this agent) on a uint32_t
 	//Maybe just scope + action index on the actual actions data vector?

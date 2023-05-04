@@ -28,6 +28,8 @@
 #include "data/agentDataStructures.hpp"
 #include "data/agentDataControllers.hpp"
 
+#include "data/dataMisc.hpp"
+
 #include "systems/PRNserver.hpp"
 #include "systems/warningsAndErrorsCounter.hpp"
 
@@ -534,24 +536,90 @@ namespace AS {
 
 	void ATT_I_L_PrepEnd(actionData_t* action_ptr) {
 
+		int agent = action_ptr->ids.origin;
+		auto ourState_ptr = 
+			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
+
+		int neighbor = action_ptr->ids.target;
+		auto enemyState_ptr = 
+			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(neighbor));
+
 		//First, we take away the troops which were sent to the guard in the spawn:
-		
+		ourState_ptr->parameters.strenght.externalGuard -= action_ptr->details.intensity;
+
+		ourState_ptr->parameters.strenght.externalGuard =
+						std::max(0.0f, ourState_ptr->parameters.strenght.externalGuard);
+
 		//Then, we calculate a base travel time according to distance and a parameter:
-		
+		pos_t ourPosition = ourState_ptr->locationAndConnections.position;
+		pos_t enemyPosition = enemyState_ptr->locationAndConnections.position;
+
+		double baseTime = calculateDistance(ourPosition, enemyPosition) 
+						  * (double)ACT_BASE_TRAVEL_UNITS_OF_DIST_PER_TENTHS_OF_MILLI;
+
 		//And modify it depending on attack size, before setting the phase total time:
-		
+		uint32_t travelTime = baseTime 
+					* ATT_I_L_travelTimeModifierFromTroopSize(action_ptr->details.intensity);
+		action_ptr->phaseTiming.total = travelTime;
+
 		//Now we just need to do the usual phase end stuff, so:
 		defaultPhaseEnd(action_ptr);
 	}
 
 	void ATT_I_L_travelEnd(actionData_t* action_ptr) {
 
+		//Know thy enemy:
+
+		int attacker = action_ptr->ids.origin;
+		int defender = action_ptr->ids.target;
+
+		auto defendersDecision_ptr = 
+			&(g_agentDataControllers_ptr->LAdecision_ptr->getDirectDataPtr()->at(defender));
+
+		auto defendersState_ptr =
+			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(defender));
+
+		int attackerIDonDefender = AS::getNeighborsIndexOnLA(attacker, defendersState_ptr);
+		
 		//The attack has begun! Our foes grit their teeth and swear our names:
-		
+		defendersState_ptr->relations.dispositionToNeighbors[attackerIDonDefender] -=
+														ACT_ATT_I_L_DISPO_LOSS_FROM_ATTACK;
+
 		//They realize their errors about our forces:
-		
-		//The fight has just begun, but already our men wonder: how long can this battle go?
-		//Usar mesma func helper do calculo do tempo de preparação, mais param
+		int strenghtField = (int)LA::requestExpectations_t::fields::STRENGHT;
+		float* defendersReadOnAttackersStrenght_ptr =
+			&(defendersDecision_ptr->requestsForNeighbors[attackerIDonDefender].expected[strenghtField]);
+
+		float attackSize = action_ptr->details.intensity;
+
+		float attackToReadNormalizedDifference =
+			std::abs(attackSize - *defendersReadOnAttackersStrenght_ptr) / attackSize;
+
+		*defendersReadOnAttackersStrenght_ptr -= attackSize;
+
+		float defendersDefences = defendersState_ptr->parameters.strenght.current
+								  + defendersState_ptr->parameters.strenght.externalGuard;
+
+		float attackToDefenceNormalizedDifference = 
+									(attackSize - defendersDefences) / attackSize;
+
+		float STRcorrectionMultiplier = 
+			attackToReadNormalizedDifference * attackToDefenceNormalizedDifference;
+
+		STRcorrectionMultiplier = 
+			std::clamp(STRcorrectionMultiplier, 0.0f, ACT_ATT_I_L_MAX_DEFENCE_STR_READ_MULT);
+
+		*defendersReadOnAttackersStrenght_ptr -= 
+				ACT_ATT_I_L_BASE_DEFENCE_STR_READ_BASE * STRcorrectionMultiplier;
+
+		*defendersReadOnAttackersStrenght_ptr =
+					std::max(*defendersReadOnAttackersStrenght_ptr, 0.0f);
+
+		//The fight has just begun, but already our men wonder: how long can this battle last?
+		uint32_t attackTime = 
+					(uint32_t)std::round( AS::ATT_I_L_prepTime(attackSize) 
+											* ACT_ATT_I_L_EFFECT_DURATION_MULTIPLIER );
+		action_ptr->phaseTiming.total = attackTime;
 
 		//Other than that, it's all done as usual:
 		defaultPhaseEnd(action_ptr);
@@ -575,7 +643,11 @@ namespace AS {
 
 	void ATT_I_L_EffectEnd(actionData_t* action_ptr) {
 		
-		//Has anyone survived?
+		//First we deal with the defender:
+		//- de acordo com score, calcula informação geral obtida: quanto melhor, mais info, até um máximo;
+		//- adiciona tropas restantes do atacante na expectativa;
+
+		//Then the attacker: has anyone survived?
 		if (action_ptr->details.intensity == 0) {
 			//nope. Clear aux and set a time for the agent to realize their loss
 
@@ -609,25 +681,59 @@ namespace AS {
 		if(action_ptr->details.intensity == 0) {
 
 			//If not, just set next phases total time to zero and proceed
+			action_ptr->phaseTiming.total = 0;
 		}
-		else {
-
-			//In case there are survivors:
-		
+		else { //In case there are survivors:
+			
+			float returnees = action_ptr->details.intensity;
+			int agent = action_ptr->ids.origin;
+			
+			auto param_ptr = 
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters);
+			
 			//First of all, take any loot in:
+			param_ptr->resources.current += action_ptr->details.processingAux;
 		
 			//Then we try to remember roughly how many people we had sent on the attack:
-			//To do that, we use the return time and the intensity
+			float estimatedAttackSize = 
+				ATT_I_L_attackSizeFromIntensityAndReturnTime(action_ptr->phaseTiming.total,
+															 action_ptr->details.intensity);
 		
 			//Then we gather information:
 			//We get infiltration points proportional to the sqrt of the ratio of returnees:
 
-			//And information specifically about their troops:
-			//(depends on battle score as well as the proportion of returnees)
-		
-			//Finally we accept out troops back in the GUARD (to recover) 
-			//and set a recover time (proportional to the troops, and atenuated, use helper):
+			int neighbor = action_ptr->ids.target;
+			auto neighborState_ptr = 
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(neighbor));
 
+			int neighborIDonAgent = getNeighborsIndexOnLA(agent, neighborState_ptr);
+
+			auto decision_ptr = 
+				&(g_agentDataControllers_ptr->LAdecision_ptr->getDirectDataPtr()->at(agent));
+
+			float returneesFactor = sqrt(returnees / estimatedAttackSize);
+
+			decision_ptr->infiltration[neighborIDonAgent] +=
+								returneesFactor * ACT_ATT_I_L_BASE_INFO_FROM_RETURNEES;
+			
+			//And information specifically about their troops:
+			//We'll interpolate our read with the real value using returneesFactor as weight:
+
+			int str = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
+			decision_ptr->reads[neighborIDonAgent].readOf[str] *= (1 - returneesFactor);
+			decision_ptr->reads[neighborIDonAgent].readOf[str] += 
+					   returneesFactor * neighborState_ptr->parameters.strenght.current;
+
+			int grd = (int)LA::readsOnNeighbor_t::fields::GUARD;
+			decision_ptr->reads[neighborIDonAgent].readOf[grd] *= (1 - returneesFactor);
+			decision_ptr->reads[neighborIDonAgent].readOf[grd] += 
+					   returneesFactor * neighborState_ptr->parameters.strenght.externalGuard;
+			
+			//Finally we accept out troops back in the GUARD (to recover):
+			param_ptr->strenght.externalGuard += returnees;
+
+			//and set a recover time (proportional to the troops, and atenuated, use helper):
+			action_ptr->phaseTiming.total = AS::ATT_I_L_prepTime(returnees);
 		}
 
 		//Then we advance the phase normally:
@@ -637,6 +743,20 @@ namespace AS {
 	void ATT_I_L_ConclusionEnd(actionData_t* action_ptr) {
 
 		//Our returned troops are ready to go back from the guard to the strenght:
+		int agent = action_ptr->ids.origin;
+
+		auto strenght_ptr = 
+			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters.strenght);
+
+		if (strenght_ptr->externalGuard >= action_ptr->details.intensity) {
+
+			strenght_ptr->current += action_ptr->details.intensity;
+			strenght_ptr->externalGuard -= action_ptr->details.intensity;
+		}
+		else { //maybe they died?
+			strenght_ptr->current += strenght_ptr->externalGuard;
+			strenght_ptr->externalGuard = 0;
+		}
 
 		defaultConclusionEnd(action_ptr);
 	}

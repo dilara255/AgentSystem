@@ -181,3 +181,9 @@ AS::actionData_t AS::getDefaultAction(AS::scope scope) {
 	
 	return data;
 }
+
+float AS::calculateDistance(AS::pos_t posA, AS::pos_t posB) {
+		float dX = posA.x - posB.x;
+		float dY = posA.y - posB.y;
+		return sqrt(dX*dX + dY*dY);
+}

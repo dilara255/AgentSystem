@@ -263,10 +263,7 @@ namespace AS{
 		action_ptr->details.intensity = attackSize;
 
 		//Also, more troops = longer preparation phase (but not linearly)
-		double effectiveAttackSize = sqrt(attackSize / ACT_REF_STRENGHT);
-
-		double preparationTime = effectiveAttackSize *
-									ACT_ATT_I_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR;			                     
+		uint32_t preparationTime = AS::ATT_I_L_prepTime(attackSize);
 
 		//Finally we can set how many tenths of MS the preparation phase will take:
 		action_ptr->phaseTiming.total = (uint32_t)std::round(preparationTime);

@@ -61,28 +61,28 @@ namespace AS{
 		int startingIndexOnActionsVector = agent * MAX_ACTIONS_PER_AGENT;
 		int startingIndexNextAgent = (agent + 1) * MAX_ACTIONS_PER_AGENT;
 
-int activeActionsFound = 0;
-for (int i = startingIndexOnActionsVector; i < startingIndexNextAgent; i++) {
+		int activeActionsFound = 0;
+		for (int i = startingIndexOnActionsVector; i < startingIndexNextAgent; i++) {
 
-	auto action_ptr = &(actionDataVec_cptr->at(i));
+			auto action_ptr = &(actionDataVec_cptr->at(i));
 
-	if (action_ptr->ids.slotIsUsed && action_ptr->ids.active) {
+			if (action_ptr->ids.slotIsUsed && action_ptr->ids.active) {
 
-		assert(activeActionsFound <= activeActions_ptr->totalElements);
+				assert(activeActionsFound <= activeActions_ptr->totalElements);
 
-		activeActions_ptr->actions[activeActionsFound].actCategory =
-			action_ptr->ids.category;
-		activeActions_ptr->actions[activeActionsFound].actMode =
-			action_ptr->ids.mode;
-		activeActions_ptr->actions[activeActionsFound].neighbor =
-			action_ptr->ids.target;
+				activeActions_ptr->actions[activeActionsFound].actCategory =
+					action_ptr->ids.category;
+				activeActions_ptr->actions[activeActionsFound].actMode =
+					action_ptr->ids.mode;
+				activeActions_ptr->actions[activeActionsFound].neighbor =
+					action_ptr->ids.target;
 
-		activeActionsFound++;
-	}
-}
+				activeActionsFound++;
+			}
+		}
 
-activeActions_ptr->totalActiveActions = activeActionsFound;
-return;
+		activeActions_ptr->totalActiveActions = activeActionsFound;
+		return;
 	}
 
 	//TODO: document math
