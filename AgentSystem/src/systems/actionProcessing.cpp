@@ -70,6 +70,8 @@ namespace AS {
 	//ATT_I_L:
 	void ATT_I_L_onSpawn(actionData_t* action_ptr);
 	void ATT_I_L_PrepEnd(actionData_t* action_ptr);
+	void ATT_I_L_travelEnd(actionData_t* action_ptr);
+	//ATT_I_L_effectTick uses a random number
 	uint32_t ATT_I_L_effectTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 	void ATT_I_L_EffectEnd(actionData_t* action_ptr);
 	void ATT_I_L_ReturnEnd(actionData_t* action_ptr);
@@ -206,6 +208,7 @@ namespace AS {
 		int res = (int)AS::actCategories::RESOURCES;
 		g_processingFunctions[local][res][self].onTick[prep] = chargingTick;
 		g_processingFunctions[local][res][self].onEnd[prep] = RES_S_L_PrepEnd;
+		g_processingFunctions[local][res][self].onEnd[travel] = ATT_I_L_travelEnd;
 		g_processingFunctions[local][res][self].onTick[travel] = passtroughTick;
 		g_processingFunctions[local][res][self].onTick[effect] = RES_S_L_effectTick;
 		g_processingFunctions[local][res][self].onTick[ret] = passtroughTick;
@@ -355,7 +358,7 @@ namespace AS {
 	void intensityToRatePrepEnd(actionData_t* action_ptr) {
 
 		//The intensity is divided by the next phase's time, becoming a rate
-		action_ptr->details.intensity / action_ptr->phaseTiming.total;
+		action_ptr->details.intensity /= action_ptr->phaseTiming.total;
 
 		//Then the usual stuff is done:
 		defaultPrepEnd(action_ptr);
@@ -381,7 +384,8 @@ namespace AS {
 
 		//Then the time for the next phase is set to be the same from the preparation phase
 		//times a parametrized multiplier:
-		action_ptr->phaseTiming.total *= ACT_STR_S_L_EFFECT_TIME_MULTIPLIER;
+		action_ptr->phaseTiming.total *= 
+						(uint32_tenthsOfMilli_t)ACT_STR_S_L_EFFECT_TIME_MULTIPLIER;
 		
 		//Finally, the intensity is divided by the next phase's time, becoming a rate
 		//(and the phase is advanced as usual):
@@ -449,7 +453,8 @@ namespace AS {
 
 		//Then the time for the next phase is set to be the same from the preparation phase
 		//times a parametrized multiplier:
-		action_ptr->phaseTiming.total *= ACT_RES_S_L_EFFECT_TIME_MULTIPLIER;
+		action_ptr->phaseTiming.total *= 
+						(uint32_tenthsOfMilli_t)ACT_RES_S_L_EFFECT_TIME_MULTIPLIER;
 
 		//Finally, the intensity is divided by the next phase's time, becoming a rate
 		//(and the phase is advanced as usual):
@@ -529,25 +534,109 @@ namespace AS {
 
 	void ATT_I_L_PrepEnd(actionData_t* action_ptr) {
 
+		//First, we take away the troops which were sent to the guard in the spawn:
+		
+		//Then, we calculate a base travel time according to distance and a parameter:
+		
+		//And modify it depending on attack size, before setting the phase total time:
+		
+		//Now we just need to do the usual phase end stuff, so:
+		defaultPhaseEnd(action_ptr);
+	}
+
+	void ATT_I_L_travelEnd(actionData_t* action_ptr) {
+
+		//The attack has begun! Our foes grit their teeth and swear our names:
+		
+		//They realize their errors about our forces:
+		
+		//The fight has just begun, but already our men wonder: how long can this battle go?
+		//Usar mesma func helper do calculo do tempo de preparação, mais param
+
+		//Other than that, it's all done as usual:
 		defaultPhaseEnd(action_ptr);
 	}
 
 	uint32_t ATT_I_L_effectTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
 
+		//This makes the attack happen and builds up an "score" of the fight in processingAux. 
+		//The tides of the battle depend on a random factor, the forces and the score;
+		//The score is used as a "morale", and dictates the pace of the fight (time advanced).
+		//If the fight's time ends, whoever the socre favours wins (dealt with on effectEnd).
+		//If either side goes out of troops, they loose:
+		//The score is changed to reflect that and we tick for zero time to end the phase.
+		//The score will also later be used to calculate loot, in case the attacker wins.		
+
+
+
+		//Finally, we pass the time (modified by the score or zero if no troops):
 		return defaultTick(tickTenthsOfMs, action_ptr);
 	}
 
 	void ATT_I_L_EffectEnd(actionData_t* action_ptr) {
+		
+		//Has anyone survived?
+		if (action_ptr->details.intensity == 0) {
+			//nope. Clear aux and set a time for the agent to realize their loss
 
+
+		}
+		else { //We have people alive
+			//How long will their travel back take? 
+			//Less people travel faster, but also the worse the losses, the slower we go
+			
+			//As an indicator of our losses, we use:
+			//float lossesTravelTimeMultiplier = phaseTotalTime / effectTime(survivors)
+			
+			//time = travel_time_this_intensity_and_distance * multiplier;
+
+			//Anyway, how much loot did they grab, losses and all? 
+			//(zero on defeat, otherwise calculated from score and defender's resources)
+
+			//Looting damages stuff: lower their income.
+			//(proportional to loot/defenders_resources, defenders_income, and a parameter)
+
+		}
+
+		//Let the survivors or the news travel:
 		defaultPhaseEnd(action_ptr);
+		return;
 	}
 
 	void ATT_I_L_ReturnEnd(actionData_t* action_ptr) {
 
+		//Did anyone survive? 
+		if(action_ptr->details.intensity == 0) {
+
+			//If not, just set next phases total time to zero and proceed
+		}
+		else {
+
+			//In case there are survivors:
+		
+			//First of all, take any loot in:
+		
+			//Then we try to remember roughly how many people we had sent on the attack:
+			//To do that, we use the return time and the intensity
+		
+			//Then we gather information:
+			//We get infiltration points proportional to the sqrt of the ratio of returnees:
+
+			//And information specifically about their troops:
+			//(depends on battle score as well as the proportion of returnees)
+		
+			//Finally we accept out troops back in the GUARD (to recover) 
+			//and set a recover time (proportional to the troops, and atenuated, use helper):
+
+		}
+
+		//Then we advance the phase normally:
 		defaultPhaseEnd(action_ptr);
 	}
 
 	void ATT_I_L_ConclusionEnd(actionData_t* action_ptr) {
+
+		//Our returned troops are ready to go back from the guard to the strenght:
 
 		defaultConclusionEnd(action_ptr);
 	}
