@@ -23,8 +23,9 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 //TODO-CRITICAL: BUG: scores + notions WILL overflow the stack for larger networks
 AS::actionData_t makeDecisionLA(int agent, 
 	             AS::dataControllerPointers_t* agentDataPtrs_ptr,
-				 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
+				 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr,
 	             AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
+				 const AS::ActionSystem* actionSystem_cptr,
 				 const float secondsSinceLastDecisionStep, int currentActions);
 
 //Action returns as innactive in case no decision is made
@@ -33,6 +34,7 @@ AS::actionData_t makeDecisionGA(int agent,
 				 AS::dataControllerPointers_t* agentDataPtrs_ptr,
 				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,
 	             AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
+				 const AS::ActionSystem* actionSystem_cptr,
 				 const float secondsSinceLastDecisionStep, int currentActions);
 
 LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp);
@@ -55,6 +57,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
                     dataControllerPointers_t* dp, ActionSystem* actionSystem_ptr,
 	                 float timeMultiplier, int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr,
+									   const AS::ActionSystem* actionSystem_cptr,
 	                            bool makeDecisions, AS::PRNserver* prnServer_ptr,
                                float secondsSinceLastDecisionStep, uint32_t tick) {
 	
@@ -103,8 +106,8 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 				actionData_t chosenAction = 
 						makeDecisionLA(agent, dp, state_ptr, &referenceReads, 
-							           errorsCounter_ptr, g_secondsSinceLastDecisionStep, 
-									                                      currentActions);
+							           errorsCounter_ptr, actionSystem_cptr,
+							           g_secondsSinceLastDecisionStep, currentActions);
 
 				//In case no decision is made, makeDecisionLA returns an innactive action, so:
 				if(chosenAction.ids.slotIsUsed){
@@ -142,8 +145,8 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 				actionData_t chosenAction = 
 						makeDecisionGA(agent , dp, state_ptr, &referenceReads, 
-									   errorsCounter_ptr, g_secondsSinceLastDecisionStep, 
-																		  currentActions);
+									   errorsCounter_ptr, actionSystem_cptr,
+							           g_secondsSinceLastDecisionStep, currentActions);
 
 				//In case no decision is made, makeDecisionGA returns an innactive action, so:
 				if(chosenAction.ids.slotIsUsed){

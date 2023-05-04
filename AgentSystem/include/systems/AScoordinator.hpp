@@ -38,6 +38,7 @@ namespace AS {
 		                    ActionSystem* actionSystem_ptr, float timeMultiplier, 
 										   int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr, 
+		                               const AS::ActionSystem* actionSystem_cptr,
 							    bool makeDecisions, AS::PRNserver* prnServer_ptr,
 		                       float secondsSinceLastDecisionStep, uint32_t tick);
 

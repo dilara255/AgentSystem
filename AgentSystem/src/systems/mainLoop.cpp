@@ -203,7 +203,9 @@ void step(AS::chopControl_st chopControl, float timeMultiplier, float decisionTi
 	AS::stepAgents(chopControl.LAdecisionsToMake, chopControl.GAdecisionsToMake, 
                       AS::g_agentDataControllerPtrs_ptr, AS::g_actionSystem_ptr,
 						timeMultiplier, numLAs, numGAs, AS::g_errorsCounter_ptr, 
-		       makeDecisions, AS::g_prnServer_ptr, decisionTimeMultiplier, tick);
+		                        (const AS::ActionSystem*)AS::g_actionSystem_ptr, 
+		                                     makeDecisions, AS::g_prnServer_ptr, 
+		                                           decisionTimeMultiplier, tick);
 }
 
 void receiveAndSendData() {
