@@ -7,10 +7,16 @@
 #include "systems/warningsAndErrorsCounter.hpp"
 
 namespace AS{
-	//TODO: Test
+
+	//TODO: test
 	//TODO: Make this into a method on ActionDataController
-	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
-		                               AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+	inline const std::vector<AS::actionData_t>* getScopeIndependentActionDataCptr(
+							            const ActionSystem* asp, AS::scope scope, int agent, 
+							                AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+
+		//All entry points to the functions should have checked their pointers:
+		assert(errorsCounter_ptr != NULL); 
+		assert(asp != NULL); 
 
 		auto actionController_cptr = asp->getDataDirectConstPointer();
 
@@ -22,14 +28,79 @@ namespace AS{
 		else if (scope == scope::GLOBAL) {
 			actionDataVec_cptr = actionController_cptr->getActionsGAsCptr();
 		}
+		
+		return actionDataVec_cptr;
+	}
+
+	//TODO: test
+	//TODO: Make this into a method on ActionDataController
+	int populateAgentsActiveActions(const ActionSystem* asp, AS::scope scope, int agent,
+		                              AS::Decisions::agentsActions_t* activeActions_ptr,
+		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+
+		if (errorsCounter_ptr == NULL) {
+			LOG_CRITICAL("populateAgentsActiveActions received bad errorsCounter_ptr");
+			return NATURAL_RETURN_ERROR;
+		}
+
+		if (asp == NULL) {
+			errorsCounter_ptr->incrementError(AS::errors::AC_COULDNT_GET_ACTIONS_CPTR);
+			return NATURAL_RETURN_ERROR;
+		}
+
+		auto actionController_cptr = asp->getDataDirectConstPointer();
+
+		const std::vector<AS::actionData_t> * actionDataVec_cptr = 
+				getScopeIndependentActionDataCptr(asp, scope, agent, errorsCounter_ptr);
+
 		if (actionDataVec_cptr == NULL) {
-			if (errorsCounter_ptr == NULL) {
-				LOG_ERROR("Couldn't get action data constant pointer (nor find the error counter)");
-			}
-			else {
-				errorsCounter_ptr->incrementError(errors::AC_COULDNT_GET_ACTIONS_CPTR);
-			}
-			
+			errorsCounter_ptr->incrementError(errors::AC_COULDNT_GET_ACTIONS_CPTR);
+			return NATURAL_RETURN_ERROR;
+		}
+
+		int startingIndexOnActionsVector = agent * MAX_ACTIONS_PER_AGENT;
+		int startingIndexNextAgent = (agent + 1) * MAX_ACTIONS_PER_AGENT;
+
+		int activeActionsFound = 0;
+		for(int i = startingIndexOnActionsVector; i < startingIndexNextAgent; i++){
+
+			auto action_ptr = &(actionDataVec_cptr->at(i));
+
+			if (action_ptr->ids.slotIsUsed && action_ptr->ids.active) {
+
+				assert(activeActionsFound <= activeActions_ptr->totalElements);
+
+				activeActions_ptr->actions[activeActionsFound].actCategory = 
+															action_ptr->ids.category;
+				activeActions_ptr->actions[activeActionsFound].actMode = 
+															action_ptr->ids.mode;
+				activeActions_ptr->actions[activeActionsFound].neighbor = 
+															action_ptr->ids.target;
+
+				activeActionsFound++;
+			}		
+		}
+
+		return activeActionsFound;
+	}
+
+	//TODO: Test
+	//TODO: Make this into a method on ActionDataController
+	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
+		                               AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+
+		if (errorsCounter_ptr == NULL) {
+			LOG_CRITICAL("populateAgentsActiveActions received bad errorsCounter_ptr");
+			return NATURAL_RETURN_ERROR;
+		}
+
+		auto actionController_cptr = asp->getDataDirectConstPointer();
+
+		const std::vector<AS::actionData_t> * actionDataVec_cptr = 
+				getScopeIndependentActionDataCptr(asp, scope, agentID, errorsCounter_ptr);
+
+		if (actionDataVec_cptr == NULL) {
+			errorsCounter_ptr->incrementError(errors::AC_COULDNT_GET_ACTIONS_CPTR);
 			return NATURAL_RETURN_ERROR;
 		}
 		

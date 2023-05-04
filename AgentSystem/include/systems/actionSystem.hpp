@@ -355,6 +355,11 @@ namespace AS {
 			float score = DEFAULT_AWFUL_SCORE;
 		} AS_API actionScore_t;
 
+		typedef struct agentsActions_st {
+			actionScore_t actions[MAX_ACTIONS_PER_AGENT];
+			const int totalElements = MAX_ACTIONS_PER_AGENT;
+		} agentsActions_t;
+
 		using namespace ActionVariations;
 		
 		static constexpr int maxScoresNeeded() {

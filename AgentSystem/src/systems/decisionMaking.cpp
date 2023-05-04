@@ -183,9 +183,11 @@ void setScore(AD::actionScore_t* actionScore_ptr, AD::notions_t* np,
 
 //TODO: throughly test this (note loop index calculation, also test callees):
 float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr, 
-							                 AS::scope scope, int totalNeighbors,
-								       const AS::ActionSystem* actionSystem_cptr,
-								 AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+							                AS::scope scope, int totalNeighbors,
+						   const AS::ActionSystem* actionSystem_cptr, int agent,
+				                  const AD::agentsActions_t* activeActions_cptr, 
+	                                                     int totalActiveActions,
+								AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 	assert(allScores_ptr->actualTotalScores != UNINITIALIZED_ACTUAL_TOTAL_SCORES);
 	assert(allScores_ptr->actualTotalScores > 0);
@@ -196,12 +198,7 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 	//Actions in SELF mode will leave neighbor = -1 (the others will also set the neighbor).
 	//Invalid variations will have score = -1
 	
-	//When we calculate the scores, we also want to apply penalties for repeat actions
-	//So we'll first gather the data on what actions the agent has active
-
-
-
-	//Now for the actual scoring:
+	bool penalizeRepeats = totalActiveActions > 0;
 
 	float maxAmbition = -1;
 	//For self, both neighbor (-1) and mode (SELF, 0) are fixed, so:
@@ -783,8 +780,15 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 	float justDoIt = ACT_JUST_DO_IT_THRESOLD;
 
 	//We start out by calculating the scores:
+	
+	AD::agentsActions_t activeActions;
+
+	int totalActiveActions = populateAgentsActiveActions(actionSystem_cptr, scope, agent,
+		                                               &activeActions, errorsCounter_ptr);
+
 	float maxAmbition = calculateScores(np, sp, scope, totalNeighbors, actionSystem_cptr,
-																       errorsCounter_ptr);
+		                               agent, (const AD::agentsActions_t*)&activeActions, 
+		                                           totalActiveActions, errorsCounter_ptr);
 	
 	//For the overall utility scores, we want to apply any personality offsets:
 	applyPersonalityOffsets(sp, agent, scope, dp, errorsCounter_ptr);
