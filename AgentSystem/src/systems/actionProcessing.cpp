@@ -89,19 +89,29 @@ namespace AS {
 		}
 
 		//timeMultiplier is in seconds, and has to be changed into a uint32_tenthsOfMilli_t:
-		double tenthsOfMillisThisStep = (double)timeMultiplier * TENTHS_OF_MS_IN_A_SECOND;
+		double tenthsOfMillisThisStep = (double)timeMultiplier * (double)TENTHS_OF_MS_IN_A_SECOND;
 		uint32_tenthsOfMilli_t timeElapsedThisStep = (uint32_t)tenthsOfMillisThisStep;	
 		
 		//Finally, we dispatch the action processing:
 		int cat = action_ptr->ids.category;
 		int mode = action_ptr->ids.mode;
-		int phase = action_ptr->ids.phase;
 		int scope = action_ptr->ids.scope;
 		uint32_tenthsOfMilli_t timeRemainingToProcess = timeElapsedThisStep;
 
-		//since a phase may end and spawn another phase, this is done in a loop:
-		while ( (timeRemainingToProcess > 0) 
+		//first of all, let's check if the action just spawned and, if so, call it's onSpawn:
+		if (action_ptr->ids.phase == (int)actPhases::SPAWN) {
+
+			g_processingFunctions[scope][cat][mode].onSpawn(action_ptr);
+			action_ptr->ids.phase = 0;
+		}
+
+		int phase = action_ptr->ids.phase;
+
+		//Since a phase may end and spawn another phase, this is done in a loop:
+		while ( (timeRemainingToProcess > 0)
 			     && (action_ptr->ids.active == 1) && (action_ptr->ids.slotIsUsed == 1) ) {
+
+			assert(phase < (int)actPhases::TOTAL);
 
 			//first we tick the action and receive any time still to be processed:
 			timeRemainingToProcess = 
@@ -137,8 +147,8 @@ namespace AS {
 		for (int cat = 0; cat < (int)actCategories::TOTAL; cat++) {
 			for (int mode = 0; mode < (int)actModes::TOTAL; mode++) {
 
-				g_processingFunctions[local][cat][mode].onSpawm = defaultOnSpawn;
-				g_processingFunctions[global][cat][mode].onSpawm = defaultOnSpawn;
+				g_processingFunctions[local][cat][mode].onSpawn = defaultOnSpawn;
+				g_processingFunctions[global][cat][mode].onSpawn = defaultOnSpawn;
 
 				for (int phase = 0; phase < (int)actPhases::TOTAL; phase++) {
 					
@@ -181,6 +191,7 @@ namespace AS {
 
 	void defaultPhaseEnd(actionData_t* action_ptr) {
 
+		action_ptr->ids.phase++;
 	}
 
 	void defaultPrepEnd(actionData_t* action_ptr) {
@@ -205,6 +216,8 @@ namespace AS {
 
 	void defaultConclusionEnd(actionData_t* action_ptr) {
 
-		defaultPhaseEnd(action_ptr);
+		//Just invalidades the action:
+		action_ptr->ids.active = 0;
+		action_ptr->ids.slotIsUsed = 0;
 	}
 }

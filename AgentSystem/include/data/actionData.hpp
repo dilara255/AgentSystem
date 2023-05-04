@@ -30,8 +30,9 @@ namespace AS {
 		                  TOTAL };
 	//TODO: brief description of each
 
+	//NOTE: SPAWN comes after total because it's processed different from the others
 	enum class actPhases { PREPARATION, TRAVEL, EFFECT, RETURN, CONCLUSION,
-		                   TOTAL };
+		                   TOTAL, SPAWN };
 	//TODO: brief description of each
 
 	//Wether action variation - ie: strenght, immediate, local - exists, and it's "kind":

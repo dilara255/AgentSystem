@@ -312,7 +312,7 @@ namespace AS {
 		typedef std::function<void(actionData_t*)> phaseEndFunction_t;
 
 		typedef struct variationProcessingFunctions_st {
-			onSpawnFunction_t onSpawm;
+			onSpawnFunction_t onSpawn;
 			tickFunction_t onTick[(int)actPhases::TOTAL];
 			phaseEndFunction_t onEnd[(int)actPhases::TOTAL];
 		} variationProcessingFunctions_t;
