@@ -33,4 +33,8 @@ namespace AS {
 	
 	float STR_S_L_necessaryFunding(float intensity);
 	float RES_S_L_necessaryFunding(float intensity);
+
+	uint32_t ATT_I_L_prepTime(float intensity);
+	double ATT_I_L_travelTimeModifierFromTroopSize(float intensity);
+	float ATT_I_L_attackSizeFromIntensityAndReturnTime(uint32_t returnTime, float intensity);
 }
