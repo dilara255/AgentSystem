@@ -12,11 +12,15 @@
 
 namespace AS {
 
+	inline const std::vector<AS::actionData_t>* getScopeIndependentActionDataCptr(
+							            const ActionSystem* asp, AS::scope scope, int agent, 
+							                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+
 	//Populates activeActions_ptr with the agents active actions (from the start).
 	//Returns total active actions, or NATURAL_RETURN_ERROR (-1) on error.
 	//NOTE: ignores BOTH action slots wich are marked as occupied but innactive
 	//AND slots marked as not occupied (regardless of active/innactive).
-	int populateAgentsActiveActions(const ActionSystem* asp, AS::scope scope, int agent,
+	void populateAgentsActiveActions(const ActionSystem* asp, AS::scope scope, int agent,
 		                              AS::Decisions::agentsActions_t* activeActions_ptr,
 		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 

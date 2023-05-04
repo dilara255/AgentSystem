@@ -184,9 +184,6 @@ void setScore(AD::actionScore_t* actionScore_ptr, AD::notions_t* np,
 //TODO: throughly test this (note loop index calculation, also test callees):
 float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr, 
 							                AS::scope scope, int totalNeighbors,
-						   const AS::ActionSystem* actionSystem_cptr, int agent,
-				                  const AD::agentsActions_t* activeActions_cptr, 
-	                                                     int totalActiveActions,
 								AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 	assert(allScores_ptr->actualTotalScores != UNINITIALIZED_ACTUAL_TOTAL_SCORES);
@@ -198,8 +195,6 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 	//Actions in SELF mode will leave neighbor = -1 (the others will also set the neighbor).
 	//Invalid variations will have score = -1
 	
-	bool penalizeRepeats = totalActiveActions > 0;
-
 	float maxAmbition = -1;
 	//For self, both neighbor (-1) and mode (SELF, 0) are fixed, so:
 	int totalActionsSelf = AS::ActionVariations::TOTAL_CATEGORIES;
@@ -210,33 +205,31 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 
 		auto sp = &(allScores_ptr->allScores[cat]);
 
-		sp->ambitions.neighbor = NEIGHBOR_ID_FOR_SELF;
-		sp->ambitions.actCategory = cat;
-		sp->ambitions.actMode = (int)AS::actModes::SELF;
 		if(valid) {
-			setScore(&(sp->ambitions), np, &AD::notionWeightsInFavor);
-		}
-		else {
-			sp->ambitions.score = BAD_AMBITION; //variation is invalid
-		}
-				
-		maxAmbition = std::max(maxAmbition, sp->ambitions.score);
-				
-		sp->worries.neighbor = NEIGHBOR_ID_FOR_SELF;
-		sp->worries.actCategory = cat;
-		sp->worries.actMode = (int)AS::actModes::SELF;
-		if(valid) {
-			setScore(&(sp->worries), np, &AD::notionWeightsAgainst);
-		}
-		else {
-			sp->worries.score = BAD_WORRY;
-		}
+			sp->ambitions.neighbor = NEIGHBOR_ID_FOR_SELF;
+			sp->ambitions.actCategory = cat;
+			sp->ambitions.actMode = (int)AS::actModes::SELF;
 
-		sp->overallUtility.neighbor = NEIGHBOR_ID_FOR_SELF;
-		sp->overallUtility.actCategory = cat;
-		sp->overallUtility.actMode = (int)AS::actModes::SELF;
-				
-		sp->overallUtility.score = sp->ambitions.score - sp->worries.score;
+			setScore(&(sp->ambitions), np, &AD::notionWeightsInFavor);
+
+			maxAmbition = std::max(maxAmbition, sp->ambitions.score);
+
+			sp->worries.neighbor = NEIGHBOR_ID_FOR_SELF;
+			sp->worries.actCategory = cat;
+			sp->worries.actMode = (int)AS::actModes::SELF;
+
+			setScore(&(sp->worries), np, &AD::notionWeightsAgainst);
+
+			sp->overallUtility.neighbor = NEIGHBOR_ID_FOR_SELF;
+			sp->overallUtility.actCategory = cat;
+			sp->overallUtility.actMode = (int)AS::actModes::SELF;
+		}
+		else { //invalid variation:
+			sp->ambitions.score = BAD_AMBITION;
+			sp->worries.score = BAD_WORRY;
+		}					
+
+		sp->overallUtility.score = sp->ambitions.score - sp->worries.score;		
 	}
 	
 	//Now we'll deal with the scores regarding neighbors:
@@ -332,15 +325,33 @@ float calculateScores(AD::notions_t* np, AD::allScoresAnyScope_t* allScores_ptr,
 	return maxAmbition;
 }
 
-void applyPersonalityOffsets(AD::allScoresAnyScope_t* sp, int agent, AS::scope scope, 
-	                                                AS::dataControllerPointers_t* dp, 
-									 AS::WarningsAndErrorsCounter* errorsCounter_ptr){
+void applyPersonalityOffsetsAndRepetitionPenalties(AD::allScoresAnyScope_t* sp, int agent, 
+										AS::scope scope, AS::dataControllerPointers_t* dp, 
+											const AD::agentsActions_t* agentsActions_cptr,
+									      AS::WarningsAndErrorsCounter* errorsCounter_ptr){
 
 	for (int score = 0; score < sp->actualTotalScores; score++) {
 		
 		auto score_ptr = &(sp->allScores[score].overallUtility);
 		int cat = score_ptr->actCategory;
 		int mode = score_ptr->actMode;
+		int neighbor = score_ptr->neighbor;
+
+		float penalty = 0;
+
+		for (int act = 0; act < agentsActions_cptr->totalActiveActions; act++) {
+			
+			if ((agentsActions_cptr->actions[act].actMode == mode) &&
+				(agentsActions_cptr->actions[act].actCategory == cat)) {
+
+				if (agentsActions_cptr->actions[act].neighbor == neighbor) {
+					penalty += ACT_SCORE_PENALTY_EXACT_REPEAT;
+				}
+				else {
+					penalty += ACT_SCORE_PENALTY_DIFFERENT_TARGET_REPEAT;
+				}
+			}
+		}
 
 		float offset = 0;
 
@@ -363,7 +374,11 @@ void applyPersonalityOffsets(AD::allScoresAnyScope_t* sp, int agent, AS::scope s
 					                          (AS::actCategories)cat, (AS::actModes)mode);								  
 			}
 		}
+
+		score_ptr->score += offset - penalty;
 	}	
+
+	return;
 }
 
 //If doNothing, returns innactive action. Else, score is recorded on action's intensity
@@ -781,17 +796,17 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 
 	//We start out by calculating the scores:
 	
-	AD::agentsActions_t activeActions;
-
-	int totalActiveActions = populateAgentsActiveActions(actionSystem_cptr, scope, agent,
-		                                               &activeActions, errorsCounter_ptr);
-
-	float maxAmbition = calculateScores(np, sp, scope, totalNeighbors, actionSystem_cptr,
-		                               agent, (const AD::agentsActions_t*)&activeActions, 
-		                                           totalActiveActions, errorsCounter_ptr);
+	float maxAmbition = calculateScores(np, sp, scope, totalNeighbors, errorsCounter_ptr);
 	
-	//For the overall utility scores, we want to apply any personality offsets:
-	applyPersonalityOffsets(sp, agent, scope, dp, errorsCounter_ptr);
+	//For the overall utility scores, we want to apply any personality offsets,
+	//as well as penalties for repeated actions. For that, we we'll need:
+	
+	AD::agentsActions_t activeActions;
+	populateAgentsActiveActions(actionSystem_cptr, scope, agent, &activeActions, 
+															  errorsCounter_ptr);
+
+	applyPersonalityOffsetsAndRepetitionPenalties(sp, agent, scope, dp, 
+								(const AD::agentsActions_t*)&activeActions, errorsCounter_ptr);
 
 	//Then we make a choice:
 	AS::actionData_t chosenAction;

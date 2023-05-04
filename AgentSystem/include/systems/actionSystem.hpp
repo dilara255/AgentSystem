@@ -1,6 +1,7 @@
-#pragma once
-
 //TODO: Reorganize and possibly rename this file
+//TODO: Some of what's here should be exposed to the applications, some should not: split
+
+#pragma once
 
 /*
 //TODO: review/update this:
@@ -358,6 +359,7 @@ namespace AS {
 		typedef struct agentsActions_st {
 			actionScore_t actions[MAX_ACTIONS_PER_AGENT];
 			const int totalElements = MAX_ACTIONS_PER_AGENT;
+			int totalActiveActions = NATURAL_RETURN_ERROR;
 		} agentsActions_t;
 
 		using namespace ActionVariations;

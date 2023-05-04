@@ -34,18 +34,18 @@ namespace AS{
 
 	//TODO: test
 	//TODO: Make this into a method on ActionDataController
-	int populateAgentsActiveActions(const ActionSystem* asp, AS::scope scope, int agent,
+	void populateAgentsActiveActions(const ActionSystem* asp, AS::scope scope, int agent,
 		                              AS::Decisions::agentsActions_t* activeActions_ptr,
 		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 		if (errorsCounter_ptr == NULL) {
 			LOG_CRITICAL("populateAgentsActiveActions received bad errorsCounter_ptr");
-			return NATURAL_RETURN_ERROR;
+			return;
 		}
 
 		if (asp == NULL) {
 			errorsCounter_ptr->incrementError(AS::errors::AC_COULDNT_GET_ACTIONS_CPTR);
-			return NATURAL_RETURN_ERROR;
+			return;
 		}
 
 		auto actionController_cptr = asp->getDataDirectConstPointer();
@@ -55,7 +55,7 @@ namespace AS{
 
 		if (actionDataVec_cptr == NULL) {
 			errorsCounter_ptr->incrementError(errors::AC_COULDNT_GET_ACTIONS_CPTR);
-			return NATURAL_RETURN_ERROR;
+			return;
 		}
 
 		int startingIndexOnActionsVector = agent * MAX_ACTIONS_PER_AGENT;
@@ -81,7 +81,8 @@ namespace AS{
 			}		
 		}
 
-		return activeActionsFound;
+		activeActions_ptr->totalActiveActions = activeActionsFound;
+		return;
 	}
 
 	//TODO: Test
