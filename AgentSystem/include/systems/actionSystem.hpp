@@ -308,7 +308,7 @@ namespace AS {
 
 		//These are the data structures to hold the functions which will process Actions:
 		typedef std::function<void(actionData_t*)> onSpawnFunction_t;
-		typedef std::function<uint32_t(uint32_t, actionData_t*)> tickFunction_t;
+		typedef std::function<uint32_tenthsOfMilli_t(uint32_tenthsOfMilli_t, actionData_t*)> tickFunction_t;
 		typedef std::function<void(actionData_t*)> phaseEndFunction_t;
 
 		typedef struct variationProcessingFunctions_st {

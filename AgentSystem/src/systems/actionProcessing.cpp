@@ -3,9 +3,13 @@
 * For the spawining and initial detail setting of actions:
 *		-> See actionPreProcessing.cpp
 * 
-* Each phase of each action variaton has two related functions:
+* Other than the SPAWN phase, each phase of each action variaton has two related functions:
 * - tick, which updates the remaining phase time and applies any other continuous change;
+* -- the tick functions receive the time to be processed and return any remaining time;
 * - endPhase, which applies any end-of-phase effects and sets the action to the next phase.
+* For the SPAWN phase of each variation, there's an onSpawn function.
+* All of these have default versions, and the specific ones will be gradually implemented 
+* at the end of this file and added to the forward declaration block bellow.
 * 
 * -> g_processingFunctions holds which funtions will be used for each phase of each variation.
 * --> THIS CORRESPONDENCE IS SET ON initializeProcessingFunctions() !
@@ -25,14 +29,16 @@
 #include "data/agentDataStructures.hpp"
 #include "data/agentDataControllers.hpp"
 
-//These are forward declarations of the actual processing functions
-//(so they can be used on initializeProcessingFunctions, bellow)
-//If this is your first time on this file, collapse this and start at the next section : )
 namespace AS {
 	
+	//Initialization of the structure holding function correspondences is done by these:
 	void initializeProcessingFunctions();
+	void setProcessingFunctionsToDefaults();
 
+	//These are the defaulf Processing functions:
 	void defaultOnSpawn(actionData_t* action_ptr);
+	//The default tick ticks for tickTenthsOfMs or until the phase ends, 
+	//and returns any remaining time
 	uint32_t defaultTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 	void defaultPhaseEnd(actionData_t* action_ptr);
 
@@ -41,6 +47,9 @@ namespace AS {
 	void defaultEffectEnd(actionData_t* action_ptr);
 	void defaultReturnEnd(actionData_t* action_ptr);
 	void defaultConclusionEnd(actionData_t* action_ptr);
+
+	//And these are specific variation processing functions:
+	void ATT_I_L_onSpawn(actionData_t* action_ptr);
 }
 
 //Here's the meat of this file: entry-point, initialization and processing actions
@@ -49,7 +58,7 @@ namespace AS {
 	static ActionVariations::actionProcessingFunctions_t g_processingFunctions[(int)AS::scope::TOTAL];
 	static bool g_processingFunctionsInitialized = false;
 
-	static dataControllerPointers_t* agentDataControllers_ptr = NULL;
+	static dataControllerPointers_t* g_agentDataControllers_ptr = NULL;
 	static ActionSystem* g_actionSystem_ptr = NULL; 
 	static WarningsAndErrorsCounter* g_errors_ptr = NULL;
 	static PRNserver* g_prnServer_ptr = NULL;
@@ -74,10 +83,15 @@ namespace AS {
 		}
 
 		//stepActions checks these before we get here, so we trust the system pointers:
-		agentDataControllers_ptr = agentDataControllers_ptr;
+		g_agentDataControllers_ptr = agentDataControllers_ptr;
 		g_actionSystem_ptr = actionSystem_ptr;
 		g_prnServer_ptr = prnServer_ptr;
 		g_errors_ptr = errors_ptr;		
+
+		assert(g_agentDataControllers_ptr != NULL);
+		assert(g_actionSystem_ptr != NULL);
+		assert(g_prnServer_ptr != NULL);
+		assert(g_errors_ptr != NULL);
 
 		//we do need to make sure the processing functions are initialized:
 		if (!g_processingFunctionsInitialized) {
@@ -105,22 +119,23 @@ namespace AS {
 			action_ptr->ids.phase = 0;
 		}
 
-		int phase = action_ptr->ids.phase;
-
 		//Since a phase may end and spawn another phase, this is done in a loop:
 		while ( (timeRemainingToProcess > 0)
 			     && (action_ptr->ids.active == 1) && (action_ptr->ids.slotIsUsed == 1) ) {
 
-			assert(phase < (int)actPhases::TOTAL);
+			assert(action_ptr->ids.phase < (int)actPhases::TOTAL);
 
 			//first we tick the action and receive any time still to be processed:
 			timeRemainingToProcess = 
-				g_processingFunctions[scope][cat][mode].onTick[phase](timeRemainingToProcess,
-					                                                              action_ptr);
-			//if that is larger then zero, we've reached a phase end and must process that
+				g_processingFunctions[scope][cat][mode].onTick[action_ptr->ids.phase](
+														timeRemainingToProcess, action_ptr);
+			
+			//if that is larger then zero, we didn't process as much time as we'd like:
+			//that's because we've reached a phase end, so we must process that:
 			if (timeRemainingToProcess > 0) {
 				//which will do any end-of-phase effect and advance phase or deactivate action
-				g_processingFunctions[scope][cat][mode].onEnd[phase](action_ptr);
+				g_processingFunctions[scope][cat][mode].onEnd[action_ptr->ids.phase](
+																				action_ptr);
 				//since there's timeRemainingToProcess, we'll loop after this
 			}
 		}	
@@ -128,13 +143,17 @@ namespace AS {
 		//Done, the action was processed until it consumed all the step time or was deactivated
 	}
 
-	void setProcessingFunctionsToDefaults();
-
 	//This is where the functions used for each phase of each action variation
 	//are selected. Changing this will change their behavior.
 	void initializeProcessingFunctions() {
 
 		setProcessingFunctionsToDefaults();		
+
+		int local = (int)AS::scope::LOCAL;
+		int immediate = (int)AS::actModes::IMMEDIATE;
+
+		g_processingFunctions[local][(int)AS::actCategories::ATTACK][immediate].onSpawn =
+																				ATT_I_L_onSpawn;
 
 		g_processingFunctionsInitialized = true;
 	}
@@ -180,18 +199,32 @@ namespace AS {
 		}
 	}
 
+	//DEFAULT ACTION PROCESSING FUNCTIONS:
+
 	void defaultOnSpawn(actionData_t* action_ptr) {
 
 	}
 
 	uint32_t defaultTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
 
-		return 0;
+		uint32_tenthsOfMilli_t timeRemainingOnPhase = 
+			action_ptr->phaseTiming.total - action_ptr->phaseTiming.elapsed;
+
+		if (timeRemainingOnPhase >= tickTenthsOfMs) {
+			action_ptr->phaseTiming.elapsed += tickTenthsOfMs;
+			return 0; //all time consumed
+		}
+		else {
+			return (tickTenthsOfMs - timeRemainingOnPhase);
+		}
 	}
 
 	void defaultPhaseEnd(actionData_t* action_ptr) {
 
 		action_ptr->ids.phase++;
+		action_ptr->phaseTiming.elapsed = 0;
+		
+		return;
 	}
 
 	void defaultPrepEnd(actionData_t* action_ptr) {
@@ -219,5 +252,31 @@ namespace AS {
 		//Just invalidades the action:
 		action_ptr->ids.active = 0;
 		action_ptr->ids.slotIsUsed = 0;
+	}
+
+	//SPECIFIC ACTION PROCESSING FUNCIONS:
+
+	//LOCAL:
+
+	//ATTACK:
+
+	//The attack intensity becomes guard (so it can't be used on other attacks)
+	//TODO: This has the side-effect of lowering upkeep. Is that a problem?
+	void ATT_I_L_onSpawn(actionData_t* action_ptr) {
+
+		int agent = action_ptr->ids.origin;
+		float intensity = action_ptr->details.intensity;
+
+		assert(g_agentDataControllers_ptr != NULL);
+
+		auto agentStrenght_ptr =
+			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters.strenght);
+
+		assert(agentStrenght_ptr != NULL);
+
+		agentStrenght_ptr->current -= intensity;
+		agentStrenght_ptr->externalGuard += intensity;
+		
+		return;
 	}
 }

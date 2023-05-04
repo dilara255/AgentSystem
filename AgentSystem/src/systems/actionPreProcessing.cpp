@@ -138,7 +138,7 @@ namespace AS{
 	//will affect its progress).
 	void setActionDetails_STR_S_L(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
-		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
 		int agent = action_ptr->ids.origin;
 		auto agentParams_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent).parameters);
@@ -174,7 +174,7 @@ namespace AS{
 	//Preparation time will depend on the increase in income (sublinear);
 	void setActionDetails_RES_S_L(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
-		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
 		int agent = action_ptr->ids.origin;
 		auto agentParams_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent).parameters);
@@ -208,7 +208,7 @@ namespace AS{
 	//TODO: this a placeholder / stub, mostly for load testing and some initial exploration
 	void setActionDetails_ATT_I_L(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
-		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 		int agent = action_ptr->ids.origin;
 		int scope = action_ptr->ids.scope;
@@ -289,7 +289,7 @@ namespace AS{
 	//TODO: this a placeholder / stub, mostly for load testing and some initial exploration
 	void setActionDetails_ATT_S_G(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
-		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 		
 		action_ptr->details.processingAux = 0;
 
@@ -307,7 +307,7 @@ namespace AS{
 			
 		if (targetsIndexOnAgent == NATURAL_RETURN_ERROR) {
 			if (action_ptr->ids.mode != (uint32_t)AS::actModes::SELF) {
-				errorsCounter_pt->incrementError(AS::errors::DS_FAILED_TO_FIND_NEIGHBORS_INDEX);
+				errorsCounter_ptr->incrementError(AS::errors::DS_FAILED_TO_FIND_NEIGHBORS_INDEX);
 			}
 			enemyStrenght = 0;
 		}
@@ -345,7 +345,7 @@ namespace AS{
 
 	void dispatchActionDetailSetting(float desiredIntensityMultiplier,
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
-		                                    AS::WarningsAndErrorsCounter* errorsCounter_pt) {
+		                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
 		int cat = action_ptr->ids.category;
 		int mode = action_ptr->ids.mode;
@@ -367,35 +367,35 @@ namespace AS{
 				{
 				case (int)AS::actCategories::STRENGHT:
 					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::RESOURCES:
 					setActionDetails_RES_S_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::ATTACK:
 					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::GUARD:
 					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::SPY:
 					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::SABOTAGE:
 					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::DIPLOMACY:
 					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::CONQUEST:
 					setActionDetails_STR_S_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				default:
 					assert(false); //all expected categories are already described
@@ -406,35 +406,35 @@ namespace AS{
 				{
 				case (int)AS::actCategories::STRENGHT:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::RESOURCES:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::ATTACK:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::GUARD:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::SPY:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::SABOTAGE:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::DIPLOMACY:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::CONQUEST:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				default:
 					assert(false); //all expected categories are already described
@@ -445,35 +445,35 @@ namespace AS{
 				{
 				case (int)AS::actCategories::STRENGHT:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::RESOURCES:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::ATTACK:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::GUARD:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::SPY:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::SABOTAGE:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::DIPLOMACY:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::CONQUEST:
 					setActionDetails_ATT_I_L(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				default:
 					assert(false); //all expected categories are already described
@@ -488,35 +488,35 @@ namespace AS{
 				{
 				case (int)AS::actCategories::STRENGHT:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::RESOURCES:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::ATTACK:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::GUARD:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::SPY:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::SABOTAGE:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::DIPLOMACY:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::CONQUEST:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				default:
 					assert(false); //all expected categories are already described
@@ -527,35 +527,35 @@ namespace AS{
 				{
 				case (int)AS::actCategories::STRENGHT:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::RESOURCES:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::ATTACK:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::GUARD:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::SPY:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::SABOTAGE:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::DIPLOMACY:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::CONQUEST:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				default:
 					assert(false); //all expected categories are already described
@@ -566,35 +566,35 @@ namespace AS{
 				{
 				case (int)AS::actCategories::STRENGHT:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::RESOURCES:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::ATTACK:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::GUARD:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::SPY:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::SABOTAGE:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				case (int)AS::actCategories::DIPLOMACY:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 					return;
 				case (int)AS::actCategories::CONQUEST:
 					setActionDetails_ATT_S_G(desiredIntensityMultiplier, action_ptr, dp, 
-			                                                      errorsCounter_pt);
+			                                                      errorsCounter_ptr);
 				return;
 				default:
 					assert(false); //all expected categories are already described
