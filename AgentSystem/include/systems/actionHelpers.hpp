@@ -24,8 +24,13 @@ namespace AS {
 		                              AS::Decisions::agentsActions_t* activeActions_ptr,
 		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
-	float actionCostFromIntensity(AS::actionData_t action);
 	float nextActionsCost(int currentActions);
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
 		                               AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+
+	//These are helper functionality for specific action variations.
+	//Their main goal is to help maintain parity between action processing and pre processing.
+	
+	float RES_S_L_necessaryFunding(float intensity);
+	float STR_S_L_necessaryFunding(float intensity);
 }

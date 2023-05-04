@@ -7,6 +7,7 @@
 
 #include "systems/warningsAndErrorsCounter.hpp"
 #include "systems/actionSystem.hpp"
+#include "systems/actionHelpers.hpp"
 
 #include "data/dataMisc.hpp"
 
@@ -150,10 +151,10 @@ namespace AS{
 
 		float newTroops = 
 			effectiveStrenght * ACT_STR_S_L_REF_PROPORTION_OF_STR * desiredIntensityMultiplier;
+		action_ptr->details.intensity = newTroops;
 
 		//This is the funding necessary to raise these troops:
-		action_ptr->details.processingAux = 
-					(newTroops / ACT_REF_STRENGHT) * ACT_STR_S_L_COST_PER_REF_STR;
+		action_ptr->details.processingAux = AS::STR_S_L_necessaryFunding(newTroops);
 
 		//And now for the preparation time:
 		double effectiveNewTroopsForTiming = std::sqrt(newTroops / ACT_REF_STRENGHT);
@@ -186,10 +187,10 @@ namespace AS{
 
 		float raise = 
 			income * ACT_RES_S_L_REF_PROPORTION_OF_INCOME * desiredIntensityMultiplier;
+		action_ptr->details.intensity = raise;
 
 		//This is the funding necessary to raise the income:
-		action_ptr->details.processingAux = 
-					(raise / ACT_REF_INCOME) * ACT_RES_S_L_COST_PER_REF_INCOME;
+		action_ptr->details.processingAux = AS::RES_S_L_necessaryFunding(raise);
 
 		//And now for the preparation time:
 		double effectiveRaiseForTiming = std::sqrt(raise / ACT_REF_INCOME);

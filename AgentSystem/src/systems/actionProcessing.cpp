@@ -102,44 +102,49 @@ namespace AS {
 			}
 		}
 
-		//timeMultiplier is in seconds, and has to be changed into a uint32_tenthsOfMilli_t:
-		double tenthsOfMillisThisStep = (double)timeMultiplier * (double)TENTHS_OF_MS_IN_A_SECOND;
-		uint32_tenthsOfMilli_t timeElapsedThisStep = (uint32_t)tenthsOfMillisThisStep;	
-		
-		//Finally, we dispatch the action processing:
-		int cat = action_ptr->ids.category;
-		int mode = action_ptr->ids.mode;
-		int scope = action_ptr->ids.scope;
-		uint32_tenthsOfMilli_t timeRemainingToProcess = timeElapsedThisStep;
-
 		//first of all, let's check if the action just spawned and, if so, call it's onSpawn:
 		if (action_ptr->ids.phase == (int)actPhases::SPAWN) {
+			int cat = action_ptr->ids.category;
+			int mode = action_ptr->ids.mode;
+			int scope = action_ptr->ids.scope;
 
 			g_processingFunctions[scope][cat][mode].onSpawn(action_ptr);
 			action_ptr->ids.phase = 0;
 		}
 
-		//Since a phase may end and spawn another phase, this is done in a loop:
+		//timeMultiplier is in seconds, and has to be changed into a uint32_tenthsOfMilli_t:
+		double tenthsOfMillisThisStep = (double)timeMultiplier * (double)TENTHS_OF_MS_IN_A_SECOND;
+		
+		uint32_tenthsOfMilli_t timeRemainingToProcess = (uint32_t)tenthsOfMillisThisStep;	
+		
+		//Finally, we dispatch the action processing:
+		//Since a phase may end and leave time for the next, this is done in a loop:
 		while ( (timeRemainingToProcess > 0)
 			     && (action_ptr->ids.active == 1) && (action_ptr->ids.slotIsUsed == 1) ) {
 
 			assert(action_ptr->ids.phase < (int)actPhases::TOTAL);
 
+			//We get these here because an action might "morph" into another as part
+			//of its processing
+			int cat = action_ptr->ids.category;
+			int mode = action_ptr->ids.mode;
+			int scope = action_ptr->ids.scope;
+			//phases also naturally progress during processing
+			int phase = action_ptr->ids.phase;
+
 			//first we tick the action and receive any time still to be processed:
 			timeRemainingToProcess = 
-				g_processingFunctions[scope][cat][mode].onTick[action_ptr->ids.phase](
-														timeRemainingToProcess, action_ptr);
+				g_processingFunctions[scope][cat][mode].onTick[phase](timeRemainingToProcess, 
+					                                                              action_ptr);
 			
 			//if that is larger then zero, we didn't process as much time as we'd like:
 			//that's because we've reached a phase end, so we must process that:
 			if (timeRemainingToProcess > 0) {
 				//which will do any end-of-phase effect and advance phase or deactivate action
-				g_processingFunctions[scope][cat][mode].onEnd[action_ptr->ids.phase](
-																				action_ptr);
+				g_processingFunctions[scope][cat][mode].onEnd[phase](action_ptr);
 				//since there's timeRemainingToProcess, we'll loop after this
 			}
 		}	
-		
 		//Done, the action was processed until it consumed all the step time or was deactivated
 	}
 
