@@ -41,8 +41,8 @@ namespace AS {
 
 	//These are the defaulf Processing functions:
 	void defaultOnSpawn(actionData_t* action_ptr);
-	//The default tick ticks for tickTenthsOfMs or until the phase ends, 
-	//and returns any remaining time
+	//The default tick ticks for tickTenthsOfMs or until the phase ends. 
+	//Either way, returns the time effectively ticked.
 	uint32_t defaultTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 	void defaultPhaseEnd(actionData_t* action_ptr);
 
@@ -53,7 +53,9 @@ namespace AS {
 	void defaultConclusionEnd(actionData_t* action_ptr);
 
 	uint32_t passtroughTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
+	uint32_t justEndThePhase(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 	uint32_t chargingTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
+	
 	void intensityToRatePrepEnd(actionData_t* action_ptr);
 
 	//And these are specific variation processing functions:
@@ -287,7 +289,8 @@ namespace AS {
 			action_ptr->phaseTiming.elapsed += tickTenthsOfMs;
 			return tickTenthsOfMs; //all time consumed
 		}
-		else {
+		else { //phase has less than a full tick remaining
+			action_ptr->phaseTiming.elapsed += timeRemainingOnPhase;
 			return timeRemainingOnPhase;
 		}
 	}
@@ -330,6 +333,11 @@ namespace AS {
 	uint32_t passtroughTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
 
 		return tickTenthsOfMs;
+	}
+
+	uint32_t justEndThePhase(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
+
+		return 0;
 	}
 
 	uint32_t chargingTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
@@ -630,15 +638,93 @@ namespace AS {
 		//This makes the attack happen and builds up an "score" of the fight in processingAux. 
 		//The tides of the battle depend on a random factor, the forces and the score;
 		//The score is used as a "morale", and dictates the pace of the fight (time advanced).
-		//If the fight's time ends, whoever the socre favours wins (dealt with on effectEnd).
+		//If the fight's time ends, whoever the score favours wins (dealt with on effectEnd).
 		//If either side goes out of troops, they loose:
 		//The score is changed to reflect that and we tick for zero time to end the phase.
 		//The score will also later be used to calculate loot, in case the attacker wins.		
 
+		assert(action_ptr->details.intensity > 0); //should have ended otherwise
 
+		int defender = action_ptr->ids.target;
+		auto defendersStrData_ptr = 
+			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(defender).parameters.strenght);
 
-		//Finally, we pass the time (modified by the score or zero if no troops):
-		return defaultTick(tickTenthsOfMs, action_ptr);
+		float defences = defendersStrData_ptr->current + defendersStrData_ptr->externalGuard;
+		
+		assert(defences > 0); //should have ended otherwise
+
+		//The score is stored in aux. Positive score: attacker winning. It's also a morale:
+		float effectiveDefences = defences * (1 - action_ptr->details.processingAux);
+		
+		float* intensity_ptr = &(action_ptr->details.intensity);
+		
+		float effectiveAttack = (*intensity_ptr) * (1 + action_ptr->details.processingAux);
+
+		//each tick we calculate the score for this round of fighting:
+		float balancePoint = effectiveAttack / (effectiveAttack + effectiveDefences);
+		//two prns are used to make the distribution a triangle centered on 0.5:
+		float draw = (g_prnServer_ptr->getNext() + g_prnServer_ptr->getNext()) / 2;
+
+		float scoreChange = balancePoint - draw; //this order preserves the meaning of score
+		action_ptr->details.processingAux += scoreChange;
+
+		//The, how many troops each side lost:
+		float totalForces = defences + (*intensity_ptr);
+		
+		uint32_t referenceTime = AS::ATT_I_L_prepTime(totalForces);
+		float timeImpact = (float)( (double)tickTenthsOfMs / (double)referenceTime );
+
+		float totalLosses = totalForces * std::abs(scoreChange) * timeImpact;
+	
+		*intensity_ptr -= totalLosses * (draw / balancePoint);
+		float defendersLosses = totalLosses * ( (1 - draw)/(1 - balancePoint) );
+
+		//For the defender, we take away the guard first:
+		if (defendersStrData_ptr->externalGuard >= defendersLosses) {
+			defendersStrData_ptr->externalGuard -= defendersLosses;
+		}
+		else {
+			defendersLosses -= defendersStrData_ptr->externalGuard;
+			defendersStrData_ptr->externalGuard = 0;
+			defendersStrData_ptr->current -= defendersLosses;
+		}
+
+		//Now we check if both sides still have troops:
+		bool keepFighting = true;
+		if ((defendersStrData_ptr->current < 0) || ( (*intensity_ptr) < 0)) { //both alive
+			if ((defendersStrData_ptr->current < 0) && ((*intensity_ptr) < 0)) {//both dead
+
+				action_ptr->details.processingAux = 0;
+				keepFighting = false;
+			}
+			else if (defendersStrData_ptr->current < 0) { //defenders dead
+				//Only score >= 0 makes sense, so:
+				action_ptr->details.processingAux = 
+					std::max(0.0f, action_ptr->details.processingAux);
+				//Score == 0: "attackers were retreating and beat defenders"
+			}
+			else { //attackers dead
+				//Same idea, but in reverse:
+				action_ptr->details.processingAux = 
+					std::min(0.0f, action_ptr->details.processingAux);
+			}
+		}
+
+		//We can now deal with ticking:
+		uint32_t tick = 
+			(uint32_t)(keepFighting * tickTenthsOfMs * action_ptr->details.processingAux);
+		
+		if (keepFighting) {
+			
+			uint32_t timeAdvanced = defaultTick(tick, action_ptr);
+
+			if (timeAdvanced == tick) { //the action still has time
+				return tickTenthsOfMs; //so we let the control loop know that;
+			}
+		}
+		
+		//If we get here, either the figh has ended or the time is up. Either way:
+		return 0; //to trigger the phase's onEnd.
 	}
 
 	void ATT_I_L_EffectEnd(actionData_t* action_ptr) {
