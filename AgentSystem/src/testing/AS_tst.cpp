@@ -43,7 +43,10 @@ namespace AS {
 	extern networkParameters_t* currentNetworkParams_ptr;
 
 	bool testWarningAndErrorCountingAndDisplaying(bool printResults) {
-		LOG_WARN("Will test counting and displaying errors and warnings");
+		
+		LOG_DEBUG("Will test counting and displaying errors and warnings\n", 1);
+		GETCHAR_PAUSE;
+
 		LOG_CRITICAL("Warning and Error messages are EXPECTED below this");
 
 		int testSpurtTicks = 4*5;
@@ -127,7 +130,9 @@ namespace AS {
 
 	//TODO: expand test
 	bool testActionVariationsInfo(bool printResults) {
-		LOG_WARN("Will test acquiring information about action variations");
+		
+		LOG_DEBUG("Will test acquiring information about action variations", 1);  
+		GETCHAR_PAUSE;
 
 		//not + spc + std = cats x modes x scopes
 		//expected: 6 NOT + 20 STD + 22 SPC = 48 = 8 x 3 x 2
@@ -213,7 +218,9 @@ namespace AS {
 	}
 
 	bool testChoppedPRNdrawing(bool printResults, bool dump) {
-		LOG_WARN("Will test drawing PRNs in parts using the PRNserver class");
+		
+		LOG_DEBUG("Will test drawing PRNs in parts using the PRNserver class\n", 1);
+		GETCHAR_PAUSE;
 
 		PRNserver* server = new PRNserver();
 		
@@ -240,7 +247,9 @@ namespace AS {
 
 	//TODO: some of the sub-tests can be extracted into FlagField functionality and tests
 	bool testNeighbourIDsetting() {
-		LOG_WARN("Will test setting neighbour IDs for LAs and GAs based on connections");
+
+		LOG_DEBUG("Will test setting neighbour IDs for LAs and GAs based on connections\n", 1);
+		GETCHAR_PAUSE;
 		
 		//First we will test the LA side: 
 		AS::LAlocationAndConnectionData_t connectionData;
@@ -400,7 +409,7 @@ namespace AS {
 
 	bool testGotNewValuesFromASthroughCL() {
 		
-		LOG_WARN("Will test changes issued by the Client to the AS through the CL...");
+		LOG_DEBUG("Will test changes issued by the Client to the AS through the CL...", 1);
 
 		if ((&actionSystem == NULL) || (!agentDataControllerPtrs.haveBeenCreated) ||
 			(!agentDataControllerPtrs.haveData) || (currentNetworkParams_ptr == NULL) ||
@@ -509,7 +518,8 @@ namespace AS {
 
 	bool testDataTransferFromAStoCL(void) {
 
-		LOG_WARN("Will Try to transfer data from AS to CL...");
+		LOG_DEBUG("Will Try to transfer data from AS to CL...\n", 1);
+		GETCHAR_PAUSE;
 
 		if (!CL::isASdataPointerInitialized()) {
 			LOG_ERROR("As mirror on CL is not yet initialized.");
@@ -577,14 +587,18 @@ namespace AS {
 
 bool AS::testContainersAndAgentObjectCreation() 
 {
-	LOG_WARN("Going to test AS data containers and Agent Object instantiation...");
+	LOG_DEBUG("Going to test AS data containers and Agent Object instantiation...\n", 1);
+	GETCHAR_PAUSE;
+
 	bool result = AS::testDataContainerCapacity(AS::agentDataControllers_cptr);
 	result &= AS::testAgentDataClassCreation();
 	return result;
 }
 
 bool AS::testFileCreation(std::string nameNoDefaults, std::string nameWithDefaults) {
-	LOG_WARN("Will test file creation, with and withouth defaults");
+	
+	LOG_DEBUG("Will test file creation, with and withouth defaults\n", 1);
+	GETCHAR_PAUSE;
 
 	int result = AS::createEmptyNetworkFile(nameNoDefaults, nameNoDefaults, TST_NUMBER_LAS, 
 						    TST_NUMBER_GAS, MAX_LA_NEIGHBOURS, MAX_ACTIONS_PER_AGENT, false);
@@ -747,6 +761,10 @@ namespace AS_TST {
 //TODO: GRAPH the files. Look at them plus results. Adjust CHANGES if needed.
 bool AS::testUpdateRead(bool printResults, bool dumpInfo, std::string filename, 
 	                                bool zeroReadPrnOnDump, bool overwriteDump) {
+	
+	LOG_DEBUG("Will test agent's reads\n", 1);
+	GETCHAR_PAUSE;
+	
 	//some definitions:
 	enum testSteps {CHANGES = 2000, INTERPOLATIONS = AS_TOTAL_CHOPS,
 							 TOTAL_STEPS = CHANGES*INTERPOLATIONS};

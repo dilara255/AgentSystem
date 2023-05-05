@@ -94,24 +94,23 @@ int main(void) {
 		printSteps = true;
 	#endif
 
-	LOG_INFO("Will first test some helper functionality:"); GETCHAR_PAUSE;
+	LOG_DEBUG("We will now run a few batteries of tests...\n",2); GETCHAR_PAUSE;
 
-	LOG_TRACE("Drawing many PRNs, one at a time:");
-	battery0[0] = AZ::testDraw1spcg32(); GETCHAR_PAUSE;
+	LOG_INFO("Will first test some helper functionality:\n", 1); GETCHAR_PAUSE;
 
-	LOG_TRACE("Drawing many PRNs, four at a time:");
-	battery0[1] = AZ::testDraw4spcg32s(); GETCHAR_PAUSE;
+	battery0[0] = AZ::testDraw1spcg32();
 
-	battery0[2] = testSnooze(printSteps); GETCHAR_PAUSE;
+	battery0[1] = AZ::testDraw4spcg32s();
 
-	LOG_TRACE("Will test Flag Field functionality...");
-	battery0[3] = AZ::testFlagFields(printSteps); GETCHAR_PAUSE;
+	battery0[2] = testSnooze(printSteps);
 
-	battery0[4] = AS::testActionVariationsInfo(printSteps); GETCHAR_PAUSE;
+	battery0[3] = AZ::testFlagFields(printSteps);
 
-	battery0[5] = AS::testMultipleAgentChopCalculations(printSteps); GETCHAR_PAUSE;
+	battery0[4] = AS::testActionVariationsInfo(printSteps);
 
-	battery0[6] = AS::testWarningAndErrorCountingAndDisplaying(printSteps); GETCHAR_PAUSE;
+	battery0[5] = AS::testMultipleAgentChopCalculations(printSteps);
+
+	battery0[6] = AS::testWarningAndErrorCountingAndDisplaying(printSteps);
 
 	int resultsBattery0 = 0;
 	for(int i = 0; i < HELPER_FUNC_TESTS; i++) { 
@@ -119,29 +118,29 @@ int main(void) {
 	}
 
 	if (resultsBattery0 != HELPER_FUNC_TESTS) {
-		LOG_CRITICAL("Not all of these tests passed:");
+		LOG_CRITICAL("Not all of these tests passed:", 1);
 		printf("%d out of %d failed", HELPER_FUNC_TESTS - resultsBattery0, HELPER_FUNC_TESTS);
 		GETCHAR_PAUSE;
 	}
 	else {
-		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
+		LOG_INFO("All of these tests passed!", 1); 
+		GETCHAR_PAUSE;
 	}
 
-	testSayHello();
+	LOG_DEBUG("Basic App, AS and CL communicaton and data storage tests:\n",1); GETCHAR_PAUSE;
 
-	LOG_INFO("AS, CL-internal and CL-external should have said hello above : )");
-	LOG_TRACE("This will run a few batteries of tests..."); GETCHAR_PAUSE;
-
-	LOG_INFO("Basic App, AS and CL communicaton and data storage tests:\n",1); GETCHAR_PAUSE;
-	battery1[0] = testMockData(); GETCHAR_PAUSE;
+	testSayHello(); //nothing to test automatically. TODO: make it do so
+		
+	battery1[0] = testMockData();
 	
-	LOG_TRACE("Actual initialization tests...");
+	LOG_DEBUG("Actual initialization tests...", 1);
 
-	battery1[1] = AS::initializeASandCL(); GETCHAR_PAUSE;
+	LOG_DEBUG("Will test the API`s AS::initializeASandCL()\n", 1); GETCHAR_PAUSE;
+	battery1[1] = AS::initializeASandCL(); 
 
-	battery1[2] = AS::testContainersAndAgentObjectCreation(); GETCHAR_PAUSE;
+	battery1[2] = AS::testContainersAndAgentObjectCreation();
 
-	battery1[3] = testFromTAifCLhasInitialized(); GETCHAR_PAUSE;
+	battery1[3] = testFromTAifCLhasInitialized();
 
 	int resultsBattery1 = 0;
 	for(int i = 0; i < BASIC_INIT_COMM_TESTS; i++) { 
@@ -149,42 +148,43 @@ int main(void) {
 	}
 
 	if (resultsBattery1 != BASIC_INIT_COMM_TESTS) {
-		LOG_CRITICAL("Not all of these tests passed:");
+		LOG_CRITICAL("Not all of these tests passed:", 1);
 		printf("%d out of %d failed", BASIC_INIT_COMM_TESTS - resultsBattery1, BASIC_INIT_COMM_TESTS);
 		GETCHAR_PAUSE;
 	}
 	else {
-		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
+		LOG_INFO("All of these tests passed!", 1); GETCHAR_PAUSE;
 	}
 
-	LOG_INFO("Specific functionality tests (DATA manipulation):\n",1); GETCHAR_PAUSE;
+	LOG_DEBUG("Specific functionality tests (DATA manipulation):\n",1); GETCHAR_PAUSE;
 	
 	battery2[0] = AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
-	GETCHAR_PAUSE;
 
-	LOG_WARN("Will test loading network from a File and then saving it back with network name");
+	LOG_DEBUG("Will test loading network from a File\n", 1); GETCHAR_PAUSE;
 	battery2[1] = AS::loadNetworkFromFile(fileNameWithDefaults, false, false, false, true); 
-	GETCHAR_PAUSE;
 	
-	battery2[2] = AS::saveNetworkToFile(); GETCHAR_PAUSE;
+	LOG_DEBUG("Will test saving back the network\n", 1); GETCHAR_PAUSE;	
+	battery2[2] = AS::saveNetworkToFile();
 
-	battery2[3] = AS::testDataTransferFromAStoCL(); GETCHAR_PAUSE;
+	battery2[3] = AS::testDataTransferFromAStoCL();
 	
-	battery2[4] = testReadingCLdataFromTA(); GETCHAR_PAUSE;
+	battery2[4] = testReadingCLdataFromTA(); 
 
-	battery2[5] = testChangingCLdataFromTAandRetrievingFromAS(); GETCHAR_PAUSE;
+	battery2[5] = testChangingCLdataFromTAandRetrievingFromAS();
 
+	LOG_DEBUG("Will test saving back the modified network with another name\n", 1); 
+	GETCHAR_PAUSE;	
 	//TODO: why does this take a while to start? Other saves are fast
 	//Seems to only be the case in debug. Idk, really weird
-	battery2[6] = AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
+	battery2[6] = AS::saveNetworkToFile(customFilename, true); 
 
-	battery2[7] = AS::testNeighbourIDsetting(); GETCHAR_PAUSE;
+	battery2[7] = AS::testNeighbourIDsetting(); 
 
-	battery2[8] = AS::testChoppedPRNdrawing(printSteps, true); GETCHAR_PAUSE;
+	battery2[8] = AS::testChoppedPRNdrawing(printSteps, true); 
 
-	battery2[9] = AS::testDecisionStepTiming(printSteps); GETCHAR_PAUSE;
+	battery2[9] = AS::testDecisionStepTiming(printSteps); 
 
-	battery2[10] = AS::testUpdateRead(true, false, readUpdatingTestFilename); GETCHAR_PAUSE;
+	battery2[10] = AS::testUpdateRead(true, false, readUpdatingTestFilename);
 
 	int resultsBattery2 = 0;
 	for(int i = 0; i < SPECIFIC_DATA_FUNCTIONALITY_TESTS; i++) { 
@@ -192,46 +192,48 @@ int main(void) {
 	}
 
 	if (resultsBattery2 != SPECIFIC_DATA_FUNCTIONALITY_TESTS) {
-		LOG_CRITICAL("Not all of these tests passed:");
+		LOG_CRITICAL("Not all of these tests passed:", 1);
 		printf("%d out of %d failed", SPECIFIC_DATA_FUNCTIONALITY_TESTS - resultsBattery2, 
 			                                             SPECIFIC_DATA_FUNCTIONALITY_TESTS);
 		GETCHAR_PAUSE;
 	}
 	else {
-		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
+		LOG_INFO("All of these tests passed!", 1); GETCHAR_PAUSE;
 	}
 	
 	LOG_INFO("Specific functionality tests involving main loop thread:\n",1); GETCHAR_PAUSE;
 
-	battery3[0] = testMainLoopErrors(customFilename); GETCHAR_PAUSE;
+	battery3[0] = testMainLoopErrors(customFilename); 
 
-	LOG_WARN("Will re-load the previously modified network for further testing");
-	battery3[1] = AS::loadNetworkFromFile(customFilename, true); GETCHAR_PAUSE;
+	LOG_DEBUG("Will re-load the previously modified network for further testing\n", 1); GETCHAR_PAUSE;
+	battery3[1] = AS::loadNetworkFromFile(customFilename, true); 
 
-	battery3[2] = testReadingTickDataWhileASmainLoopRuns_start(); GETCHAR_PAUSE;
+	battery3[2] = testReadingTickDataWhileASmainLoopRuns_start(); 
 	
-	battery3[3] = testReadingTickDataWhileASmainLoopRuns_end(); GETCHAR_PAUSE;
+	battery3[3] = testReadingTickDataWhileASmainLoopRuns_end(); 
 
-	battery3[4] = AS::saveNetworkToFile(customFilename, true); GETCHAR_PAUSE;
+	LOG_DEBUG("Will save again\n", 1); GETCHAR_PAUSE;
+	battery3[4] = AS::saveNetworkToFile(customFilename, true);
 
 	//Also saves another network, with steps, and resumes it:
-	battery3[5] = testClientDataHAndlerInitialization(); GETCHAR_PAUSE;
+	battery3[5] = testClientDataHAndlerInitialization(); 
 
-	battery3[6] = testSendingClientDataAndSaving(); GETCHAR_PAUSE;
+	battery3[6] = testSendingClientDataAndSaving(); 
 
-	battery3[7] = testPause(printSteps); GETCHAR_PAUSE;
+	battery3[7] = testPause(printSteps); 
 
-	battery3[8] = AS::quit(); GETCHAR_PAUSE;
+	LOG_DEBUG("Will test quitting the AS\n", 1); GETCHAR_PAUSE;
+	battery3[8] = AS::quit();
 
-	battery3[9] = testAgentsUpdating(printSteps); GETCHAR_PAUSE;
+	battery3[9] = testAgentsUpdating(printSteps); 
 	
-	battery3[10] = testAgentsUpdating(printSteps, true); GETCHAR_PAUSE;
+	battery3[10] = testAgentsUpdating(printSteps, true); 
 
-	battery3[11] = testReads(printSteps); GETCHAR_PAUSE;
+	battery3[11] = testReads(printSteps);
 
 	battery3[12] = 
 			testDecisionsAndActionsForThrownErrorsAndCalculateTiming(printSteps, true);
-	GETCHAR_PAUSE;
+	
 	
 	int resultsBattery3 = 0;
 	for(int i = 0; i < SPECIFIC_THREADED_LOOP_TESTS; i++) { 
@@ -239,23 +241,23 @@ int main(void) {
 	}
 
 	if (resultsBattery3 != SPECIFIC_THREADED_LOOP_TESTS) {
-		LOG_CRITICAL("Not all of these tests passed:");
+		LOG_CRITICAL("Not all of these tests passed:", 1);
 		printf("%d out of %d failed", SPECIFIC_THREADED_LOOP_TESTS - resultsBattery3,
 			SPECIFIC_THREADED_LOOP_TESTS);
 		GETCHAR_PAUSE;
 	}
 	else {
-		LOG_INFO("All of these tests passed!"); GETCHAR_PAUSE;
+		LOG_INFO("All of these tests passed!", 1); GETCHAR_PAUSE;
 	}
 
-	LOG_TRACE("Tests ended...\n",1); GETCHAR_PAUSE;
+	LOG_DEBUG("Tests ended...\n", 1); GETCHAR_PAUSE;
 
 	int totalPassed = resultsBattery0 + resultsBattery1 + resultsBattery2 + resultsBattery3;
 	if (totalPassed == TOTAL_TESTS) {
-		LOG_INFO("All automatically checked tests passed!"); GETCHAR_PAUSE;
+		LOG_INFO("All automatically checked tests passed!", 1); GETCHAR_PAUSE;
 	}
 	else {
-		LOG_CRITICAL("Not all tests were passed (as far as we checked)!");
+		LOG_CRITICAL("Not all tests were passed!", 1);
 		printf("%d out of %d failed\n", TOTAL_TESTS - totalPassed, TOTAL_TESTS);
 
 		printFailedTests();
@@ -264,7 +266,7 @@ int main(void) {
 	}
 
 	//TODO: Update expected changes after I'm done updating it
-	LOG_WARN("Check that you have (at least): one network file with format specifiers,\none with default values and one with modified values:");
+	LOG_DEBUG("Check that you have (at least): one network file with format specifiers,\none with default values and one with modified values:", 1);
 	printf("\t-The one with specifiers is %s\n\t-%s should have the defaults\n\t-%s received modifications from TA\n",
 		                              fileNameNoDefaults, fileNameWithDefaults, customFilename);
 	printf("\nThe modified file has different data:\n\t-The comment's first letter should be a %c;\n\t-Ticks should be the number of times mainLoopTrhead looped before last save;\n",TST_COMMENT_LETTER_CHANGE);
@@ -274,13 +276,15 @@ int main(void) {
 	
 	GETCHAR_FORCE_PAUSE;
 
-	LOG_INFO("Done! Enter to exit"); GETCHAR_FORCE_PAUSE;
-	return (1 + (totalPassed - TOTAL_TESTS));
+	LOG_INFO("Done! Enter to exit", 1); GETCHAR_FORCE_PAUSE;
+	return (TOTAL_TESTS - totalPassed);
 }
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 bool testSnooze(bool printLog) {
-	LOG_TRACE("Will test sleeping and waking a few times...");
+	
+	LOG_DEBUG("Will test sleeping and waking a few times...\n", 1); 
+	GETCHAR_PAUSE; 
 
 	double result = AZ::testHybridBusySleeping(printLog); 
 
@@ -295,7 +299,9 @@ bool testSnooze(bool printLog) {
 //timing data, including amount of active actions for each tick.
 //Fails in case mainLoop finds errors or updating of the timing data doesn't work.
 bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool dump) {
-	LOG_WARN("Will load a network, run it with decisions and actions and check for errors, while logging performance");
+	
+	LOG_DEBUG("Will load a network, run it with decisions and actions and check for errors, while logging performance\n", 1);
+	GETCHAR_PAUSE;
 	
 	bool result = AS::loadNetworkFromFile(fileNameWithDefaults, false);
 	if (!result) {
@@ -530,7 +536,9 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 //Loads a network, sets some values, runs it, checks new values, saves, loads, checks again
 //TODO: check all fields, better sanity checking
 bool testReads(bool print, float secondsToRun) {
-	LOG_WARN("Will load a network, run for several ticks, stop it, and check reads");
+	
+	LOG_DEBUG("Will load a network, run for several ticks, stop it, and check reads\n", 1);
+	GETCHAR_PAUSE;
 	
 	//Load, but don't start, so we can calculate and set test conditions:
 	bool result = AS::loadNetworkFromFile(fileNameWithDefaults, false);
@@ -777,8 +785,15 @@ bool testReads(bool print, float secondsToRun) {
 //TODO: make a more interesting test-case using clientDataHandler (include war/attrition)
 //TODO: this is really brittle : /
 bool testAgentsUpdating(bool print, bool fixedAndStepped) {
-	LOG_WARN("Will load a network, run for several ticks, stop it, and check agent updating");
-	
+
+	if(fixedAndStepped){
+		LOG_DEBUG("Will load a network, run for several ticks with FIXED timestep, stop it, and check agent updating\n", 1);
+	}
+	else {
+		LOG_DEBUG("Will load a network, run for several ticks with VARIABLE timestep, stop it, and check agent updating\n", 1);
+	}
+	GETCHAR_PAUSE;
+
 	//Load, but don't start, so we can calculate and set test conditions:
 	bool result = AS::loadNetworkFromFile(updateTestFilename, false);
 	if (!result) {
@@ -1135,8 +1150,9 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 
 #define TST_TICKS_MAINLOOP_ERRORS (AS_TOTAL_CHOPS*25)
 bool testMainLoopErrors(std::string filename) {
-	LOG_WARN("Will load a network, run for several ticks, stop it, and check for errors");
 	
+	LOG_DEBUG("Will load a network, run for several ticks, stop it, and check for errors\n", 1);
+	GETCHAR_PAUSE;
 	bool result = AS::loadNetworkFromFile(filename, true);
 	if (!result) {
 		LOG_ERROR("Failed to Load test network. Aborting test");
@@ -1156,8 +1172,9 @@ bool testMainLoopErrors(std::string filename) {
 }
 
 bool testPause(bool printLog, int pauseUnpauseCycles) {
-	LOG_WARN("Will test pausing and resuming the main loop");
 
+	LOG_DEBUG("Will test pausing and resuming the main loop\n", 1);
+	GETCHAR_PAUSE;
 
 	if (!AS::isMainLoopRunning()) {
 		LOG_ERROR("This test needs main loop to already be running. Aborting");
@@ -1282,7 +1299,9 @@ bool testPause(bool printLog, int pauseUnpauseCycles) {
 }
 
 bool testSendingClientDataAndSaving(void) {
-	LOG_WARN("Will try to send data through CL's Client Data Handler");
+
+	LOG_DEBUG("Will try to send data through CL's Client Data Handler\n", 1);
+	GETCHAR_PAUSE;
 
 	if (!AS::isMainLoopRunning()) {
 		LOG_ERROR("This test expects the mainLoop to be running");
@@ -1324,7 +1343,9 @@ bool testSendingClientDataAndSaving(void) {
 }
 
 bool testClientDataHAndlerInitialization(void) {
-	LOG_WARN("Will test ClientDataHandler acquisition");
+	
+	LOG_DEBUG("Will test ClientDataHandler acquisition\n", 1);
+	GETCHAR_PAUSE;
 
 	auto cdHandler_ptr = CL::getClientDataHandlerPtr();
 
@@ -1365,8 +1386,9 @@ void TAreadLoop(int numberTicks) {
 //WARNING: this is fairly brittle, check actual results on failing
 bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
-	LOG_WARN("Will check if reader thread's results are as expected. May need to wait for execution to finish");
-	
+	LOG_DEBUG("Will check if reader thread's results are as expected. May need to wait for execution to finish\n",1);
+	GETCHAR_PAUSE;
+
 	bool result = false;
 	if (reader.joinable()) {
 		reader.join();
@@ -1499,7 +1521,8 @@ bool testReadingTickDataWhileASmainLoopRuns_end(void) {
 
 bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 
-	LOG_WARN("Will spawn a new thread which will try to read a few times from CL the number of ticks while AS's main loop runs");
+	LOG_DEBUG("Will spawn a new thread which will try to read a few times from CL the number of ticks while AS's main loop runs\n", 1);
+	GETCHAR_PAUSE;
 
 	if (!AS::isMainLoopRunning() || !AS::chekIfMainLoopShouldBeRunning()) {
 		LOG_CRITICAL("Main loop has to be running for this test to work");
@@ -1524,7 +1547,8 @@ bool testReadingTickDataWhileASmainLoopRuns_start(void) {
 //Changes: Comment, GAid, GAconn, Guard, LA GA offsets, aux
 bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 	
-	LOG_WARN("TA will try to change some data in CL so AS can check it...");
+	LOG_DEBUG("TA will try to change some data in CL so AS can check it...\n",1);
+	GETCHAR_PAUSE;
 	
 	LOG_TRACE("Will acquire pointers to the DATA on AS and CL");
 
@@ -1617,7 +1641,8 @@ bool testChangingCLdataFromTAandRetrievingFromAS(void) {
 
 bool testReadingCLdataFromTA(void) {
 
-	LOG_WARN("TA will try to read data from CL...");
+	LOG_DEBUG("TA will try to read data from CL...\n", 1);
+	GETCHAR_PAUSE;
 
 	bool result = CL::ASmirrorData_cptr->agentMirrorPtrs.haveData;
 	result &= CL::ASmirrorData_cptr->networkParams.isNetworkInitialized;
@@ -1674,7 +1699,8 @@ bool testReadingCLdataFromTA(void) {
 
 bool testFromTAifCLhasInitialized(void) {
 
-	LOG_WARN("TA will querry wether CL's Data Controller are properly initialized...");
+	LOG_DEBUG("TA will querry wether CL's Data Controllers are properly initialized...\n", 1);
+	GETCHAR_PAUSE;
 
 	bool result = CL::ASmirrorData_cptr->actionMirror.isInitialized();
 	result &= CL::ASmirrorData_cptr->agentMirrorPtrs.haveBeenCreated;
@@ -1748,7 +1774,8 @@ bool testFromTAifCLhasInitialized(void) {
 
 bool testMockData(void) {
 
-	LOG_WARN("Sanity checks for the communication between APP and DLLs (with mock initialization)");
+	LOG_DEBUG("Sanity checks for the communication between APP and DLLs (with mock initialization)\n", 1);
+	GETCHAR_PAUSE;
 
 	AS::CLsanityTest();
 
@@ -1786,10 +1813,16 @@ bool testMockData(void) {
 }
 
 void testSayHello(void) {
-	
+	//TODO: sayHello()s should return char*m to be tested and printed
+	//This way we can programatically test the results
+	//The strings should be predifined
+
+	LOG_DEBUG("We will test basic communication with the dlls\n",1);
+	GETCHAR_PAUSE;
+
 	AS::sayHello();
 
 	CL::sayHelloExternal();
 	
-	GETCHAR_PAUSE;
+	LOG_INFO("AS, CL-internal and CL-external should have said hello above : )");
 }

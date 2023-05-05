@@ -6,14 +6,12 @@
 #include "timeHelpers.hpp"
 #include "flagFields.hpp"
 
-//TODO: create "AS_testsAPI", move declarations there (as well as those currently on AS_API)
-//move definitions to cpp file
+//TODO: move declarations to AS_testsAPIT and move the definitions to cpp file
 namespace AZ{
 
 	static bool specificFlagField32Test(FlagField32* flags, uint32_t testField,
   		     int testBit, int initialExpectedOn, int testBitInitialExpectation, 
 		                                                      bool log = false) {
-
 		int testsDone = 0;
 
 		flags->loadField(testField);
@@ -79,7 +77,6 @@ namespace AZ{
 	static bool specificFlagField128Test(FlagField128* flags, uint32_t testField, int blockTo,
 						    int testBit, int initialExpectedOn, int testBitInitialExpectation,
    		                                                                     bool log = false) {
-
 		int testsDone = 0;
 
 		flags->loadField(testField, blockTo);
@@ -147,6 +144,9 @@ namespace AZ{
 	//-Count of on flags, along the way.
 	//Returns false if any test fails.
 	static bool testFlagFields(bool log = false) {
+		
+		LOG_DEBUG("Will test Flag Field functionality\n", 1); 
+		GETCHAR_PAUSE;
 
 		uint32_t full = 0b11111111111111111111111111111111;
 		uint32_t empty = 0b00000000000000000000000000000000;
@@ -257,6 +257,10 @@ namespace AZ{
     //Returns true if all tests pass. Defaults to 100M draws, minimum 16.
 	//If log == true, logs to output (eg, console) the time per draw
 	static bool testDraw4spcg32s(bool log = true, int64_t howManyTuplesToDraw = 128000) {
+		
+		LOG_DEBUG("Will test PRN system: draw 4 at a time\n", 1); 
+		GETCHAR_PAUSE;
+
 		const int mininumTotalDrawn = 16;
 
 		if (howManyTuplesToDraw < (mininumTotalDrawn / DRAW_WIDTH)) {
@@ -379,6 +383,9 @@ namespace AZ{
 	static bool testDraw1spcg32(bool log = true, int64_t howManyToDraw = 128000) {
 			const int mininumTotalDrawn = 16;
 
+		LOG_DEBUG("Will test PRN system: draw 1 at a time\n", 1); 
+		GETCHAR_PAUSE;
+
 		if (howManyToDraw < mininumTotalDrawn) {
 			if (log) {
 				puts("Too few tuples for test to run properly, aborting with false");
@@ -485,7 +492,7 @@ namespace AZ{
 		return result;
 	}
 
-	//used of the following test
+	//used by the following test
 	void makeParallelLoad(float loadLevel, std::chrono::microseconds testSleepTime);
 	bool g_stopParallelLoad = false;
 	inline bool sleepAndLog(std::chrono::microseconds sleepTestTime, int loadLevel, 
@@ -499,9 +506,7 @@ namespace AZ{
 	#define LOAD_THRESHOLD_COMBINATIONS (QUANTITY_LOADS*QUANTITY_THRESHOLDS)
 	#define SLEEP_REPETITIONS 10
 	#define RUNS_FOR_BASELINE 25
-	#define BASELINE_MULTIPLIER_GRACE 10
-
-	
+	#define BASELINE_MULTIPLIER_GRACE 10	
 
     //Sleeps from minimumSleepTimeMicros to maximumSleepTimeMicros, increasing by
 	//multiplications of 4. Always includes maximumSleepTimeMicros.
@@ -515,6 +520,8 @@ namespace AZ{
 	static double testHybridBusySleeping(
 			bool log = true, int minimumSleepTimeMicros = 17, 
 		    int maximumSleepTimeMicros = 17408, double margin = 0.005) {
+
+		LOG_DEBUG("Will test sleeping functionality", 1);
 
 		float loads[QUANTITY_LOADS];
 		loads[0] = 0;

@@ -102,15 +102,6 @@ void timeOperation(std::chrono::steady_clock::time_point lastReferenceTime,
 	                                           int64_t* counterToIncrement);
 void calculateAndPrintMainTimingInfo(AS::timing_st timingMicros);
 
-bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
-							 std::thread::id* mainLoopId_ptr,
-	                         std::thread* mainLoopThread_ptr,
-						     ActionSystem* actionSystem_ptr, 
-							 dataControllerPointers_t* agentDataControllerPtrs_ptr,
-							 networkParameters_t* currentNetworkParams_ptr,
-	                         AS::PRNserver* prnServer_ptr);	
-	
-
 void AS::mainLoop(bool fixedTimeStep) {
 	//setup:
 	uint64_t minimumTicksPerErrorDisplay = 
@@ -641,6 +632,7 @@ bool AS::isMainLoopRunning() {
 }
 
 bool testAgentChopCalculation(int chopIndex, int decisionsMade, int numberAgents, bool log) {	
+	
 	int firstTestChop = chopIndex;
 	int chopIndexSmallerThen = AS_TOTAL_CHOPS;
 
@@ -673,7 +665,9 @@ bool testAgentChopCalculation(int chopIndex, int decisionsMade, int numberAgents
 
 #define TST_CHOP_CALC_TEST_CASES 5
 bool AS::testMultipleAgentChopCalculations(bool log) {
-	LOG_WARN("Will test calculation of how many decisions to make per chop");
+
+	LOG_DEBUG("Will test calculation of how many decisions to make per chop\n", 1);
+	GETCHAR_PAUSE;
 
 	//Needs to initialize its own error counter for testing
 	WarningsAndErrorsCounter counter(0, 0);
@@ -725,8 +719,9 @@ bool AS::testMultipleAgentChopCalculations(bool log) {
 
 #define TST_DECISION_TIMING_FULL_LOOPS 5
 bool AS::testDecisionStepTiming(bool log) {
-	LOG_WARN("Will test timing of decision steps");
-
+	
+	LOG_DEBUG("Will test timing of decision steps\n", 1);
+	GETCHAR_PAUSE;
 	timing_st timingMicros;
 	chopControl_st chopControl;
 		
