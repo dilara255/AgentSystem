@@ -39,7 +39,8 @@ namespace az {
     //- Message, color coded by level and with time and project stamps; and
     //- Adds extraNewlinesAfter the message.
     void log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file, 
-             const int line, const char* message, uint32_t trailingNewlines = 0);
+             const int line, const char* message, uint32_t trailingNewlines = 0, 
+                                                           bool supress = false);
 
     uint16_t RGB24toRGB565(uint8_t r, uint8_t g, uint8_t b);
 }

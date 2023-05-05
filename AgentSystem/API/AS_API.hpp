@@ -23,7 +23,8 @@ namespace AS {
 	//WARNING: CLEARS active Network and Client Data Handler, no confirmation needed! 
 	//Any logic to save current network first and etc should be handled by the CLIENT.
 	AS_API bool loadNetworkFromFile(std::string name, bool runNetwork = false,
-		                            bool disableDecisions = false, bool blockActions = false);
+		                            bool disableDecisions = false, bool blockActions = false,
+		                            bool verbose = false);
 
 	#define RUN_INDEFINETELY (-1)
 	//Creates thread to run AS's main loop, if it doesn't exist already. Stores the thread::id.
