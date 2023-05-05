@@ -13,6 +13,8 @@
 #include "timeHelpers.hpp"
 #include "tests.hpp"
 
+#include "textViz.hpp"
+
 void testSayHello(void);
 bool testMockData(void);
 bool testSnooze(bool printLog = true);
@@ -161,7 +163,8 @@ int main(void) {
 	GETCHAR_PAUSE;
 
 	LOG_WARN("Will test loading network from a File and then saving it back with network name");
-	battery2[1] = AS::loadNetworkFromFile(fileNameWithDefaults); GETCHAR_PAUSE;
+	battery2[1] = AS::loadNetworkFromFile(fileNameWithDefaults, false, false, false, true); 
+	GETCHAR_PAUSE;
 	
 	battery2[2] = AS::saveNetworkToFile(); GETCHAR_PAUSE;
 

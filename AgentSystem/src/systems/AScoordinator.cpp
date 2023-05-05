@@ -162,7 +162,7 @@ bool AS::sendReplacementDataToCL(bool silent) {
 }
 
 namespace AS {
-	void clearNetwork() {
+	void clearNetwork(bool verbose = false) {
 		agentDataControllerPtrs.GAcoldData_ptr->clearData();
 		agentDataControllerPtrs.LAcoldData_ptr->clearData();
 		agentDataControllerPtrs.GAstate_ptr->clearData();
@@ -174,12 +174,12 @@ namespace AS {
 
 		actionSystem.getDataDirectPointer()->clearData();
 
-		LOG_TRACE("Network Cleared");
+		LOG_TRACE("Network Cleared", 0, verbose);
 	}
 }
 
-bool AS::loadNetworkFromFile(std::string name, bool runNetwork, 
-	                         bool disableDecisions, bool blockActions) {
+bool AS::loadNetworkFromFile(std::string name, bool runNetwork, bool disableDecisions, 
+	                                                  bool blockActions, bool verbose) {
 	
 	bool shouldBlockClientFromIssuingData = CL::isClintDataInitialized();
 	std::mutex* clientDataMutex_ptr = NULL;
@@ -191,7 +191,7 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork,
 			return false;
 		}
 		else {
-			LOG_TRACE("Mutex Acquired");
+			LOG_TRACE("Mutex Acquired", 0, verbose);
 		}
 	}
 
@@ -220,9 +220,9 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork,
 	}
 
 	if (shouldMainLoopBeRunning) {
-		LOG_TRACE("Will stop Main Loop Thread");
+		LOG_TRACE("Will stop Main Loop Thread", 0, verbose);
 		if(stop()){
-			LOG_TRACE("Thread stopped");
+			LOG_TRACE("Thread stopped", 0, verbose);
 		}
 		else {
 			LOG_WARN("Something weird is going on with the Main Loop Thread. Loading will proceed but may fail...");
@@ -230,10 +230,11 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork,
 	}
 
 	//in order to load the new data:
-	clearNetwork(); //this also re-initializes the action system with appropriate sizes
+	clearNetwork(verbose); //this also re-initializes the action system with appropriate sizes
 
 	strcpy(currentNetworkParams.name, name.c_str());
-	LOG_TRACE("File Acquired and of compatiple version. Network cleared and new name set");
+	LOG_TRACE("File Acquired and of compatiple version. Network cleared and new name set", 
+																			  0, verbose);
 
 	result = loadNetworkFromFileToDataControllers(fp, agentDataControllerPtrs, 
 		                                          currentNetworkParams_ptr,
@@ -241,11 +242,12 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork,
 		                                          disableDecisions, blockActions);
 
 	fclose(fp);
-	LOG_TRACE("File closed");
+	LOG_TRACE("File closed", 0, verbose);
 
 	if (!result) {
 		LOG_ERROR("Load failed mid-way through. Will clear the network.");
-		clearNetwork(); //we don't leave an incomplete state behind. Marks data as not initialized.
+		//we don't leave an incomplete state behind:
+		clearNetwork(verbose); //Also marks data as not initialized.
 		goto cleanUpAndReturn;
 	}
 
@@ -259,7 +261,7 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork,
 	if (clientDataMutex_ptr != NULL) {
 		clientDataMutex_ptr->unlock();
 		clientDataMutex_ptr = NULL; //so we don't try to release again later
-		LOG_TRACE("Mutex Released closed");
+		LOG_TRACE("Mutex Released closed", 0, verbose);
 	}
 
 	//TODO: Could this be just an update(), which clears + shrinks + reserves stuff?
@@ -286,17 +288,18 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork,
 cleanUpAndReturn:
 	if (fp != NULL) {
 		fclose(fp);
-		LOG_TRACE("File closed");
+		LOG_TRACE("File closed", 0, verbose);
 	}
 	if (clientDataMutex_ptr != NULL) {
 		clientDataMutex_ptr->unlock();
-		LOG_TRACE("Mutex Released");
+		LOG_TRACE("Mutex Released", 0, verbose);
 	}
 
 	return result; //not much info is given, but the app may decide what to do on failure
 }
 
-bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite, bool willResumeAfterSave, bool silent) {
+bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite, bool willResumeAfterSave, 
+																				bool silent) {
 	LOG_INFO("Trying to save network to a file...");
 
 	if (!isInitialized) {
@@ -369,7 +372,7 @@ bool AS::saveNetworkToFile(std::string name, bool shouldOverwrite, bool willResu
 	}
 
 	fclose(fp);
-	LOG_TRACE("File closed.");
+	if(!silent) { LOG_TRACE("File closed."); }
 	
 	if (shouldResumeThread) { 
 		if(!silent) { LOG_TRACE("File closed. Will resume mainLoop..."); }
