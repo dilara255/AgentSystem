@@ -1,13 +1,11 @@
 /*
-Classes and functions on this file are responsible for the coordination of the AS.
+The functions on this file are responsible for basic coordination of the AS.
 This includes:
 - Coordinating initialization and termination;
-- Main loop;
-- Access/references to the different systems;
-- Bulk data transfer to/from CL;
-(may separete some if this file gets too large)
+- Bulk data transfer from the AS to the CL;
+- Saving and loading;
 
-TODO-CRITICAL: Break up this file. Main loop should probably stay, move most of the rest
+It also holds the control structures to different subsystems and references to them
 */
 
 #include "miscStdHeaders.h"
@@ -16,8 +14,8 @@ TODO-CRITICAL: Break up this file. Main loop should probably stay, move most of 
 
 #include "CL_internalAPI.hpp"
 
-#include "network/parameters.hpp" //exposes "currentNetworkParams"
-#include "data/agentDataControllers.hpp" //exposes "dataControllers"
+#include "network/parameters.hpp"
+#include "data/agentDataControllers.hpp"
 #include "systems/actionSystem.hpp"
 
 #include "network/fileManager.hpp"
@@ -26,14 +24,11 @@ TODO-CRITICAL: Break up this file. Main loop should probably stay, move most of 
 
 #include "data/dataMisc.hpp"
 
-//TODO:
-// - Create control class with control structures as members
-
 bool isInitialized = false;
 
 namespace AS {
 	//these are the control structures/objects for the AS's main systems;
-	//they're kinda in global scope for this file for now : )
+	//TODO: Create control class to hold them
 	
 	bool shouldMainLoopBeRunning = false;
 	std::thread::id mainLoopId;

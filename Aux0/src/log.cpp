@@ -21,7 +21,8 @@ namespace az {
 	void log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file, 
 		const int line, const char* message, uint32_t trailingNewlines, bool supress) {
 		
-		if(!supress) { Log::log(logger, degree, file, line, message, trailingNewlines); }
+		if(!supress || (degree != L_TRACE) ) { 
+			Log::log(logger, degree, file, line, message, trailingNewlines); }
 	}
 
 	void Log::init() {
@@ -35,13 +36,15 @@ namespace az {
 			auto color_sink = 
 				static_cast<spdlog::sinks::stdout_color_sink_mt*>(s_AgentSystemLogger->sinks()[0].get());
 			color_sink->set_color(spdlog::level::trace, AZ_LOG_TRACE_COLOR);
-			color_sink->set_color(spdlog::level::info, AZ_LOG_INFO_COLOR);			
+			color_sink->set_color(spdlog::level::debug, AZ_LOG_DEBUG_COLOR);
+			color_sink->set_color(spdlog::level::info, AZ_LOG_INFO_COLOR);	
 
 			s_CommLayerLogger = spdlog::stdout_color_mt("CL");
 			s_CommLayerLogger->set_level(spdlog::level::trace);
 			color_sink =
 				static_cast<spdlog::sinks::stdout_color_sink_mt*>(s_CommLayerLogger->sinks()[0].get());
 			color_sink->set_color(spdlog::level::trace, AZ_LOG_TRACE_COLOR);
+			color_sink->set_color(spdlog::level::debug, AZ_LOG_DEBUG_COLOR);
 			color_sink->set_color(spdlog::level::info, AZ_LOG_INFO_COLOR);
 
 			s_TestAppLogger = spdlog::stdout_color_mt("TA");
@@ -49,6 +52,7 @@ namespace az {
 			color_sink =
 				static_cast<spdlog::sinks::stdout_color_sink_mt*>(s_TestAppLogger->sinks()[0].get());
 			color_sink->set_color(spdlog::level::trace, AZ_LOG_TRACE_COLOR);
+			color_sink->set_color(spdlog::level::debug, AZ_LOG_DEBUG_COLOR);
 			color_sink->set_color(spdlog::level::info, AZ_LOG_INFO_COLOR);
 			
 			s_DebugAuxLogger = spdlog::stdout_color_mt("DA");
@@ -89,6 +93,9 @@ namespace az {
 			break;
 		case L_CRITICAL:
 			logger->critical(message);
+			break;
+		case L_DEBUG:
+			logger->debug(message);
 			break;
 		default:
 		{

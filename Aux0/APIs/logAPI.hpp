@@ -17,7 +17,13 @@ TODO: Generalize the whole macro thingy and all that's associated with it
 
 //The default for the following definitions is 0
 
-//Setting this to anything but 0 makes release as verbose as debug.
+//All LOG_TRACE logs will be supressed if this is set to anything but 0
+#define SUPRESS_TRACES 0
+
+//Setting this to anything but 0 makes release supress only LOG_TRACEs
+#define RELEASE_SUPRESS_ONLY_TRACES 0
+
+//Setting this to anything but 0 makes release as verbose as debug
 #define VERBOSE_RELEASE 0
 
 //Setting this to anything but 0 makes debug not ask for keypresses on GETCHAR_PAUSE
@@ -50,10 +56,11 @@ namespace az {
 }
 
 #define L_TRACE 0
-#define L_INFO 1
-#define L_WARN 2
-#define L_ERROR 3
-#define L_CRITICAL 4
+#define L_DEBUG 1
+#define L_INFO 2
+#define L_WARN 3
+#define L_ERROR 4
+#define L_CRITICAL 5
 
 //Only macros from here on : )
 
@@ -115,10 +122,19 @@ namespace az {
                                   __FILE__, __LINE__, __VA_ARGS__)
 #endif
 
-#if !VERBOSE_RELEASE && defined AS_RELEASE
+#if (!VERBOSE_RELEASE && defined AS_RELEASE) || SUPRESS_TRACES
     #define LOG_TRACE(...)
 #else
     //Usage: LOG_TRACE("message", int extraNewlinesAfter = 0)
     #define LOG_TRACE(...) az::log(GETLOGGER, L_TRACE,\
                                    __FILE__, __LINE__, __VA_ARGS__)
 #endif
+
+#if !(RELEASE_SUPRESS_ONLY_TRACES || VERBOSE_RELEASE) && defined AS_RELEASE
+    #define LOG_DEBUG(...)
+#else
+    //Usage: LOG_TRACE("message", int extraNewlinesAfter = 0)
+    #define LOG_DEBUG(...) az::log(GETLOGGER, L_DEBUG,\
+                                   __FILE__, __LINE__, __VA_ARGS__)
+#endif
+
