@@ -36,5 +36,11 @@ namespace AS {
 
 	uint32_t ATT_I_L_prepTime(float intensity);
 	double ATT_I_L_travelTimeModifierFromTroopSize(float intensity);
-	float ATT_I_L_attackSizeFromIntensityAndReturnTime(uint32_t returnTime, float intensity);
+	float ATT_I_L_attackSizeFromIntensityAndReturnTime(AS::pos_t posA, AS::pos_t posB, 
+											     uint32_t returnTime, float intensity);
+	uint32_t ATT_I_L_travelTimeFromDistanceAndTroops(AS::pos_t posA, AS::pos_t posB, 
+																	float intensity);
+	uint32_t ATT_I_L_attackTime(float intensity);
+	uint32_t ATT_I_L_returnTime(AS::pos_t posA, AS::pos_t posB, float intensity,
+	                                              uint32_t effectPhaseTotalTime);
 }

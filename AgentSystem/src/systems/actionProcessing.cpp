@@ -562,13 +562,9 @@ namespace AS {
 		pos_t ourPosition = ourState_ptr->locationAndConnections.position;
 		pos_t enemyPosition = enemyState_ptr->locationAndConnections.position;
 
-		double baseTime = calculateDistance(ourPosition, enemyPosition) 
-						  * (double)ACT_BASE_TRAVEL_UNITS_OF_DIST_PER_TENTHS_OF_MILLI;
-
-		//And modify it depending on attack size, before setting the phase total time:
-		uint32_t travelTime = baseTime 
-					* ATT_I_L_travelTimeModifierFromTroopSize(action_ptr->details.intensity);
-		action_ptr->phaseTiming.total = travelTime;
+		action_ptr->phaseTiming.total =
+			ATT_I_L_travelTimeFromDistanceAndTroops(ourPosition, enemyPosition, 
+													action_ptr->details.intensity);
 
 		//Now we just need to do the usual phase end stuff, so:
 		defaultPhaseEnd(action_ptr);
@@ -624,10 +620,7 @@ namespace AS {
 					std::max(*defendersReadOnAttackersStrenght_ptr, 0.0f);
 
 		//The fight has just begun, but already our men wonder: how long can this battle last?
-		uint32_t attackTime = 
-					(uint32_t)std::round( AS::ATT_I_L_prepTime(attackSize) 
-											* ACT_ATT_I_L_EFFECT_DURATION_MULTIPLIER );
-		action_ptr->phaseTiming.total = attackTime;
+		action_ptr->phaseTiming.total = AS::ATT_I_L_attackTime(attackSize);
 
 		//Other than that, it's all done as usual:
 		defaultPhaseEnd(action_ptr);
@@ -730,33 +723,92 @@ namespace AS {
 	void ATT_I_L_EffectEnd(actionData_t* action_ptr) {
 		
 		//First we deal with the defender:
-		//- de acordo com score, calcula informação geral obtida: quanto melhor, mais info, até um máximo;
-		//- adiciona tropas restantes do atacante na expectativa;
+		int defender = action_ptr->ids.target;
+		auto defendersDecision_ptr = 
+			&(g_agentDataControllers_ptr->LAdecision_ptr->getDirectDataPtr()->at(defender));
+
+		int attackerID = action_ptr->ids.origin;
+		auto defenderState_ptr = 
+			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(defender));
+
+		int attackerIndexOnDefender = getNeighborsIndexOnLA(attackerID, defenderState_ptr);
+
+		//They will get some general information according to the score, if positive
+		float*  aux_ptr = &(action_ptr->details.processingAux);
+		float infiltrationGain = 
+							std::max(0.0f, (*aux_ptr) ) * ACT_ATT_I_L_BASE_DEFENDER_INFO_GAIN;
+
+		defendersDecision_ptr->infiltration[attackerIndexOnDefender] +=
+			                std::min(infiltrationGain, ACT_ATT_I_L_MAX_DEFENDER_INFO_GAIN);
+
+		//And add any routing/returning troops to their expectations:
+		int str = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
+
+		float* intensity_ptr = &(action_ptr->details.intensity);
+		defendersDecision_ptr->reads[attackerIndexOnDefender].readOf[str] += (*intensity_ptr);
+
+		//In order to set the return time, we will need:
+		uint32_t* phaseTotal_ptr = &(action_ptr->phaseTiming.total);
+		auto attackerState_ptr =
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDataCptr()->at(attackerID));
+		
+		AS::pos_t attackerPos = attackerState_ptr->locationAndConnections.position;
+		AS::pos_t defenderPos = defenderState_ptr->locationAndConnections.position;
 
 		//Then the attacker: has anyone survived?
-		if (action_ptr->details.intensity == 0) {
+		if ((*intensity_ptr) == 0) {
 			//nope. Clear aux and set a time for the agent to realize their loss
-
-
+			*aux_ptr = 0; //no survivors, no loot
+			*phaseTotal_ptr = AS::ATT_I_L_travelTimeFromDistanceAndTroops(attackerPos,
+														defenderPos, ACT_REF_STRENGHT);
 		}
 		else { //We have people alive
 			//How long will their travel back take? 
 			//Less people travel faster, but also the worse the losses, the slower we go
 			
-			//As an indicator of our losses, we use:
-			//float lossesTravelTimeMultiplier = phaseTotalTime / effectTime(survivors)
+			//So, as an indicator of our losses, we use:
+			*phaseTotal_ptr = ATT_I_L_returnTime(attackerPos, defenderPos, (*intensity_ptr),
+				                                                         (*phaseTotal_ptr) );
 			
-			//time = travel_time_this_intensity_and_distance * multiplier;
-
 			//Anyway, how much loot did they grab, losses and all? 
 			//(zero on defeat, otherwise calculated from score and defender's resources)
+			if ((*aux_ptr <= 0) || (*intensity_ptr <= 0)) {
+				*aux_ptr = 0; //now storing the (non-existent) loot
+			}
+			else { //attacker won: there will be loot!
+				//The better the score, the more loot each attacker manages to get
+				//The more surviving attackers, the more hands o loot
+
+				float resources = defenderState_ptr->parameters.resources.current;
+				float effectiveDefendersResources = 
+						resources * ACT_ATT_I_L_MIN_PROPORTIONAL_RESOURCE_RESERVE_FROM_LOOT;
+				
+				float carryCapactiy = 
+					ACT_ATT_I_L_BASE_LOOT_PER_STR
+								* (*intensity_ptr)
+									* std::max((*aux_ptr), ACT_ATT_I_L_MAX_CARRY_MULTIPLIER);
+																	
+				*aux_ptr = std::min(effectiveDefendersResources, carryCapactiy);
+
+				defenderState_ptr->parameters.resources.current -= (*aux_ptr);
+			}
 
 			//Looting damages stuff: lower their income.
 			//(proportional to loot/defenders_resources, defenders_income, and a parameter)
+			float originalResources = 
+				defenderState_ptr->parameters.resources.current + (*aux_ptr);
 
+			float lootProportion = (*aux_ptr) / originalResources;
+			
+			float unprotectedIncome = 
+						defenderState_ptr->parameters.resources.updateRate
+								* ACT_ATT_I_L_INCOME_PROPORTION_PROTECTED_FROM_LOOT;
+
+			defenderState_ptr->parameters.resources.updateRate -=
+														unprotectedIncome * lootProportion;
 		}
 
-		//Let the survivors or the news travel:
+		//Let the troops (or their ghosts) travel back home:
 		defaultPhaseEnd(action_ptr);
 		return;
 	}
@@ -781,9 +833,19 @@ namespace AS {
 			param_ptr->resources.current += action_ptr->details.processingAux;
 		
 			//Then we try to remember roughly how many people we had sent on the attack:
+			auto attackerState_ptr = 
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDataCptr()->at(agent));
+
+			int defender = action_ptr->ids.target;
+			auto defenderState_ptr = 
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDataCptr()->at(defender));
+
+			AS::pos_t attackerPos = attackerState_ptr->locationAndConnections.position;
+			AS::pos_t defenderPos = defenderState_ptr->locationAndConnections.position;
+
 			float estimatedAttackSize = 
-				ATT_I_L_attackSizeFromIntensityAndReturnTime(action_ptr->phaseTiming.total,
-															 action_ptr->details.intensity);
+				ATT_I_L_attackSizeFromIntensityAndReturnTime(attackerPos, defenderPos,
+					     action_ptr->phaseTiming.total, action_ptr->details.intensity);
 		
 			//Then we gather information:
 			//We get infiltration points proportional to the sqrt of the ratio of returnees:
