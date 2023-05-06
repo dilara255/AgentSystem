@@ -287,7 +287,7 @@ namespace CL{
 
 	bool CL_API ClientData::ActionDetailsHandler::changeAuxTo(bool isGlobal, uint32_t agentID, uint32_t actionID, float newValue)
 	{
-		int maxActionsPerAgent = MAX_ACTIONS_PER_AGENT;
+		int maxActionsPerAgent = m_parentHandlerPtr->m_maxActions;
 		int index = (agentID)*maxActionsPerAgent + actionID;
 
 		//TODO: extract

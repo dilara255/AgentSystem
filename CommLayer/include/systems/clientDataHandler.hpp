@@ -242,6 +242,7 @@ namespace CL::ClientData {
 
 		protected:
 			friend class ActionsHandler;
+			friend class Handler;
 
 			bool initialize(ClientData::Handler* parentHandlerPtr, 
 							std::vector <actionData_t>* data_ptr,
@@ -747,6 +748,8 @@ namespace CL::ClientData {
 		ActionsHandler LAaction;
 		ActionsHandler GAaction;
 	protected:
+		friend class ActionDetailsHandler;
+
 		int m_referenceNetworkSize = 0;
 		int m_maxActions = 0;
 		int m_LAquantity = 0;

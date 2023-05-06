@@ -1,21 +1,24 @@
 #include "miscStdHeaders.h"
 #include "miscDefines.hpp"
 
-#include "logAPI.hpp"
 #include "timeHelpers.hpp"
+#include "AS_warningAndErrorDefinitions.hpp"
 
+#include "logAPI.hpp"
 #include "AS_API.hpp"
 #include "CL_externalAPI.hpp"
 
 #include "textViz.hpp"
+
+#include <Windows.h>
 
 const char* initialNetworkFilename = "textModeVizBase.txt";
 const char* networkFilenameSaveName = "textModeViz_run0.txt";
 
 const std::chrono::seconds testTime = std::chrono::seconds(30);
 const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(200);
-const float testResources = 999999.99f;
-const float testPace = 25.0f;
+const float testResources = 10000.0f;
+const float testPace = 6.0f;
 
 namespace TV{
 
@@ -98,34 +101,147 @@ namespace TV{
 				std::chrono::duration_cast<std::chrono::seconds>(now - start);
 	}
 
-	void printLAactionData() {
+	void printAction(AS::actionData_t actionData) {
+
+		int cat = actionData.ids.category;
+		int mode = actionData.ids.mode;
+		int phase = actionData.ids.phase;
+		char target = 'x';
+		if (actionData.ids.target != actionData.ids.origin) {
+			target = '0' + actionData.ids.target; //expects target <= 9
+		}
+
+		double secondsElapsed = 
+			(double)actionData.phaseTiming.elapsed/(double)TENTHS_OF_MS_IN_A_SECOND;
+		double phaseTotal = 
+			(double)actionData.phaseTiming.total/(double)TENTHS_OF_MS_IN_A_SECOND;
+
+		float intensity = actionData.details.intensity;
+		float aux = actionData.details.processingAux;
+
+		printf("\t-> %6.2f/%6.2f s | %u_%u_%u -> %c | intens: %7.2f, aux: %+7.2f\n",
+						     secondsElapsed, phaseTotal, cat, mode, phase, 
+												   target, intensity, aux);
+	}
+
+	const char* placeholderActionFormatLine = 
+		       "\t-> --------------- | ---------- | ------------------------------";
+	const char* separatorFormatLine = 
+		       "**********************************************************************\n";
+
+	void printLAactionData(int agent) {
 		
-		int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
 		int maxActions = CL::ASmirrorData_cptr->networkParams.maxActions;
 		auto LAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataLAs);
 
 		AS::actionData_t actionData;
 		int local = (int)AS::scope::LOCAL;
 
-		LOG_DEBUG("Will print action data for the Local Agents:", 2);
-		for (int agent = 0; agent < numberLAs; agent++) {
+		for (int action = 0; action < maxActions; action++) {
 
-			printf("\nLA: %d\n", agent);
-			for (int action = 0; action < maxActions; action++) {
+			int actionIndex = AS::getAgentsActionIndex(agent, action, maxActions);
+			actionData = LAactions_ptr->at(actionIndex);
 
-				int actionIndex = AS::getAgentsActionIndex(agent, action, maxActions);
-				actionData = LAactions_ptr->at(actionIndex);
+			if (actionData.ids.slotIsUsed && actionData.ids.active) {
 
-				if (actionData.ids.slotIsUsed && actionData.ids.active) {
-
-					printf("\t-> %d | (%u / %u) - cat: %u, mode: %u, phase: %u | intens: %f, aux: %f | from: %u, to: %u\n",
-						   action, actionData.phaseTiming.elapsed, actionData.phaseTiming.total,
-						   actionData.ids.category, actionData.ids.mode, actionData.ids.phase,
-						   actionData.details.intensity, actionData.details.processingAux,
-						   actionData.ids.origin, actionData.ids.target);
-				}
+				printAction(actionData);
+			}
+			else {
+				puts(placeholderActionFormatLine);
 			}
 		}
+	}
+		
+	void printLAheaderAndstateData(int agent) {
+		
+		std::string agentName = 
+			CL::ASmirrorData_cptr->agentMirrorPtrs.LAcoldData_ptr->data.at(agent).name;
+
+		auto agentState_ptr =
+			&(CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data.at(agent));
+
+		AS::pos_t position = agentState_ptr->locationAndConnections.position;
+		auto resources_ptr = &(agentState_ptr->parameters.resources);
+		auto strenght_ptr = &(agentState_ptr->parameters.strenght);
+
+
+		strenght_ptr->current; strenght_ptr->currentUpkeep; strenght_ptr->externalGuard;
+		strenght_ptr->thresholdToCostUpkeep;
+
+		printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | name: %s\n",
+			    agent, agentState_ptr->GAid, position.x, position.y, agentName.c_str());
+
+		printf("\tSTATE | $ %+10.2f (%+6.2f $/sec) | %7.2f I + %7.2f D ($%5.2f $/sec)\n",
+			                         resources_ptr->current, resources_ptr->updateRate,
+			                        strenght_ptr->current, strenght_ptr->externalGuard,
+			                                               strenght_ptr->currentUpkeep);
+	}
+
+	char charFromStance(int stance) {
+		switch (stance) 
+		{
+		case (int)AS::diploStance::WAR:
+			return 'W';
+		case (int)AS::diploStance::NEUTRAL:
+			return 'N';
+		case (int)AS::diploStance::TRADE:
+			return 'T';
+		case (int)AS::diploStance::ALLY:
+			return 'A';
+		case (int)AS::diploStance::ALLY_WITH_TRADE:
+			return 'Æ';
+		default:
+			return '?';
+		}
+	}
+
+	void printLAneighborData(int agent) {
+
+		auto agentState_ptr = 
+			&(CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data.at(agent));
+		int totalNeighbors = 
+			agentState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+		
+		auto decisionData_ptr =
+			&(CL::ASmirrorData_cptr->agentMirrorPtrs.LAdecision_ptr->data.at(agent));
+
+		int resorucesReadField = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
+		int incomeReadField = (int)LA::readsOnNeighbor_t::fields::INCOME;
+		int strenghtReadField = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
+		int guardReadField = (int)LA::readsOnNeighbor_t::fields::GUARD;
+
+		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+			
+			int neighborID = agentState_ptr->locationAndConnections.neighbourIDs[neighbor];
+
+			int stance = (int)agentState_ptr->relations.diplomaticStanceToNeighbors[neighbor];
+			char stanceChar = charFromStance(stance);
+
+			float disposition = agentState_ptr->relations.dispositionToNeighbors[neighbor];
+			float infiltration = decisionData_ptr->infiltration[neighbor];
+			
+			float resources = decisionData_ptr->reads[neighbor].readOf[resorucesReadField];
+			float income = decisionData_ptr->reads[neighbor].readOf[incomeReadField];
+			float strenght = decisionData_ptr->reads[neighbor].readOf[strenghtReadField];
+			float guard = decisionData_ptr->reads[neighbor].readOf[guardReadField];
+			
+			printf("\tNEIGHBOR: %d | %c, disp: %+3.2f | %+3.2f? | $ %+10.2f (%+6.2f $/sec) | %7.2f I + %7.2f D\n",
+									neighborID, stanceChar, disposition, 
+									infiltration, resources, income, strenght, guard);		
+		}
+
+	}
+
+	void printLAdecisionData(int agent) {
+		printf("\tDECISION: CCC_M (NTN+, NTN-) | CCC_M? CCC_M (NTN+, NTN-) | CCC_M -> x, YY\n");
+	}
+
+	void printSeparation() {
+		puts(separatorFormatLine);
+	}
+
+	void resetScreen() {
+		system("cls");
 	}
 
 	void textModeVisualizationLoop(std::chrono::seconds loopTime) {
@@ -138,13 +254,22 @@ namespace TV{
 		printf("\n\n\n\nWill run test for %llu seconds...\n", loopTime.count());
 
 
-
+		int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
 		while (timePassed < loopTime) {
 			
-			printLAactionData();
+			resetScreen(); puts("");
 
-			wait(&timePassed, loopSleepTime, start);
-			printf("\nSeconds remaining: %llu...\n", (loopTime - timePassed).count());			
+			for(int agent = 0; agent < numberLAs; agent++){
+				
+				printLAheaderAndstateData(agent);
+				printLAneighborData(agent);
+				printLAdecisionData(agent);
+				printLAactionData(agent);
+				printSeparation();
+			}
+
+			printf("\t\tSeconds remaining: %llu...\n", (loopTime - timePassed).count());	
+			wait(&timePassed, loopSleepTime, start);					
 		}
 		printf("\nDone! Leaving Main Loop...\n\n\n");
 

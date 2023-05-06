@@ -21,8 +21,8 @@ namespace AS {
 	//NOTE: ignores BOTH action slots wich are marked as occupied but innactive
 	//AND slots marked as not occupied (regardless of active/innactive).
 	void populateAgentsActiveActions(const ActionSystem* asp, AS::scope scope, int agent,
-		                              AS::Decisions::agentsActions_t* activeActions_ptr,
-		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+		                               AS::Decisions::agentsActions_t* activeActions_ptr, 
+		                                 AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
 	float nextActionsCost(int currentActions);
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
