@@ -622,6 +622,23 @@ void AS::unpauseMainLoop() {
 	g_shouldMainLoopBePaused = false;
 }
 
+bool AS::changePace(float newPace) {
+	if (g_currentNetworkParams_ptr != NULL) {
+		if (newPace >= 0) {
+			g_currentNetworkParams_ptr->pace = newPace;
+			return true;
+		}
+		else {
+			LOG_ERROR("Tried to set negative pace");
+			return false;
+		}
+	}
+	else {
+		LOG_ERROR("Parameters pointer is not valid, can't change pace");
+		return false;
+	}
+}
+
 void AS::stepMainLoopFor(int steps) {
 	g_isStepping = true;
 	g_stepsRemaining = std::max(1, steps);

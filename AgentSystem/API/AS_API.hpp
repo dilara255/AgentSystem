@@ -38,6 +38,11 @@ namespace AS {
 	AS_API bool run(bool fixedTimeStep = false, int stepsToRun = RUN_INDEFINETELY,
 		                 bool disableDecisions = false, bool blockActions = false);
 
+	//Changes the pace applied to the time multiplier for all time-sensitity parts of the AS.
+	//Will only accept positive values.
+	//Returns false on failure or invalid input.
+	AS_API bool changePace(float newPace);
+
 	//Stops AS execution thread, marks it as stopped and clears the stored thread::id;
 	//Returns false if this fails or if the Main Loop found errors while running.
 	AS_API bool stop();

@@ -15,7 +15,7 @@ const char* networkFilenameSaveName = "textModeViz_run0.txt";
 const std::chrono::seconds testTime = std::chrono::seconds(30);
 
 int TV::textModeVisualizationLoop(std::chrono::seconds loopTime) {
-
+	
 	auto start = std::chrono::steady_clock::now();
 	auto timePassed = std::chrono::seconds(0);
 	printf("\n\n\n\nWill run test for %llu seconds...\nSeconds remaining: %llu...", 
@@ -57,7 +57,8 @@ int TV::textModeVisualizationEntry() {
 		return 1;
 	}
 
-	LOG_DEBUG("Starting visualization Main Loop...\n",20);
+	LOG_DEBUG("Will starting visualization Main Loop...",20);
+	GETCHAR_FORCE_PAUSE;
 	int result = textModeVisualizationLoop(testTime);
 	GETCHAR_FORCE_PAUSE;
 	

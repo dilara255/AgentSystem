@@ -25,7 +25,7 @@ namespace AZ{ long long getExpectedWakeUpDelay(long long microsToSleep); }
 	#endif
 
 	#define AZ_LOG_TRACE_COLOR (FOREGROUND_BLUE | FOREGROUND_GREEN)
-	#define AZ_LOG_DEBUG_COLOR (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY)
+	#define AZ_LOG_DEBUG_COLOR (FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_INTENSITY)
 	#define AZ_LOG_INFO_COLOR (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
 	
 	//Based on tests on a single machine, tuned for release mode with low concurrency
