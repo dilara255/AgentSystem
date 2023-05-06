@@ -12,7 +12,7 @@ v0.2   -Basic data structures, loading and exporting (done);<br />
 v0.3   -Data manipulation (sytem done, but not implemented for all fields);<br />
 v0.4   -Runtime loop (done);<br />
 v0.5.2 -Simplified decisions and actions (sytem and initial actions and notions done);<br />
-v0.5.4 -Inspection and tooling; (text mode visualization in progress) <br />
+v0.5.4 -Inspection and tooling; (text mode: 40% done) <br />
 v0.7 -Vertical Slice (refined decision making and actions for a couple cases);<br />
 v1.0 -Actual behaviours, targeted prototype and final testing.
 
