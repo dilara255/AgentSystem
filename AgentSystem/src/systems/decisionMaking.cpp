@@ -51,7 +51,8 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	if (!dp->LAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return nullAction;
 	}
-	if (currentActions >= MAX_ACTIONS_PER_AGENT) {
+	int maxActionsPerAgent = actionSystem_cptr->getMaxActionsPerAgent();
+	if (currentActions >= maxActionsPerAgent) {
 		return nullAction; //won't be able to spawn any action anyway;
 	}
 	if (currentActions == NATURAL_RETURN_ERROR) {
@@ -106,7 +107,8 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 	if (!dp->GAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return nullAction;
 	}
-	if (currentActions >= MAX_ACTIONS_PER_AGENT) {
+	int maxActionsPerAgent = actionSystem_cptr->getMaxActionsPerAgent();
+	if (currentActions >= maxActionsPerAgent) {
 		return nullAction; //won't be able to spawn any action anyway;
 	}
 	if (currentActions == NATURAL_RETURN_ERROR) {

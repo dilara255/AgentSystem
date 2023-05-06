@@ -35,8 +35,8 @@ namespace AS{
 	//TODO: test
 	//TODO: Make this into a method on ActionDataController
 	void populateAgentsActiveActions(const ActionSystem* asp, AS::scope scope, int agent,
-		                              AS::Decisions::agentsActions_t* activeActions_ptr,
-		                                AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+		                               AS::Decisions::agentsActions_t* activeActions_ptr, 
+		                                 AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 		if (errorsCounter_ptr == NULL) {
 			LOG_CRITICAL("populateAgentsActiveActions received bad errorsCounter_ptr");
@@ -58,8 +58,10 @@ namespace AS{
 			return;
 		}
 
-		int startingIndexOnActionsVector = agent * MAX_ACTIONS_PER_AGENT;
-		int startingIndexNextAgent = (agent + 1) * MAX_ACTIONS_PER_AGENT;
+		int maxActionsPerAgent = asp->getMaxActionsPerAgent();
+
+		int startingIndexOnActionsVector = agent * maxActionsPerAgent;
+		int startingIndexNextAgent = (agent + 1) * maxActionsPerAgent;
 
 		int activeActionsFound = 0;
 		for (int i = startingIndexOnActionsVector; i < startingIndexNextAgent; i++) {
@@ -97,7 +99,7 @@ namespace AS{
 	//TODO: Test
 	//TODO: Make this into a method on ActionDataController
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const* asp,
-		AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+		                              AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 		if (errorsCounter_ptr == NULL) {
 			LOG_CRITICAL("populateAgentsActiveActions received bad errorsCounter_ptr");
@@ -114,8 +116,10 @@ namespace AS{
 			return NATURAL_RETURN_ERROR;
 		}
 
-		int startingIndexOnActionsVector = agentID * MAX_ACTIONS_PER_AGENT;
-		int startingIndexNextAgent = (agentID + 1) * MAX_ACTIONS_PER_AGENT;
+		int maxActionsPerAgent = asp->getMaxActionsPerAgent();
+
+		int startingIndexOnActionsVector = agentID * maxActionsPerAgent;
+		int startingIndexNextAgent = (agentID + 1) * maxActionsPerAgent;
 
 		int currentActions = 0;
 		for (int i = startingIndexOnActionsVector; i < startingIndexNextAgent; i++) {

@@ -56,7 +56,7 @@ namespace AS {
 		std::vector <actionData_t>* getDirectLAdataPtr() { return &dataLAs; }
 		std::vector <actionData_t>* getDirectGAdataPtr() { return &dataGAs; }
 
-		int getMaxActionsPerAgent() const { return m_maxActionsPerAgent; }
+		inline int getMaxActionsPerAgent() const { return m_maxActionsPerAgent; }
 
 		bool setMaxActionsPerAgent(int newMax) {
 			if ( (newMax > 0) && (newMax <= MAX_ACTIONS_PER_AGENT) ) {
@@ -104,6 +104,10 @@ namespace AS {
 			                     const ActionDataController** actionDataController_cptr_ptr);
 
 		void stepActions(ActionSystem* ap, float timeMultiplier);
+
+		inline int getMaxActionsPerAgent() const {
+			return data.getMaxActionsPerAgent();
+		}
 
 		ActionDataController* getDataDirectPointer() {
 			if(!data.isInitialized()){return NULL;}

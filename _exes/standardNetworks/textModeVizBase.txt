@@ -1,5 +1,5 @@
 Version: 1
-GAs: 2, LAs: 3, maxNeighbors: 10, maxActions: 10, ticks: 0 (total multiplier last: 0.000000, pace: 1.000000)
+GAs: 2, LAs: 3, maxNeighbors: 10, maxActions: 4, ticks: 0 (total multiplier last: 0.000000, pace: 1.000000)
 makeDecisions: 1, act: 1
 s0: 2685821657736338717, s1: 4281543115072698430, s2: 8057464973209016151, s3: 1595721457336359713
 # textModeVizBase.txt
@@ -84,12 +84,6 @@ GA Action 0 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0
 GA Action 1 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
 GA Action 2 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
 GA Action 3 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 4 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 5 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 6 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 7 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 8 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 9 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
 
 #LA Action Data:
 
@@ -97,39 +91,11 @@ LA Action 0 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.00000
 LA Action 1 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
 LA Action 2 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
 LA Action 3 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 4 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 5 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 6 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 7 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 8 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 9 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 10 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 11 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 12 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 13 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 14 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 15 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 16 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 17 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 18 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 19 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 20 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 21 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 22 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 23 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 24 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 25 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 26 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 27 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 28 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 29 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 30 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 31 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 32 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 33 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 34 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 35 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 36 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 37 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 38 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 39 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 4 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 5 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 6 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 7 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 8 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 9 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 10 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 11 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000

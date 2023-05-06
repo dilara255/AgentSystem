@@ -7,6 +7,8 @@
 #include "AS_API.hpp"
 #include "CL_externalAPI.hpp"
 
+#include "AS_warningAndErrorDefinitions.hpp"
+
 #include "textViz.hpp"
 
 const char* initialNetworkFilename = "textModeVizBase.txt";
@@ -15,7 +17,7 @@ const char* networkFilenameSaveName = "textModeViz_run0.txt";
 const std::chrono::seconds testTime = std::chrono::seconds(30);
 const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(200);
 const float testResources = 999999.99f;
-const float testPace = 25.0f;
+const float testPace = 6.0f;
 
 namespace TV{
 
@@ -98,34 +100,83 @@ namespace TV{
 				std::chrono::duration_cast<std::chrono::seconds>(now - start);
 	}
 
-	void printLAactionData() {
+	void printAction(AS::actionData_t actionData) {
+
+		int cat = actionData.ids.category;
+		int mode = actionData.ids.mode;
+		int phase = actionData.ids.phase;
+		char target = 'x';
+		if (actionData.ids.target != actionData.ids.origin) {
+			target = '0' + actionData.ids.target; //expects target <= 9
+		}
+
+		double secondsElapsed = 
+			(double)actionData.phaseTiming.elapsed/(double)TENTHS_OF_MS_IN_A_SECOND;
+		double phaseTotal = 
+			(double)actionData.phaseTiming.total/(double)TENTHS_OF_MS_IN_A_SECOND;
+
+		float intensity = actionData.details.intensity;
+		float aux = actionData.details.processingAux;
+
+		printf("\t-> %6.2f/%6.2f s | %u_%u_%u -> %c | intens: %7.2f, aux: %+7.2f\n",
+						     secondsElapsed, phaseTotal, cat, mode, phase, 
+												   target, intensity, aux);
+	}
+
+	const char* placeholderActionFormatLine = 
+		       "\t-> --------------- | -------------- | ------------------------------";
+	const char* separatorFormatLine = 
+		       "**********************************************************************\n";
+
+	void printLAactionData(int agent) {
 		
-		int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
 		int maxActions = CL::ASmirrorData_cptr->networkParams.maxActions;
 		auto LAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataLAs);
 
 		AS::actionData_t actionData;
 		int local = (int)AS::scope::LOCAL;
 
-		LOG_DEBUG("Will print action data for the Local Agents:", 2);
-		for (int agent = 0; agent < numberLAs; agent++) {
+		for (int action = 0; action < maxActions; action++) {
 
-			printf("\nLA: %d\n", agent);
-			for (int action = 0; action < maxActions; action++) {
+			int actionIndex = AS::getAgentsActionIndex(agent, action, maxActions);
+			actionData = LAactions_ptr->at(actionIndex);
 
-				int actionIndex = AS::getAgentsActionIndex(agent, action, maxActions);
-				actionData = LAactions_ptr->at(actionIndex);
+			if (actionData.ids.slotIsUsed && actionData.ids.active) {
 
-				if (actionData.ids.slotIsUsed && actionData.ids.active) {
-
-					printf("\t-> %d | (%u / %u) - cat: %u, mode: %u, phase: %u | intens: %f, aux: %f | from: %u, to: %u\n",
-						   action, actionData.phaseTiming.elapsed, actionData.phaseTiming.total,
-						   actionData.ids.category, actionData.ids.mode, actionData.ids.phase,
-						   actionData.details.intensity, actionData.details.processingAux,
-						   actionData.ids.origin, actionData.ids.target);
-				}
+				printAction(actionData);
+			}
+			else {
+				puts(placeholderActionFormatLine);
 			}
 		}
+	}
+		
+	void printLAstateData(int agent) {
+		printf("LA STATE: ");
+		puts(placeholderActionFormatLine);
+	}
+
+	void printLAneighborData(int agent) {
+
+		auto agentState_ptr = 
+			&(CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data.at(agent));
+		int totalNeighbors = 
+			agentState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+
+		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+			printf("NEIGHBOR DATA: ");
+			puts(placeholderActionFormatLine);
+		}
+
+	}
+
+	void printLAdecisionData(int agent) {
+		printf("DECISION DATA: ");
+		puts(placeholderActionFormatLine);
+	}
+
+	void printSeparation() {
+		puts(separatorFormatLine);
 	}
 
 	void textModeVisualizationLoop(std::chrono::seconds loopTime) {
@@ -138,13 +189,20 @@ namespace TV{
 		printf("\n\n\n\nWill run test for %llu seconds...\n", loopTime.count());
 
 
-
+		int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
 		while (timePassed < loopTime) {
 			
-			printLAactionData();
+			for(int agent = 0; agent < numberLAs; agent++){
+			
+				printLAstateData(agent);
+				printLAneighborData(agent);
+				printLAdecisionData(agent);
+				printLAactionData(agent);
+				printSeparation();
+			}
 
 			wait(&timePassed, loopSleepTime, start);
-			printf("\nSeconds remaining: %llu...\n", (loopTime - timePassed).count());			
+			printf("\t\tSeconds remaining: %llu...\n", (loopTime - timePassed).count());			
 		}
 		printf("\nDone! Leaving Main Loop...\n\n\n");
 
