@@ -40,7 +40,7 @@ namespace AS {
 		                             WarningsAndErrorsCounter* errorsCounter_ptr, 
 		                               const AS::ActionSystem* actionSystem_cptr,
 							    bool makeDecisions, AS::PRNserver* prnServer_ptr,
-		                       float secondsSinceLastDecisionStep, uint32_t tick);
+		                                      float secondsSinceLastDecisionStep);
 
 	struct chopControl_st {
 		int chopIndex = 0;

@@ -126,13 +126,13 @@ namespace AS{
 		return currentActions;
 	}
 
-	bool spawnAction(actionData_t action, ActionSystem* actionSystem_ptr, uint32_t tick) {
+	bool spawnAction(actionData_t action, ActionSystem* actionSystem_ptr) {
 
 		return actionSystem_ptr->getDataDirectPointer()->addActionData(action);
 	}
 
 	void chargeForAndSpawnAction(actionData_t action, AS::dataControllerPointers_t* dp,
-										 ActionSystem* actionSystem_ptr, uint32_t tick,
+										                ActionSystem* actionSystem_ptr,
 										   WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 		AS::scope scope = (AS::scope)action.ids.scope;
@@ -172,7 +172,7 @@ namespace AS{
 		action.details.processingAux = cost;
 
 		//finally, we try to spawn the action:
-		if (!spawnAction(action, actionSystem_ptr, tick)) {
+		if (!spawnAction(action, actionSystem_ptr)) {
 			errorsCounter_ptr->incrementWarning(AS::warnings::DS_TRIED_TO_SPAWN_TOO_MANY_ACTIONS);
 		}
 
