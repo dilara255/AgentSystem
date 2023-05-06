@@ -1194,12 +1194,14 @@ bool testMainLoopErrors(std::string filename) {
 	
 	LOG_DEBUG("Will load a network, run for several ticks, stop it, and check for errors\n", 1);
 	GETCHAR_PAUSE;
-	bool result = AS::loadNetworkFromFile(filename, true);
+	bool result = AS::loadNetworkFromFile(filename, false);
 	if (!result) {
 		LOG_ERROR("Failed to Load test network. Aborting test");
 		return false;
 	}
 
+	AS::run();
+	
 	int ticks = TST_TICKS_MAINLOOP_ERRORS;
 	std::chrono::microseconds microsToSleep(ticks*AS_MILLISECONDS_PER_STEP*MICROS_IN_A_MILLI);
 	AZ::hybridBusySleepForMicros(microsToSleep);

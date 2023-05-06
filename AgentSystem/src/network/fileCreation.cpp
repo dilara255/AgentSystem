@@ -297,15 +297,20 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
         AZ::FlagField128 connectionField;
         int connections = MAX_LA_NEIGHBOURS / DEFAULT_LA_NEIGHBOUR_QUOTIENT;
+        int blockSize = connections + 1;
         
         //DEFAULT: LAs are connected in blocks:
-        int neighborBlock = i/connections;
-        int blockStartingIndex = neighborBlock * connections;
-        int blockBoundingIndex = blockStartingIndex + connections;
+        int neighborBlock = i/blockSize;
+        int blockStartingIndex = neighborBlock * blockSize;
+        int blockBoundingIndex = 
+            std::min(blockStartingIndex + blockSize, DEFAULT_NUMBER_LAS);
         blockBoundingIndex = std::min(blockBoundingIndex, numberLAs);
 
-        for (int j = blockStartingIndex; j < blockBoundingIndex; j++) {
-            connectionField.setBitOn(j);
+        int neighborID = blockStartingIndex;
+        for (int j = blockStartingIndex; j < blockBoundingIndex; j++, neighborID++) {
+            if (neighborID != i) {
+                connectionField.setBitOn(neighborID);
+            }
         }
 
         resultAux = fprintf(fp, connectedLAbitfield, connectionField.getField(0),
@@ -313,21 +318,27 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
                                                     connectionField.getField(2), 
                                                     connectionField.getField(3));
         if (resultAux <= 0) result = 0;
-
+        
         int neighbor = 0;
-        for (int j = blockStartingIndex; j < blockBoundingIndex; j++, neighbor++) {
+        for (int neighborID = blockStartingIndex; neighborID < blockBoundingIndex; 
+                                                                     neighborID++) {
+            
+            if (neighborID != i) { //so an agent doesn't count itself as a neighbor
+                           
+                resultAux = fprintf(fp, LArelationsInfo, neighbor, neighborID,
+                    DEFAULT_LA_STANCE, DEFAULT_LA_DISPOSITION, DEFAULT_LA_DISPOSITION,
+                    DEFAULT_LA_INFILTRATION);
+                if (resultAux <= 0) result = 0;
 
-            resultAux = fprintf(fp, LArelationsInfo, neighbor, j,
-                DEFAULT_LA_STANCE, DEFAULT_LA_DISPOSITION, DEFAULT_LA_DISPOSITION,
-                DEFAULT_LA_INFILTRATION);
-            if (resultAux <= 0) result = 0;
+                neighbor++; //found neighbor, so increment neighbor index on agent
 
-             resultAux = fprintf(fp, LAreadsOnNeighbor, 
-                                DEFAULT_LA_RESOURCES, DEFAULT_REQUESTS, 
-                                DEFAULT_LA_INCOME,
-                                DEFAULT_LA_STRENGHT, DEFAULT_REQUESTS, 
-                                DEFAULT_REINFORCEMENT, DEFAULT_REQUESTS);
-            if (resultAux <= 0) result = 0;
+                 resultAux = fprintf(fp, LAreadsOnNeighbor, 
+                                    DEFAULT_LA_RESOURCES, DEFAULT_REQUESTS, 
+                                    DEFAULT_LA_INCOME,
+                                    DEFAULT_LA_STRENGHT, DEFAULT_REQUESTS, 
+                                    DEFAULT_REINFORCEMENT, DEFAULT_REQUESTS);
+                if (resultAux <= 0) result = 0;
+            }
         }
 
         resultAux = fputs(LAoffsetsTitle, fp);

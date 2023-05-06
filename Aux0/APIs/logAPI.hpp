@@ -9,35 +9,12 @@ TODO: Generalize the whole macro thingy and all that's associated with it
 */
 
 #include "core.hpp"
+#include "keypressPausingOptions.hpp"
 
 //para os outros projetos poderem linkar as funções, declaradas em log.hpp
 #ifndef AUX0
     #include "../include/log.hpp"
 #endif
-
-//The default for the following definitions is 0
-
-//All LOG_TRACE logs will be supressed if this is set to anything but 0
-#define SUPRESS_TRACES 0
-
-//Setting this to anything but 0 makes release supress only LOG_TRACEs
-#define RELEASE_SUPRESS_ONLY_TRACES 0
-
-//Setting this to anything but 0 makes release as verbose as debug
-#define VERBOSE_RELEASE 0
-
-//Setting this to anything but 0 makes debug not ask for keypresses on GETCHAR_PAUSE
-#define DONT_ASK_KEYPRESS_DEBUG 0
-
-//Setting this to anything but 0 makes release ASK for keypresses on GETCHAR_PAUSE
-#define ASK_KEYPRESS_ON_RELEASE 0
-
-//Setting this to anything but 0 makes GETCHAR_FORCE_PAUSE act the same as GETCHAR_PAUSE
-#define DONT_FORCE_KEYPRESS 0
-
-//TODO: way to define level for test header
-
-//NOTE: changing these may lead to full recompile : (
 
 namespace az {
     //Usage: LOG_*LEVEL*("message", int extraNewlinesAfter = 0) logs:
@@ -45,8 +22,8 @@ namespace az {
     //- Message, color coded by level and with time and project stamps; and
     //- Adds extraNewlinesAfter the message.
     void log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file, 
-             const int line, const char* message, uint32_t trailingNewlines = 0, 
-                                                           bool supress = false);
+                                  const int line, const bool pause, const char* message, 
+                                    uint32_t trailingNewlines = 0, bool supress = false);
 
     uint16_t RGB24toRGB565(uint8_t r, uint8_t g, uint8_t b);
 }
@@ -68,8 +45,6 @@ namespace az {
 //MACROS for user interaction
 
 //TODO: BUG: FIX: this is using getchar() withouth taking care to exausting the buffer!
-
-#define TST while((ch=getchar())!='\n'&&ch!=EOF);
 
 inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines = 0) {
     int ch;
@@ -106,16 +81,21 @@ inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines =
 #define GETLOGGER az::Log::GetTALogger()
 #endif
 
+//Will only actually pause if GETCHAR_FORCE_PAUSE should pause
+#define SHOULD_CRITICALS_PAUSE (PAUSE_ON_CRITICALS || PAUSE_ON_ERRORS || PAUSE_ON_WARNINGS)
+#define SHOULD_ERRORS_PAUSE (PAUSE_ON_ERRORS || PAUSE_ON_WARNINGS)
+#define SHOULD_WARNINGS_PAUSE PAUSE_ON_WARNINGS
+
 //Usage: LOG_CRITICAL("message", int extraNewlinesAfter = 0)
 #define LOG_CRITICAL(...) az::log(GETLOGGER, L_CRITICAL,\
-                                   __FILE__, __LINE__, __VA_ARGS__)
+                                   __FILE__, __LINE__, SHOULD_CRITICALS_PAUSE, __VA_ARGS__)
 
 #ifdef AS_DISTRO
     #define LOG_ERROR(...)
 #else
     //Usage: LOG_ERROR("message", int extraNewlinesAfter = 0)
     #define LOG_ERROR(...) az::log(GETLOGGER, L_ERROR,\
-                                   __FILE__, __LINE__, __VA_ARGS__)
+                                   __FILE__, __LINE__, SHOULD_ERRORS_PAUSE ,__VA_ARGS__)
 #endif
 
 #if !VERBOSE_RELEASE && defined AS_RELEASE
@@ -123,7 +103,7 @@ inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines =
 #else
     //Usage: LOG_WARN("message", int extraNewlinesAfter = 0)
     #define LOG_WARN(...) az::log(GETLOGGER, L_WARN,\
-                                  __FILE__, __LINE__, __VA_ARGS__)
+                                  __FILE__, __LINE__, SHOULD_WARNINGS_PAUSE, __VA_ARGS__)
 #endif
 
 #ifdef AS_DISTRO
@@ -131,7 +111,7 @@ inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines =
 #else
     //Usage: LOG_INFO("message", int extraNewlinesAfter = 0)
     #define LOG_INFO(...) az::log(GETLOGGER, L_INFO,\
-                                  __FILE__, __LINE__, __VA_ARGS__)
+                                  __FILE__, __LINE__, false, __VA_ARGS__)
 #endif
 
 #if (!VERBOSE_RELEASE && defined AS_RELEASE) || SUPRESS_TRACES
@@ -139,7 +119,7 @@ inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines =
 #else
     //Usage: LOG_TRACE("message", int extraNewlinesAfter = 0)
     #define LOG_TRACE(...) az::log(GETLOGGER, L_TRACE,\
-                                   __FILE__, __LINE__, __VA_ARGS__)
+                                   __FILE__, __LINE__, false, __VA_ARGS__)
 #endif
 
 #if !(RELEASE_SUPRESS_ONLY_TRACES || VERBOSE_RELEASE) && defined AS_RELEASE
@@ -147,6 +127,6 @@ inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines =
 #else
     //Usage: LOG_TRACE("message", int extraNewlinesAfter = 0)
     #define LOG_DEBUG(...) az::log(GETLOGGER, L_DEBUG,\
-                                   __FILE__, __LINE__, __VA_ARGS__)
+                                   __FILE__, __LINE__, false, __VA_ARGS__)
 #endif
 

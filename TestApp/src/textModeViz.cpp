@@ -57,6 +57,8 @@ int TV::textModeVisualizationEntry() {
 		return 1;
 	}
 
+	AS::changePace(25);
+
 	LOG_DEBUG("Will starting visualization Main Loop...",20);
 	GETCHAR_FORCE_PAUSE;
 	int result = textModeVisualizationLoop(testTime);
