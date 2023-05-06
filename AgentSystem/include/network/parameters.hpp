@@ -279,7 +279,7 @@ namespace AS {
 	//clientDataHandler, and file format, creation and loading!
 	typedef struct networkParameters_st {
 		bool isNetworkInitialized = false;
-		float pace = AS_GENERAL_PACE;
+		float pace = DEFAULT_PACE;
 		uint64_t mainLoopTicks = 0;
 		uint64_t lastMainLoopStartingTick = 0;
 		double accumulatedMultiplier = DEFAULT_TOTAL_MULTIPLIER;

@@ -68,8 +68,20 @@ namespace az {
 //MACROS for user interaction
 
 //TODO: BUG: FIX: this is using getchar() withouth taking care to exausting the buffer!
+
+#define TST while((ch=getchar())!='\n'&&ch!=EOF);
+
+inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines = 0) {
+    int ch;
+    if (showMessage) {
+        for(int i = 0; i < trailingNewlines; i++) {puts("\n"); }
+        fputs("\t\tpress enter...", stdout);
+    }
+    while( (ch = getchar()) != '\n' && ch != EOF );
+}
+
 #if (defined AS_DEBUG && !DONT_ASK_KEYPRESS_DEBUG) || (defined AS_RELEASE && ASK_KEYPRESS_ON_RELEASE)
-	#define GETCHAR_PAUSE getchar()
+	#define GETCHAR_PAUSE consumeAllcharacters()
 #else
 	#define GETCHAR_PAUSE puts("\n")
 #endif // AS_DEBUG
@@ -77,7 +89,7 @@ namespace az {
 #if (DONT_FORCE_KEYPRESS)
     #define GETCHAR_FORCE_PAUSE GETCHAR_PAUSE;
 #else
-	#define GETCHAR_FORCE_PAUSE getchar()
+	#define GETCHAR_FORCE_PAUSE consumeAllcharacters()
 #endif // AS_DEBUG
 
 //MACROS log Agent System

@@ -21,27 +21,29 @@ namespace AZ {
 
         FILE* fp = fopen(name.c_str(), "r");
 
-        if (fp == NULL) {
+        if (fp == NULL) { //file doesn't exist yet
             return fopen(name.c_str(), "w");
         }
-        else if (shouldOverwrite) {
+        else if (shouldOverwrite) { //it does exist but we don't care
             //Will overwrite existing file
             return fopen(name.c_str(), "w");
         }
     
-        //File already exists and shouldn't overwrite. 
+        //If we got here, the file already exists and we shouldn't overwrite it. 
+        
         //Will append a number to the end of the name, so we need to keep name in two parts:
-        std::string tempName = "";
+
+        std::string originalName = "";
         int i = 0;
         const char delim = '.';
         while ( (name.c_str()[i] != '\0') && (name.c_str()[i] != delim)) {
-            tempName += name.c_str()[i];
+            originalName += name.c_str()[i];
             i++;
         }
 
-        std::string restOfName = "";
+        std::string format = "";
         while (name.c_str()[i] != '\0') {
-            restOfName += name.c_str()[i];
+            format += name.c_str()[i];
             i++;
         }
    
@@ -53,11 +55,11 @@ namespace AZ {
         while ((fp != NULL) && (tries < AZ_MAX_FP_AQUISITION_TRIES)) {
             fclose(fp);
 
-            append++;
-            newName = tempName + std::to_string(append) + restOfName;
+            newName = originalName + std::to_string(append) + format;
 
             fp = fopen(newName.c_str(), "r");
 
+            append++;
             tries++;
         }
         
