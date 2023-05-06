@@ -127,6 +127,11 @@ namespace CL {
 		return false;
 	}
 
+	bool ClientData::NetworkParameterDataHandler::transferPace(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
+
 	bool ClientData::NetworkParameterDataHandler::transferLastMainLoopStartingTick(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
 	{
 		return false;

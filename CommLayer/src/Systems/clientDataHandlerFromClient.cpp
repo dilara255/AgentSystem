@@ -89,6 +89,11 @@ namespace CL{
 		return false;
 	}
 
+	bool CL_API ClientData::NetworkParameterDataHandler::changePaceTo(float newValue)
+	{
+		return false;
+	}
+	
 	bool CL_API ClientData::NetworkParameterDataHandler::changeLastMainLoopStartingTickTo(uint64_t newValue)
 	{
 		return false;

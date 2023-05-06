@@ -732,7 +732,7 @@ bool testReads(bool print, float secondsToRun) {
 	}
 
 	//save the network
-	result = AS::saveNetworkToFile(inNetworkReadsTest, false, false, true);
+	result = AS::saveNetworkToFile(inNetworkReadsTest, true, false, true);
 	if (!result) {
 		LOG_ERROR("Failed to save network. Aborting test");
 		return false;
