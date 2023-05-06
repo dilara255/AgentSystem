@@ -19,10 +19,15 @@ namespace az {
 	}
 
 	void log(std::shared_ptr<spdlog::logger> logger, const int degree, const char* file, 
-		const int line, const char* message, uint32_t trailingNewlines, bool supress) {
+		const int line, const bool pause, const char* message, uint32_t trailingNewlines, 
+		                                                                    bool supress) {
 		
 		if(!supress || (degree != L_TRACE) ) { 
-			Log::log(logger, degree, file, line, message, trailingNewlines); }
+			Log::log(logger, degree, file, line, message, trailingNewlines); 
+		}
+		if (pause) {
+			GETCHAR_FORCE_PAUSE;
+		}
 	}
 
 	void Log::init() {

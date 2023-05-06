@@ -222,9 +222,9 @@ void timeAndSleep(AS::timing_st* timing_ptr, int chopIndex, bool fixedTimeStep) 
 	
 	timing_ptr->startLastStep = timing_ptr->startThisStep;
 
-	auto targetWakeTime = timing_ptr->startThisStep + timing_ptr->targetStepTime;
 	std::chrono::microseconds threshold(MICROS_TO_BUSY_WAIT);
-
+	auto targetWakeTime = timing_ptr->startThisStep + timing_ptr->targetStepTime;
+	
 	auto bedTime = std::chrono::steady_clock::now();
 	
 	AZ::hybridBusySleep(targetWakeTime, threshold);
@@ -271,17 +271,18 @@ void timeAndSleep(AS::timing_st* timing_ptr, int chopIndex, bool fixedTimeStep) 
 	//NOTE: the multiplier is bounded to a maximum proportion of the expected multiplier,
 	//but the step duration is not changed: 
 	//in case of severe lag, total duration and total multiplier can diverge
-	float targetMultiplier = (float)timing_ptr->targetStepTime.count()/MICROS_IN_A_SECOND
-												   * AS::g_currentNetworkParams_ptr->pace;
+	float targetStepTime = (float)timing_ptr->targetStepTime.count()/MICROS_IN_A_SECOND;
 
 	if(fixedTimeStep){
-		timing_ptr->timeMultiplier = targetMultiplier;
+		timing_ptr->timeMultiplier = targetStepTime;
 	}
 	else {
 		timing_ptr->timeMultiplier = (float)lastStepDurationMicros/MICROS_IN_A_SECOND;
-		float maxMultiplier = targetMultiplier * MAX_PROPORTIONAL_STEP_DURATION_ERROR;
+		float maxMultiplier = targetStepTime * MAX_PROPORTIONAL_STEP_DURATION_ERROR;
 		timing_ptr->timeMultiplier = std::min(timing_ptr->timeMultiplier, maxMultiplier);
 	}
+
+	timing_ptr->timeMultiplier *= AS::g_currentNetworkParams_ptr->pace;
 
 	timing_ptr->decisionStepTimeMultipliers[chopIndex] = 0;
 	for (int i = 0; i < AS_TOTAL_CHOPS; i++) {
@@ -529,8 +530,6 @@ bool AS::run(bool fixedTimeStep, int stepsToRun,
 		AS::g_errorsCounter_ptr->incrementError(AS::errors::RS_FAILED_RECEIVING);
 	}
 
-	LOG_TRACE("Creating Main Loop Thread and marking as started...");
-
 	*g_shouldMainLoopBeRunning_ptr = true;
 	g_shouldMainLoopBePaused = false;
 	g_currentNetworkParams_ptr->lastMainLoopStartingTick = 
@@ -539,7 +538,10 @@ bool AS::run(bool fixedTimeStep, int stepsToRun,
 	g_currentNetworkParams_ptr->makeDecisions &= !disableDecisions;
 	g_currentNetworkParams_ptr->processActions &= !blockActions;
 
+	LOG_TRACE("Creating Main Loop Thread and marking as started...");
+
 	if (stepsToRun > 0) { stepMainLoopFor(stepsToRun); }
+
 	*g_mainLoopThread_ptr = std::thread(mainLoop, fixedTimeStep);
 	*g_mainLoopId_ptr = g_mainLoopThread_ptr->get_id();
 

@@ -317,10 +317,12 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
 
     int neighboursFound = 0;
     uint32_t i = 0;
+    data_ptr->connectedNeighbors.updateHowManyAreOn();
+
     while ( (neighboursFound < data_ptr->numberConnectedNeighbors) 
                                       && (i < (uint32_t)numberLAs) 
                           && (neighboursFound < MAX_LA_NEIGHBOURS) ) {
-
+        
         if (data_ptr->connectedNeighbors.isBitOn(i)) {
             data_ptr->neighbourIDs[neighboursFound] = i;
             neighboursFound++;
@@ -333,7 +335,7 @@ bool setLAneighbourIDsAndFirst(AS::LAlocationAndConnectionData_t* data_ptr, int 
 
         LOG_ERROR("Found less neighbours than expected when updating LA connection data!");
         #if (defined AS_DEBUG) || VERBOSE_RELEASE
-            printf("\nFIELDS: %d , %d , %d , %d ", data_ptr->connectedNeighbors.getField(0),
+            printf("\nFIELDS: %u , %u , %u , %u ", data_ptr->connectedNeighbors.getField(0),
                                                 data_ptr->connectedNeighbors.getField(1),
                                                 data_ptr->connectedNeighbors.getField(2),
                                                 data_ptr->connectedNeighbors.getField(3));
@@ -368,7 +370,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
     if (tokens != 4) {
         LOG_ERROR("Error reading identity tokens from LA. Aborting load.");
         #if (defined AS_DEBUG) || VERBOSE_RELEASE
-            printf("LA: %d , Tokens read = %d , Cold.id = %d , state.GAid = %d , onOff = %d, decide = %d \n\n",
+            printf("LA: %d , Tokens read = %d , Cold.id = %u , state.GAid = %u , onOff = %u, decide = %u \n\n",
                 id, tokens, cold.id, state.GAid, onOff, shouldDecide);
         #endif // AS_DEBUG 
         return false;
@@ -464,6 +466,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
             return false;
         }
 
+        state.locationAndConnections.neighbourIDs[neighbor] = otherId;
         state.relations.diplomaticStanceToNeighbors[neighbor] = (AS::diploStance)stance;
         state.relations.dispositionToNeighbors[neighbor] = disposition;
         state.relations.dispositionToNeighborsLastStep[neighbor] = lastDispo;
@@ -561,8 +564,6 @@ bool addLAactionFromFile(int id, FILE* fp, AS::ActionDataController* ap) {
 //TODO: extect functions?
 bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPointers_t* dp,
                                                                AS::ActionDataController* ap) {
-    bool result;
-
     LOG_TRACE("Will load Agent and Action Data...");
 
     char buffer[COMMENT_LENGHT];
@@ -586,6 +587,8 @@ bool loadDataFromFp(FILE* fp, AS::networkParameters_t* pp, AS::dataControllerPoi
     LOG_TRACE("Loading Global Agent Data...");
 
     int numEffectiveGAs = pp->numberGAs - 1;//one GA is left to represent "belongs to no GA"
+    bool result = true;
+
     for (int i = 0; i < numEffectiveGAs; i++) {
         result = addGAfromFile(i, fp, dp, numEffectiveGAs, pp->numberLAs);
         if (!result) break;

@@ -47,7 +47,7 @@ namespace AS {
 		uint32_t origin : 10; //max LAs <= 1024
 		uint32_t target : 10;
 		uint32_t scope : 1;
-		uint32_t category : 3;
+		uint32_t category : 4;
 		uint32_t mode : 2;
 		uint32_t phase : 3;
 
