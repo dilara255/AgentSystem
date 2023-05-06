@@ -13,6 +13,7 @@ const char* initialNetworkFilename = "textModeVizBase.txt";
 const char* networkFilenameSaveName = "textModeViz_run0.txt";
 
 const std::chrono::seconds testTime = std::chrono::seconds(30);
+const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(200);
 const float testResources = 999999.99f;
 const float testPace = 25.0f;
 
@@ -88,6 +89,45 @@ namespace TV{
 		return true;
 	}
 
+	void wait(std::chrono::seconds* timePassed_ptr, std::chrono::milliseconds sleepTime,
+			                                std::chrono::steady_clock::time_point start) {
+
+		AZ::hybridBusySleepForMicros(std::chrono::microseconds(sleepTime));
+			auto now = std::chrono::steady_clock::now();
+			*timePassed_ptr = 
+				std::chrono::duration_cast<std::chrono::seconds>(now - start);
+	}
+
+	void printLAactionData() {
+		
+		int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
+		int maxActions = CL::ASmirrorData_cptr->networkParams.maxActions;
+		auto LAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataLAs);
+
+		AS::actionData_t actionData;
+		int local = (int)AS::scope::LOCAL;
+
+		LOG_DEBUG("Will print action data for the Local Agents:", 2);
+		for (int agent = 0; agent < numberLAs; agent++) {
+
+			printf("\nLA: %d\n", agent);
+			for (int action = 0; action < maxActions; action++) {
+
+				int actionIndex = AS::getAgentsActionIndex(agent, action, maxActions);
+				actionData = LAactions_ptr->at(actionIndex);
+
+				if (actionData.ids.slotIsUsed && actionData.ids.active) {
+
+					printf("\t-> %d | (%u / %u) - cat: %u, mode: %u, phase: %u | intens: %f, aux: %f | from: %u, to: %u\n",
+						   action, actionData.phaseTiming.elapsed, actionData.phaseTiming.total,
+						   actionData.ids.category, actionData.ids.mode, actionData.ids.phase,
+						   actionData.details.intensity, actionData.details.processingAux,
+						   actionData.ids.origin, actionData.ids.target);
+				}
+			}
+		}
+	}
+
 	void textModeVisualizationLoop(std::chrono::seconds loopTime) {
 	
 		LOG_DEBUG("Will starting visualization Main Loop...",20);
@@ -95,16 +135,16 @@ namespace TV{
 
 		auto start = std::chrono::steady_clock::now();
 		auto timePassed = std::chrono::seconds(0);
-		printf("\n\n\n\nWill run test for %llu seconds...\nSeconds remaining: %llu...", 
-						  							loopTime.count(), loopTime.count());
+		printf("\n\n\n\nWill run test for %llu seconds...\n", loopTime.count());
+
+
 
 		while (timePassed < loopTime) {
+			
+			printLAactionData();
 
-			AZ::hybridBusySleepForMicros(std::chrono::microseconds(MICROS_IN_A_SECOND));
-			auto now = std::chrono::steady_clock::now();
-			timePassed = 
-				std::chrono::duration_cast<std::chrono::seconds>(now - start);
-			printf(" %llu...", (loopTime - timePassed).count());
+			wait(&timePassed, loopSleepTime, start);
+			printf("\nSeconds remaining: %llu...\n", (loopTime - timePassed).count());			
 		}
 		printf("\nDone! Leaving Main Loop...\n\n\n");
 

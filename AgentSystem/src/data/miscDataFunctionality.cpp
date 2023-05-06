@@ -2,6 +2,17 @@
 
 #include "data/dataMisc.hpp"
 
+int AS::getAgentsActionIndex(int agentID, int action, int maxActions) {
+	
+	if (action >= maxActions) {
+		LOG_WARN("Tried to get index of an action with ID above the maximum");
+		return NATURAL_RETURN_ERROR;
+	}
+
+	return ((agentID * maxActions) + action);
+
+}
+
 //Returns neighbor's index on this agent's state data. Returns NATURAL_RETURN_ERROR on failure
 //WARNING: WILL fail if agent is passed to itlself (agentID = neighborID) 
 int AS::getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_ptr) {

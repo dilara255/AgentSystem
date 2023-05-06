@@ -3,6 +3,11 @@
 #include "AS_internal.hpp" //because dataMirror.hpp on CL is using this. TODO: don't.
 
 namespace AS {
+	//This gives you the index ASSUMING you passed in valid agentID and maxActions.
+	//Returns NATURAL_RETURN_ERROR in case of error.
+	//TODO: this is a temporary fix while dataMirrors equivalent method is not fixed.
+	AS_API int getAgentsActionIndex(int agentID, int action, int maxActions);
+
 	AS_API int getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_ptr);
 
 	AS_API int getNeighborsIndexOnLA(int neighborID, const LA::stateData_t* ThisState_ptr);
