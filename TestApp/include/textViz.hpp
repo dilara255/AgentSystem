@@ -2,6 +2,7 @@
 
 namespace TV {
 
-	int textModeVisualization();
+	int textModeVisualizationEntry();
+	int textModeVisualizationLoop(std::chrono::seconds loopTime);
 
 }

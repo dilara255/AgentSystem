@@ -15,6 +15,8 @@
 
 #include "textViz.hpp"
 
+int testsBattery(void);
+
 void testSayHello(void);
 bool testMockData(void);
 bool testSnooze(bool printLog = true);
@@ -35,6 +37,9 @@ void quickTestInit(bool run, bool disableDecisions, bool blockActions) {
 	AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults);
 	AS::loadNetworkFromFile(fileNameWithDefaults, run, disableDecisions, blockActions);
 }
+
+#define TESTS_BATTERY 0
+#define TEXT_VIZ 1
 
 #define MINIMUM_PROPORTION_SLEEP_PASSES (0.95)
 
@@ -87,16 +92,52 @@ void printFailedTests() {
 std::thread reader;//to test realtime reading of data trough CL as AS runs
 uint64_t g_ticksRead[TST_TIMES_TO_QUERRY_TICK]; 
 
-int main(void) {
+void printOptions(){
+
+	printf("Program expects zero arguments (default test) or a single argument, to define the test to run\n\n");
+	printf("Available tests are:\n%d - Tests Battery;\n%d - Text Mode Visualization;\n",
+																TESTS_BATTERY, TEXT_VIZ);
+	return;
+}
+
+int main(int argc, char **argv) {
+
+	if (argc == 1) {
+		LOG_INFO("No arguments entered, will run the tests battery\n\n");
+		return testsBattery();
+	}
+	else if (argc != 2) {
+		LOG_ERROR("Bad number of arguments");
+		printOptions();
+		GETCHAR_FORCE_PAUSE;
+		return 1;
+	}
+
+	switch (std::stoi(argv[1]))
+	{
+	case TESTS_BATTERY:
+		return testsBattery();
+	case TEXT_VIZ:
+		return TV::textModeVisualizationEntry();
+	default:
+		LOG_ERROR("Received bad argument");
+		printOptions();
+		GETCHAR_FORCE_PAUSE;
+		return 1;
+	}
+}
+
+
+int testsBattery(void) {
 	//TODO: review wich tests print to console, and pass this (macro?)
 	bool printSteps = false;
 	#if ( (defined AS_DEBUG) || VERBOSE_RELEASE )
 		printSteps = true;
 	#endif
 
-	LOG_DEBUG("We will now run a few batteries of tests...\n",2); GETCHAR_PAUSE;
+	LOG_DEBUG("This is a battery of tests for the Multi Agent System\n"); GETCHAR_PAUSE;
 
-	LOG_INFO("Will first test some helper functionality:\n", 1); GETCHAR_PAUSE;
+	LOG_INFO("\tBATTERY 0 - Helper Functionality\n", 1); GETCHAR_PAUSE;
 
 	battery0[0] = AZ::testDraw1spcg32();
 
@@ -127,7 +168,7 @@ int main(void) {
 		GETCHAR_PAUSE;
 	}
 
-	LOG_DEBUG("Basic App, AS and CL communicaton and data storage tests:\n",1); GETCHAR_PAUSE;
+	LOG_DEBUG("\tBATTERY 1 - Communicaton and Data Storage\n",1); GETCHAR_PAUSE;
 
 	testSayHello(); //nothing to test automatically. TODO: make it do so
 		
@@ -156,7 +197,7 @@ int main(void) {
 		LOG_INFO("All of these tests passed!", 1); GETCHAR_PAUSE;
 	}
 
-	LOG_DEBUG("Specific functionality tests (DATA manipulation):\n",1); GETCHAR_PAUSE;
+	LOG_DEBUG("\tBATTERY 2 - Basic Data Manipulation\n",1); GETCHAR_PAUSE;
 	
 	battery2[0] = AS::testFileCreation(fileNameNoDefaults, fileNameWithDefaults); 
 
@@ -201,7 +242,7 @@ int main(void) {
 		LOG_INFO("All of these tests passed!", 1); GETCHAR_PAUSE;
 	}
 	
-	LOG_INFO("Specific functionality tests involving main loop thread:\n",1); GETCHAR_PAUSE;
+	LOG_INFO("BATTERY 3 - Specific Functionality and Main Loop\n",1); GETCHAR_PAUSE;
 
 	battery3[0] = testMainLoopErrors(customFilename); 
 
