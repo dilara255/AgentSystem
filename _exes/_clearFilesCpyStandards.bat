@@ -7,4 +7,6 @@
 @del /S /Q "%RootDir%\Release-windows-x86_64\TestApp\networkFiles"
 @del /S /Q "%RootDir%\Release-windows-x86\TestApp\networkFiles"
 
+@_cpyStandardNetworks.bat
+
 @pause

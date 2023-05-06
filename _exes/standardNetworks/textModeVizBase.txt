@@ -1,0 +1,652 @@
+Version: 1
+GAs: 5, LAs: 15, maxNeighbors: 10, maxActions: 10, ticks: 0 (total multiplier last: 0.000000), makeDecisions: 1, act: 1
+s0: 2685821657736338717, s1: 4281543115072698430, s2: 8057464973209016151, s3: 1595721457336359713
+# testNetworkWithDefaults.txt
+commentSeparatorToCheckOverflowDontEdit
+#Global Agent Data:
+
+GA Id: 0, On? 1, Decisions? 1
+Name: GA_0
+  Personality Traits: 0 1 2 3
+  Resources: 0.000000 (+ 5.500000), Last tax: 0.001600 (+ 5.500000), Last trade: 0.000800 (+ 5.500000)
+  LA totals: resources: 400.000000 (2.000000 income), strenght: 200.000000 + 5.500000 (0.400000 + 5.500000 guard)
+  Connected LAs (bitfield): 15 0 0 0
+  Connected GAs (bitfield): 14
+    Relation with Neighbor 0 (id 1): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+    Relation with Neighbor 1 (id 2): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+    Relation with Neighbor 2 (id 3): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+
+GA Id: 1, On? 1, Decisions? 1
+Name: GA_1
+  Personality Traits: 0 1 2 3
+  Resources: 0.000000 (+ 5.500000), Last tax: 0.001600 (+ 5.500000), Last trade: 0.000800 (+ 5.500000)
+  LA totals: resources: 400.000000 (2.000000 income), strenght: 200.000000 + 5.500000 (0.400000 + 5.500000 guard)
+  Connected LAs (bitfield): 240 0 0 0
+  Connected GAs (bitfield): 13
+    Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+    Relation with Neighbor 1 (id 2): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+    Relation with Neighbor 2 (id 3): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+
+GA Id: 2, On? 1, Decisions? 1
+Name: GA_2
+  Personality Traits: 0 1 2 3
+  Resources: 0.000000 (+ 5.500000), Last tax: 0.001600 (+ 5.500000), Last trade: 0.000800 (+ 5.500000)
+  LA totals: resources: 400.000000 (2.000000 income), strenght: 200.000000 + 5.500000 (0.400000 + 5.500000 guard)
+  Connected LAs (bitfield): 3840 0 0 0
+  Connected GAs (bitfield): 11
+    Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+    Relation with Neighbor 1 (id 1): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+    Relation with Neighbor 2 (id 3): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+
+GA Id: 3, On? 1, Decisions? 1
+Name: GA_3
+  Personality Traits: 0 1 2 3
+  Resources: 0.000000 (+ 5.500000), Last tax: 0.001200 (+ 5.500000), Last trade: 0.000600 (+ 5.500000)
+  LA totals: resources: 300.000000 (1.500000 income), strenght: 150.000000 + 5.500000 (0.300000 + 5.500000 guard)
+  Connected LAs (bitfield): 28672 0 0 0
+  Connected GAs (bitfield): 7
+    Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001200 (+ 5.500000), Trade: 0.000600 (+ 5.500000). LAs strenght: 150.000000 (+ 5.500000), Guard: 0.300000 (+ 5.500000)
+    Relation with Neighbor 1 (id 1): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001200 (+ 5.500000), Trade: 0.000600 (+ 5.500000). LAs strenght: 150.000000 (+ 5.500000), Guard: 0.300000 (+ 5.500000)
+    Relation with Neighbor 2 (id 2): stance: 2, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001200 (+ 5.500000), Trade: 0.000600 (+ 5.500000). LAs strenght: 150.000000 (+ 5.500000), Guard: 0.300000 (+ 5.500000)
+
+#The last GA is reserved for local agents not belonging to any GA
+
+#Local Agent Data:
+
+LA Id: 0, belongs to GA: 0, On? 1, Decisions? 1
+Name: LA_0
+  Pos: X 0.000000, Y 0.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31 0 0 0
+    Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 1): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 2): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 3): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 4): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 1, belongs to GA: 0, On? 1, Decisions? 1
+Name: LA_1
+  Pos: X 10.000000, Y 0.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31 0 0 0
+    Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 1): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 2): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 3): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 4): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 2, belongs to GA: 0, On? 1, Decisions? 1
+Name: LA_2
+  Pos: X 20.000000, Y 0.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31 0 0 0
+    Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 1): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 2): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 3): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 4): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 3, belongs to GA: 0, On? 1, Decisions? 1
+Name: LA_3
+  Pos: X 0.000000, Y 10.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31 0 0 0
+    Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 1): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 2): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 3): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 4): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 4, belongs to GA: 1, On? 1, Decisions? 1
+Name: LA_4
+  Pos: X 10.000000, Y 10.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31 0 0 0
+    Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 1): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 2): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 3): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 4): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 5, belongs to GA: 1, On? 1, Decisions? 1
+Name: LA_5
+  Pos: X 20.000000, Y 10.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 992 0 0 0
+    Relation with Neighbor 0 (id 5): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 6): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 7): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 8): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 9): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 6, belongs to GA: 1, On? 1, Decisions? 1
+Name: LA_6
+  Pos: X 0.000000, Y 20.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 992 0 0 0
+    Relation with Neighbor 0 (id 5): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 6): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 7): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 8): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 9): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 7, belongs to GA: 1, On? 1, Decisions? 1
+Name: LA_7
+  Pos: X 10.000000, Y 20.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 992 0 0 0
+    Relation with Neighbor 0 (id 5): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 6): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 7): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 8): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 9): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 8, belongs to GA: 2, On? 1, Decisions? 1
+Name: LA_8
+  Pos: X 20.000000, Y 20.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 992 0 0 0
+    Relation with Neighbor 0 (id 5): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 6): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 7): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 8): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 9): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 9, belongs to GA: 2, On? 1, Decisions? 1
+Name: LA_9
+  Pos: X 0.000000, Y 30.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 992 0 0 0
+    Relation with Neighbor 0 (id 5): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 6): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 7): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 8): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 9): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 10, belongs to GA: 2, On? 1, Decisions? 1
+Name: LA_10
+  Pos: X 10.000000, Y 30.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31744 0 0 0
+    Relation with Neighbor 0 (id 10): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 11): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 12): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 13): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 14): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 11, belongs to GA: 2, On? 1, Decisions? 1
+Name: LA_11
+  Pos: X 20.000000, Y 30.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31744 0 0 0
+    Relation with Neighbor 0 (id 10): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 11): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 12): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 13): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 14): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 12, belongs to GA: 3, On? 1, Decisions? 1
+Name: LA_12
+  Pos: X 0.000000, Y 40.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31744 0 0 0
+    Relation with Neighbor 0 (id 10): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 11): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 12): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 13): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 14): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 13, belongs to GA: 3, On? 1, Decisions? 1
+Name: LA_13
+  Pos: X 10.000000, Y 40.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31744 0 0 0
+    Relation with Neighbor 0 (id 10): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 11): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 12): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 13): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 14): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+LA Id: 14, belongs to GA: 3, On? 1, Decisions? 1
+Name: LA_14
+  Pos: X 20.000000, Y 40.000000
+  Strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000), Threshold to cost upkeed: 40.000000
+  Current Resources: 100.000000 (+ 5.500000), income: 0.500000, upkeep: 0.502500
+  Connected LAs (bitfield): 31744 0 0 0
+    Relation with Neighbor 0 (id 10): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 1 (id 11): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 2 (id 12): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 3 (id 13): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+    Relation with Neighbor 4 (id 14): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
+      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+  #Action Offsets {from LA's personality | from GA's actions}:
+    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+
+#GA Action Data:
+
+GA Action 0 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 1 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 2 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 3 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 4 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 5 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 6 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 7 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 8 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 9 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 10 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 11 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 12 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 13 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 14 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 15 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 16 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 17 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 18 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 19 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 20 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 21 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 22 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 23 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 24 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 25 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 26 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 27 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 28 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 29 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 30 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 31 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 32 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 33 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 34 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 35 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 36 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 37 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 38 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 39 (GA 3): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+
+#LA Action Data:
+
+LA Action 0 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 1 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 2 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 3 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 4 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 5 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 6 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 7 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 8 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 9 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 10 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 11 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 12 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 13 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 14 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 15 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 16 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 17 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 18 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 19 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 20 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 21 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 22 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 23 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 24 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 25 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 26 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 27 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 28 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 29 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 30 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 31 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 32 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 33 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 34 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 35 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 36 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 37 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 38 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 39 (LA 3): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 40 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 41 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 42 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 43 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 44 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 45 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 46 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 47 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 48 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 49 (LA 4): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 50 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 51 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 52 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 53 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 54 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 55 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 56 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 57 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 58 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 59 (LA 5): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 60 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 61 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 62 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 63 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 64 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 65 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 66 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 67 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 68 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 69 (LA 6): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 70 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 71 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 72 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 73 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 74 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 75 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 76 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 77 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 78 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 79 (LA 7): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 80 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 81 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 82 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 83 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 84 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 85 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 86 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 87 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 88 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 89 (LA 8): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 90 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 91 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 92 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 93 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 94 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 95 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 96 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 97 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 98 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 99 (LA 9): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 100 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 101 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 102 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 103 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 104 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 105 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 106 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 107 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 108 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 109 (LA 10): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 110 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 111 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 112 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 113 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 114 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 115 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 116 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 117 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 118 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 119 (LA 11): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 120 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 121 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 122 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 123 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 124 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 125 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 126 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 127 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 128 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 129 (LA 12): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 130 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 131 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 132 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 133 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 134 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 135 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 136 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 137 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 138 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 139 (LA 13): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 140 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 141 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 142 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 143 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 144 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 145 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 146 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 147 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 148 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 149 (LA 14): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
