@@ -94,6 +94,7 @@ bool AS::copyNetworkParameters(networkParameters_t * destination,
 
 	int commentCpy = strcpy_s(destination->comment, commentSize, source->comment);
 	destination->isNetworkInitialized = source->isNetworkInitialized;
+	destination->pace = source->pace;
 	destination->lastMainLoopStartingTick = source->lastMainLoopStartingTick;
 	destination->mainLoopTicks = source->mainLoopTicks;
 	destination->accumulatedMultiplier = source->accumulatedMultiplier;
@@ -132,28 +133,9 @@ bool AS::copyNetworkParameters(networkParameters_t * destination,
 
 bool AS::defaultNetworkParameters(networkParameters_t* destination) {
 
-	strcpy(destination->comment, "");
-	destination->isNetworkInitialized = false;
-	destination->lastMainLoopStartingTick = 0;
-	destination->mainLoopTicks = 0;
-	destination->accumulatedMultiplier = DEFAULT_TOTAL_MULTIPLIER;
-	destination->lastStepTimeMicros = std::chrono::microseconds(0);
-	destination->lastStepHotMicros = std::chrono::microseconds(0);
-	destination->maxActions = MAX_ACTIONS_PER_AGENT;
-	destination->maxLAneighbours = 0;
-	strcpy(destination->name, "");
-	destination->numberGAs = DEFAULT_NUMBER_GAS;
-	destination->numberLAs = DEFAULT_NUMBER_LAS;
+	networkParameters_t defaultNetworkParams;
+	*destination = defaultNetworkParams;
 
-	//TODO: this is kinda icky if we change the number of seeds
-	destination->seeds[0] = DEFAULT_PRNG_SEED0;
-	destination->seeds[1] = DEFAULT_PRNG_SEED1;
-	destination->seeds[2] = DEFAULT_PRNG_SEED2;
-	destination->seeds[3] = DEFAULT_PRNG_SEED3;
-
-	destination->makeDecisions = DEFAULT_SYSTEM_WIDE_MAKE_DECISIONS;
-	destination->processActions = DEFAULT_SYSTEM_WIDE_PROCESS_ACTIONS;
-	
 	return true;
 }
 

@@ -112,6 +112,7 @@ namespace CL::ClientData {
 		bool CL_API changeAll(networkParameters_t* newValue_ptr);
 		
 		bool CL_API changeIsNetworkInitializedTo(bool newValue);
+		bool CL_API changePaceTo(float newValue);
 		bool CL_API changeMainLoopTicksTo(uint64_t newValue);
 		bool CL_API changeLastMainLoopStartingTickTo(uint64_t newValue);
 		bool CL_API changeAccumulatedMultiplierTo(double newValue);
@@ -136,6 +137,7 @@ namespace CL::ClientData {
 		virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
 		bool transferIsNetworkInitialized(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferPace(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferMainLoopTicks(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferLastMainLoopStartingTick(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transAccumulatedMultiplier(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);

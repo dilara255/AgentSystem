@@ -212,6 +212,7 @@ and data sizes static.
 //--> DEFAULT values for new network creation:
 
 #define DEFAULT_ONOFF (true)
+#define DEFAULT_PACE (1.0f)
 #define DEFAULT_NUMBER_LAS 15
 #define DEFAULT_NUMBER_GAS 5 //but last one doesn't count
 #define DEFAULT_GA_RESOURCES (0.0f)
@@ -276,22 +277,24 @@ namespace AS {
 	//Should then have copy/assignment constructor
 	//FOR NOW: WARNING: FIX: any changes here have to be reflected on dataMisc, dataMirror,
 	//clientDataHandler, and file format, creation and loading!
-	typedef struct {
-		bool isNetworkInitialized;
-		uint64_t mainLoopTicks;
-		uint64_t lastMainLoopStartingTick;
-		double accumulatedMultiplier;
-		std::chrono::microseconds lastStepTimeMicros;
-		std::chrono::microseconds lastStepHotMicros;
-		int numberLAs;
-		int numberGAs;
-		int maxLAneighbours;
-		int maxActions;
-		char name[NAME_LENGHT];
-		char comment[COMMENT_LENGHT];
-		uint64_t seeds[DRAW_WIDTH];
-		bool makeDecisions;
-		bool processActions;
+	typedef struct networkParameters_st {
+		bool isNetworkInitialized = false;
+		float pace = AS_GENERAL_PACE;
+		uint64_t mainLoopTicks = 0;
+		uint64_t lastMainLoopStartingTick = 0;
+		double accumulatedMultiplier = DEFAULT_TOTAL_MULTIPLIER;
+		std::chrono::microseconds lastStepTimeMicros = std::chrono::microseconds(0);
+		std::chrono::microseconds lastStepHotMicros = std::chrono::microseconds(0);
+		int numberLAs = DEFAULT_NUMBER_LAS;
+		int numberGAs = DEFAULT_NUMBER_GAS;
+		int maxLAneighbours = 0;
+		int maxActions = MAX_ACTIONS_PER_AGENT;
+		char name[NAME_LENGHT] = "";
+		char comment[COMMENT_LENGHT] = "";
+		uint64_t seeds[DRAW_WIDTH] = {DEFAULT_PRNG_SEED0, DEFAULT_PRNG_SEED1,
+			                          DEFAULT_PRNG_SEED2, DEFAULT_PRNG_SEED3};
+		bool makeDecisions = DEFAULT_SYSTEM_WIDE_MAKE_DECISIONS;
+		bool processActions = DEFAULT_SYSTEM_WIDE_PROCESS_ACTIONS;
 	} AS_API networkParameters_t;
 }
 

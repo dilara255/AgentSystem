@@ -1,5 +1,6 @@
 Version: 1
-GAs: 5, LAs: 15, maxNeighbors: 10, maxActions: 10, ticks: 0 (total multiplier last: 0.000000), makeDecisions: 1, act: 1
+GAs: 5, LAs: 15, maxNeighbors: 10, maxActions: 10, ticks: 0 (total multiplier last: 0.000000, pace: 1.000000)
+makeDecisions: 1, act: 1
 s0: 2685821657736338717, s1: 4281543115072698430, s2: 8057464973209016151, s3: 1595721457336359713
 # testNetworkWithDefaults.txt
 commentSeparatorToCheckOverflowDontEdit

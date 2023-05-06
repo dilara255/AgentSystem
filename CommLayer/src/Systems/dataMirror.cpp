@@ -23,6 +23,7 @@ namespace CL {
 		//WARNING: DISASTER WAITING TO HAPPEN: deeply burried repetition and coupling
 		strcpy(data.networkParams.comment, params_cptr->comment);
 		data.networkParams.isNetworkInitialized = params_cptr->isNetworkInitialized;
+		data.networkParams.pace = params_cptr->pace;
 		data.networkParams.lastMainLoopStartingTick = params_cptr->lastMainLoopStartingTick;
 		data.networkParams.lastStepTimeMicros = params_cptr->lastStepTimeMicros;
 		data.networkParams.lastStepHotMicros = params_cptr->lastStepHotMicros;
@@ -187,6 +188,7 @@ namespace CL {
 		if (!data.networkParams.isNetworkInitialized) {
 			LOG_WARN("Network being read says it wasnt initialized! Will proceed, but errors are to be expected");
 		}
+		data.networkParams.pace = params_cptr->pace;
 		data.networkParams.maxActions = params_cptr->maxActions;
 		data.networkParams.maxLAneighbours = params_cptr->maxLAneighbours;
 		data.networkParams.numberGAs = params_cptr->numberGAs;
@@ -261,24 +263,6 @@ namespace CL {
 		data.actionMirror.setHasData(true);
 
 		return true;
-	}
-
-	bool DataMirrorSystem::transferParams(AS::networkParameters_t* recepient_ptr) const {
-
-		LOG_WARN("This function is not implemented yet - returning false...");
-		return false;
-	}
-
-	bool DataMirrorSystem::transferAgentData(CL::agentMirrorControllerPtrs_t* recepient_ptr) const {
-
-		LOG_WARN("This function is not implemented yet - returning false...");
-        return false;
-	}
-
-	bool DataMirrorSystem::transferActionData(CL::ActionMirrorController* recepient_ptr) const {
-
-		LOG_WARN("This function is not implemented yet - returning false...");
-		return false;
 	}
 }
 

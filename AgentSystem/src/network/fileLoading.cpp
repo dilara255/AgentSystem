@@ -33,17 +33,18 @@ bool loadHeaderFromFp(FILE* fp, AS::networkParameters_t* pp, bool disableDecisio
 
     bool result = true;
     int tokensRead;
-    float mult;
+    float mult, pace;
     int makeDecisions, processActions;
 
     tokensRead = fscanf(fp, headerLine, &version, &pp->numberGAs, &pp->numberLAs,
                        &pp->maxLAneighbours, &pp->maxActions, &pp->mainLoopTicks,
-                       &mult, //TODO: WHY? Doesn't work if I use &pp->accumulatedMultiplier D:
+                       &mult, &pace,//TODO: WHY? Doesn't work with &pp->accumulatedMultiplier D:
                        &makeDecisions, &processActions, //So we don't try to load into a bool            
                        &pp->seeds[0], &pp->seeds[1], &pp->seeds[2], &pp->seeds[3]);
-    result &= (tokensRead == 13);
+    result &= (tokensRead == 14);
 
     pp->accumulatedMultiplier = mult;
+    pp->pace = pace;
     pp->makeDecisions = (bool)makeDecisions && !disableDecisions;
     pp->processActions = (bool)processActions && !blockActions;
 
@@ -691,14 +692,14 @@ bool AS::fileIsCompatible(FILE* fp) {
 
     int version, GAs, LAs, maxNeighbours, maxActions;
     uint64_t ticks;
-    double accumulatedMultiplier;
+    double accumulatedMultiplier, pace;
     int makeDecisions, processActions;
     uint64_t seeds[DRAW_WIDTH];
 
     int tokens = fscanf(fp, headerLine, &version, &GAs, &LAs, &maxNeighbours, &maxActions,
-                          &ticks, &accumulatedMultiplier, &makeDecisions, &processActions,
-                                               &seeds[0], &seeds[1], &seeds[2], &seeds[3]);
-    if (tokens != 13) {
+                                    &ticks, &accumulatedMultiplier, &pace, &makeDecisions, 
+                              &processActions, &seeds[0], &seeds[1], &seeds[2], &seeds[3]);
+    if (tokens != 14) {
         LOG_ERROR("Couldn't read all tokens from header to validade file format. Aborting load.");
         return false;
     }
