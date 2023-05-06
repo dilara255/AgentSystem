@@ -59,7 +59,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 		                             WarningsAndErrorsCounter* errorsCounter_ptr,
 									   const AS::ActionSystem* actionSystem_cptr,
 	                            bool makeDecisions, AS::PRNserver* prnServer_ptr,
-                               float secondsSinceLastDecisionStep, uint32_t tick) {
+                                              float secondsSinceLastDecisionStep) {
 	
 	g_errorsCounter_ptr = errorsCounter_ptr;
 	g_secondsSinceLastDecisionStep = secondsSinceLastDecisionStep;
@@ -111,8 +111,8 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 				//In case no decision is made, makeDecisionLA returns an innactive action, so:
 				if(chosenAction.ids.slotIsUsed){
-					chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
-																   errorsCounter_ptr);
+					chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, 
+														     errorsCounter_ptr);
 				}
 			}
 
@@ -150,8 +150,8 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 
 				//In case no decision is made, makeDecisionGA returns an innactive action, so:
 				if(chosenAction.ids.slotIsUsed){
-					chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, tick,
-																   errorsCounter_ptr);
+					chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr,
+														     errorsCounter_ptr);
 				}
 			}
 
