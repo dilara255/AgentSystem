@@ -15,10 +15,10 @@
 const char* initialNetworkFilename = "textModeVizBase.txt";
 const char* networkFilenameSaveName = "textModeViz_run0.txt";
 
-const std::chrono::seconds testTime = std::chrono::seconds(30);
-const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(120);
+const std::chrono::seconds testTime = std::chrono::seconds(600);
+const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
 const float testResources = DEFAULT_LA_RESOURCES;
-const float testPace = 3.0f;
+const float testPace = 1.0f;
 
 namespace TV{
 
@@ -303,9 +303,17 @@ namespace TV{
 
 		auto pauseStart = std::chrono::steady_clock::now();
 
+		AS::pauseMainLoop();
+
 		GETCHAR_PAUSE_SILENT;
 
+		AS::unpauseMainLoop();
+		while (AS::checkIfMainLoopIsPaused()) {
+			AZ::hybridBusySleepForMicros(std::chrono::microseconds(1*MICROS_IN_A_MILLI));
+		}
+
 		auto pauseEnd = std::chrono::steady_clock::now();
+				
 
 		*loopTime_ptr +=
 			std::chrono::duration_cast<std::chrono::seconds>(pauseEnd - pauseStart);

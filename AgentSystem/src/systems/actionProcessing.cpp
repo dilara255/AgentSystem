@@ -202,11 +202,11 @@ namespace AS {
 								  //SELF:
 		//STRENGHT:
 		int str = (int)AS::actCategories::STRENGHT;
-		g_processingFunctions[local][str][self].onTick[prep] = chargingTick;
-		g_processingFunctions[local][str][self].onEnd[prep] = STR_S_L_PrepEnd;
-		g_processingFunctions[local][str][self].onTick[travel] = passtroughTick;
-		g_processingFunctions[local][str][self].onTick[effect] = STR_S_L_effectTick;
-		g_processingFunctions[local][str][self].onTick[ret] = passtroughTick;
+		//g_processingFunctions[local][str][self].onTick[prep] = chargingTick;
+		//g_processingFunctions[local][str][self].onEnd[prep] = STR_S_L_PrepEnd;
+		//g_processingFunctions[local][str][self].onTick[travel] = passtroughTick;
+		//g_processingFunctions[local][str][self].onTick[effect] = STR_S_L_effectTick;
+		//g_processingFunctions[local][str][self].onTick[ret] = passtroughTick;
 		
 		//RESOURCES:
 		int res = (int)AS::actCategories::RESOURCES;
