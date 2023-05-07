@@ -16,9 +16,9 @@ const char* initialNetworkFilename = "textModeVizBase.txt";
 const char* networkFilenameSaveName = "textModeViz_run0.txt";
 
 const std::chrono::seconds testTime = std::chrono::seconds(30);
-const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(200);
-const float testResources = 10000.0f;
-const float testPace = 6.0f;
+const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(120);
+const float testResources = DEFAULT_LA_RESOURCES;
+const float testPace = 3.0f;
 
 namespace TV{
 
@@ -101,16 +101,63 @@ namespace TV{
 				std::chrono::duration_cast<std::chrono::seconds>(now - start);
 	}
 
+	void initializeActionsVec(std::vector<TV::actionChanges_t>* actionsVec_ptr, 
+															     int numberLAs){
+			
+		int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
+		int totalActions = maxActionsPerAgent * numberLAs;
+		actionsVec_ptr->reserve(totalActions);
+		TV::actionChanges_t emptyAction;
+		for (int i = 0; i < totalActions; i++) {
+			actionsVec_ptr->push_back(emptyAction);
+		}
+	}	
+
+	bool updateActionsAndChangeOnPause(std::vector<TV::actionChanges_t>* actionsVec_ptr, 
+											                              int numberLAs) {
+
+		int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
+		assert( actionsVec_ptr->size() == (maxActionsPerAgent * numberLAs) ); //from init
+
+		auto LAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataLAs);
+
+		AS::actionData_t newActionData;
+		int local = (int)AS::scope::LOCAL; //we're only dealing with locals for now
+
+		bool foundNewAction = false;
+		for(int agent = 0; agent < numberLAs; agent++){
+			for (int action = 0; action < maxActionsPerAgent; action++) {
+
+				int actionIndex = AS::getAgentsActionIndex(agent, action, maxActionsPerAgent);
+				newActionData = LAactions_ptr->at(actionIndex);
+
+				AS::actionData_t* oldAction_ptr = &(actionsVec_ptr->at(actionIndex).data);
+
+				if (newActionData.ids.slotIsUsed && newActionData.ids.active) {
+					
+					//Change in IDs mean something important happened
+					bool isNew = (oldAction_ptr->ids != newActionData.ids);
+					foundNewAction |= isNew;
+					actionsVec_ptr->at(actionIndex).hasChanged = isNew;
+
+					*oldAction_ptr = newActionData; //we always update if used and active
+				}
+			}
+		}
+
+		return foundNewAction;
+	}
+
 	void printAction(AS::actionData_t actionData) {
 
-		int cat = actionData.ids.category;
-		int mode = actionData.ids.mode;
+		std::string_view cat = AS::catToString((AS::actCategories)actionData.ids.category);
+		char mode = AS::modeToChar((AS::actModes)actionData.ids.mode);
 		int phase = actionData.ids.phase;
 		char target = 'x';
 		if (actionData.ids.target != actionData.ids.origin) {
 			target = '0' + actionData.ids.target; //expects target <= 9
 		}
-
+		
 		double secondsElapsed = 
 			(double)actionData.phaseTiming.elapsed/(double)TENTHS_OF_MS_IN_A_SECOND;
 		double phaseTotal = 
@@ -119,32 +166,37 @@ namespace TV{
 		float intensity = actionData.details.intensity;
 		float aux = actionData.details.processingAux;
 
-		printf("\t-> %6.2f/%6.2f s | %u_%u_%u -> %c | intens: %7.2f, aux: %+7.2f\n",
-						     secondsElapsed, phaseTotal, cat, mode, phase, 
+		printf("\t-> %6.2f/%6.2f s | %s_%c_%u -> %c | intens: %7.2f, aux: %+7.2f\n",
+						     secondsElapsed, phaseTotal, cat.data(), mode, phase, 
 												   target, intensity, aux);
 	}
 
 	const char* placeholderActionFormatLine = 
-		       "\t-> --------------- | ---------- | ------------------------------";
+		       "\t-> --------------- | ------------ | ------------------------------";
 	const char* separatorFormatLine = 
 		       "**********************************************************************\n";
+	const char* newArrow = ">>--NEW-->";
 
-	void printLAactionData(int agent) {
+
+	void printLAactionData(int agent, std::vector<TV::actionChanges_t>*actionsVec_ptr) {
 		
 		int maxActions = CL::ASmirrorData_cptr->networkParams.maxActions;
-		auto LAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataLAs);
 
-		AS::actionData_t actionData;
-		int local = (int)AS::scope::LOCAL;
+		AS::actionData_t* actionData_ptr;
 
 		for (int action = 0; action < maxActions; action++) {
 
 			int actionIndex = AS::getAgentsActionIndex(agent, action, maxActions);
-			actionData = LAactions_ptr->at(actionIndex);
+			actionData_ptr = &(actionsVec_ptr->at(actionIndex).data);
+			bool* isNew_ptr = &(actionsVec_ptr->at(actionIndex).hasChanged);
 
-			if (actionData.ids.slotIsUsed && actionData.ids.active) {
+			if (actionData_ptr->ids.slotIsUsed && actionData_ptr->ids.active) {
 
-				printAction(actionData);
+				if(*isNew_ptr) {
+					printf(newArrow);
+					*isNew_ptr = false;
+				}
+				printAction(*actionData_ptr);
 			}
 			else {
 				puts(placeholderActionFormatLine);
@@ -171,28 +223,10 @@ namespace TV{
 		printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | name: %s\n",
 			    agent, agentState_ptr->GAid, position.x, position.y, agentName.c_str());
 
-		printf("\tSTATE | $ %+10.2f (%+6.2f $/sec) | %7.2f I + %7.2f D ($%5.2f $/sec)\n",
+		printf("\tSTATE | %+10.2f $ (%+6.2f $/sec) | %7.2f S , %7.2f D (%+5.2f $/sec)\n",
 			                         resources_ptr->current, resources_ptr->updateRate,
 			                        strenght_ptr->current, strenght_ptr->externalGuard,
-			                                               strenght_ptr->currentUpkeep);
-	}
-
-	char charFromStance(int stance) {
-		switch (stance) 
-		{
-		case (int)AS::diploStance::WAR:
-			return 'W';
-		case (int)AS::diploStance::NEUTRAL:
-			return 'N';
-		case (int)AS::diploStance::TRADE:
-			return 'T';
-		case (int)AS::diploStance::ALLY:
-			return 'A';
-		case (int)AS::diploStance::ALLY_WITH_TRADE:
-			return 'Æ';
-		default:
-			return '?';
-		}
+			                                              -strenght_ptr->currentUpkeep);
 	}
 
 	void printLAneighborData(int agent) {
@@ -215,7 +249,7 @@ namespace TV{
 			int neighborID = agentState_ptr->locationAndConnections.neighbourIDs[neighbor];
 
 			int stance = (int)agentState_ptr->relations.diplomaticStanceToNeighbors[neighbor];
-			char stanceChar = charFromStance(stance);
+			char stanceChar = AS::diploStanceToChar((AS::diploStance)stance);
 
 			float disposition = agentState_ptr->relations.dispositionToNeighbors[neighbor];
 			float infiltration = decisionData_ptr->infiltration[neighbor];
@@ -225,11 +259,10 @@ namespace TV{
 			float strenght = decisionData_ptr->reads[neighbor].readOf[strenghtReadField];
 			float guard = decisionData_ptr->reads[neighbor].readOf[guardReadField];
 			
-			printf("\tNEIGHBOR: %d | %c, disp: %+3.2f | %+3.2f? | $ %+10.2f (%+6.2f $/sec) | %7.2f I + %7.2f D\n",
+			printf("\tNEIGHBOR: %d | %c, disp: %+3.2f | %+3.2f ? | %+10.2f $ (%+6.2f $/sec) | %7.2f S , %7.2f D\n",
 									neighborID, stanceChar, disposition, 
 									infiltration, resources, income, strenght, guard);		
 		}
-
 	}
 
 	void printLAdecisionData(int agent) {
@@ -244,6 +277,40 @@ namespace TV{
 		system("cls");
 	}
 
+	void printStandardAgent(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr) {
+
+		printLAheaderAndstateData(agent);
+		printLAneighborData(agent);
+		printLAdecisionData(agent);
+		printLAactionData(agent, actionsVec_ptr);
+	}
+
+	void screenStepStandard(int numberLAs, std::vector<TV::actionChanges_t>* actionsVec_ptr,
+		                     std::chrono::seconds timePassed, std::chrono::seconds loopTime) {
+		
+		resetScreen(); puts("");
+
+		for(int agent = 0; agent < numberLAs; agent++){
+				
+			printStandardAgent(agent, actionsVec_ptr);
+			printSeparation();
+		}
+
+		printf("\t\tSeconds remaining: %llu...\n", (loopTime - timePassed).count());
+	}
+			
+	void pauseLoop(std::chrono::seconds* loopTime_ptr) {
+
+		auto pauseStart = std::chrono::steady_clock::now();
+
+		GETCHAR_PAUSE_SILENT;
+
+		auto pauseEnd = std::chrono::steady_clock::now();
+
+		*loopTime_ptr +=
+			std::chrono::duration_cast<std::chrono::seconds>(pauseEnd - pauseStart);
+	}
+
 	void textModeVisualizationLoop(std::chrono::seconds loopTime) {
 	
 		LOG_DEBUG("Will starting visualization Main Loop...",20);
@@ -253,22 +320,20 @@ namespace TV{
 		auto timePassed = std::chrono::seconds(0);
 		printf("\n\n\n\nWill run test for %llu seconds...\n", loopTime.count());
 
-
 		int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
+
+		std::vector<TV::actionChanges_t> actionsVec;
+		initializeActionsVec(&actionsVec, numberLAs);
+
+		bool newAction = false;
 		while (timePassed < loopTime) {
 			
-			resetScreen(); puts("");
+			newAction = updateActionsAndChangeOnPause(&actionsVec, numberLAs);
 
-			for(int agent = 0; agent < numberLAs; agent++){
-				
-				printLAheaderAndstateData(agent);
-				printLAneighborData(agent);
-				printLAdecisionData(agent);
-				printLAactionData(agent);
-				printSeparation();
-			}
+			screenStepStandard(numberLAs, &actionsVec, timePassed, loopTime);
 
-			printf("\t\tSeconds remaining: %llu...\n", (loopTime - timePassed).count());	
+			if(newAction) { pauseLoop(&loopTime); } //after displaying it			
+
 			wait(&timePassed, loopSleepTime, start);					
 		}
 		printf("\nDone! Leaving Main Loop...\n\n\n");

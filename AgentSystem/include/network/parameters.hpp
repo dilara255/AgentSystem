@@ -287,7 +287,7 @@ namespace AS {
 		int numberLAs = DEFAULT_NUMBER_LAS;
 		int numberGAs = DEFAULT_NUMBER_GAS;
 		int maxLAneighbours = 0;
-		int maxActions = MAX_ACTIONS_PER_AGENT;
+		int maxActions = MAX_ACTIONS_PER_AGENT; //TODO: rename to maxActionsPerAgent
 		char name[NAME_LENGHT] = "";
 		char comment[COMMENT_LENGHT] = "";
 		uint64_t seeds[DRAW_WIDTH] = {DEFAULT_PRNG_SEED0, DEFAULT_PRNG_SEED1,

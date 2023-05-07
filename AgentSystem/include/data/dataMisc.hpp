@@ -3,10 +3,17 @@
 #include "AS_internal.hpp" //because dataMirror.hpp on CL is using this. TODO: don't.
 
 namespace AS {
+
+	AS_API constexpr char diploStanceToChar(AS::diploStance stance);
+	AS_API constexpr char scopeToChar(AS::scope scope);
+	AS_API constexpr char modeToChar(AS::actModes mode);
+	//Returns a string_view to a null-terminated char[4]:
+	AS_API constexpr std::string_view catToString(AS::actCategories cat);	
+
 	//This gives you the index ASSUMING you passed in valid agentID and maxActions.
 	//Returns NATURAL_RETURN_ERROR in case of error.
 	//TODO: this is a temporary fix while dataMirrors equivalent method is not fixed.
-	AS_API int getAgentsActionIndex(int agentID, int action, int maxActions);
+	AS_API int getAgentsActionIndex(int agentID, int action, int maxActionsPerAgent);
 
 	AS_API int getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_ptr);
 
