@@ -116,7 +116,6 @@ namespace TV{
 	//Returns true if there are significant changes
 	bool updateActionsAndCheckForChanges(std::vector<TV::actionChanges_t>* actionsVec_ptr, 
 											                              int numberLAs) {
-
 		int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
 		assert( actionsVec_ptr->size() == (maxActionsPerAgent * numberLAs) ); //from init
 
@@ -140,9 +139,10 @@ namespace TV{
 					bool isNew = (oldAction_ptr->ids != newActionData.ids);
 					foundNewAction |= isNew;
 					actionsVec_ptr->at(actionIndex).hasChanged = isNew;
-
-					*oldAction_ptr = newActionData; //we always update if used and active
 				}
+				
+				//Either way we always update, so old actions drop out
+				*oldAction_ptr = newActionData;
 			}
 		}
 
@@ -179,7 +179,7 @@ namespace TV{
 	const char* newArrow = ">>--NEW-->";
 
 
-	void printLAactionData(int agent, std::vector<TV::actionChanges_t>*actionsVec_ptr) {
+	void printLAactionData(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr) {
 		
 		int maxActions = CL::ASmirrorData_cptr->networkParams.maxActions;
 
@@ -266,8 +266,28 @@ namespace TV{
 		}
 	}
 
-	void printLAdecisionData(int agent) {
-		printf("\tDECISION: CCC_M (NTN+, NTN-) | CCC_M? CCC_M (NTN+, NTN-) | CCC_M -> x, YY\n");
+	float costNextAgentsAction(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr) {
+
+		int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
+		int startingIndex = maxActionsPerAgent * agent;
+		int boundingIndex = startingIndex + maxActionsPerAgent;
+
+		int currentValidActions = 0;
+		for (int action = startingIndex; action < boundingIndex; action++) {
+			if (actionsVec_ptr->at(action).data.ids.slotIsUsed
+				&& actionsVec_ptr->at(action).data.ids.active) {
+				currentValidActions++;
+			}
+		}
+
+		return AS::nextActionsCost(currentValidActions);
+	}
+
+	void printLAdecisionData(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr) {
+
+		float costNext = costNextAgentsAction(agent, actionsVec_ptr);
+
+		printf("\tDECISION: $ Next: %6.2f | CCC_M (NTN+, NTN-) | CCC_M? CCC_M (NTN+, NTN-) | CCC_M -> x, YY\n", costNext);
 	}
 
 	void printSeparation() {
@@ -282,7 +302,7 @@ namespace TV{
 
 		printLAheaderAndstateData(agent);
 		printLAneighborData(agent);
-		printLAdecisionData(agent);
+		printLAdecisionData(agent, actionsVec_ptr);
 		printLAactionData(agent, actionsVec_ptr);
 	}
 
@@ -334,14 +354,17 @@ namespace TV{
 		std::vector<TV::actionChanges_t> actionsVec;
 		initializeActionsVec(&actionsVec, numberLAs);
 
+		bool vizActive = true;
 		bool newAction = false;
 		while (timePassed < loopTime) {
 			
 			newAction = updateActionsAndCheckForChanges(&actionsVec, numberLAs);
 
-			screenStepStandard(numberLAs, &actionsVec, timePassed, loopTime);
+			if(vizActive){
+				screenStepStandard(numberLAs, &actionsVec, timePassed, loopTime);
 
-			if(newAction) { pauseLoop(&loopTime); } //after displaying it			
+				if(newAction) { pauseLoop(&loopTime); } //after displaying it			
+			}
 
 			wait(&timePassed, loopSleepTime, start);					
 		}

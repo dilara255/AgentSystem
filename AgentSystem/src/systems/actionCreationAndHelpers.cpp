@@ -2,6 +2,7 @@
 #include "miscDefines.hpp"
 
 #include "data/agentDataControllers.hpp"
+#include "data/dataMisc.hpp"
 
 #include "systems/actionSystem.hpp"
 #include "systems/warningsAndErrorsCounter.hpp"
@@ -87,15 +88,6 @@ namespace AS{
 		return;
 	}
 
-	//TODO: document math
-	float nextActionsCost(int currentActions) {
-
-		float multiplier = currentActions
-			+ ACT_SUPERLINEAR_WEIGHT * powf((float)(currentActions - 1), (float)ACT_SUPERLINEAR_EXPO);
-
-		return multiplier * BASE_ACT_COST;
-	}
-
 	//TODO: Test
 	//TODO: Make this into a method on ActionDataController
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const* asp,
@@ -148,7 +140,7 @@ namespace AS{
 
 		//The cost is composed of a base cost from the amount current actions plus
 		//any costs related to funding (stored at processingAux when details are set):
-		float cost = nextActionsCost(currentActions - 1) + action.details.processingAux;
+		float cost = nextActionsCost(currentActions) + action.details.processingAux;
 
 		float* currency_ptr = NULL;
 		if (scope == AS::scope::LOCAL) {

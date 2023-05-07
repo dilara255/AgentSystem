@@ -1,6 +1,17 @@
-//TODO-CRITICAL: These things probably should be in a networkParameters_t handler class
+//TODO-CRITICAL: Some of these things should be in data classes, others are part of API
 
 #include "data/dataMisc.hpp"
+
+//TODO: document math
+float AS::nextActionsCost(int currentActions) {
+
+	if(currentActions == 0) { return 0.0f; } //first is a freeby
+
+	float multiplier = currentActions
+		+ ACT_SUPERLINEAR_WEIGHT * powf((float)(currentActions - 1), (float)ACT_SUPERLINEAR_EXPO);
+	
+	return multiplier * BASE_ACT_COST;
+}
 
 constexpr char AS::diploStanceToChar(AS::diploStance stance){
 
@@ -15,7 +26,7 @@ constexpr char AS::diploStanceToChar(AS::diploStance stance){
 	case (int)AS::diploStance::ALLY:
 		return 'A';
 	case (int)AS::diploStance::ALLY_WITH_TRADE:
-		return 146;
+		return (char)146;
 	default:
 		return '?';
 	}

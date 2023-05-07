@@ -24,7 +24,6 @@ namespace AS {
 		                               AS::Decisions::agentsActions_t* activeActions_ptr, 
 		                                 AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
-	float nextActionsCost(int currentActions);
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
 		                               AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
