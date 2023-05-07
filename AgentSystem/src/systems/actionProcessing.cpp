@@ -118,12 +118,13 @@ namespace AS {
 		g_prnServer_ptr = prnServer_ptr;
 		g_errors_ptr = errors_ptr;		
 
+		//But there's no harm in asserting our trust:
 		assert(g_agentDataControllers_ptr != NULL);
 		assert(g_actionSystem_ptr != NULL);
 		assert(g_prnServer_ptr != NULL);
 		assert(g_errors_ptr != NULL);
 
-		//we do need to make sure the processing functions are initialized:
+		//We do need to make sure the processing functions are initialized:
 		if (!g_processingFunctionsInitialized) {
 
 			initializeProcessingFunctions();
@@ -132,18 +133,19 @@ namespace AS {
 			}
 		}
 
-		//first of all, let's check if the action just spawned and, if so, call it's onSpawn:
+		//Let's also check if the action just spawned and, if so, call it's onSpawn:
 		if (action_ptr->ids.phase == (int)actPhases::SPAWN) {
 			int cat = action_ptr->ids.category;
 			int mode = action_ptr->ids.mode;
 			int scope = action_ptr->ids.scope;
 
 			g_processingFunctions[scope][cat][mode].onSpawn(action_ptr);
-			action_ptr->ids.phase = 0;
+			action_ptr->ids.phase = (int)AS::actPhases::PREPARATION;
 		}
 
 		//timeMultiplier is in seconds, and has to be changed into a uint32_tenthsOfMilli_t:
-		double tenthsOfMillisThisStep = (double)timeMultiplier * (double)TENTHS_OF_MS_IN_A_SECOND;
+		double tenthsOfMillisThisStep = 
+							(double)timeMultiplier * (double)TENTHS_OF_MS_IN_A_SECOND;
 		
 		uint32_tenthsOfMilli_t timeRemainingToProcess = (uint32_t)tenthsOfMillisThisStep;	
 		
@@ -162,17 +164,21 @@ namespace AS {
 			//phases also naturally progress during processing
 			int phase = action_ptr->ids.phase;
 
-			//first we tick the action and receive any time still to be processed:
+			//First we tick the action, receive the time progressed and calculate the remaining
 			timeRemainingToProcess -= 
 				g_processingFunctions[scope][cat][mode].onTick[phase](timeRemainingToProcess, 
 					                                                              action_ptr);
 			
-			//if that is larger then zero, we didn't process as much time as we'd like:
+			//If that is larger than zero, we didn't process as much time as we'd like:
 			//that's because we've reached a phase end, so we must process that:
 			if (timeRemainingToProcess > 0) {
-				//which will do any end-of-phase effect and advance phase or deactivate action
+				
+				//onEnd will do any end-of-phase effect and advance phase or deactivate action:
 				g_processingFunctions[scope][cat][mode].onEnd[phase](action_ptr);
-				//since there's timeRemainingToProcess, we'll loop after this
+
+				//Since there's still timeRemainingToProcess, we'll loop after this
+				//and try to tick the timeRemainingToProcess. 
+				//We might even end another phase and get back here.
 			}
 		}	
 		//Done, the action was processed until it consumed all the step time or was deactivated

@@ -18,7 +18,7 @@ const char* networkFilenameSaveName = "textModeViz_run0.txt";
 const std::chrono::seconds testTime = std::chrono::seconds(600);
 const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
 const float testResources = DEFAULT_LA_RESOURCES;
-const float testPace = 1.0f;
+const float testPace = 5.0f;
 
 namespace TV{
 
@@ -81,7 +81,7 @@ namespace TV{
 	bool startNetworkAtPace(float pace) {
 		LOG_DEBUG("Running network...\n",1);
 		
-		if (!AS::run()) {
+		if (!AS::run(true)) {
 			LOG_CRITICAL("Failed to run network");
 			GETCHAR_FORCE_PAUSE;
 			return false;
@@ -113,7 +113,8 @@ namespace TV{
 		}
 	}	
 
-	bool updateActionsAndChangeOnPause(std::vector<TV::actionChanges_t>* actionsVec_ptr, 
+	//Returns true if there are significant changes
+	bool updateActionsAndCheckForChanges(std::vector<TV::actionChanges_t>* actionsVec_ptr, 
 											                              int numberLAs) {
 
 		int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
@@ -336,7 +337,7 @@ namespace TV{
 		bool newAction = false;
 		while (timePassed < loopTime) {
 			
-			newAction = updateActionsAndChangeOnPause(&actionsVec, numberLAs);
+			newAction = updateActionsAndCheckForChanges(&actionsVec, numberLAs);
 
 			screenStepStandard(numberLAs, &actionsVec, timePassed, loopTime);
 

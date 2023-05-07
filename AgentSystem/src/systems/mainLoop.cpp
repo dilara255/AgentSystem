@@ -330,7 +330,7 @@ void timeAndSleep(AS::timing_st* timing_ptr, int chopIndex, bool fixedTimeStep) 
 	}
 	AS::g_isMainLoopPaused = false;
 
-	//If a pause happened, we should reset the step start timem so it doesn't run long.
+	//If a pause happened, we should reset the step start time so it doesn't run long.
 	//Some time will have actually passed between the current start time and the pause.
 	//So we set the new start time to that much time before now.
 	if (hasPaused) {
