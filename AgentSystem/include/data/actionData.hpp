@@ -39,20 +39,41 @@ namespace AS {
     //NOT: "no". SPC: "yes, and is specific to this action". STD: "yes, and is the standard".
 	enum class actExists { NOT = 0, SPC = 1, STD = -1 };
 
+	//Should be always guaranteed to be 32 bits wide.
+	//TODO: a cast to uint32_t and a enum with offsets
 	//TODO-CRITICAL: WARNING: (possible) BUG: MAY NOT BE PORTABLE?
-	typedef struct {
-		//We still have 1 bit free for use
-		uint32_t slotIsUsed : 1;
-		uint32_t active : 1;
-		uint32_t origin : 10; //max LAs <= 1024
-		uint32_t target : 10;
-		uint32_t scope : 1;
-		uint32_t category : 4;
-		uint32_t mode : 2;
-		uint32_t phase : 3;
+	typedef struct ids_st {
+		enum class fieldSizes { USED = 1, ACTIVE = 1, ORIGIN = 10, TARGET = 10, 
+			                    SCOPE = 1, CATEGORY = 4, MODE = 2, PHASE = 3,
+			                    TOTAL_BITS = 
+									USED + ACTIVE + ORIGIN + TARGET + SCOPE
+									+ CATEGORY + MODE + PHASE};
 
-		enum class fields { ACTIVE, ORIGIN, TARGET, SCOPE, CATEGORY, MODE, PHASE,
-			                TOTAL_ACTION_FIELDS };
+		static_assert((int)ids_st::fieldSizes::TOTAL_BITS == 32);
+
+		uint32_t slotIsUsed : fieldSizes::USED;
+		uint32_t active : fieldSizes::ACTIVE;
+		uint32_t origin : fieldSizes::ORIGIN; //max LAs <= 1024
+		uint32_t target : fieldSizes::TARGET;
+		uint32_t scope : fieldSizes::SCOPE;
+		uint32_t category : fieldSizes::CATEGORY;
+		uint32_t mode : fieldSizes::MODE;
+		uint32_t phase : fieldSizes::PHASE;
+
+		bool operator==(ids_st& rhs) {
+			return	(rhs.slotIsUsed == slotIsUsed)
+					&& (rhs.active == active)
+					&& (rhs.origin == origin)
+					&& (rhs.target == target)
+					&& (rhs.scope == scope)
+					&& (rhs.category == category)
+					&& (rhs.mode == mode)
+					&& (rhs.phase == phase);
+		}
+
+		bool operator!=(ids_st& rhs) {
+			return	!(*this == rhs);
+		}
 	} AS_API ids_t;
 
 	//TODO: WARNING: MAY NOT BE PORTABLE?

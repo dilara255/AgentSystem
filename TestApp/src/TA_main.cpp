@@ -317,6 +317,8 @@ int testsBattery(void) {
 	
 	GETCHAR_FORCE_PAUSE;
 
+	AZ::hybridBusySleepForMicros(std::chrono::microseconds(MICROS_IN_A_SECOND));
+
 	LOG_INFO("Done! Enter to exit", 1); GETCHAR_FORCE_PAUSE;
 	return (TOTAL_TESTS - totalPassed);
 }

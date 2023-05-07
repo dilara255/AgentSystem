@@ -2,14 +2,90 @@
 
 #include "data/dataMisc.hpp"
 
-int AS::getAgentsActionIndex(int agentID, int action, int maxActions) {
+constexpr char AS::diploStanceToChar(AS::diploStance stance){
+
+	switch ((int)stance) 
+	{
+	case (int)AS::diploStance::WAR:
+		return 'W';
+	case (int)AS::diploStance::NEUTRAL:
+		return 'N';
+	case (int)AS::diploStance::TRADE:
+		return 'T';
+	case (int)AS::diploStance::ALLY:
+		return 'A';
+	case (int)AS::diploStance::ALLY_WITH_TRADE:
+		return 146;
+	default:
+		return '?';
+	}
+}
+
+constexpr char AS::scopeToChar(AS::scope scope) {
+
+	switch ((int)scope)
+	{
+	case  (int)AS::scope::LOCAL:
+		return 'L';
+	case  (int)AS::scope::GLOBAL:
+		return 'G';
+	default:
+		return '?';
+	}
+}
+
+constexpr char AS::modeToChar(AS::actModes mode) {
+
+	switch ((int)mode)
+	{
+	case  (int)AS::actModes::SELF:
+		return 'S';
+	case  (int)AS::actModes::IMMEDIATE:
+		return 'I';
+	case  (int)AS::actModes::REQUEST:
+		return 'R';
+	default:
+		return '?';
+	}
+}
+
+
+constexpr std::string_view AS::catToString(AS::actCategories cat) {
+
+	//NOTE: The string_view returned should be to a 4 char 
+	//NULL-TERMINATED string literal
+
+	switch ((int)cat)
+	{
+	case  (int)AS::actCategories::STRENGHT:
+		return "STR";
+	case  (int)AS::actCategories::RESOURCES:
+		return "RES";
+	case  (int)AS::actCategories::ATTACK:
+		return "ATT";
+	case  (int)AS::actCategories::GUARD:
+		return "GRD";
+	case  (int)AS::actCategories::SPY:
+		return "SPY";
+	case  (int)AS::actCategories::SABOTAGE:
+		return "SAB";
+	case  (int)AS::actCategories::DIPLOMACY:
+		return "DIP";
+	case  (int)AS::actCategories::CONQUEST:
+		return "CNQ";
+	default:
+		return "???";
+	}
+}
+
+int AS::getAgentsActionIndex(int agentID, int action, int maxActionsPerAgent) {
 	
-	if (action >= maxActions) {
+	if (action >= maxActionsPerAgent) {
 		LOG_WARN("Tried to get index of an action with ID above the maximum");
 		return NATURAL_RETURN_ERROR;
 	}
 
-	return ((agentID * maxActions) + action);
+	return ((agentID * maxActionsPerAgent) + action);
 
 }
 

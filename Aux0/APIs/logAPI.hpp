@@ -57,14 +57,17 @@ inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines =
 
 #if (defined AS_DEBUG && !DONT_ASK_KEYPRESS_DEBUG) || (defined AS_RELEASE && ASK_KEYPRESS_ON_RELEASE)
 	#define GETCHAR_PAUSE consumeAllcharacters()
+    #define GETCHAR_PAUSE_SILENT consumeAllcharacters(false)
 #else
 	#define GETCHAR_PAUSE puts("\n")
 #endif // AS_DEBUG
 
 #if (DONT_FORCE_KEYPRESS)
     #define GETCHAR_FORCE_PAUSE GETCHAR_PAUSE;
+    #define GETCHAR_FORCE_PAUSE_SILENT GETCHAR_PAUSE_SILENT;
 #else
 	#define GETCHAR_FORCE_PAUSE consumeAllcharacters()
+    #define GETCHAR_PAUSE_SILENT consumeAllcharacters(false)
 #endif // AS_DEBUG
 
 //MACROS log Agent System
