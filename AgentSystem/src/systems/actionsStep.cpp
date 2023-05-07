@@ -68,7 +68,7 @@ void AS::ActionSystem::stepActions(ActionSystem* ap, float timeMultiplier){
 
 	for (int gaActsIndex = 0; gaActsIndex < GAactions; gaActsIndex++) {
 
-		AS::dispatchActionProcessing(&(laActs->at(gaActsIndex)), timeMultiplier,
+		AS::dispatchActionProcessing(&(gaActs->at(gaActsIndex)), timeMultiplier,
 			        g_agentDataControllers_ptr, ap, g_prnServer_ptr, g_errorsCounter_ptr);
 	}
 }

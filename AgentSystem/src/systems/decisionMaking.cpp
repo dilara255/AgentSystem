@@ -59,7 +59,9 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 		errorsCounter_ptr->incrementWarning(AS::warnings::DS_LA_GOT_BAD_ACT_COUNT);
 		return nullAction; //won't be able to charge for the action;
 	}
+	
 	float cost = AS::nextActionsCost(currentActions);
+	//We check if cost > 0 because the first is free and can be done even while on debt
 	if ((cost > 0) && (cost > state_ptr->parameters.resources.current)) {
 		return nullAction; //won't be able to pay for any action anyway
 	}
@@ -115,7 +117,9 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 		errorsCounter_ptr->incrementWarning(AS::warnings::DS_GA_GOT_BAD_ACT_COUNT);
 		return nullAction; //won't be able to charge for the action;
 	}
+
 	float cost = AS::nextActionsCost(currentActions);
+	//We check if cost > 0 because the first is free and can be done even while on debt
 	if ((cost > 0) && (cost > state_ptr->parameters.GAresources)) {
 		return nullAction; //won't be able to pay for any action anyway
 	}

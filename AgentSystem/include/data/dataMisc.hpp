@@ -1,8 +1,12 @@
+
+
 #pragma once
 
-#include "AS_internal.hpp" //because dataMirror.hpp on CL is using this. TODO: don't.
+#include "AS_internal.hpp"
 
 namespace AS {
+
+	AS_API float nextActionsCost(int currentActions);
 
 	AS_API constexpr char diploStanceToChar(AS::diploStance stance);
 	AS_API constexpr char scopeToChar(AS::scope scope);
