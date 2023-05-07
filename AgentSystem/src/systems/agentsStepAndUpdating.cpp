@@ -639,6 +639,8 @@ void updateRead(float* read_ptr, float real, float reference, float infiltration
 		difference = minimumDifference * sign;
 	}
 
+	assert(isfinite(difference));
+
 	float correctionFactor = std::min(EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION, 
 		                                      abs(difference)/effectiveReference);
 	correctionFactor = std::max(0.f, (correctionFactor - BIAS));
@@ -648,7 +650,14 @@ void updateRead(float* read_ptr, float real, float reference, float infiltration
 						+ B*( (2*prnFrom0to1) - 1) 
 						+ C*(powf(correctionFactor, S))
 					) );
-	*read_ptr += difference * multiplier * timeMultiplier;
+
+	assert(isfinite(multiplier));
+
+	float change = difference * multiplier * timeMultiplier;
+
+	assert(isfinite(change));
+
+	*read_ptr += change;
 	*read_ptr = std::max(-*read_ptr, *read_ptr);
 }
 
