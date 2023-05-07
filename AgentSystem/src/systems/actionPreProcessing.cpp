@@ -151,13 +151,17 @@ namespace AS{
 
 		float newTroops = 
 			effectiveStrenght * ACT_STR_S_L_REF_PROPORTION_OF_STR * desiredIntensityMultiplier;
+		
+		newTroops = std::ceil(newTroops);
+
 		action_ptr->details.intensity = newTroops;
 
 		//This is the funding necessary to raise these troops:
 		action_ptr->details.processingAux = AS::STR_S_L_necessaryFunding(newTroops);
 
-		//And now for the preparation time:
-		double effectiveNewTroopsForTiming = std::sqrt(newTroops / ACT_REF_STRENGHT);
+		//And now for the preparation time (which scales with the 2/3 power of troops):
+		double effectiveNewTroopsForTiming = std::cbrt(newTroops / ACT_REF_STRENGHT);
+		effectiveNewTroopsForTiming *= effectiveNewTroopsForTiming;
 
 		double preparationTime = 
 			ACT_STR_S_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR * effectiveNewTroopsForTiming;

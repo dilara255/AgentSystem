@@ -208,7 +208,7 @@ namespace AS {
 								  //SELF:
 		//STRENGHT:
 		int str = (int)AS::actCategories::STRENGHT;
-		//g_processingFunctions[local][str][self].onTick[prep] = chargingTick;
+		g_processingFunctions[local][str][self].onTick[prep] = chargingTick;
 		//g_processingFunctions[local][str][self].onEnd[prep] = STR_S_L_PrepEnd;
 		//g_processingFunctions[local][str][self].onTick[travel] = passtroughTick;
 		//g_processingFunctions[local][str][self].onTick[effect] = STR_S_L_effectTick;
@@ -351,7 +351,6 @@ namespace AS {
 		//tries to pay wathever funding is left of the desired funding, then tick as usual
 
 		int agent = action_ptr->ids.origin;
-		float intensity = action_ptr->details.intensity;
 
 		assert(g_agentDataControllers_ptr != NULL);
 
@@ -365,7 +364,7 @@ namespace AS {
 		}
 		else {
 			action_ptr->details.processingAux -= *resources_ptr;
-			*resources_ptr -= 0;			
+			*resources_ptr = 0;			
 		}
 
 		return defaultTick(tickTenthsOfMs, action_ptr);

@@ -17,8 +17,10 @@ const char* networkFilenameSaveName = "textModeViz_run0.txt";
 
 const std::chrono::seconds testTime = std::chrono::seconds(600);
 const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
-const float testResources = DEFAULT_LA_RESOURCES;
-const float testPace = 5.0f;
+const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
+const float testPace = 1.0f;
+
+#define PRINT_VIZ true
 
 namespace TV{
 
@@ -354,7 +356,7 @@ namespace TV{
 		std::vector<TV::actionChanges_t> actionsVec;
 		initializeActionsVec(&actionsVec, numberLAs);
 
-		bool vizActive = true;
+		bool vizActive = PRINT_VIZ;
 		bool newAction = false;
 		while (timePassed < loopTime) {
 			
