@@ -54,7 +54,7 @@ uint32_t AS::ATT_I_L_travelTimeFromDistanceAndTroops(AS::pos_t posA, AS::pos_t p
 																	float intensity) {
 
 	double baseTime = calculateDistance(posA, posB) 
-							* (double)ACT_BASE_TRAVEL_UNITS_OF_DIST_PER_TENTHS_OF_MILLI;
+							/ (double)ACT_BASE_TRAVEL_UNITS_OF_DIST_PER_TENTHS_OF_MILLI;
 
 	return (uint32_t)std::round(baseTime * ATT_I_L_travelTimeModifierFromTroopSize(intensity));
 }

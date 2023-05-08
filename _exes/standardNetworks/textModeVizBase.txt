@@ -48,7 +48,7 @@ Name: GA_02
 
 LA Id: 0, belongs to GA: 0, On? 1, Decisions? 1
 Name: LA_0
-  Pos: X 0.000000, Y 0.000000
+  Pos: X 150.000000, Y 225.000000
   Strenght: 25.000000 (+ 0.000000), Guard: 15.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000
   Current Resources: 100.000000 (+ 0.000000), income: 1.000000, upkeep: 0.502500
   Connected LAs (bitfield): 6 0 0 0
@@ -68,7 +68,7 @@ Name: LA_0
 
 LA Id: 1, belongs to GA: 1, On? 1, Decisions? 1
 Name: LA_1
-  Pos: X 10.000000, Y 0.000000
+  Pos: X 125.000000, Y 50.000000
   Strenght: 50.000000 (+ 0.000000), Guard: 0.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000
   Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500
   Connected LAs (bitfield): 5 0 0 0
@@ -88,7 +88,7 @@ Name: LA_1
 
 LA Id: 2, belongs to GA: 2, On? 1, Decisions? 1
 Name: LA_2
-  Pos: X 20.000000, Y 0.000000
+  Pos: X 375.000000, Y 70.000000
   Strenght: 0.000000 (+ 0.000000), Guard: 40.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000
   Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500
   Connected LAs (bitfield): 3 0 0 0
