@@ -151,6 +151,35 @@ namespace TV{
 		return foundNewAction;
 	}
 
+	float setStyleAndcalculateDisplayIntensity(AS::actionData_t actionData, bool* isRate) {
+		
+		float intensity = actionData.details.intensity;
+		float rateMultiplier = TENTHS_OF_MS_IN_A_SECOND;
+
+		switch (actionData.ids.mode)
+		{
+		case((int)AS::actModes::SELF):
+			switch (actionData.ids.category)
+			{
+			case((int)AS::actCategories::STRENGHT):
+				if(actionData.ids.phase == (int)AS::actPhases::EFFECT){
+					*isRate = true;
+					return intensity * rateMultiplier;
+				}
+				else {
+					*isRate = false;
+					return intensity;
+				}
+			default:
+				*isRate = false;
+				return intensity;
+			}
+		default:
+			*isRate = false;
+			return intensity;
+		}
+	}
+
 	void printAction(AS::actionData_t actionData) {
 
 		std::string_view cat = AS::catToString((AS::actCategories)actionData.ids.category);
@@ -166,12 +195,21 @@ namespace TV{
 		double phaseTotal = 
 			(double)actionData.phaseTiming.total/(double)TENTHS_OF_MS_IN_A_SECOND;
 
-		float intensity = actionData.details.intensity;
+		bool intensityIsRate = false;
+		float intensity = setStyleAndcalculateDisplayIntensity(actionData, &intensityIsRate);
+		
 		float aux = actionData.details.processingAux;
 
-		printf("\t-> %6.2f/%6.2f s | %s_%c_%u -> %c | intens: %7.2f, aux: %+7.2f\n",
-						     secondsElapsed, phaseTotal, cat.data(), mode, phase, 
-												   target, intensity, aux);
+		if(!intensityIsRate){
+			printf("\t-> %6.2f/%6.2f s | %s_%c_%u -> %c | intens: %7.2f, aux: %+7.2f\n",
+								 secondsElapsed, phaseTotal, cat.data(), mode, phase, 
+													   target, intensity, aux);
+		}
+		else {
+			printf("\t-> %6.2f/%6.2f s | %s_%c_%u -> %c | intens: %5.2f/s, aux: %+7.2f\n",
+								 secondsElapsed, phaseTotal, cat.data(), mode, phase, 
+													   target, intensity, aux);
+		}
 	}
 
 	const char* placeholderActionFormatLine = 
