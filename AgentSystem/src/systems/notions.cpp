@@ -158,8 +158,8 @@ namespace AS::Decisions::LA {
 		assert(isfinite(notionBaseFromReferenceReads));
 		assert(notionBaseFromReferenceReads >= 0);
 
-		float baseFromReadsSquared = notionBaseFromReferenceReads * notionBaseFromReferenceReads;
-		float baseFromParamsSquared = baseFromNetworkParamValues * baseFromNetworkParamValues;
+		double baseFromReadsSquared = notionBaseFromReferenceReads * notionBaseFromReferenceReads;
+		double baseFromParamsSquared = baseFromNetworkParamValues * baseFromNetworkParamValues;
 		
 		float notionBase =
 			(float)std::sqrt( (baseFromReadsSquared + baseFromParamsSquared) / 2 );

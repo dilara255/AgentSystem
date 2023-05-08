@@ -140,7 +140,6 @@ namespace AS {
 			int scope = action_ptr->ids.scope;
 
 			g_processingFunctions[scope][cat][mode].onSpawn(action_ptr);
-			action_ptr->ids.phase = (int)AS::actPhases::PREPARATION;
 		}
 
 		//timeMultiplier is in seconds, and has to be changed into a uint32_tenthsOfMilli_t:
@@ -284,6 +283,7 @@ namespace AS {
 
 	void defaultOnSpawn(actionData_t* action_ptr) {
 
+		action_ptr->ids.phase = (int)AS::actPhases::PREPARATION;
 		return;
 	}
 
@@ -587,20 +587,30 @@ namespace AS {
 	//TODO: This has the side-effect of lowering upkeep. Is that a problem?
 	void ATT_I_L_onSpawn(actionData_t* action_ptr) {
 
-		int agent = action_ptr->ids.origin;
+		assert(g_agentDataControllers_ptr != NULL);
+
 		float intensity = action_ptr->details.intensity;
 
-		assert(g_agentDataControllers_ptr != NULL);
+		int agent = action_ptr->ids.origin;
 
 		auto agentStrenght_ptr =
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters.strenght);
 
 		assert(agentStrenght_ptr != NULL);
 
-		agentStrenght_ptr->current -= intensity;
-		agentStrenght_ptr->externalGuard += intensity;
-		
-		return;
+		if (intensity <= ACT_ATT_I_L_MINIMUM_ATTACK_INTENSITY) {
+			//not worth it
+			action_ptr->ids.phase = (int)AS::actPhases::CONCLUSION;
+			action_ptr->phaseTiming.total = 0;
+			return;
+		}
+		else {
+			agentStrenght_ptr->current -= intensity;
+			agentStrenght_ptr->externalGuard += intensity;
+			
+			defaultOnSpawn(action_ptr);
+			return;
+		}				
 	}
 
 	void ATT_I_L_PrepEnd(actionData_t* action_ptr) {

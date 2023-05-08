@@ -21,7 +21,7 @@ const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
 const float testPace = 10.0f;
 
 #define PRINT_VIZ true
-#define SHOULD_PAUSE_ON_NEW true
+#define SHOULD_PAUSE_ON_NEW false
 
 namespace TV{
 
@@ -140,7 +140,6 @@ namespace TV{
 					
 					//Change in IDs mean something important happened
 					bool isNew = (oldAction_ptr->ids != newActionData.ids);
-					isNew &= (newActionData.ids.phase != (int)AS::actPhases::SPAWN);
 					foundNewAction |= isNew;
 					actionsVec_ptr->at(actionIndex).hasChanged = isNew;
 				}
@@ -242,7 +241,8 @@ namespace TV{
 			actionData_ptr = &(actionsVec_ptr->at(actionIndex).data);
 			bool* isNew_ptr = &(actionsVec_ptr->at(actionIndex).hasChanged);
 
-			if (actionData_ptr->ids.slotIsUsed && actionData_ptr->ids.active) {
+			if (actionData_ptr->ids.slotIsUsed && actionData_ptr->ids.active
+				&& (actionData_ptr->ids.phase != (int)AS::actPhases::SPAWN) ) {
 
 				if(*isNew_ptr) {
 					printf(newArrow);
