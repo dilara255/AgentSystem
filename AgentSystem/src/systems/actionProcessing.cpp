@@ -227,12 +227,12 @@ namespace AS {
 						    //IMMEDIATE:
 		//ATTACK:
 		int att = (int)AS::actCategories::ATTACK;
-		//g_processingFunctions[local][att][immediate].onSpawn = ATT_I_L_onSpawn;
-		//g_processingFunctions[local][att][self].onEnd[prep] = ATT_I_L_PrepEnd;
-		//g_processingFunctions[local][att][self].onTick[effect] = ATT_I_L_effectTick;
-		//g_processingFunctions[local][att][self].onEnd[effect] = ATT_I_L_EffectEnd;
-		//g_processingFunctions[local][att][self].onEnd[effect] = ATT_I_L_ReturnEnd;
-		//g_processingFunctions[local][att][self].onEnd[effect] = ATT_I_L_ConclusionEnd;
+		g_processingFunctions[local][att][immediate].onSpawn = ATT_I_L_onSpawn;
+		g_processingFunctions[local][att][immediate].onEnd[prep] = ATT_I_L_PrepEnd;
+		//g_processingFunctions[local][att][immediate].onTick[effect] = ATT_I_L_effectTick;
+		//g_processingFunctions[local][att][immediate].onEnd[effect] = ATT_I_L_EffectEnd;
+		//g_processingFunctions[local][att][immediate].onEnd[ret] = ATT_I_L_ReturnEnd;
+		//g_processingFunctions[local][att][immediate].onEnd[conclusion] = ATT_I_L_ConclusionEnd;
 
 							   //DONE
 
