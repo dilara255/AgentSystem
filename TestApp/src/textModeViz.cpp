@@ -18,7 +18,7 @@ const char* networkFilenameSaveName = "textModeViz_run0.txt";
 const std::chrono::seconds testTime = std::chrono::seconds(600);
 const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
 const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
-const float testPace = 40.0f;
+const float testPace = 10.0f;
 
 #define PRINT_VIZ true
 #define SHOULD_PAUSE_ON_NEW true
@@ -140,6 +140,7 @@ namespace TV{
 					
 					//Change in IDs mean something important happened
 					bool isNew = (oldAction_ptr->ids != newActionData.ids);
+					isNew &= (newActionData.ids.phase != (int)AS::actPhases::SPAWN);
 					foundNewAction |= isNew;
 					actionsVec_ptr->at(actionIndex).hasChanged = isNew;
 				}

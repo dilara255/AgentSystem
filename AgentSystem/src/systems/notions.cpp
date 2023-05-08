@@ -136,17 +136,33 @@ namespace AS::Decisions::LA {
 		assert(notionBaseFromReferenceReads >= 0);
 
 		//We want to avoid a situation where everyone is just really lax with their defenses
-		//So the actual score will be based on the geometric mean between this
+		//So the actual score will be based on the rms mean between this
 		//and how well we compare to a proportion of REF_STR and REF_RES
 
 		double defenseProportionFromFixedRefs = agentsDefense / ACT_REF_DEFENSE;
 		double resourcesProportionFromFixedRefs = agentsResources / ACT_REFERENCE_RESOURCES;
 		
-		double baseFromNetworkReferenceValues =
+		if (defenseProportionFromFixedRefs < small) {
+			defenseProportionFromFixedRefs = small;
+		}
+
+		if (resourcesProportionFromFixedRefs < small) {
+			resourcesProportionFromFixedRefs = small;
+		}
+
+		double baseFromNetworkParamValues =
 			resourcesProportionFromFixedRefs / defenseProportionFromFixedRefs;
+
+		assert(isfinite(baseFromNetworkParamValues));
+		assert(baseFromNetworkParamValues >= 0);
+		assert(isfinite(notionBaseFromReferenceReads));
+		assert(notionBaseFromReferenceReads >= 0);
+
+		float baseFromReadsSquared = notionBaseFromReferenceReads * notionBaseFromReferenceReads;
+		float baseFromParamsSquared = baseFromNetworkParamValues * baseFromNetworkParamValues;
 		
 		float notionBase =
-			(float)std::sqrt(baseFromNetworkReferenceValues * notionBaseFromReferenceReads);
+			(float)std::sqrt( (baseFromReadsSquared + baseFromParamsSquared) / 2 );
 
 		assert(std::isfinite(notionBase));
 		assert(notionBase >= 0);
