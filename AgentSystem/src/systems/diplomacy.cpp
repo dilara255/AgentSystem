@@ -94,12 +94,13 @@ float LA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStan
 	int tradeSaturation = 0;
 	int partnersNeighbours = partner.locationAndConnections.connectedNeighbors.howManyAreOn();
 	
-	for (int i = 0; i < partnersNeighbours; i++) {
+	for (int i = 0; i < partnersNeighbours; i++) { //counts this agent (as it should)
 		int diploStance = (int)partner.relations.diplomaticStanceToNeighbors[i];
 		tradeSaturation += AS::tradeSaturationFromStance[diploStance];
 	}
 
 	if(tradeSaturation == 0) {
+		//If you're doing trade with them, they're doing trade with you
 		errorsCounter_ptr->incrementWarning(AS::warnings::DP_LA_TRADE_PARTNER_HAS_ZERO_SAT);
 		return 0; 
 	}
@@ -107,7 +108,6 @@ float LA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStan
 	//each neighbour gets a share depending on their diplomatic stance:
 	float agentsShare = (float)AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
 	
-
 	return agentsShare;
 }
 
@@ -223,17 +223,19 @@ float GA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStan
 	int partnersNeighbours = partner.connectedGAs.howManyAreOn();
 
 	for (int i = 0; i < partnersNeighbours; i++) {
-		int idOther = partner.neighbourIDs[i];
+		int idOther = partner.neighbourIDs[i]; //counts this agent (as it should)
 		int diploStance = (int)partner.relations.diplomaticStanceToNeighbors[idOther];
 		tradeSaturation += AS::tradeSaturationFromStance[diploStance];
 	}
 
+	if(tradeSaturation == 0) {
+		//If you're doing trade with them, they're doing trade with you
+		errorsCounter_ptr->incrementWarning(AS::warnings::DP_GA_TRADE_PARTNER_HAS_ZERO_SAT);
+		return 0; 
+	}
+
 	//each neighbour gets a share depending on their diplomatic stance:
 	float agentsShare = (float)AS::tradeSaturationFromStance[(int)theirStance]/tradeSaturation;
-	if(tradeSaturation == 0) {
-		errorsCounter_ptr->incrementWarning(AS::warnings::DP_GA_TRADE_PARTNER_HAS_ZERO_SAT);
-		agentsShare = 0; 
-	}
 
 	return agentsShare;
 }

@@ -52,15 +52,14 @@ namespace AS::Decisions::LA {
 		auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentID));
 
 		float upkeep = state_ptr->parameters.strenght.currentUpkeep;
-
+		
 		float effectiveIncome = NTN_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY 
 								* state_ptr->parameters.resources.updateRate;
+		
+		float notionBase = NTN_STD_MAX_EFFECTIVE_NOTION_BASE; //in case of really small income
 
 		float small = 0.1f; //to avoid blowups and worries about small quantities
-		
-		float notionBase = NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
-		
-		//If possible, we want the notionBase to be this proportion:
+		//But if possible, we want the notionBase to be this proportion:
 		if (effectiveIncome > small) {
 			notionBase = upkeep/effectiveIncome;
 		}
@@ -74,8 +73,8 @@ namespace AS::Decisions::LA {
 
 	//S1: LOW_DEFENSE_TO_RESOURCES
 	//This agent has low defences compared to it's resources:
-	//- The higher the current resources are compared to the reference, the higher this is;
-	//- The lower the defences are compared to the reference, the higher this is;
+	//- The higher the current resources are compared to the references, the higher this is;
+	//- The lower the defences are compared to the references, the higher this is;
 	float calcNotionBaseS1(int agentID, AS::dataControllerPointers_t* dp, 
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
@@ -90,7 +89,7 @@ namespace AS::Decisions::LA {
 		float refGuard = refReads_ptr->readOf[guardIndex];
 		
 		float refDefense = refGuard + refStrenght;
-
+		
 		//And these are the refResources:
 		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
 		float refResources = refReads_ptr->readOf[resourcesIndex];
@@ -100,6 +99,8 @@ namespace AS::Decisions::LA {
 		//Now we get the actual value of our defenses:
 		float agentsDefense = agentParameters_ptr->strenght.current
 							  + agentParameters_ptr->strenght.externalGuard;
+		
+		assert(agentsDefense >= 0); //there could always be some floating point weirdness
 
 		float small = 0.1f; //to avoid blowups on division : )
 
@@ -114,8 +115,8 @@ namespace AS::Decisions::LA {
 		}
 
 		//Same idea, for resources:
-		float agentsResources = agentParameters_ptr->resources.current;
-
+		float agentsResources = std::max(0.0f, agentParameters_ptr->resources.current);
+		
 		if (refResources < small) {
 			refResources = small;
 		}
@@ -128,9 +129,25 @@ namespace AS::Decisions::LA {
 		}
 
 		//Finally, this proportion is the notionBase we want:
-		float notionBase = resourcesProportion / defenceProportion;
-
+		double notionBaseFromReferenceReads = resourcesProportion / defenceProportion;
+		
 		//Since we've sanitized the terms before, we expect that:
+		assert(std::isfinite(notionBaseFromReferenceReads));
+		assert(notionBaseFromReferenceReads >= 0);
+
+		//We want to avoid a situation where everyone is just really lax with their defenses
+		//So the actual score will be based on the geometric mean between this
+		//and how well we compare to a proportion of REF_STR and REF_RES
+
+		double defenseProportionFromFixedRefs = agentsDefense / ACT_REF_DEFENSE;
+		double resourcesProportionFromFixedRefs = agentsResources / ACT_REFERENCE_RESOURCES;
+		
+		double baseFromNetworkReferenceValues =
+			resourcesProportionFromFixedRefs / defenseProportionFromFixedRefs;
+		
+		float notionBase =
+			(float)std::sqrt(baseFromNetworkReferenceValues * notionBaseFromReferenceReads);
+
 		assert(std::isfinite(notionBase));
 		assert(notionBase >= 0);
 
@@ -266,11 +283,11 @@ namespace AS::Decisions::LA {
 		if (refDefense < small) {
 			refDefense = small;
 		}
-		float defenceProportion = neighborDefense / refDefense;		
+		float defenceProportionRefReads = neighborDefense / refDefense;		
 
 		//defenceProportion will be a divident later, so:
-		if (defenceProportion < small) {
-			defenceProportion = small;
+		if (defenceProportionRefReads < small) {
+			defenceProportionRefReads = small;
 		}
 
 		//Same idea, for resources:
@@ -279,18 +296,34 @@ namespace AS::Decisions::LA {
 		if (refResources < small) {
 			refResources = small;
 		}
-		float resourcesProportion = neighborResources / refResources;
+		float resourcesProportionRefReads = neighborResources / refResources;
 
 		//Since we may have increased the defenceProportion a bit, 
 		//let's extend resourcesProportion the same courtesy:
-		if (resourcesProportion < small) {
-			resourcesProportion = small;
+		if (resourcesProportionRefReads < small) {
+			resourcesProportionRefReads = small;
 		}
 
 		//Finally, this proportion is the notionBase we want:
-		float notionBase = resourcesProportion / defenceProportion;
+		float notionBaseFromRefReads = resourcesProportionRefReads / defenceProportionRefReads;
 
 		//Since we've sanitized the terms before, we expect that:
+		assert(std::isfinite(notionBaseFromRefReads));
+		assert(notionBaseFromRefReads >= 0);
+
+		//We want to avoid a situation where everyone is just really lax with their defenses
+		//So the actual score will be based on the geometric mean between this
+		//and how well we compare to a proportion of REF_STR and REF_RES
+
+		double defenseProportionFromFixedRefs = neighborDefense / ACT_REF_DEFENSE;
+		double resourcesProportionFromFixedRefs = neighborResources / ACT_REFERENCE_RESOURCES;
+		
+		double baseFromNetworkReferenceValues =
+			resourcesProportionFromFixedRefs / defenseProportionFromFixedRefs;
+		
+		float notionBase =
+			(float)std::sqrt(baseFromNetworkReferenceValues * notionBaseFromRefReads);
+
 		assert(std::isfinite(notionBase));
 		assert(notionBase >= 0);
 
@@ -498,67 +531,78 @@ namespace AS::Decisions::LA {
 		int neighborIndex = ourState_ptr->locationAndConnections.neighbourIDs[neighbor];
 		uint32_t neighborsGA = dp->LAstate_ptr->getDataCptr()->at(neighborIndex).GAid;
 
-		auto GAstates_ptr = dp->GAstate_ptr->getDataCptr();
-		auto ourGAstate_ptr = &(GAstates_ptr->at(ourState_ptr->GAid));
+		float effectiveGAdisposition = 0;
+		bool GAsAreNeighbors = false;
+		if (ourState_ptr->GAid == neighborsGA) {
 
-		int ourGAsTotalNeighbors = ourGAstate_ptr->connectedGAs.howManyAreOn();
+			effectiveGAdisposition = 
+				PROPORTIONAL_WEIGHT_SAME_GA_COMPARED_TO_TRADE * stanceImpactFactorFromTrade;
+			GAsAreNeighbors = true;
+		}
+		else {
 
-		int notFound = -1;
-		uint32_t neighborsGAidOnOurGA = notFound;
+			auto GAstates_ptr = dp->GAstate_ptr->getDataCptr();
+			auto ourGAstate_ptr = &(GAstates_ptr->at(ourState_ptr->GAid));
+
+			int ourGAsTotalNeighbors = ourGAstate_ptr->connectedGAs.howManyAreOn();
+
+			int notFound = -1;
+			int neighborsGAidOnOurGA = notFound;
 		
-		for (int GAneighbor = 0; GAneighbor < ourGAsTotalNeighbors; GAneighbor++) {
-			if (ourGAstate_ptr->neighbourIDs[GAneighbor] == neighborsGA) {
-				neighborsGAidOnOurGA = GAneighbor;
+			for (int GAneighbor = 0; GAneighbor < ourGAsTotalNeighbors; GAneighbor++) {
+				if (ourGAstate_ptr->neighbourIDs[GAneighbor] == neighborsGA) {
+					neighborsGAidOnOurGA = GAneighbor;
+				}
 			}
-		}
 
-		bool GAsAreNeighbors = (neighborsGAidOnOurGA != notFound);
+			bool GAsAreNeighbors = (neighborsGAidOnOurGA != notFound);
 		
-		//Now we can get the GA info:
-		float GAdisposition = 0;
-		float GAlastDisposition = 0;
-		AS::diploStance GAstance = AS::diploStance::NEUTRAL;
+			//Now we can get the GA info:
+			float GAdisposition = 0;
+			float GAlastDisposition = 0;
+			AS::diploStance GAstance = AS::diploStance::NEUTRAL;
 
-		if (GAsAreNeighbors) {
-			GAdisposition = 
-				ourGAstate_ptr->relations.dispositionToNeighbors[neighborsGAidOnOurGA];
-			GAlastDisposition = 
-				ourGAstate_ptr->relations.dispositionToNeighborsLastStep[neighborsGAidOnOurGA];
-			GAstance = 
-				ourGAstate_ptr->relations.diplomaticStanceToNeighbors[neighborsGAidOnOurGA];
-		}
+			if (GAsAreNeighbors) {
+				GAdisposition = 
+					ourGAstate_ptr->relations.dispositionToNeighbors[neighborsGAidOnOurGA];
+				GAlastDisposition = 
+					ourGAstate_ptr->relations.dispositionToNeighborsLastStep[neighborsGAidOnOurGA];
+				GAstance = 
+					ourGAstate_ptr->relations.diplomaticStanceToNeighbors[neighborsGAidOnOurGA];
+			}
 
-		float changeInGAdisposition = GAlastDisposition - GAdisposition;
+			float changeInGAdisposition = GAlastDisposition - GAdisposition;
 
-		float effectiveGAdisposition = GAdisposition;
-		if (GAsAreNeighbors) {
+			float effectiveGAdisposition = GAdisposition;
+			if (GAsAreNeighbors) {
 
-			//We project their future disposition:
-			float projectedDispositionChange =
-				std::max(NTN_MAX_ABSOLUTE_DISPOSITION_EXTRAPOLATION,
-							(changeInGAdisposition * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS 
-																	* MILLIS_IN_A_SECOND) );
+				//We project their future disposition:
+				float projectedDispositionChange =
+					std::max(NTN_MAX_ABSOLUTE_DISPOSITION_EXTRAPOLATION,
+								(changeInGAdisposition * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS 
+																		* MILLIS_IN_A_SECOND) );
 			
-			effectiveGAdisposition += projectedDispositionChange;
-			//And then add the impact from the diplomatic stance:
+				effectiveGAdisposition += projectedDispositionChange;
+				//And then add the impact from the diplomatic stance:
 
-			float changeFromGAstance = 0;
-			if (stance == AS::diploStance::WAR) {
+				float changeFromGAstance = 0;
+				if (stance == AS::diploStance::WAR) {
 
-				changeFromGAstance += stanceImpactFactorFromWar;
+					changeFromGAstance += stanceImpactFactorFromWar;
+				}
+				if ( (stance == AS::diploStance::TRADE) || 
+					 (stance == AS::diploStance::ALLY_WITH_TRADE) ) {
+
+					changeFromGAstance += stanceImpactFactorFromTrade;
+				}
+				if ( (stance == AS::diploStance::ALLY) || 
+					 (stance == AS::diploStance::ALLY_WITH_TRADE) ) {
+
+					changeFromGAstance += stanceImpactFactorFromAlliance;
+				}
+
+				effectiveGAdisposition += changeFromGAstance;
 			}
-			if ( (stance == AS::diploStance::TRADE) || 
-				 (stance == AS::diploStance::ALLY_WITH_TRADE) ) {
-
-				changeFromGAstance += stanceImpactFactorFromTrade;
-			}
-			if ( (stance == AS::diploStance::ALLY) || 
-				 (stance == AS::diploStance::ALLY_WITH_TRADE) ) {
-
-				changeFromGAstance += stanceImpactFactorFromAlliance;
-			}
-
-			effectiveGAdisposition += changeFromGAstance;
 		}
 		
 		//Now we add the effectiveGAdisposition, with a weight, to our effectiveDisposition
@@ -1043,5 +1087,67 @@ namespace AS::Decisions {
 		assert(std::isfinite(finalNotion));
 		
 		return finalNotion;
+	}
+
+	float arithmeticAverageNotions(int totalNeighbors, notions_t* np, int notion) {
+		
+		if(totalNeighbors == 0) { return 0; }
+
+		float average = 0;
+		
+		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+			
+			average += np->neighbors[neighbor][notion];
+		}
+
+		return (average / totalNeighbors);
+	}
+
+	float rootMeanSquareNotions(int totalNeighbors, notions_t* np, int notion, 
+		                         AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+		
+		if(totalNeighbors == 0) { return 0; }
+
+		float average = 0;
+		
+		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+			
+			average += (np->neighbors[neighbor][notion] * np->neighbors[neighbor][notion]);
+		}
+		if (!std::isfinite(np->averages[notion])) {
+			
+			errorsCounter_ptr->incrementWarning(AS::warnings::DS_NOTIONS_RMS_BLEW_UP);
+			
+			average = arithmeticAverageNotions(totalNeighbors, np, notion);
+		}
+		else {
+			//Otherwise, we keep going with the original RMS plan:
+			average /= totalNeighbors;
+			average = sqrt(average); //notions are bounded to [0,1]
+		}
+
+		return average;
+	}
+	
+	float harmonicMeanNotions(int totalNeighbors, notions_t* np, int notion, 
+		                         AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+		
+		if(totalNeighbors == 0) { return 0; }
+
+		float average = 0;
+		
+		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+			
+			average += (1 / np->neighbors[neighbor][notion]);
+		}
+		
+		average /= totalNeighbors;
+		if (average >= 1) {
+			return (1 / average); //the harmonic mean
+		}
+		else {
+			errorsCounter_ptr->incrementWarning(AS::warnings::DS_NOTIONS_HARMONIC_OUT_BOUNDS);
+			return 1; //this is the maximum as notions are bounded to [0,1]
+		}
 	}
 }

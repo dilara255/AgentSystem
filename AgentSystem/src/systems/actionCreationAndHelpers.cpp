@@ -155,14 +155,14 @@ namespace AS{
 
 		//The agent can pay any eventual funding as the action runs, but we'll pay as much
 		//as possible now:
-		if ((*currency_ptr) < cost) {
-			cost -= (*currency_ptr);
-			*currency_ptr = 0;
-		}
-		else {
+		if ((*currency_ptr) >= cost) {
 			*currency_ptr -= cost;
 			cost = 0;			
 		}
+		else if ((*currency_ptr) > 0)  {
+			cost -= (*currency_ptr);
+			*currency_ptr = 0;
+		}		
 
 		//Any pending funding will be stored back in the aux:
 		action.details.processingAux = cost;

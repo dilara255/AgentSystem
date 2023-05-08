@@ -14,7 +14,13 @@
 
 float AS::RES_S_L_necessaryFunding(float intensity) {
 	
-	return (intensity / ACT_REF_INCOME) * ACT_RES_S_L_COST_PER_REF_INCOME;
+	float relativeChange = (intensity / ACT_REF_INCOME);
+
+	//raising income has a exponential-growth potential, so we add a squared term
+	//to help reign that in:
+
+	return ACT_RES_S_L_COST_PER_REF_INCOME * relativeChange
+			* (1 + (ACT_RES_S_L_COS_RELATIVE_WEIGHT_SQUARE_TERM * relativeChange) );
 }
 
 float AS::STR_S_L_necessaryFunding(float intensity) {

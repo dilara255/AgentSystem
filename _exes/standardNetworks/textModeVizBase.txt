@@ -1,5 +1,5 @@
 Version: 1
-GAs: 2, LAs: 3, maxNeighbors: 10, maxActions: 4, ticks: 0 (total multiplier last: 0.000000, pace: 1.000000)
+GAs: 4, LAs: 3, maxNeighbors: 10, maxActions: 4, ticks: 0 (total multiplier last: 0.000000, pace: 1.000000)
 makeDecisions: 1, act: 1
 s0: 2685821657736338717, s1: 4281543115072698430, s2: 8057464973209016151, s3: 1595721457336359713
 # textModeVizBase.txt
@@ -10,9 +10,37 @@ GA Id: 0, On? 1, Decisions? 1
 Name: GA_0
   Personality Traits: 0 1 2 3
   Resources: 0.000000 (+ 5.500000), Last tax: 0.001600 (+ 5.500000), Last trade: 0.000800 (+ 5.500000)
-  LA totals: resources: 400.000000 (2.000000 income), strenght: 200.000000 + 5.500000 (0.400000 + 5.500000 guard)
-  Connected LAs (bitfield): 7 0 0 0
-  Connected GAs (bitfield): 0
+  LA totals: resources: 100.000000 (0.500000 income), strenght: 50.000000 + 5.500000 (0.400000 + 5.500000 guard)
+  Connected LAs (bitfield): 1 0 0 0
+  Connected GAs (bitfield): 6
+    Relation with Neighbor 0 (id 1): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+    Relation with Neighbor 1 (id 2): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+
+GA Id: 1, On? 1, Decisions? 1
+Name: GA_1
+  Personality Traits: 0 1 2 3
+  Resources: 0.000000 (+ 5.500000), Last tax: 0.001600 (+ 5.500000), Last trade: 0.000800 (+ 5.500000)
+  LA totals: resources: 100.000000 (0.500000 income), strenght: 50.000000 + 5.500000 (0.400000 + 5.500000 guard)
+  Connected LAs (bitfield): 2 0 0 0
+  Connected GAs (bitfield): 5
+    Relation with Neighbor 0 (id 0): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+    Relation with Neighbor 1 (id 2): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+
+GA Id: 2, On? 1, Decisions? 1
+Name: GA_02  
+  Personality Traits: 0 1 2 3
+  Resources: 0.000000 (+ 5.500000), Last tax: 0.001600 (+ 5.500000), Last trade: 0.000800 (+ 5.500000)
+  LA totals: resources: 100.000000 (0.500000 income), strenght: 50.000000 + 5.500000 (0.400000 + 5.500000 guard)
+  Connected LAs (bitfield): 4 0 0 0
+  Connected GAs (bitfield): 3
+    Relation with Neighbor 0 (id 0): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+    Relation with Neighbor 1 (id 1): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
+      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
 
 #The last GA is reserved for local agents not belonging to any GA
 
@@ -21,7 +49,7 @@ Name: GA_0
 LA Id: 0, belongs to GA: 0, On? 1, Decisions? 1
 Name: LA_0
   Pos: X 0.000000, Y 0.000000
-  Strenght: 20.000000 (+ 0.000000), Guard: 20.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000
+  Strenght: 25.000000 (+ 0.000000), Guard: 15.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000
   Current Resources: 100.000000 (+ 0.000000), income: 1.000000, upkeep: 0.502500
   Connected LAs (bitfield): 6 0 0 0
     Relation with Neighbor 0 (id 1): stance: 0, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
@@ -38,10 +66,10 @@ Name: LA_0
     Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
     Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
 
-LA Id: 1, belongs to GA: 0, On? 1, Decisions? 1
+LA Id: 1, belongs to GA: 1, On? 1, Decisions? 1
 Name: LA_1
   Pos: X 10.000000, Y 0.000000
-  Strenght: 50.000000 (+ 0.000000), Guard: 50.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000
+  Strenght: 50.000000 (+ 0.000000), Guard: 0.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000
   Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500
   Connected LAs (bitfield): 5 0 0 0
     Relation with Neighbor 0 (id 0): stance: 0, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
@@ -58,10 +86,10 @@ Name: LA_1
     Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
     Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
 
-LA Id: 2, belongs to GA: 0, On? 1, Decisions? 1
+LA Id: 2, belongs to GA: 2, On? 1, Decisions? 1
 Name: LA_2
   Pos: X 20.000000, Y 0.000000
-  Strenght: 0.000000 (+ 0.000000), Guard: 70.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000
+  Strenght: 0.000000 (+ 0.000000), Guard: 40.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000
   Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500
   Connected LAs (bitfield): 3 0 0 0
     Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
@@ -84,6 +112,14 @@ GA Action 0 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0
 GA Action 1 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
 GA Action 2 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
 GA Action 3 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 4 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 5 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 6 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 7 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 8 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 9 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 10 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 11 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
 
 #LA Action Data:
 

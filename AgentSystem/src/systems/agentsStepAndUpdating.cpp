@@ -430,6 +430,8 @@ void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t*
 
 		for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
 
+			assert(isfinite(refs_ptr->readOf[field]));
+
 			//this is the payload:
 			updateRead(&readsOnNeighbor_ptr->readOf[field], realValues.readOf[field], 
 		             refs_ptr->readOf[field], infiltration, prnServer_ptr->getNext(), 
@@ -451,17 +453,17 @@ void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t*
 		int neighborID = state_ptr->neighbourIDs[neighbor];
 		auto readsOnNeighbor_ptr = &reads_ptr[neighbor];
 		
-		//int neighborID = agentState_ptr->locationAndConnections.neighbourIDs[neighbor];
-		
 		GA::readsOnNeighbor_t realValues = getRealValuesGA(dp, neighborID);
 		float infiltration = decisionData_ptr->infiltration[neighbor];
 
 		for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
+			
+			assert(isfinite(refs_ptr->readOf[field]));
 
 			//this is the payload:
 			updateRead(&(readsOnNeighbor_ptr->readOf[field]), realValues.readOf[field], 
-		               refs_ptr->readOf[field], infiltration, prnServer_ptr->getNext(), 
-				                                        g_secondsSinceLastDecisionStep);
+						refs_ptr->readOf[field], infiltration, prnServer_ptr->getNext(), 
+														g_secondsSinceLastDecisionStep);
 		}
 	}	
 }
@@ -519,38 +521,54 @@ LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPoint
 	auto GAstate_ptr = &(dp->GAstate_ptr->getDataCptr()->at(state_ptr->GAid));
 	auto GAparams_ptr = &(GAstate_ptr->parameters);
 
-	//TODO: extract this
 	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::GUARD] =
 										GAparams_ptr->LAguardTotal;
+	assert(isfinite(GAparams_ptr->LAguardTotal));
+
 	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::INCOME] =
 										GAparams_ptr->LAesourceTotals.updateRate;
+	assert(isfinite(GAparams_ptr->LAesourceTotals.updateRate));
+
 	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::RESOURCES] =
 										GAparams_ptr->LAesourceTotals.current;
+	assert(isfinite(GAparams_ptr->LAesourceTotals.current));
+
 	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::STRENGHT] =
 										GAparams_ptr->LAstrenghtTotal;
-
-	int totalNeighbors = state_ptr->locationAndConnections.numberConnectedNeighbors;
-	float totalInfiltration = 0;
+	assert(isfinite(GAparams_ptr->LAstrenghtTotal));
 
 	LA::readsOnNeighbor_t references; 
 	for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
 			references.readOf[field] = 0;
 	}
+
+	int totalNeighbors = state_ptr->locationAndConnections.numberConnectedNeighbors;
+	float totalAbsoluteInfiltration = 0;
+
 	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
 
-		float iniltration =  decision_ptr->infiltration[neighbor];
-		totalInfiltration += iniltration;
+		float absIniltration =  std::abs(decision_ptr->infiltration[neighbor]);
+		totalAbsoluteInfiltration += absIniltration;
 		for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
 
 			references.readOf[field] += 
-				(decision_ptr->reads[neighbor].readOf[field] * abs(iniltration));
+				(decision_ptr->reads[neighbor].readOf[field] * absIniltration);
 		}
 	}
+
 	int totalLAs = GAstate_ptr->localAgentsBelongingToThis.howManyAreOn();
+	assert(totalLAs > 0); //at least the agent, right?
 	for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
-			references.readOf[field] = 
-								(D * references.readOf[field] / totalInfiltration)
-								+ (E * GAreferences.readOf[field] / totalLAs);
+
+		float effectiveReference = 0;
+		if (totalAbsoluteInfiltration == 0) {
+			effectiveReference = references.readOf[field] / totalAbsoluteInfiltration;
+		}
+
+		references.readOf[field] = (D * effectiveReference) 
+									+ (E * GAreferences.readOf[field] / totalLAs);
+		
+		assert(isfinite(references.readOf[field]));
 	}
 
 	return references;
@@ -572,36 +590,55 @@ GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPoint
 	//TODO: extract this
 	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::GA_RESOURCES] =
 										GAparams_ptr->GAresources;
+	assert(isfinite(GAparams_ptr->GAresources));
+
 	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::GUARD_LAS] =
 										GAparams_ptr->LAguardTotal;
+	assert(isfinite(GAparams_ptr->LAguardTotal));
+
 	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS] =
 										GAparams_ptr->LAstrenghtTotal;
+	assert(isfinite(GAparams_ptr->LAstrenghtTotal));
+
 	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::TAX_INCOME] =
 										GAparams_ptr->lastTaxIncome;
+	assert(isfinite(GAparams_ptr->lastTaxIncome));
+
 	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::TRADE_INCOME] =
 										GAparams_ptr->lastTradeIncome;
-
-	int totalNeighbors = state_ptr->connectedGAs.howManyAreOn();
-	float totalInfiltration = 0;
-
+	assert(isfinite(GAparams_ptr->lastTradeIncome));
+	
 	GA::readsOnNeighbor_t references; 
 	for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
 			references.readOf[field] = 0;
 	}
+
+	int totalNeighbors = state_ptr->connectedGAs.howManyAreOn();
+	float totalAbsoluteInfiltration = 0;
+
 	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
 
-		float iniltration =  decision_ptr->infiltration[neighbor];
-		totalInfiltration += iniltration;
+		float absoluteIniltration =  std::abs(decision_ptr->infiltration[neighbor]);
+		totalAbsoluteInfiltration += absoluteIniltration;
 		for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
 
 			references.readOf[field] += 
-				(decision_ptr->reads[neighbor].readOf[field] * abs(iniltration));
+				(decision_ptr->reads[neighbor].readOf[field] * absoluteIniltration);
+
+			assert(isfinite(references.readOf[field]));
 		}
 	}
+
 	for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
-			references.readOf[field] = 
-								(D * references.readOf[field] / totalInfiltration)
-								+ (E * GAreferences.readOf[field]);
+		
+		float effectiveReference = 0;
+		if( totalAbsoluteInfiltration == 0 ){
+			effectiveReference = references.readOf[field] / totalAbsoluteInfiltration;
+		}
+				
+		references.readOf[field] = (D * effectiveReference) + (E * GAreferences.readOf[field]);
+
+		assert(isfinite(references.readOf[field]));
 	}
 
 	return references;
@@ -623,6 +660,11 @@ void updateRead(float* read_ptr, float real, float reference, float infiltration
 										 float prnFrom0to1, float timeMultiplier) {
 	
 	assert( (prnFrom0to1 >= 0.f) && (prnFrom0to1 <= 1.f) );
+	assert(isfinite(real));
+	assert(isfinite(reference));
+
+	//Reads can get dangerously unstable if the time-multiplier is too high
+	//TODO: timeMultiplier ceiling
 
 	static const float MAX_CORRECTION_WEIGHT_RELATIVE_TO_INFO = powf(FAC_CW , S);
 	static const float C = A*MAX_CORRECTION_WEIGHT_RELATIVE_TO_INFO/powf(EXPC_PROPORTIONAL_ERROR_OVER_MINIMUM_FOR_MAX_CORRECTION,S);
@@ -632,14 +674,19 @@ void updateRead(float* read_ptr, float real, float reference, float infiltration
 		effectiveReference = 1; //"neutral" to multiplication and division
 	}
 
+	assert(isfinite(effectiveReference));
+
 	float difference = real - (*read_ptr);
+
+	assert(isfinite(difference));
+
 	float minimumDifference = EXPC_EFFECTIVE_MIN_PROPORTIONAL_DIFF * effectiveReference;
+	int sign = difference >= 0 ? 1 : -1;
 	if (abs(difference) < abs(minimumDifference)) {
-		int sign = difference >= 0 ? 1 : -1;
 		difference = minimumDifference * sign;
 	}
 
-	assert(isfinite(difference));
+	assert(isfinite(difference) && true);
 
 	float correctionFactor = std::min(EXPC_PROPORTIONAL_ERROR_FOR_MAX_CORRECTION, 
 		                                      abs(difference)/effectiveReference);
@@ -652,9 +699,13 @@ void updateRead(float* read_ptr, float real, float reference, float infiltration
 					) );
 
 	assert(isfinite(multiplier));
-
+	
 	float change = difference * multiplier * timeMultiplier;
-
+	float absChange = std::abs(change);
+	if (absChange > EXPC_MINIMUM_CHANGE_TO_WORRY) {
+		change = sign * std::min(absChange, std::abs(difference));
+	}
+	
 	assert(isfinite(change));
 
 	*read_ptr += change;
