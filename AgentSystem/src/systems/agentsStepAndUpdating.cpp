@@ -108,7 +108,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 						makeDecisionLA(agent, dp, state_ptr, &referenceReads, 
 							           errorsCounter_ptr, actionSystem_cptr,
 							           g_secondsSinceLastDecisionStep, currentActions);
-
+				
 				//In case no decision is made, makeDecisionLA returns an innactive action, so:
 				if(chosenAction.ids.slotIsUsed){
 					chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, 

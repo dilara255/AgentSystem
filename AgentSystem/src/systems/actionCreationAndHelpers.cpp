@@ -131,6 +131,8 @@ namespace AS{
 										                ActionSystem* actionSystem_ptr,
 										   WarningsAndErrorsCounter* errorsCounter_ptr) {
 
+		assert(action.ids.phase == (int)AS::actPhases::SPAWN);
+
 		AS::scope scope = (AS::scope)action.ids.scope;
 		int agentID = action.ids.origin;
 

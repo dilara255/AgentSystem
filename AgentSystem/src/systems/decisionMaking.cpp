@@ -825,7 +825,7 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 		//some ideas sound nice, so:
 		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope, errorsCounter_ptr);
 	}
-	
+
 	//If we choose to do nothing, chosenAction.ids.slotIsUsed will be 0, else, 1, so:
 	if(chosenAction.ids.slotIsUsed) { //we have actually chosen to do something!
 
