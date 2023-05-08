@@ -219,7 +219,6 @@ namespace AS {
 		int res = (int)AS::actCategories::RESOURCES;
 		g_processingFunctions[local][res][self].onTick[prep] = chargingTick;
 		g_processingFunctions[local][res][self].onEnd[prep] = RES_S_L_PrepEnd;
-		g_processingFunctions[local][res][self].onEnd[travel] = ATT_I_L_travelEnd;
 		g_processingFunctions[local][res][self].onTick[travel] = justEndThePhase;
 		g_processingFunctions[local][res][self].onTick[effect] = RES_S_L_effectTick;
 		g_processingFunctions[local][res][self].onTick[ret] = justEndThePhase;
@@ -228,12 +227,12 @@ namespace AS {
 						    //IMMEDIATE:
 		//ATTACK:
 		int att = (int)AS::actCategories::ATTACK;
-		g_processingFunctions[local][att][immediate].onSpawn = ATT_I_L_onSpawn;
-		g_processingFunctions[local][att][self].onEnd[prep] = ATT_I_L_PrepEnd;
-		g_processingFunctions[local][att][self].onTick[effect] = ATT_I_L_effectTick;
-		g_processingFunctions[local][att][self].onEnd[effect] = ATT_I_L_EffectEnd;
-		g_processingFunctions[local][att][self].onEnd[effect] = ATT_I_L_ReturnEnd;
-		g_processingFunctions[local][att][self].onEnd[effect] = ATT_I_L_ConclusionEnd;
+		//g_processingFunctions[local][att][immediate].onSpawn = ATT_I_L_onSpawn;
+		//g_processingFunctions[local][att][self].onEnd[prep] = ATT_I_L_PrepEnd;
+		//g_processingFunctions[local][att][self].onTick[effect] = ATT_I_L_effectTick;
+		//g_processingFunctions[local][att][self].onEnd[effect] = ATT_I_L_EffectEnd;
+		//g_processingFunctions[local][att][self].onEnd[effect] = ATT_I_L_ReturnEnd;
+		//g_processingFunctions[local][att][self].onEnd[effect] = ATT_I_L_ConclusionEnd;
 
 							   //DONE
 
@@ -381,7 +380,7 @@ namespace AS {
 			*resources_ptr -= action_ptr->details.processingAux;
 			action_ptr->details.processingAux = 0;
 		}
-		else {
+		else if ((*resources_ptr) > 0) {
 			action_ptr->details.processingAux -= *resources_ptr;
 			*resources_ptr = 0;			
 		}
@@ -444,6 +443,12 @@ namespace AS {
 
 		float fundingPending = std::max(0.0f, resourcesLeftToPay - (*funds_ptr));
 
+		//Calculate how much STR we should get this tick if fully funded:
+		float idealGain = action_ptr->details.intensity * tickTenthsOfMs;
+
+		//Then we calculate how much that would cost in fundings:
+		float fundsForIdealGain = STR_S_L_necessaryFunding(idealGain);
+
 		//How much of that can we pay now?
 		float* resources_ptr = &(params_ptr->resources.current);		
 
@@ -451,18 +456,16 @@ namespace AS {
 		if ( (*resources_ptr) >= fundingPending) {
 			newFunds = fundingPending;
 		}
-		else {
+		else if ( (*resources_ptr) > 0 ) {
 			newFunds = (*resources_ptr);
 		}
+		else {
+			newFunds = fundsForIdealGain * ACT_STR_S_L_OVERDRAFT_FUNDS_PROPORTION;
+		}
 
+		//Charge for the funds:
 		*funds_ptr += newFunds;
 		*resources_ptr -= newFunds;
-		
-		//Calculate how much str we should get this tick if fully funded:
-		float idealGain = action_ptr->details.intensity * tickTenthsOfMs;
-
-		//Then we calculate how much that would cost in fundings:
-		float fundsForIdealGain = STR_S_L_necessaryFunding(idealGain);
 
 		//Of course we won't try to pay over our intended maximum:
 		float effectiveMaximumExpenseThisTick = 
@@ -518,44 +521,63 @@ namespace AS {
 		auto params_ptr = 
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters);
 
-		//Try to pay as much as possible from the pending funding:
-		float* resources_ptr = &(params_ptr->resources.current);
-		float totalDesiredFunding = STR_S_L_necessaryFunding(action_ptr->details.intensity);
-
+		//Try to pay as much as possible of the remaining funding:
+		uint32_t timeLeft = action_ptr->phaseTiming.total - action_ptr->phaseTiming.elapsed;
+		//How much does the rate times the time left cost?
+		float resourcesLeftToPay = 
+			RES_S_L_necessaryFunding(action_ptr->details.intensity * timeLeft);
+		
 		float* funds_ptr = &(action_ptr->details.processingAux);
 
-		float leftToPay = totalDesiredFunding - (*funds_ptr);
+		float fundingPending = std::max(0.0f, resourcesLeftToPay - (*funds_ptr));
 
-		float newFunds = 0;
-		if ( (*resources_ptr) >= leftToPay) {
-			newFunds = leftToPay;
-		}
-		else {
-			newFunds = (*resources_ptr);
-		}
-
-		*funds_ptr += newFunds;
-		*resources_ptr -= newFunds;
-		 
-		//Calculate how much str we should get this tick if fully funded:
+		//Calculate how much INC we should get this tick if fully funded:
 		float idealGain = action_ptr->details.intensity * tickTenthsOfMs;
 
 		//Then we calculate how much that would cost in fundings:
 		float fundsForIdealGain = RES_S_L_necessaryFunding(idealGain);
-		
+
+		//How much of that can we pay now?
+		float* resources_ptr = &(params_ptr->resources.current);	
+
+		float newFunds = 0;
+		if ( (*resources_ptr) >= fundingPending) {
+			newFunds = fundingPending;
+		}
+		else if( (*resources_ptr) > 0 ) {
+			newFunds = (*resources_ptr);
+		}
+		else {
+			newFunds = fundsForIdealGain * ACT_RES_S_L_OVERDRAFT_FUNDS_PROPORTION;
+		}
+
+		//Charge for the funds:
+		*funds_ptr += newFunds;
+		*resources_ptr -= newFunds;
+
+		//Of course we won't try to pay over our intended maximum:
+		float effectiveMaximumExpenseThisTick = 
+						std::min(fundsForIdealGain, resourcesLeftToPay);
+
 		//How much of that can we pay for from our funding?
-		float ratioToGain = std::min(1.0f, ((*funds_ptr) / fundsForIdealGain) );
+		float ratioToGain = std::min(1.0f, ((*funds_ptr) / effectiveMaximumExpenseThisTick) );
 		 
 		//Now we pay for that that and raise the str:
-		*funds_ptr -= (ratioToGain * fundsForIdealGain);
+		*funds_ptr -= (ratioToGain * effectiveMaximumExpenseThisTick);
 		*funds_ptr = std::max(0.0f, (*funds_ptr) ); //to avoid any floating point weirdness
 
+		//Gain INC:
 		params_ptr->resources.updateRate += (ratioToGain * idealGain);
 		
-		//Then we do the usual ticking, but advance time proportionally to our gain:
-		uint32_t timeToTick = (uint32_t)round( (double)tickTenthsOfMs * (double)ratioToGain );
-
-		return defaultTick(timeToTick, action_ptr);
+		//We want to tick normally, but since the effect may be partial,
+		//we offset that by an increase in total time proportional to the gain in STR:
+		if (ratioToGain < 1.0f) {
+			//We use floor to make sure this ends, even if with *slightly* less troops
+			action_ptr->phaseTiming.total +=
+					(uint32_t)floor((1 - (double)ratioToGain)*tickTenthsOfMs);
+		}
+		
+		return defaultTick(tickTenthsOfMs, action_ptr);
 	}
 	
 					  //IMMEDIATE:
@@ -869,7 +891,8 @@ namespace AS {
 				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters);
 			
 			//First of all, take any loot in:
-			param_ptr->resources.current += action_ptr->details.processingAux;
+			param_ptr->resources.current += 
+				ACT_ATT_I_L_PROPORTION_OF_LOOT_ACTUALLY_PROFITED * action_ptr->details.processingAux;
 		
 			//Then we try to remember roughly how many people we had sent on the attack:
 			auto attackerState_ptr = 

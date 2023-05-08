@@ -470,11 +470,11 @@ namespace AS {
 
 			{{                         //STRENGHT  
 				//SELF:
-				{-0.8f, 0.6f, -0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				 0.3f, 0.3f, 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				{-0.8f, 1.2f, -0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.9f, 0.3f, 0.9f, -0.35f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				 /*Changed for testing. Original:
-				 {-0.8f, 0.6f, -0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				 0.3f, 0.3f, 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				{-0.8f, 0.8f, -0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.6f, 0.3f, 0.6f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				 */
 				//IMMEDIATE:
 				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
@@ -485,11 +485,11 @@ namespace AS {
 			}},
 			{{                         //RESOURCES 
 				//SELF:
-				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
-				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				{0.5f, -0.6f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.0f, 0.0f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				 /*Changed for testing. Original:
-				 {0.8f, -0.8f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				 0.2f, 0.0f, -0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				 {0.8f, -0.6f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+				 0.2f, 0.0f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				 */
 				//IMMEDIATE:
 				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
@@ -506,8 +506,8 @@ namespace AS {
 				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
 				 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				 /**Changed for testing. Original:
-				 {0.4f, -0.4f, 0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				 0.4f, -0.6f, 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+				 {0.4f, -0.4f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+				 1.0f, -0.6f, 0.7f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 				 */
 				//REQUEST:
 				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
@@ -689,6 +689,21 @@ namespace AS {
 			else {
 				return notionsMaxEffectiveBasesGA[index];
 			}
+		}
+
+		enum class notionMeanStrategies { AVG, RMS, HAR,
+										  TOTAL };
+
+		constexpr auto AVG = notionMeanStrategies::AVG;
+		constexpr auto RMS = notionMeanStrategies::RMS;
+		constexpr auto HAR = notionMeanStrategies::HAR;
+
+		static constexpr notionMeanStrategies neighborNotionMeanTakingStrategy[(int)notionsNeighbor::TOTAL] = {
+			RMS, HAR, RMS, HAR, RMS, RMS, RMS, RMS, RMS, RMS, RMS, RMS
+		};
+
+		static constexpr notionMeanStrategies getMeanTakingStrategy(notionsNeighbor notion) {
+			return neighborNotionMeanTakingStrategy[(int)notion];
 		}
 
 		//These are the GA personalities:

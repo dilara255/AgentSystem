@@ -40,4 +40,12 @@ namespace AS::Decisions{
 	float delinearizeAndClampNotion(float baseNotion, 
 								float effectiveMaxBase = NTN_STD_MAX_EFFECTIVE_NOTION_BASE, 
 								float smallExponent = NTN_STD_DELINEARIZATION_EXPONENT);
+
+	float arithmeticAverageNotions(int totalNeighbors, notions_t* np, int notion);
+
+	float rootMeanSquareNotions(int totalNeighbors, notions_t* np, int notion, 
+		                         AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+
+	float harmonicMeanNotions(int totalNeighbors, notions_t* np, int notion, 
+		                         AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 }

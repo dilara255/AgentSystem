@@ -896,29 +896,22 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 	//We also have the np->averages to populate.
 	for(int notion = 0; notion < totalNotionsNeighbor; notion++){	
 		
-		np->averages[notion] = 0;
+		//Each neighbor notion can have a different averaging strategy, so:
+		AD::notionMeanStrategies strategy = 
+				AD::getMeanTakingStrategy((AD::notionsNeighbor)notion);
 
-		//We'll actually compute the RMS of each neighbors contribution:
-		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
-			np->averages[notion] += 
-				(np->neighbors[neighbor][notion] * np->neighbors[neighbor][notion]);
-		}
-		if (!std::isfinite(np->averages[notion])) {
-			
-			errorsCounter_ptr->incrementWarning(AS::warnings::DS_LA_NOTIONS_RMS_BLEW_UP);
-			
-			//Anyway, if the squaring blew things up, we go back to a simple average:
-			np->averages[notion] = 0;
-
-			for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
-				np->averages[notion] += np->neighbors[neighbor][notion];
-			}
-			np->averages[notion] /= totalNeighbors;
-		}
-		else {
-			//Otherwise, we keep going with the original RMS plan:
-			np->averages[notion] /= totalNeighbors;
-			np->averages[notion] = sqrt(np->averages[notion]); //notions are bounded to [0,1]
+		switch (strategy)
+		{
+		case AD::notionMeanStrategies::AVG:
+			np->averages[notion] = AD::arithmeticAverageNotions(totalNeighbors, np, notion);
+		case AD::notionMeanStrategies::RMS:
+			np->averages[notion] = AD::rootMeanSquareNotions(totalNeighbors, np, notion, 
+																	  errorsCounter_ptr);
+		case AD::notionMeanStrategies::HAR:
+			np->averages[notion] = AD::harmonicMeanNotions(totalNeighbors, np, notion, 
+																	errorsCounter_ptr);
+		default:
+			np->averages[notion] = AD::arithmeticAverageNotions(totalNeighbors, np, notion);
 		}
 	}
 }
@@ -973,29 +966,22 @@ void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 	//We also have the np->averages to populate.
 	for(int notion = 0; notion < totalNotionsNeighbor; notion++){	
 		
-		np->averages[notion] = 0;
+		//Each neighbor notion can have a different averaging strategy, so:
+		AD::notionMeanStrategies strategy = 
+				AD::getMeanTakingStrategy((AD::notionsNeighbor)notion);
 
-		//We'll actually compute the RMS of each neighbors contribution:
-		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
-			np->averages[notion] += 
-				(np->neighbors[neighbor][notion] * np->neighbors[neighbor][notion]);
-		}
-		if (!std::isfinite(np->averages[notion])) {
-			
-			errorsCounter_ptr->incrementWarning(AS::warnings::DS_GA_NOTIONS_RMS_BLEW_UP);
-			
-			//Anyway, if the squaring blew things up, we go back to a simple average:
-			np->averages[notion] = 0;
-
-			for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
-				np->averages[notion] += np->neighbors[neighbor][notion];
-			}
-			np->averages[notion] /= totalNeighbors;
-		}
-		else {
-			//Otherwise, we keep going with the original RMS plan:
-			np->averages[notion] /= totalNeighbors;
-			np->averages[notion] = sqrt(np->averages[notion]); //notions are bounded to [0,1]
+		switch (strategy)
+		{
+		case AD::notionMeanStrategies::AVG:
+			np->averages[notion] = AD::arithmeticAverageNotions(totalNeighbors, np, notion);
+		case AD::notionMeanStrategies::RMS:
+			np->averages[notion] = AD::rootMeanSquareNotions(totalNeighbors, np, notion, 
+																	  errorsCounter_ptr);
+		case AD::notionMeanStrategies::HAR:
+			np->averages[notion] = AD::harmonicMeanNotions(totalNeighbors, np, notion, 
+																	errorsCounter_ptr);
+		default:
+			np->averages[notion] = AD::arithmeticAverageNotions(totalNeighbors, np, notion);
 		}
 	}
 }

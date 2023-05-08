@@ -18,9 +18,10 @@ const char* networkFilenameSaveName = "textModeViz_run0.txt";
 const std::chrono::seconds testTime = std::chrono::seconds(600);
 const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
 const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
-const float testPace = 1.0f;
+const float testPace = 10.0f;
 
 #define PRINT_VIZ true
+#define SHOULD_PAUSE_ON_NEW false
 
 namespace TV{
 
@@ -170,6 +171,15 @@ namespace TV{
 					*isRate = false;
 					return intensity;
 				}
+			case((int)AS::actCategories::RESOURCES):
+				if(actionData.ids.phase == (int)AS::actPhases::EFFECT){
+					*isRate = true;
+					return intensity * rateMultiplier;
+				}
+				else {
+					*isRate = false;
+					return intensity;
+				}
 			default:
 				*isRate = false;
 				return intensity;
@@ -206,7 +216,7 @@ namespace TV{
 													   target, intensity, aux);
 		}
 		else {
-			printf("\t-> %6.2f/%6.2f s | %s_%c_%u -> %c | intens: %5.2f/s, aux: %+7.2f\n",
+			printf("\t-> %6.2f/%6.2f s | %s_%c_%u -> %c | rate: %7.4f/s, aux: %+7.2f\n",
 								 secondsElapsed, phaseTotal, cat.data(), mode, phase, 
 													   target, intensity, aux);
 		}
@@ -403,7 +413,7 @@ namespace TV{
 			if(vizActive){
 				screenStepStandard(numberLAs, &actionsVec, timePassed, loopTime);
 
-				if(newAction) { pauseLoop(&loopTime); } //after displaying it			
+				if(newAction && SHOULD_PAUSE_ON_NEW) { pauseLoop(&loopTime); }		
 			}
 
 			wait(&timePassed, loopSleepTime, start);					

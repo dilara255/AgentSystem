@@ -196,8 +196,9 @@ namespace AS{
 		//This is the funding necessary to raise the income:
 		action_ptr->details.processingAux = AS::RES_S_L_necessaryFunding(raise);
 
-		//And now for the preparation time:
-		double effectiveRaiseForTiming = std::sqrt(raise / ACT_REF_INCOME);
+		//And now for the preparation time (which scales with the 2/3 power of troops):
+		double effectiveRaiseForTiming = std::cbrt(raise / ACT_REF_INCOME);
+		effectiveRaiseForTiming *= effectiveRaiseForTiming;
 
 		double preparationTime = 
 			ACT_RES_S_L_BASE_PREP_TENTHS_OF_MS_PER_REF_INCOME * effectiveRaiseForTiming;
