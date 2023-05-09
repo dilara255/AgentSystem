@@ -10,6 +10,7 @@ namespace AS {
 
 	AS_API constexpr char diploStanceToChar(AS::diploStance stance);
 	AS_API constexpr char scopeToChar(AS::scope scope);
+	AS_API constexpr char phaseToChar(AS::actPhases phase);
 	AS_API constexpr char modeToChar(AS::actModes mode);
 	//Returns a string_view to a null-terminated char[4]:
 	AS_API constexpr std::string_view catToString(AS::actCategories cat);	

@@ -45,6 +45,27 @@ constexpr char AS::scopeToChar(AS::scope scope) {
 	}
 }
 
+constexpr char AS::phaseToChar(AS::actPhases phase) {
+
+	switch ((int)phase)
+	{
+	case  (int)AS::actPhases::SPAWN:
+		return 'S';
+	case  (int)AS::actPhases::PREPARATION:
+		return 'P';
+	case  (int)AS::actPhases::TRAVEL:
+		return 'T';
+	case  (int)AS::actPhases::EFFECT:
+		return 'E';
+	case  (int)AS::actPhases::RETURN:
+		return 'R';
+	case  (int)AS::actPhases::CONCLUSION:
+		return 'C';
+	default:
+		return '?';
+	}
+}
+
 constexpr char AS::modeToChar(AS::actModes mode) {
 
 	switch ((int)mode)

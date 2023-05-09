@@ -228,7 +228,8 @@ namespace AS {
 		int att = (int)AS::actCategories::ATTACK;
 		g_processingFunctions[local][att][immediate].onSpawn = ATT_I_L_onSpawn;
 		g_processingFunctions[local][att][immediate].onEnd[prep] = ATT_I_L_PrepEnd;
-		//g_processingFunctions[local][att][immediate].onTick[effect] = ATT_I_L_effectTick;
+		g_processingFunctions[local][att][immediate].onEnd[travel] = ATT_I_L_travelEnd;
+		g_processingFunctions[local][att][immediate].onTick[effect] = ATT_I_L_effectTick;
 		//g_processingFunctions[local][att][immediate].onEnd[effect] = ATT_I_L_EffectEnd;
 		//g_processingFunctions[local][att][immediate].onEnd[ret] = ATT_I_L_ReturnEnd;
 		//g_processingFunctions[local][att][immediate].onEnd[conclusion] = ATT_I_L_ConclusionEnd;
@@ -289,6 +290,8 @@ namespace AS {
 
 	uint32_t defaultTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
 
+		assert(action_ptr->phaseTiming.elapsed <= action_ptr->phaseTiming.total);
+
 		uint32_tenthsOfMilli_t timeRemainingOnPhase = 
 			action_ptr->phaseTiming.total - action_ptr->phaseTiming.elapsed;
 
@@ -347,15 +350,24 @@ namespace AS {
 		return 0;
 	}
 
-	uint32_t routeToPasstroughOrEndOfPhaseTick(uint32_t effectiveTick, uint32_t fullTickTime, 
-		                                                            actionData_t* action_ptr) {
+	uint32_t partialTickIncreasingTotal(uint32_t effectiveTick, uint32_t fullTickTime, 
+		                                                     actionData_t* action_ptr) {
+
+		if (action_ptr->phaseTiming.elapsed > action_ptr->phaseTiming.total) {
+			return justEndThePhase(fullTickTime, action_ptr);
+		}
 
 		uint32_tenthsOfMilli_t timeRemainingOnPhase = 
-			action_ptr->phaseTiming.total - action_ptr->phaseTiming.elapsed;
+				action_ptr->phaseTiming.total - action_ptr->phaseTiming.elapsed;			
 
 		if (timeRemainingOnPhase >= effectiveTick) { 
-			//consume all time, pretend was intended time
-			action_ptr->phaseTiming.elapsed += effectiveTick;
+			//consume all time, pretend was intended time, add difference to total
+			uint32_tenthsOfMilli_t effectiveFullTime = 
+						std::min(fullTickTime, timeRemainingOnPhase);
+			uint32_tenthsOfMilli_t timeNotReallyTicked = effectiveFullTime - effectiveTick;
+
+			action_ptr->phaseTiming.total += timeNotReallyTicked;
+			action_ptr->phaseTiming.elapsed += fullTickTime;
 			return passtroughTick(fullTickTime, action_ptr);
 		}
 		else { //phase has less than a full tick remaining
@@ -661,31 +673,36 @@ namespace AS {
 														ACT_ATT_I_L_DISPO_LOSS_FROM_ATTACK;
 
 		//They realize their errors about our forces:
-		int strenghtField = (int)LA::requestExpectations_t::fields::STRENGHT;
+		int strenghtField = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
 		float* defendersReadOnAttackersStrenght_ptr =
-			&(defendersDecision_ptr->requestsForNeighbors[attackerIDonDefender].expected[strenghtField]);
+			&(defendersDecision_ptr->reads[attackerIDonDefender].readOf[strenghtField]);
 
 		float attackSize = action_ptr->details.intensity;
 
+		//Do they think we've attacked with all our might?
 		float attackToReadNormalizedDifference =
-			std::abs(attackSize - *defendersReadOnAttackersStrenght_ptr) / attackSize;
+			std::sqrt(std::abs(attackSize - *defendersReadOnAttackersStrenght_ptr) / attackSize);
 
 		*defendersReadOnAttackersStrenght_ptr -= attackSize;
 
 		float defendersDefences = defendersState_ptr->parameters.strenght.current
 								  + defendersState_ptr->parameters.strenght.externalGuard;
 
+		//Are they impressed?
 		float attackToDefenceNormalizedDifference = 
 									(attackSize - defendersDefences) / attackSize;
 
+		//Will they learn to fear our forces?
 		float STRcorrectionMultiplier = 
 			attackToReadNormalizedDifference * attackToDefenceNormalizedDifference;
 
 		STRcorrectionMultiplier = 
-			std::clamp(STRcorrectionMultiplier, 0.0f, ACT_ATT_I_L_MAX_DEFENCE_STR_READ_MULT);
-
-		*defendersReadOnAttackersStrenght_ptr -= 
-				ACT_ATT_I_L_BASE_DEFENCE_STR_READ_BASE * STRcorrectionMultiplier;
+			std::clamp(STRcorrectionMultiplier, -ACT_ATT_I_L_MAX_DEFENDER_STR_READ_MULT, 
+										         ACT_ATT_I_L_MAX_DEFENDER_STR_READ_MULT);
+		
+		*defendersReadOnAttackersStrenght_ptr += 
+				ACT_ATT_I_L_DEFENDER_STR_READ_BASE * STRcorrectionMultiplier 
+											       * std::sqrt(attackSize);
 
 		*defendersReadOnAttackersStrenght_ptr =
 					std::max(*defendersReadOnAttackersStrenght_ptr, 0.0f);
@@ -715,35 +732,63 @@ namespace AS {
 
 		float defences = defendersStrData_ptr->current + defendersStrData_ptr->externalGuard;
 		
-		assert(defences > 0); //should have ended otherwise
+		assert(defences >= 0); //first turn around, zero is valid
 
-		//The score is stored in aux. Positive score: attacker winning. It's also a morale:
-		float effectiveDefences = defences * (1 - action_ptr->details.processingAux);
+		//How do the forces compare, effectively?
+		//The score is stored in aux. Positive score: attacker winning. 
+		//It's also a morale, so it changes effective defense and attack.
+		
+		//We also take the sqrt of the force sizes: a bunch of guys can't fight a few together
+		//The signs on the multipliers preserve the meaning (positive: attacker ahead)
+
+		float moraleFactor = ATT_I_L_MORALE_IMPACT_FACTOR * action_ptr->details.processingAux;
+
+		float effectiveDefences = std::sqrt (defences ) * (1 - moraleFactor);
 		
 		float* intensity_ptr = &(action_ptr->details.intensity);
-		
-		float effectiveAttack = (*intensity_ptr) * (1 + action_ptr->details.processingAux);
+		float effectiveAttack = std::sqrt ( (*intensity_ptr) ) * (1 + moraleFactor);
 
-		//each tick we calculate the score for this round of fighting:
+		//Each tick we calculate the score for this round of fighting:
+		//First, we need to know how the balance of the forces is:
 		float balancePoint = effectiveAttack / (effectiveAttack + effectiveDefences);
-		//two prns are used to make the distribution a triangle centered on 0.5:
+		//Two prns are used to make the distribution a triangle centered on 0.5:
 		float draw = (g_prnServer_ptr->getNext() + g_prnServer_ptr->getNext()) / 2;
 
-		float scoreChange = balancePoint - draw; //this order preserves the meaning of score
+		//The score change is proportional to the timestep (so high frequency doesn't blow it).
+		//Also, larger battles should tend to take longer: we use a reference time for that
+		//The order of balancePoint - draw is important to preserve the meaning (att vs def)
+		//Note that the more unbalanced the balance point, te harder it is to recover
+		
+		float totalForces = defences + (*intensity_ptr);
+		uint32_t referenceTime = AS::ATT_I_L_prepTime(totalForces);
+
+		float scoreChange = (balancePoint - draw) * ((float)tickTenthsOfMs / referenceTime);
 		action_ptr->details.processingAux += scoreChange;
 
-		//The, how many troops each side lost:
-		float totalForces = defences + (*intensity_ptr);
-		
-		uint32_t referenceTime = AS::ATT_I_L_prepTime(totalForces);
-		float timeImpact = (float)( (double)tickTenthsOfMs / (double)referenceTime );
-
-		float totalLosses = totalForces * std::abs(scoreChange) * timeImpact;
+		//How many troops were lost?		
+		float totalLosses = totalForces * std::abs(scoreChange);
 	
-		*intensity_ptr -= totalLosses * (draw / balancePoint);
-		float defendersLosses = totalLosses * ( (1 - draw)/(1 - balancePoint) );
+		//How will that be distributed?
+		//Both sides suffer losses, but the distribution depends on the balance and the draw:
 
-		//For the defender, we take away the guard first:
+		float drawOffset = (draw - balancePoint)/2; //the division is because we'll apply to both
+		float drawWidht = balancePoint;
+		if(drawOffset > 0) { drawWidht = (1 - balancePoint); }
+		if(drawWidht != 0){
+			drawWidht *= 2; //it's as if there was this much room both sides of the balancePoint
+			drawOffset /= drawWidht; //relative to wich side of the balancePoint the draw fell in
+		}
+		else { drawOffset = std::copysign(0.5f, drawOffset); }
+
+		float attackerShareOfLosses = 0.5f + drawOffset;
+		float deffenderShareOfLosses = 0.5f - drawOffset;
+
+		//For the attacker, the losses come from the action intensity:
+		*intensity_ptr -= totalLosses * attackerShareOfLosses;
+
+		//For the defender, we take away the guard first, then the strenght:
+		float defendersLosses = totalLosses * deffenderShareOfLosses;
+				
 		if (defendersStrData_ptr->externalGuard >= defendersLosses) {
 			defendersStrData_ptr->externalGuard -= defendersLosses;
 		}
@@ -752,43 +797,56 @@ namespace AS {
 			defendersStrData_ptr->externalGuard = 0;
 			defendersStrData_ptr->current -= defendersLosses;
 		}
+		defences -= defendersLosses;
 
 		//Now we check if both sides still have troops:
+		float irrelevantForce = 0.1f;
 		bool keepFighting = true;
-		if ((defendersStrData_ptr->current < 0) || ( (*intensity_ptr) < 0)) { //both alive
-			if ((defendersStrData_ptr->current < 0) && ((*intensity_ptr) < 0)) {//both dead
 
-				action_ptr->details.processingAux = 0;
-				keepFighting = false;
-			}
-			else if (defendersStrData_ptr->current < 0) { //defenders dead
-				//Only score >= 0 makes sense, so:
-				action_ptr->details.processingAux = 
-					std::max(0.0f, action_ptr->details.processingAux);
-				//Score == 0: "attackers were retreating and beat defenders"
-			}
-			else { //attackers dead
-				//Same idea, but in reverse:
-				action_ptr->details.processingAux = 
-					std::min(0.0f, action_ptr->details.processingAux);
-			}
+		if ((defences < irrelevantForce) && ((*intensity_ptr) < irrelevantForce)) {//both dead
+
+			defendersStrData_ptr->current = 0;
+			*intensity_ptr = 0;
+
+			action_ptr->details.processingAux = 0;
+
+			keepFighting = false;
 		}
+		else if (defences < irrelevantForce) { //defenders dead
+			
+			defendersStrData_ptr->current = 0;
+			
+			//Only score >= 0 makes sense, so:
+			action_ptr->details.processingAux = 
+				std::max(0.0f, action_ptr->details.processingAux);
+			//Score == 0: "attackers were retreating and beat defenders"
 
-		//We can now deal with ticking:
-		uint32_t tick = 
-			(uint32_t)(keepFighting * tickTenthsOfMs * action_ptr->details.processingAux);
+			keepFighting = false;
+		}
+		else if ( (*intensity_ptr) < irrelevantForce) { //attackers dead
+			
+			*intensity_ptr = 0;
+
+			//Same idea, but in reverse:
+			action_ptr->details.processingAux = 
+				std::min(0.0f, action_ptr->details.processingAux);
+
+			keepFighting = false;
+		}
 		
+		//Now we deal with ticking (and possibly ending the phase):
 		if (keepFighting) {
 			
-			uint32_t timeAdvanced = defaultTick(tick, action_ptr);
+			//The more one-sided the fight is, the less we expect it to last. So:
+			uint32_t effectiveTick = 
+				(uint32_t)( (double)tickTenthsOfMs * std::abs(action_ptr->details.processingAux) );
 
-			if (timeAdvanced == tick) { //the action still has time
-				return tickTenthsOfMs; //so we let the control loop know that;
-			}
+			return partialTickIncreasingTotal(effectiveTick, tickTenthsOfMs, action_ptr);
 		}
-		
-		//If we get here, either the figh has ended or the time is up. Either way:
-		return 0; //to trigger the phase's onEnd.
+		else {
+			return justEndThePhase(0, action_ptr); //the fighting is over
+		}
+
 	}
 
 	void ATT_I_L_EffectEnd(actionData_t* action_ptr) {

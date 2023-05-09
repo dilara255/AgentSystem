@@ -18,7 +18,7 @@ const char* networkFilenameSaveName = "textModeViz_run0.txt";
 const std::chrono::seconds testTime = std::chrono::seconds(600);
 const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
 const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
-const float testPace = 10.0f;
+const float testPace = 5.0f;
 
 #define PRINT_VIZ true
 #define SHOULD_PAUSE_ON_NEW false
@@ -139,7 +139,8 @@ namespace TV{
 				if (newActionData.ids.slotIsUsed && newActionData.ids.active) {
 					
 					//Change in IDs mean something important happened
-					bool isNew = (oldAction_ptr->ids != newActionData.ids);
+					bool isNew = ((oldAction_ptr->ids != newActionData.ids)
+						           && (newActionData.ids.phase != (int)AS::actPhases::SPAWN));
 					foundNewAction |= isNew;
 					actionsVec_ptr->at(actionIndex).hasChanged = isNew;
 				}
@@ -194,7 +195,7 @@ namespace TV{
 
 		std::string_view cat = AS::catToString((AS::actCategories)actionData.ids.category);
 		char mode = AS::modeToChar((AS::actModes)actionData.ids.mode);
-		int phase = actionData.ids.phase;
+		char phase = AS::phaseToChar((AS::actPhases)actionData.ids.phase);
 		char target = 'x';
 		if (actionData.ids.target != actionData.ids.origin) {
 			target = '0' + actionData.ids.target; //expects target <= 9
@@ -211,12 +212,12 @@ namespace TV{
 		float aux = actionData.details.processingAux;
 
 		if(!intensityIsRate){
-			printf("\t-> %6.2f/%6.2f s | %s_%c_%u -> %c | intens: %7.2f, aux: %+7.2f\n",
+			printf("\t-> %6.2f/%6.2f s | %s_%c_%c -> %c | intens: %7.2f, aux: %+7.2f\n",
 								 secondsElapsed, phaseTotal, cat.data(), mode, phase, 
 													   target, intensity, aux);
 		}
 		else {
-			printf("\t-> %6.2f/%6.2f s | %s_%c_%u -> %c | rate: %7.4f/s, aux: %+7.2f\n",
+			printf("\t-> %6.2f/%6.2f s | %s_%c_%c -> %c | rate: %7.4f/s, aux: %+7.2f\n",
 								 secondsElapsed, phaseTotal, cat.data(), mode, phase, 
 													   target, intensity, aux);
 		}
@@ -241,8 +242,7 @@ namespace TV{
 			actionData_ptr = &(actionsVec_ptr->at(actionIndex).data);
 			bool* isNew_ptr = &(actionsVec_ptr->at(actionIndex).hasChanged);
 
-			if (actionData_ptr->ids.slotIsUsed && actionData_ptr->ids.active
-				&& (actionData_ptr->ids.phase != (int)AS::actPhases::SPAWN) ) {
+			if (actionData_ptr->ids.slotIsUsed && actionData_ptr->ids.active ) {
 
 				if(*isNew_ptr) {
 					printf(newArrow);
