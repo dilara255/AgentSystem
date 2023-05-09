@@ -51,12 +51,18 @@ namespace AS {
 	void defaultEffectEnd(actionData_t* action_ptr);
 	void defaultReturnEnd(actionData_t* action_ptr);
 	void defaultConclusionEnd(actionData_t* action_ptr);
-
+	
 	uint32_t passtroughTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 	uint32_t justEndThePhase(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 	uint32_t chargingTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 	
 	void intensityToRatePrepEnd(actionData_t* action_ptr);
+	void postergatePhaseEnd(actionData_t* action_ptr);
+
+	//These are not swappable in as the initial call, but can be called from a standard
+	//function and will do their thing and reroute to another standard one to finish:
+	uint32_t partialTickIncreasingTotal(uint32_t effectiveTick, uint32_t fullTickTime, 
+		                                                     actionData_t* action_ptr);
 
 	//And these are specific variation processing functions:
 
@@ -230,9 +236,9 @@ namespace AS {
 		g_processingFunctions[local][att][immediate].onEnd[prep] = ATT_I_L_PrepEnd;
 		g_processingFunctions[local][att][immediate].onEnd[travel] = ATT_I_L_travelEnd;
 		g_processingFunctions[local][att][immediate].onTick[effect] = ATT_I_L_effectTick;
-		//g_processingFunctions[local][att][immediate].onEnd[effect] = ATT_I_L_EffectEnd;
-		//g_processingFunctions[local][att][immediate].onEnd[ret] = ATT_I_L_ReturnEnd;
-		//g_processingFunctions[local][att][immediate].onEnd[conclusion] = ATT_I_L_ConclusionEnd;
+		g_processingFunctions[local][att][immediate].onEnd[effect] = ATT_I_L_EffectEnd;
+		g_processingFunctions[local][att][immediate].onEnd[ret] = ATT_I_L_ReturnEnd;
+		g_processingFunctions[local][att][immediate].onEnd[conclusion] = ATT_I_L_ConclusionEnd;
 
 							   //DONE
 
@@ -338,6 +344,16 @@ namespace AS {
 		//Just invalidades the action:
 		action_ptr->ids.active = 0;
 		action_ptr->ids.slotIsUsed = 0;
+	}
+
+	//Doesn't change time ellapsed or advance phase. Instead, add to the total time.
+	void postergatePhaseEnd(actionData_t* action_ptr){
+
+		action_ptr->phaseTiming.total += 
+			MAX_PROPORTIONAL_STEP_DURATION_ERROR *
+					AS_MILLISECONDS_PER_STEP * TENTHS_OF_MS_IN_A_MILLI;
+
+		return;
 	}
 
 	uint32_t passtroughTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
@@ -603,20 +619,35 @@ namespace AS {
 
 		float intensity = action_ptr->details.intensity;
 
-		int agent = action_ptr->ids.origin;
-
-		auto agentStrenght_ptr =
-			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters.strenght);
-
-		assert(agentStrenght_ptr != NULL);
-
 		if (intensity <= ACT_ATT_I_L_MINIMUM_ATTACK_INTENSITY) {
-			//not worth it
-			action_ptr->ids.phase = (int)AS::actPhases::CONCLUSION;
-			action_ptr->phaseTiming.total = 0;
+			//This is not worth the trouble
+			//Did the agent actually pay anything for this? If so, let's refund that:
+			int agent = action_ptr->ids.origin;
+			int actionsCountingThis = 
+				AS::getQuantityOfCurrentActions((AS::scope)action_ptr->ids.scope, agent,
+													   g_actionSystem_ptr, g_errors_ptr);
+			assert(actionsCountingThis >= 1);
+			
+			float costForRefund = AS::nextActionsCost(actionsCountingThis - 1);
+
+			if (costForRefund > 0) {
+				auto agent_ptr =
+					&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
+				
+				agent_ptr->parameters.resources.current += costForRefund;
+			}
+
+			defaultConclusionEnd(action_ptr);
 			return;
 		}
 		else {
+			int agent = action_ptr->ids.origin;
+
+			auto agentStrenght_ptr =
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters.strenght);
+
+			assert(agentStrenght_ptr != NULL);
+
 			agentStrenght_ptr->current -= intensity;
 			agentStrenght_ptr->externalGuard += intensity;
 			
@@ -631,15 +662,45 @@ namespace AS {
 		auto ourState_ptr = 
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
 
+		if (ourState_ptr->underAttack > 0) { //Don't actually end the preparation phase
+			postergatePhaseEnd(action_ptr);
+			return;
+		}
+
+		//If we're not under attack, let's get on our way
+
 		int neighbor = action_ptr->ids.target;
 		auto enemyState_ptr = 
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(neighbor));
 
 		//First, we take away the troops which were sent to the guard in the spawn:
-		ourState_ptr->parameters.strenght.externalGuard -= action_ptr->details.intensity;
+		float* externalGuard_ptr = &(ourState_ptr->parameters.strenght.externalGuard);
+		float* intensity_ptr = &(action_ptr->details.intensity);
 
-		ourState_ptr->parameters.strenght.externalGuard =
-						std::max(0.0f, ourState_ptr->parameters.strenght.externalGuard);
+		if (*externalGuard_ptr >= *intensity_ptr) {
+			*externalGuard_ptr -= action_ptr->details.intensity;	
+		}
+		else {
+			float* strenght_ptr = &(ourState_ptr->parameters.strenght.current);
+
+			float troopsMissing = *intensity_ptr - *externalGuard_ptr;
+			*externalGuard_ptr = 0;
+
+			if (*strenght_ptr >= troopsMissing) {
+				*strenght_ptr -= troopsMissing;
+				troopsMissing = 0;
+			}
+			else {
+				troopsMissing -= *strenght_ptr;
+				*strenght_ptr = 0;
+			}
+			
+			//The attack will be launched as well as it can be:
+			*intensity_ptr -= troopsMissing;
+
+			//TODO: maybe set a maximum loss to abort the attack?
+		}
+		
 
 		//Then, we calculate a base travel time according to distance and a parameter:
 		pos_t ourPosition = ourState_ptr->locationAndConnections.position;
@@ -647,7 +708,7 @@ namespace AS {
 
 		action_ptr->phaseTiming.total =
 			ATT_I_L_travelTimeFromDistanceAndTroops(ourPosition, enemyPosition, 
-													action_ptr->details.intensity);
+													            *intensity_ptr);
 
 		//Now we just need to do the usual phase end stuff, so:
 		defaultPhaseEnd(action_ptr);
@@ -665,6 +726,8 @@ namespace AS {
 
 		auto defendersState_ptr =
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(defender));
+
+		defendersState_ptr->underAttack++;
 
 		int attackerIDonDefender = AS::getNeighborsIndexOnLA(attacker, defendersState_ptr);
 		
@@ -816,6 +879,10 @@ namespace AS {
 			
 			defendersStrData_ptr->current = 0;
 			
+			//No defenses leave time to recover and regroup (and maybe loot):
+			action_ptr->details.processingAux +=
+				ACT_ATT_I_L_ATTACKER_SCORE_BONUS_IF_NO_DEFENDERS;
+
 			//Only score >= 0 makes sense, so:
 			action_ptr->details.processingAux = 
 				std::max(0.0f, action_ptr->details.processingAux);
@@ -828,6 +895,11 @@ namespace AS {
 			*intensity_ptr = 0;
 
 			//Same idea, but in reverse:
+
+			//No attackers able to fight means more opportunities to make prisioners:
+			action_ptr->details.processingAux +=
+				ACT_ATT_I_L_ATTACKER_SCORE_BONUS_IF_NO_DEFENDERS;
+
 			action_ptr->details.processingAux = 
 				std::min(0.0f, action_ptr->details.processingAux);
 
@@ -856,16 +928,18 @@ namespace AS {
 		auto defendersDecision_ptr = 
 			&(g_agentDataControllers_ptr->LAdecision_ptr->getDirectDataPtr()->at(defender));
 
-		int attackerID = action_ptr->ids.origin;
-		auto defenderState_ptr = 
+		auto defendersState_ptr = 
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(defender));
 
-		int attackerIndexOnDefender = getNeighborsIndexOnLA(attackerID, defenderState_ptr);
+		defendersState_ptr->underAttack--;
 
-		//They will get some general information according to the score, if positive
+		int attackerID = action_ptr->ids.origin;
+		int attackerIndexOnDefender = getNeighborsIndexOnLA(attackerID, defendersState_ptr);
+
+		//They get some general information according to the score, if negative (defender win)
 		float*  aux_ptr = &(action_ptr->details.processingAux);
 		float infiltrationGain = 
-							std::max(0.0f, (*aux_ptr) ) * ACT_ATT_I_L_BASE_DEFENDER_INFO_GAIN;
+						- std::min(0.0f, (*aux_ptr) ) * ACT_ATT_I_L_BASE_DEFENDER_INFO_GAIN;
 
 		defendersDecision_ptr->infiltration[attackerIndexOnDefender] +=
 			                std::min(infiltrationGain, ACT_ATT_I_L_MAX_DEFENDER_INFO_GAIN);
@@ -876,15 +950,17 @@ namespace AS {
 		float* intensity_ptr = &(action_ptr->details.intensity);
 		defendersDecision_ptr->reads[attackerIndexOnDefender].readOf[str] += (*intensity_ptr);
 
+		//Now we deal with the returnees:
+		
 		//In order to set the return time, we will need:
 		uint32_t* phaseTotal_ptr = &(action_ptr->phaseTiming.total);
 		auto attackerState_ptr =
 				&(g_agentDataControllers_ptr->LAstate_ptr->getDataCptr()->at(attackerID));
 		
 		AS::pos_t attackerPos = attackerState_ptr->locationAndConnections.position;
-		AS::pos_t defenderPos = defenderState_ptr->locationAndConnections.position;
+		AS::pos_t defenderPos = defendersState_ptr->locationAndConnections.position;
 
-		//Then the attacker: has anyone survived?
+		//has anyone even survived?
 		if ((*intensity_ptr) == 0) {
 			//nope. Clear aux and set a time for the agent to realize their loss
 			*aux_ptr = 0; //no survivors, no loot
@@ -895,7 +971,6 @@ namespace AS {
 			//How long will their travel back take? 
 			//Less people travel faster, but also the worse the losses, the slower we go
 			
-			//So, as an indicator of our losses, we use:
 			*phaseTotal_ptr = ATT_I_L_returnTime(attackerPos, defenderPos, (*intensity_ptr),
 				                                                         (*phaseTotal_ptr) );
 			
@@ -905,36 +980,43 @@ namespace AS {
 				*aux_ptr = 0; //now storing the (non-existent) loot
 			}
 			else { //attacker won: there will be loot!
-				//The better the score, the more loot each attacker manages to get
-				//The more surviving attackers, the more hands o loot
+				//The better the score, the more loot each attacker manages to get,
+				//and the more surviving attackers, the more hands to loot!
 
-				float resources = defenderState_ptr->parameters.resources.current;
+				auto defendersResourceInfo_ptr = &(defendersState_ptr->parameters.resources);
+
+				float resources = defendersResourceInfo_ptr->current;
 				float effectiveDefendersResources = 
-						resources * ACT_ATT_I_L_MIN_PROPORTIONAL_RESOURCE_RESERVE_FROM_LOOT;
+						resources * (1 - ACT_ATT_I_L_MIN_PROPORTIONAL_RESOURCE_RESERVE_FROM_LOOT);
+
+				effectiveDefendersResources = std::max(0.0f, effectiveDefendersResources);
 				
-				float carryCapactiy = 
-					ACT_ATT_I_L_BASE_LOOT_PER_STR
-								* (*intensity_ptr)
-									* std::max((*aux_ptr), ACT_ATT_I_L_MAX_CARRY_MULTIPLIER);
-																	
-				*aux_ptr = std::min(effectiveDefendersResources, carryCapactiy);
+				float lootEffectiveness =
+						std::min((*aux_ptr)*(*aux_ptr), ACT_ATT_I_L_MAX_LOOT_PER_HAND);
 
-				defenderState_ptr->parameters.resources.current -= (*aux_ptr);
-			}
+				float totalCarryCapactiy = ACT_ATT_I_L_MAX_LOOT_PER_HAND
+								           * (*intensity_ptr) * lootEffectiveness * 2;
+				
+				//This is the loot:
+				*aux_ptr = std::min(effectiveDefendersResources, totalCarryCapactiy);
+				defendersResourceInfo_ptr->current -= *aux_ptr;
 
-			//Looting damages stuff: lower their income.
-			//(proportional to loot/defenders_resources, defenders_income, and a parameter)
-			float originalResources = 
-				defenderState_ptr->parameters.resources.current + (*aux_ptr);
+				//Looting damages infrastructure, which lowers the lootee's income.
+				//(proportional to loot/resources, to the original income, and to a parameter)
 
-			float lootProportion = (*aux_ptr) / originalResources;
+				//In case there are no resources to loot, we have looted as much as possible:
+				float lootProportion = 1;
+				//Otehrwise:
+				if(resources > 0) {
+					lootProportion = *aux_ptr / resources; //resources is pre-loot value
+				}
 			
-			float unprotectedIncome = 
-						defenderState_ptr->parameters.resources.updateRate
-								* ACT_ATT_I_L_INCOME_PROPORTION_PROTECTED_FROM_LOOT;
+				float unprotectedIncome = 
+							defendersResourceInfo_ptr->updateRate
+									* ACT_ATT_I_L_INCOME_PROPORTION_NOT_PROTECTED_FROM_LOOT;
 
-			defenderState_ptr->parameters.resources.updateRate -=
-														unprotectedIncome * lootProportion;
+				defendersResourceInfo_ptr->updateRate -= unprotectedIncome * lootProportion;
+			}
 		}
 
 		//Let the troops (or their ghosts) travel back home:
@@ -944,25 +1026,24 @@ namespace AS {
 
 	void ATT_I_L_ReturnEnd(actionData_t* action_ptr) {
 
-		//Did anyone survive? 
-		if(action_ptr->details.intensity == 0) {
+		assert(action_ptr->details.intensity >= 0);
 
-			//If not, just set next phases total time to zero and proceed
-			action_ptr->phaseTiming.total = 0;
-		}
-		else { //In case there are survivors:
+		float returnees = action_ptr->details.intensity;
+
+		if(returnees > 0) { 
 			
-			float returnees = action_ptr->details.intensity;
 			int agent = action_ptr->ids.origin;
 			
-			auto param_ptr = 
-				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters);
+			auto agentState_ptr = &(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
 			
 			//First of all, take any loot in:
-			param_ptr->resources.current += 
-				ACT_ATT_I_L_PROPORTION_OF_LOOT_ACTUALLY_PROFITED * action_ptr->details.processingAux;
+			agentState_ptr->parameters.resources.current += 
+									ACT_ATT_I_L_PROPORTION_OF_LOOT_ACTUALLY_PROFITED 
+									* action_ptr->details.processingAux;
 		
-			//Then we try to remember roughly how many people we had sent on the attack:
+			//The more people returned compared to the original size and the faster the fight,
+			//the more info they'll have been able to get:
+
 			auto attackerState_ptr = 
 				&(g_agentDataControllers_ptr->LAstate_ptr->getDataCptr()->at(agent));
 
@@ -973,46 +1054,57 @@ namespace AS {
 			AS::pos_t attackerPos = attackerState_ptr->locationAndConnections.position;
 			AS::pos_t defenderPos = defenderState_ptr->locationAndConnections.position;
 
-			float estimatedAttackSize = 
-				ATT_I_L_attackSizeFromIntensityAndReturnTime(attackerPos, defenderPos,
-					     action_ptr->phaseTiming.total, action_ptr->details.intensity);
+			float effectiveReturneeRatio = 
+				ATT_I_L_effectiveReturneeRatio(attackerPos, defenderPos,
+					     action_ptr->phaseTiming.total, returnees);
 		
+			effectiveReturneeRatio = std::min(1.0f, effectiveReturneeRatio);
+
 			//Then we gather information:
-			//We get infiltration points proportional to the sqrt of the ratio of returnees:
+
+			//We get infiltration points proportional to the effectiveReturneeRatio:
 
 			int neighbor = action_ptr->ids.target;
-			auto neighborState_ptr = 
-				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(neighbor));
 
-			int neighborIDonAgent = getNeighborsIndexOnLA(agent, neighborState_ptr);
+			int neighborIndexOnAgent = getNeighborsIndexOnLA(neighbor, agentState_ptr);
 
 			auto decision_ptr = 
 				&(g_agentDataControllers_ptr->LAdecision_ptr->getDirectDataPtr()->at(agent));
 
-			float returneesFactor = sqrt(returnees / estimatedAttackSize);
-
-			decision_ptr->infiltration[neighborIDonAgent] +=
-								returneesFactor * ACT_ATT_I_L_BASE_INFO_FROM_RETURNEES;
+			decision_ptr->infiltration[neighborIndexOnAgent] +=
+								effectiveReturneeRatio * ACT_ATT_I_L_BASE_INFO_FROM_RETURNEES;
 			
+			decision_ptr->infiltration[neighborIndexOnAgent] =
+					std::clamp(decision_ptr->infiltration[neighborIndexOnAgent], 
+						                     MIN_INFILTRATION, MAX_INFILTRATION);
+
 			//And information specifically about their troops:
 			//We'll interpolate our read with the real value using returneesFactor as weight:
 
+			auto neighborStrenght_ptr = 
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(neighbor).parameters.strenght);
+
 			int str = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
-			decision_ptr->reads[neighborIDonAgent].readOf[str] *= (1 - returneesFactor);
-			decision_ptr->reads[neighborIDonAgent].readOf[str] += 
-					   returneesFactor * neighborState_ptr->parameters.strenght.current;
+			decision_ptr->reads[neighborIndexOnAgent].readOf[str] *= (1 - effectiveReturneeRatio);
+			decision_ptr->reads[neighborIndexOnAgent].readOf[str] += 
+										   effectiveReturneeRatio * neighborStrenght_ptr->current;
 
 			int grd = (int)LA::readsOnNeighbor_t::fields::GUARD;
-			decision_ptr->reads[neighborIDonAgent].readOf[grd] *= (1 - returneesFactor);
-			decision_ptr->reads[neighborIDonAgent].readOf[grd] += 
-					   returneesFactor * neighborState_ptr->parameters.strenght.externalGuard;
+			decision_ptr->reads[neighborIndexOnAgent].readOf[grd] *= (1 - effectiveReturneeRatio);
+			decision_ptr->reads[neighborIndexOnAgent].readOf[grd] += 
+									 effectiveReturneeRatio * neighborStrenght_ptr->externalGuard;
 			
 			//Finally we accept out troops back in the GUARD (to recover):
-			param_ptr->strenght.externalGuard += returnees;
+			agentState_ptr->parameters.strenght.externalGuard += returnees;
 
-			//and set a recover time (proportional to the troops, and atenuated, use helper):
+			//and set a recover time:
 			action_ptr->phaseTiming.total = AS::ATT_I_L_prepTime(returnees);
 		}
+		else { //in case everyone's dead:
+			//Oh well. Set next phases total time to zero and proceed:
+			action_ptr->phaseTiming.total = 0;
+		}
+		
 
 		//Then we advance the phase normally:
 		defaultPhaseEnd(action_ptr);
@@ -1028,11 +1120,11 @@ namespace AS {
 
 		if (strenght_ptr->externalGuard >= action_ptr->details.intensity) {
 
-			strenght_ptr->current += action_ptr->details.intensity;
 			strenght_ptr->externalGuard -= action_ptr->details.intensity;
+			strenght_ptr->current += action_ptr->details.intensity;
 		}
 		else { //maybe they died?
-			strenght_ptr->current += strenght_ptr->externalGuard;
+			strenght_ptr->current += strenght_ptr->externalGuard;		
 			strenght_ptr->externalGuard = 0;
 		}
 

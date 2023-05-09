@@ -469,6 +469,7 @@ namespace CL::ClientData {
 
 		bool CL_API changeGAid(uint32_t agentID, uint32_t newValue);
 		bool CL_API changeOnOFF(uint32_t agentID, bool newValue);
+		bool CL_API changeUnderAttack(uint32_t agentID, int newValue);
 
 		LArelationsHandler relations;
 		LocationAndConnectionsHandler location;
@@ -484,6 +485,7 @@ namespace CL::ClientData {
 		
 		bool transferGAid(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		bool transferOnOFF(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+		bool transferUnderAttack(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 		
 		StateControllerLA* m_data_ptr;
 	};

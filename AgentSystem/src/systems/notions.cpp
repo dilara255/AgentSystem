@@ -437,8 +437,8 @@ namespace AS::Decisions::LA {
 
 		float changeFromStance = 0;
 		if (stance == AS::diploStance::WAR) {
-			changeFromStance = stanceImpactFactorFromWar 
-				               * NTN_MULTIPLIER_OF_WAR_EFFECT_ON_DISTRUST;
+			changeFromStance -= stanceImpactFactorFromWar 
+				                * NTN_MULTIPLIER_OF_WAR_EFFECT_ON_DISTRUST;
 		}
 
 		//This is our effective disposition:
@@ -446,14 +446,15 @@ namespace AS::Decisions::LA {
 
 		//Now let's look at our infiltration level:
 		float absolutInfiltration = std::abs(ourDecisionData_ptr->infiltration[neighbor]);
-		float uncertainty = 1 - absolutInfiltration;
+		float uncertainty = ((1 - absolutInfiltration)/2);
 
 		assert(uncertainty >= 0);
 
-		uncertainty *= uncertainty; //to not over-penalize reasonable levels
+		//to not over-penalize reasonable levels of uncertainty:
+		uncertainty *= uncertainty; 
 
 		//From effectiveDisposition and uncertainty, we calculate mistrustStrenghtMultiplier:
-		float dislike = std::max(0.0f, -effectiveDisposition);
+		float dislike = std::max(0.0f, effectiveDisposition);
 
 		float mistrustStrenghtMultiplier = 
 						NTN_MISTRUST_THREATH_MULTIPLIER * (dislike + uncertainty);
@@ -480,7 +481,14 @@ namespace AS::Decisions::LA {
 		strenghtProportion = std::min(strenghtProportion, maxStrenghtProportion);
 			
 		//Finally:
-		return (strenghtProportion * mistrustStrenghtMultiplier);
+		float dispositionImpactOnRiskPerceived = std::clamp(effectiveDisposition, -1.0f, 1.0f);
+		dispositionImpactOnRiskPerceived = (1.0f - dispositionImpactOnRiskPerceived)/2;
+
+		assert(strenghtProportion >= 0);
+		assert(mistrustStrenghtMultiplier >= 0);
+		assert(dispositionImpactOnRiskPerceived >= 0);
+
+		return (strenghtProportion * mistrustStrenghtMultiplier * dispositionImpactOnRiskPerceived);
 	}
 
 	//N3: I_TRUST_THEM
@@ -511,9 +519,11 @@ namespace AS::Decisions::LA {
 		
 		//And then add the impact from the diplomatic stance:
 		//These will be used to convert diplomatic stance in impact for this notionBase:
-		float stanceImpactFactorFromTrade = 
-			MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS
-												 * NTN_DIPLO_STANCE_WEIGHT_PROPORTION_TO_REFS;
+		float stanceImpactFactorFromTrade = NTN_TRADE_IMPACT_MULTIPLIER_FOR_TRUST 
+											* MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND 
+											* NOTIONS_AND_ACTIONS_REF_PERIOD_SECS
+											* NTN_DIPLO_STANCE_WEIGHT_PROPORTION_TO_REFS;
+
 		float stanceImpactFactorFromAlliance = 
 			PROPORTIONAL_WEIGHT_OF_ALLIANCE_COMPARED_TO_TRADE * stanceImpactFactorFromTrade;
 
@@ -523,7 +533,7 @@ namespace AS::Decisions::LA {
 		float changeFromStance = 0;
 		if (stance == AS::diploStance::WAR) {
 
-			changeFromStance += stanceImpactFactorFromWar;
+			changeFromStance -= stanceImpactFactorFromWar;
 		}
 		if ( (stance == AS::diploStance::TRADE) || 
 			 (stance == AS::diploStance::ALLY_WITH_TRADE) ) {
@@ -642,11 +652,7 @@ namespace AS::Decisions::LA {
 		uncertainty *= uncertainty; //so a little uncertainty doesn't matter as much;
 
 		//The more uncertain we are, the less weight we will give to our disposition:
-		float notionBase = effectiveDisposition * (1 - uncertainty);
-
-		//Finally, we'll stretch this so that very high values map the notion to 1;
-		//Also, the base should be at or above zero, so:
-		return std::max(0.0f, (notionBase * NTN_STD_MAX_EFFECTIVE_NOTION_BASE) );
+		return  std::max(0.0f, effectiveDisposition * (1 - uncertainty));
 	}
 
 	float calcNotionBaseN4(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
@@ -1088,7 +1094,7 @@ namespace AS::Decisions {
 		//sanitizing:
 		if (baseNotion < 0) {
 			//TODO: add warning after error handling is implemented here
-			assert(false); //for now, just crash if in debug
+			assert(baseNotion > 0); //for now, just crash if in debug
 		}
 
 		//effectiveMaxBase is the limit, so:

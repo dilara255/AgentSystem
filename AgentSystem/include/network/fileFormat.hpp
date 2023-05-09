@@ -51,7 +51,7 @@ static const char* lastGAwarning = "\n#The last GA is reserved for local agents 
 static const char* LAidentity = "\nLA Id: %d, belongs to GA: %d, On? %d, Decisions? %d\n";
 static const char* LAname = "Name: %s\n";
 static const char* LAposition = "  Pos: X %f, Y %f\n";
-static const char* LAstrenght = "  Strenght: %f (+ %f), Guard: %f (+ %f), Threshold to cost upkeed: %f\n";
+static const char* LAstrenght = "  Strenght: %f (+ %f), Guard: %f (+ %f), Threshold to cost upkeed: %f. Under Attack? %d\n";
 static const char* LAresources = "  Current Resources: %f (+ %f), income: %f, upkeep: %f\n";
 static const char* LArelationsInfo = "    Relation with Neighbor %d (id %d): stance: %d, disposition: %f (last: %f), infiltration: %f\n";
 

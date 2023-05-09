@@ -7,6 +7,7 @@
 namespace AS {
 
 	AS_API float nextActionsCost(int currentActions);
+	AS_API float calculateUpkeep(float strenght, float guard, float threshold);
 
 	AS_API constexpr char diploStanceToChar(AS::diploStance stance);
 	AS_API constexpr char scopeToChar(AS::scope scope);
@@ -20,9 +21,9 @@ namespace AS {
 	//TODO: this is a temporary fix while dataMirrors equivalent method is not fixed.
 	AS_API int getAgentsActionIndex(int agentID, int action, int maxActionsPerAgent);
 
-	AS_API int getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_ptr);
+	AS_API int getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* thisState_ptr);
 
-	AS_API int getNeighborsIndexOnLA(int neighborID, const LA::stateData_t* ThisState_ptr);
+	AS_API int getNeighborsIndexOnLA(int neighborID, const LA::stateData_t* thisState_ptr);
 
 	AS_API int getGAsIDonNeighbor(int agent, int neighborID, 
 		                      const GA::stateData_t* partnerState_ptr);

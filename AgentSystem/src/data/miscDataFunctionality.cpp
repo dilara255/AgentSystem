@@ -2,6 +2,13 @@
 
 #include "data/dataMisc.hpp"
 
+float AS::calculateUpkeep(float strenght, float guard, float threshold) {
+	float guardPaidForByDefended = guard *EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
+	float effectiveTroopSize = guardPaidForByDefended + strenght - threshold;
+	
+	return std::max(0.0f, effectiveTroopSize * LA_UPKEEP_PER_EXCESS_STRENGHT);
+}
+
 //TODO: document math
 float AS::nextActionsCost(int currentActions) {
 
@@ -123,16 +130,16 @@ int AS::getAgentsActionIndex(int agentID, int action, int maxActionsPerAgent) {
 
 //Returns neighbor's index on this agent's state data. Returns NATURAL_RETURN_ERROR on failure
 //WARNING: WILL fail if agent is passed to itlself (agentID = neighborID) 
-int AS::getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_ptr) {
+int AS::getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* thisState_ptr) {
 
 	int totalNeighbors = 
-			ThisState_ptr->connectedGAs.howManyAreOn();
+			thisState_ptr->connectedGAs.howManyAreOn();
 
 		int neighborIndex = NATURAL_RETURN_ERROR;
 		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
 
 			int tryNeighborsID = 
-				ThisState_ptr->neighbourIDs[neighbor];
+				thisState_ptr->neighbourIDs[neighbor];
 
 			if (tryNeighborsID == neighborID) {
 				neighborIndex = neighbor;
@@ -144,16 +151,16 @@ int AS::getNeighborsIndexOnGA(int neighborID, const GA::stateData_t* ThisState_p
 
 //Returns neighbor's index on this agent's state data. Returns NATURAL_RETURN_ERROR on failure
 //WARNING: WILL fail if agent is passed to itlself (agentID = neighborID)
-int AS::getNeighborsIndexOnLA(int neighborID, const LA::stateData_t* ThisState_ptr) {
+int AS::getNeighborsIndexOnLA(int neighborID, const LA::stateData_t* thisState_ptr) {
 
 	int totalNeighbors = 
-			ThisState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+			thisState_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
 
 		int neighborIndex = NATURAL_RETURN_ERROR;
 		for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
 
 			int tryNeighborsID = 
-				ThisState_ptr->locationAndConnections.neighbourIDs[neighbor];
+				thisState_ptr->locationAndConnections.neighbourIDs[neighbor];
 
 			if (tryNeighborsID == neighborID) {
 				neighborIndex = neighbor;

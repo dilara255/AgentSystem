@@ -409,8 +409,9 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
                         &decision.requestsForSelf.expected[expecStrenghtID],
                         &state.parameters.strenght.externalGuard,
                         &decision.requestsForSelf.expected[expecGuardID],
-                        &state.parameters.strenght.thresholdToCostUpkeep);
-    if (tokens != 5) {
+                        &state.parameters.strenght.thresholdToCostUpkeep,
+                        &state.underAttack);
+    if (tokens != 6) {
         LOG_ERROR("Error reading strenght tokens from LA. Aborting load.");
         return false;
     }

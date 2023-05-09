@@ -375,6 +375,11 @@ namespace CL{
 		return false;
 	}
 
+	bool CL_API CL::ClientData::LAstateHandler::changeUnderAttack(uint32_t agentID, int newValue)
+	{
+		return false;
+	}
+
 //STATE: PARAMS: RELATIONS
 	
 	bool CL_API ClientData::LArelationsHandler::changeAll(uint32_t agentID, AS::LAneighborRelations_t* newValue_ptr)

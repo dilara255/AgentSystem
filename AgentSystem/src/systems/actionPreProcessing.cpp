@@ -237,14 +237,14 @@ namespace AS{
 				decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
 				
 		//We'll set the action's intensty to be the attack size
-		float attackSize;
+		float attackSize = 0;
 
 		//There are two cases: either we are stronger, or not:
 
 		if (agentStrenght > enemyStrenght) {
 
 			float attackExtraProportionalMargin = 
-					ACT_INTENS_ATTACK_MARGIN_PROPORTION * desiredIntensityMultiplier;
+				ACT_INTENS_ATTACK_MARGIN_INTENSITY_MULTIPLIER * desiredIntensityMultiplier;
 
 			//We are stronger, so we will attack with more strenght than they have,
 			//and the more we want to attack, the more extra forces we'll commit:
@@ -254,11 +254,11 @@ namespace AS{
 
 			//We're not stronger. We'll commit a portion of our strenght proportional
 			//to how high our desiredIntensityMultiplier was compared to what it would
-			//be if we had made this choice with a score of 1.
+			//be if we had made this choice with a score of "justDoIt".
 			//IE: if our desire is the same as the desire of a score 1 action,
 			//then we throw all our forces on this attack:
 			attackSize = 
-				agentStrenght * (desiredIntensityMultiplier / ACT_INTENSITY_SCORE_1);
+				agentStrenght * (desiredIntensityMultiplier / ACT_INTENSITY_JUST_DO_IT);
 		}
 		
 		//In case we got carried away and chose an attack larger than our strenght:
@@ -323,7 +323,7 @@ namespace AS{
 		}
 		
 		float attackMarginProportion = 
-			ACT_INTENS_ATTACK_MARGIN_PROPORTION * desiredIntensityMultiplier;
+			ACT_INTENS_ATTACK_MARGIN_INTENSITY_MULTIPLIER * desiredIntensityMultiplier;
 
 		float suggestionIntensity;
 
