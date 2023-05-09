@@ -18,13 +18,13 @@ const char* networkFilenameSaveName = "textModeViz_run0.txt";
 const std::chrono::seconds testTime = std::chrono::seconds(600);
 const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
 const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
-const float testPace = 5.0f;
+const float testPace = 4.0f;
 
 #define PRINT_VIZ true
-#define SHOULD_PAUSE_ON_NEW false
+#define SHOULD_PAUSE_ON_NEW true
 
 namespace TV{
-
+	
 	bool initializeAS() {
 
 		LOG_DEBUG("Initializing the AS...\n",1);
@@ -268,12 +268,21 @@ namespace TV{
 		auto resources_ptr = &(agentState_ptr->parameters.resources);
 		auto strenght_ptr = &(agentState_ptr->parameters.strenght);
 
-
 		strenght_ptr->current; strenght_ptr->currentUpkeep; strenght_ptr->externalGuard;
 		strenght_ptr->thresholdToCostUpkeep;
 
-		printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | name: %s\n",
+		int attacksUnder = agentState_ptr->underAttack;
+
+		if(attacksUnder != 0){ 
+			printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | name: %s | Under %d attacks!\n",
+			    agent, agentState_ptr->GAid, position.x, position.y, agentName.c_str(), 
+			                                                              attacksUnder);
+		}
+		else {
+			printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | name: %s\n",
 			    agent, agentState_ptr->GAid, position.x, position.y, agentName.c_str());
+		}
+		
 
 		printf("\tSTATE | %+10.2f $ (%+6.2f $/sec) | %7.2f S , %7.2f D (%+5.2f $/sec)\n",
 			                         resources_ptr->current, resources_ptr->updateRate,

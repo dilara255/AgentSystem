@@ -9,9 +9,15 @@
 
 namespace AS{
 
+	void invalidateAction(actionData_t* action_ptr) {
+		action_ptr->ids.active = 0;
+		action_ptr->ids.slotIsUsed = 0;
+		return;
+	}
+
 	//TODO: test
 	//TODO: Make this into a method on ActionDataController
-	inline const std::vector<AS::actionData_t>* getScopeIndependentActionDataCptr(
+	const std::vector<AS::actionData_t>* getScopeIndependentActionDataCptr(
 							            const ActionSystem* asp, AS::scope scope, int agent, 
 							                AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 

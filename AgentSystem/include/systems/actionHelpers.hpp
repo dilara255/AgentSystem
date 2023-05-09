@@ -12,9 +12,11 @@
 
 namespace AS {
 
-	inline const std::vector<AS::actionData_t>* getScopeIndependentActionDataCptr(
-							            const ActionSystem* asp, AS::scope scope, int agent, 
-							                AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+	const std::vector<AS::actionData_t>* getScopeIndependentActionDataCptr(
+										const ActionSystem* asp, AS::scope scope, int agent, 
+							            AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+
+	inline void invalidateAction(actionData_t* action_ptr);
 
 	//Populates activeActions_ptr with the agents active actions (from the start).
 	//Returns total active actions, or NATURAL_RETURN_ERROR (-1) on error.
@@ -36,8 +38,8 @@ namespace AS {
 	//Times in Tehnths of MS
 	uint32_t ATT_I_L_prepTime(float intensity);
 	double ATT_I_L_travelTimeModifierFromTroopSize(float intensity);
-	float ATT_I_L_attackSizeFromIntensityAndReturnTime(AS::pos_t posA, AS::pos_t posB, 
-											     uint32_t returnTime, float intensity);
+	float ATT_I_L_effectiveReturneeRatio(AS::pos_t posA, AS::pos_t posB, 
+									     uint32_t returnTime, float intensity);
 	uint32_t ATT_I_L_travelTimeFromDistanceAndTroops(AS::pos_t posA, AS::pos_t posB, 
 																	float intensity);
 	uint32_t ATT_I_L_attackTime(float intensity);

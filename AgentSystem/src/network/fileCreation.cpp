@@ -281,15 +281,11 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
         resultAux = fprintf(fp, LAstrenght, DEFAULT_LA_STRENGHT, DEFAULT_REQUESTS, 
                                           DEFAULT_REINFORCEMENT, DEFAULT_REQUESTS,
-                                              DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
+                                           DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP, 0);
         if (resultAux <= 0) result = 0;
 
-        float upkeep = 0;
-        if (DEFAULT_LA_STRENGHT > DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP) {
-            float guardCost = (float)DEFAULT_REINFORCEMENT*EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
-            upkeep = (float)(guardCost + DEFAULT_LA_STRENGHT - DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
-            upkeep *= LA_UPKEEP_PER_EXCESS_STRENGHT;
-        }
+        float upkeep = AS::calculateUpkeep(DEFAULT_LA_STRENGHT,DEFAULT_REINFORCEMENT, 
+		                                         DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
 
         resultAux = fprintf(fp, LAresources, DEFAULT_LA_RESOURCES, DEFAULT_REQUESTS, 
                                                           DEFAULT_LA_INCOME, upkeep);
@@ -618,7 +614,8 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
                         decision.requestsForSelf.expected[expecStrenghtID],
                         state.parameters.strenght.externalGuard,
                         decision.requestsForSelf.expected[expecGuardID],
-                        state.parameters.strenght.thresholdToCostUpkeep);
+                        state.parameters.strenght.thresholdToCostUpkeep,
+                        state.underAttack);
         if (resultAux <= 0) result = 0;
 
         int expecResID = (int)LA::requestExpectations_t::fields::RESOURCES;

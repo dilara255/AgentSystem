@@ -59,33 +59,33 @@ uint32_t AS::ATT_I_L_travelTimeFromDistanceAndTroops(AS::pos_t posA, AS::pos_t p
 	return (uint32_t)std::round(baseTime * ATT_I_L_travelTimeModifierFromTroopSize(intensity));
 }
 
+//TODO: would it be better to base this on score (if still available)?
 uint32_t AS::ATT_I_L_returnTime(AS::pos_t posA, AS::pos_t posB, float intensity,
 	                                              uint32_t effectPhaseTotalTime) {
 
-	float lossesTravelTimeMultiplier = 
-		  (float)((double)effectPhaseTotalTime / (double)AS::ATT_I_L_attackTime(intensity));
-			
+	//More people travel slower, 
+	//but also the worse the losses and the longer the battle, the longer the return
+
+	float lossesIndicatorQuotient = 
+		(float)((double)effectPhaseTotalTime / (double)AS::ATT_I_L_attackTime(intensity));
+	
+	//since effectPhaseTotalTime accounts for how many troops were initially involved
+	//but also how close the battle was:
+	float lossesTravelTimeMultiplier = std::sqrt(lossesIndicatorQuotient);
+		  
 	return	(uint32_t)std::round( lossesTravelTimeMultiplier
 					* AS::ATT_I_L_travelTimeFromDistanceAndTroops(posA, posB, intensity) );
 }
 	
+//Uses travel times as an estimate. See ATT_I_L_returnTime.
+//Can be larger than 1 in case the attack ended faster than the expected time
+//Ie: the attacker killed all defenders, and did so fairly quickly
+//TODO: add test to the fixed battery, since this is kinda brittle
+float AS::ATT_I_L_effectiveReturneeRatio(AS::pos_t posA, AS::pos_t posB, 
+									     uint32_t returnTime, float intensity) {
 
-float AS::ATT_I_L_attackSizeFromIntensityAndReturnTime(AS::pos_t posA, AS::pos_t posB, 
-											     uint32_t returnTime, float intensity) {
+	float baseTravelTimeReturnees = 
+			(float)AS::ATT_I_L_travelTimeFromDistanceAndTroops(posA, posB, intensity);
 
-	//This basically substitutes other functions above and solves for original intensity
-
-	double effectPhaseTotalTime = returnTime * ATT_I_L_attackTime(intensity)
-					/ AS::ATT_I_L_travelTimeFromDistanceAndTroops(posA, posB, intensity); 
-
-	double B2 = ACT_ATT_I_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR
-							* ACT_ATT_I_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR;
-
-	double M2 = ACT_ATT_I_L_EFFECT_DURATION_MULTIPLIER 
-							* ACT_ATT_I_L_EFFECT_DURATION_MULTIPLIER;
-
-	double originalIntensity = 
-		((double)ACT_REF_STRENGHT * effectPhaseTotalTime * effectPhaseTotalTime) / (B2 * M2);
-
-	return (float)originalIntensity;
+	return baseTravelTimeReturnees / returnTime ;
 }

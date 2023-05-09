@@ -370,8 +370,11 @@ namespace CL {
 		return false;
 	}
 
-
-
+	bool ClientData::LAstateHandler::transferUnderAttack(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
+	
 //LA_STATE: RELATION
 
 	bool ClientData::LArelationsHandler::transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)

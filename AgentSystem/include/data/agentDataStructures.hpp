@@ -160,8 +160,9 @@ namespace LA {
 		AS::LAlocationAndConnectionData_t locationAndConnections;
 		AS::LAparameters_t parameters;
 		unsigned GAid;
+		int underAttack;
 
-		enum class fields { ACTIVE, RELATIONS, LOCATION, PARAMETERS, GA_ID,
+		enum class fields { ACTIVE, RELATIONS, LOCATION, PARAMETERS, GA_ID, UNDER_ATTACK,
 			                TOTAL_LA_STATE_FIELDS };
 	} AS_API stateData_t;
 

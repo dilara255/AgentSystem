@@ -180,15 +180,9 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	auto res_ptr = &state_ptr->parameters.resources;
 	auto str_ptr = &state_ptr->parameters.strenght;
 
-	//External guard costs a portion of upkeep for each agent:
-	float externalUpkeep = (float)(str_ptr->externalGuard*EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED);
-	//upkeep is linear with strenght above trheshold:
-	str_ptr->currentUpkeep = str_ptr->current + externalUpkeep - str_ptr->thresholdToCostUpkeep;
-	//and proportional to a factor:
-	str_ptr->currentUpkeep *= LA_UPKEEP_PER_EXCESS_STRENGHT;
-	//and never smaller then zero : )
-	str_ptr->currentUpkeep = std::max(0.0f, str_ptr->currentUpkeep);
-
+	str_ptr->currentUpkeep = AS::calculateUpkeep(str_ptr->current, str_ptr->externalGuard, 
+													       str_ptr->thresholdToCostUpkeep);
+	
 	//now we can update the current resources:
 	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep) * timeMultiplier;
 	
@@ -632,7 +626,7 @@ GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPoint
 	for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
 		
 		float effectiveReference = 0;
-		if( totalAbsoluteInfiltration == 0 ){
+		if( totalAbsoluteInfiltration != 0 ){
 			effectiveReference = references.readOf[field] / totalAbsoluteInfiltration;
 		}
 				
