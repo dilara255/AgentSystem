@@ -8,6 +8,7 @@
 #include "systems/actionHelpers.hpp"
 #include "systems/actionCreation.hpp"
 #include "systems/notions.hpp"
+#include "systems/notionWeights.h"
 
 #include "network/parameters.hpp"
 
