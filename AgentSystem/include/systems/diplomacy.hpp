@@ -26,7 +26,7 @@ namespace LA{
 	//Total trade value of a LA is a portion of it's liquid income (income minus upkeep)
 	//That gets divided between partners and also goes down in case of war
 	//NOTE: can be negative if partners income minus upkeep gets negative!
-	float calculateTradeIncomePerSecond(float agentsShare, int partnerID,
+	float calculateTradeIncomePerSecondFromNetwork(float agentsShare, int partnerID,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr);
 	
 	//Both agents loose a fraction of the smaller agents strenght each second:

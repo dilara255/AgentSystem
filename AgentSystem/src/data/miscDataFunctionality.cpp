@@ -2,6 +2,11 @@
 
 #include "data/dataMisc.hpp"
 
+//Taxes are proportional to current resources, and can be "negative"
+float AS::taxPayedPerSecond(AS::resources_t resources) {
+	return ((float)GA_TAX_RATE_PER_SECOND * resources.current);
+}
+
 float AS::calculateUpkeep(float strenght, float guard, float threshold) {
 	float guardPaidForByDefended = guard *EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
 	float effectiveTroopSize = guardPaidForByDefended + strenght - threshold;
