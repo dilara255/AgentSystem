@@ -827,6 +827,7 @@ bool testReads(bool print, float secondsToRun) {
 
 //TODO: make a more interesting test-case using clientDataHandler (include war/attrition)
 //TODO: this is really brittle : /
+//NOTE: ASSUMES EVERYONE IS TRADING WITH EVERYONE ELSE
 bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 
 	if(fixedAndStepped){
@@ -871,26 +872,27 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	clientData_ptr->networkParameters.changeMakeDecisionsTo(false);
 	clientData_ptr->networkParameters.changeProcessActionsTo(false);
 
-	AS::GAflagField_t neighboursLastGA; //none will be on: no trade
-	AS::GAflagField_t neighboursFirstGA;
+	AS::GAflagField_t neighboursOfLastGA; //none will be on: no trade
+	AS::GAflagField_t neighboursOfFirstGA;
 	uint32_t flagField = (uint32_t)pow(2,(quantityGAs - 1)) - 1; //All on, but last
 	flagField--; //turn off first, since this will be used for the first GA
-	neighboursFirstGA.loadField(flagField);
+	neighboursOfFirstGA.loadField(flagField);
 
-	clientData_ptr->GAstate.changeConnectedGAs(0, &neighboursFirstGA);
-	clientData_ptr->GAstate.changeConnectedGAs(quantityGAs-1, &neighboursLastGA);
+	clientData_ptr->GAstate.changeConnectedGAs(0, &neighboursOfFirstGA);
+	clientData_ptr->GAstate.changeConnectedGAs(quantityGAs-1, &neighboursOfLastGA);
 
 	//Other GAs can't be neighbour of last either (no need to change IDs since it's the last),
 	//but must be of first (nieghbor IDs are set when data is sent):
+	//We first set them up on the mirror:
 	for (int i = 1; i < (quantityGAs - 1); i++) {
 		auto data_ptr = &CL::ASmirrorData_cptr->agentMirrorPtrs.GAstate_ptr->data.at(i);
 		data_ptr->connectedGAs.setBitOff(quantityGAs - 1);
 		data_ptr->connectedGAs.setBitOn(0);
 	}
+	//Then use the connections field in the mirror to issue the actual change:
 	for (int i = 1; i < (quantityGAs - 1); i++) {
 		auto data_ptr = &CL::ASmirrorData_cptr->agentMirrorPtrs.GAstate_ptr->data.at(i);
-		auto connectedGAs = data_ptr->connectedGAs;
-		clientData_ptr->GAstate.changeConnectedGAs(i, &connectedGAs);
+		clientData_ptr->GAstate.changeConnectedGAs(i, &(data_ptr->connectedGAs));
 	}
 
 	float externalGuardFirstLA = 184;
@@ -901,6 +903,7 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 
 	auto laState_ptr = &CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data;
 	
+	//These are initial values, to make sure they change (or don't change) as expected:
 	float incomeFirstLA = laState_ptr->at(0).parameters.resources.updateRate;
 	float incomeLastLA = laState_ptr->at(quantityLAs - 1).parameters.resources.updateRate;
 	float strenghtFirstLA = laState_ptr->at(0).parameters.strenght.current;
@@ -916,22 +919,16 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	//How long to wait for test to run?
 	int millisToRun = A_THOUSAND;
 	int targetTicksToRun = millisToRun/AS_MILLISECONDS_PER_STEP;
-	int microsToBusyWait = 50;
+	
 	//Should try to sleep "target - 1" ticks, as the pause only happens at the end of the tick
 	int sleepMicros = (targetTicksToRun-1)*AS_MILLISECONDS_PER_STEP*MICROS_IN_A_MILLI;
 	
 	std::chrono::microseconds sleepTime(sleepMicros);
-	std::chrono::microseconds threshold(A_THOUSAND);
+	std::chrono::microseconds threshold(MICROS_IN_A_MILLI);
 
 	//Now we can run the test:
 	if (fixedAndStepped) {
 		result = AS::run(true, targetTicksToRun);
-
-		//wait for it to be done and pause:
-		bool paused = false; //pause is NOT instantaneous
-		while(!paused){
-			paused = AS::checkIfMainLoopIsPaused();
-		}
 	}
 	else {
 		result = AS::run();
@@ -940,10 +937,12 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 		AZ::hybridBusySleepForMicros(sleepTime, threshold);
 
 		AS::pauseMainLoop(); //we don't stop/quit, so the info is still available
-		bool paused = false; //pause is NOT instantaneous
-		while(!paused){
-			paused = AS::checkIfMainLoopIsPaused();
-		}
+	}
+
+	//Either way, pause is NOT instantaneous, so wait for confirmation on pause:
+	bool paused = false; 
+	while(!paused){
+		paused = AS::checkIfMainLoopIsPaused();
 	}
 
 	if (!result) { //we didn't check earlier to try and keep things in synch
@@ -990,13 +989,13 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 		return false;
 	}
 
-	if (gaState_ptr->at(0).connectedGAs.getField() != neighboursFirstGA.getField()) {
+	if (gaState_ptr->at(0).connectedGAs.getField() != neighboursOfFirstGA.getField()) {
 		LOG_ERROR("Unexpected changes happened TO GA0, maybe through actions or decisions. Will fail.");
 		AS::quit();
 		return false;
 	}
 
-	if (gaState_ptr->at(quantityGAs - 1).connectedGAs.getField() != neighboursLastGA.getField()) {
+	if (gaState_ptr->at(quantityGAs - 1).connectedGAs.getField() != neighboursOfLastGA.getField()) {
 		LOG_ERROR("Unexpected changes happened to last GA, maybe through actions or decisions. Will fail.");
 		AS::quit();
 		return false;
@@ -1019,47 +1018,61 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	//TODO: Check that diplomatic relations haven't changed either
 		
 	//Now we calculate the expected results, first for the LAs:
+	
+	float defaultUpkeep = AS::calculateUpkeep(DEFAULT_LA_STRENGHT, DEFAULT_REINFORCEMENT,
+												     DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
+
 	float LAtradeCoeficient = 1.0f/(MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT); 
 
-	float defaultStrOverThreshold = DEFAULT_LA_STRENGHT 
-		                            - DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP;
-	if (defaultStrOverThreshold < 0) {
-		defaultStrOverThreshold = 0;
-	}
+	float tradePerSecondFromOtherLAs = 
+		AS::calculateTradeIncomePerSecondFromResources(LAtradeCoeficient, DEFAULT_LA_INCOME,
+			                                                                  defaultUpkeep);
+	float tradeFromOtherLAs = tradePerSecondFromOtherLAs * (float)adjustedTotalMultiplier;
 
-	float defaultUpkeep = defaultStrOverThreshold * LA_UPKEEP_PER_EXCESS_STRENGHT;
-	float defaultIncome = DEFAULT_LA_INCOME - defaultUpkeep;
+	float expectedTradeFirstLA = tradeFromOtherLAs 
+								 * MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT;
 
-	float expectedTradeFirstLA = defaultIncome * TRADE_FACTOR_LA_PER_SECOND
-									* (float)adjustedTotalMultiplier;
+	float expectedUpkeepFirstLA = AS::calculateUpkeep(DEFAULT_LA_STRENGHT, 
+		                                              externalGuardFirstLA,
+												      DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
 
-	float effectiveArmyCostFirstLA = (float)(DEFAULT_LA_STRENGHT +
-						EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED*externalGuardFirstLA);
-	float expectedUpkeepFirstLA = (float)(LA_UPKEEP_PER_EXCESS_STRENGHT *
-					(effectiveArmyCostFirstLA - DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP));
-	expectedUpkeepFirstLA = std::max(0.0f, expectedUpkeepFirstLA);
-	float expectedLiquidFirstLA = defaultIncome - expectedUpkeepFirstLA;
+	float expectedLiquidFirstLA = DEFAULT_LA_INCOME - expectedUpkeepFirstLA;
 	float expectedTotalIncomeFirstLAMinusTrade = 
-							expectedLiquidFirstLA*(float)adjustedTotalMultiplier;
-
+							expectedLiquidFirstLA * (float)adjustedTotalMultiplier;
+	
 	float expectedTotalResourcesFirstLA = startingResourcesFirstLA +
 						expectedTradeFirstLA + expectedTotalIncomeFirstLAMinusTrade;
+
 	float expectedTaxesFirstLA = (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
 		                  * (expectedTotalResourcesFirstLA + startingResourcesFirstLA)/2);
+	expectedTaxesFirstLA -= (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
+		                            * expectedTaxesFirstLA); //second order effect
 	expectedTotalResourcesFirstLA -= expectedTaxesFirstLA; 
 	
-	float tradeFromFirstLA = (float)(TRADE_FACTOR_LA_PER_SECOND * adjustedTotalMultiplier
-										* LAtradeCoeficient * expectedLiquidFirstLA);
-	float tradeFromOtherLAs = (float)(TRADE_FACTOR_LA_PER_SECOND * adjustedTotalMultiplier
-												* LAtradeCoeficient * defaultIncome);
-	int quantityOtherLAs = (MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT) - 1;
+	float tradePerSecondFromFirstLA = 
+		AS::calculateTradeIncomePerSecondFromResources(LAtradeCoeficient, DEFAULT_LA_INCOME,
+			                                                          expectedUpkeepFirstLA);
+	float tradeFromFirstLA = tradePerSecondFromFirstLA * (float)adjustedTotalMultiplier;
 
-	float expectedTradeLastLA = quantityOtherLAs*tradeFromOtherLAs + tradeFromFirstLA;
-	float expectedTotalIncomeLastLAMinusTrade = (float)(defaultIncome*adjustedTotalMultiplier);
+	//int quantityOtherLAs = (MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT) - 1;
+	//float expectedTradeLastLA = quantityOtherLAs*tradeFromOtherLAs + tradeFromFirstLA;
+	//Change in blocks means last LA is not a partner of the first LA anymore, so:
+	float expectedTradeLastLA = 
+		(MAX_LA_NEIGHBOURS/DEFAULT_LA_NEIGHBOUR_QUOTIENT) * tradeFromOtherLAs;
+
+	float defaultLiquidIncome = DEFAULT_LA_INCOME - defaultUpkeep;
+
+	float expectedTotalIncomeLastLAMinusTrade = 
+							(float)(defaultLiquidIncome * adjustedTotalMultiplier);
+	//zeroth order on taxes:
 	float expectedTotalResourcesLastLA = DEFAULT_LA_RESOURCES + 
 							expectedTotalIncomeLastLAMinusTrade + expectedTradeLastLA;
+	//first order on taxes:
 	float expectedTaxesLastLA = (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
 								* (expectedTotalResourcesLastLA + DEFAULT_LA_RESOURCES)/2);
+	//second order on taxes:
+	expectedTaxesLastLA -= (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
+						  * expectedTaxesLastLA);
 	expectedTotalResourcesLastLA -= expectedTaxesLastLA; 
 	
 	//Then the GA expectations:
@@ -1068,9 +1081,9 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	//First GA by default has LA0 and the next few, which by default do not trade with LA0
 	//So we can calculate a standard LAs expected tax and add connectedLAs-1 of that to LA0s:
 	float expectedTradeDefaultLA = 
-			(float)(TRADE_FACTOR_LA_PER_SECOND * adjustedTotalMultiplier * defaultIncome);
+			(float)(TRADE_FACTOR_LA_PER_SECOND * adjustedTotalMultiplier * defaultLiquidIncome);
 	float expectedTotalIncomeDefaultLAMinusTrade =
-									(float)(defaultIncome * adjustedTotalMultiplier);
+									(float)(defaultLiquidIncome * adjustedTotalMultiplier);
 	float expectedTotalResourcesDefaultLA =  DEFAULT_LA_RESOURCES + 
 			expectedTotalIncomeDefaultLAMinusTrade + expectedTradeDefaultLA;
 	float expectedTaxesDefaultLA = (float)(GA_TAX_RATE_PER_SECOND * adjustedTotalMultiplier
@@ -1101,6 +1114,7 @@ bool testAgentsUpdating(bool print, bool fixedAndStepped) {
 	float expectedTotalResourcesLastGA = DEFAULT_GA_RESOURCES + lastGAtaxGain;
 	
 	//And finally check them:
+	//TODO: notice that we have a 0.015f timeMultiplier grace factor
 	float epsLA = 0.6f; //TODO: actual reasonable margin, this is a guess
 	bool aux;
 	aux = (fabs(expectedTotalResourcesFirstLA - laState_ptr->at(0).parameters.resources.current) <= epsLA);

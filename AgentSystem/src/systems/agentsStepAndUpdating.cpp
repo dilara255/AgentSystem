@@ -163,12 +163,6 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	nextDecisionGAindex %= numberEffectiveGAs;
 }
 
-//Taxes are proportional to current resources, and can be "negative"
-//TODO: expose as helper function
-float taxPayedPerSecond(AS::resources_t resources) {
-	return ((float)GA_TAX_RATE_PER_SECOND * resources.current);
-}
-
 void updateLA(LA::stateData_t* state_ptr, int agentId, 
 	          AS::dataControllerPointers_t* dp, float timeMultiplier,
 	                 AS::WarningsAndErrorsCounter* errorsCounter_ptr) {

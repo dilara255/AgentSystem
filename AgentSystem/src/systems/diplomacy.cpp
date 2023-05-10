@@ -29,7 +29,8 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 			float share = LA::calculateShareOfPartnersTrade(partnerID, stance, dp, 
 				                                                errorsCounter_ptr);
 			res_ptr->current += 
-				LA::calculateTradeIncomePerSecond(share, partnerID, dp) * timeMultiplier;
+						LA::calculateTradeIncomePerSecondFromNetwork(share, partnerID, dp) 
+												 * timeMultiplier;
 			
 			//raise relations and infiltration in proportion to share of trade:
 			state_ptr->relations.dispositionToNeighbors[neighbor] +=
@@ -111,18 +112,24 @@ float LA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStan
 	return agentsShare;
 }
 
-float LA::calculateTradeIncomePerSecond(float agentsShare, int partnerID,
+float AS::calculateTradeIncomePerSecondFromResources(float agentsShare, float partnersIncome,
+												                    float partnersUpkeep) {
+
+	float totalPartnerTradeValue = TRADE_FACTOR_LA_PER_SECOND 
+		                           * (partnersIncome - partnersUpkeep);
+
+	return agentsShare * totalPartnerTradeValue;
+}
+
+float LA::calculateTradeIncomePerSecondFromNetwork(float agentsShare, int partnerID,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr) {
  
 	LA::stateData_t partner = 
 		agentDataPtrs_ptr->LAstate_ptr->getDirectDataPtr()->at(partnerID);
 
-	float totalPartnerTradeValue = TRADE_FACTOR_LA_PER_SECOND *
-		(partner.parameters.resources.updateRate - partner.parameters.strenght.currentUpkeep);
-
-	
-
-	return agentsShare * totalPartnerTradeValue;
+	return AS::calculateTradeIncomePerSecondFromResources(agentsShare, 
+			 			      partner.parameters.resources.updateRate,
+						    partner.parameters.strenght.currentUpkeep);
 }
 
 float LA::calculateAttritionLossesPerSecond(int agentId1, int agentId2,
