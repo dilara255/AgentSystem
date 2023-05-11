@@ -550,119 +550,120 @@ namespace AS {
 		}
 
 		//These are the GA personalities:
-			enum class gaPersonalityTraits { GA_PERS_0, GA_PERS_1, GA_PERS_2, GA_PERS_3,
-											 GA_PERS_4, GA_PERS_5, GA_PERS_6, GA_PERS_7,
-											 TOTAL_GA_PERS };
-			#define TOTAL_GA_PERS ((int)gaPersonalityTraits::TOTAL_GA_PERS)
+		enum class gaPersonalityTraits { GA_PERS_0, GA_PERS_1, GA_PERS_2, GA_PERS_3,
+											GA_PERS_4, GA_PERS_5, GA_PERS_6, GA_PERS_7,
+											TOTAL_GA_PERS };
+		#define TOTAL_GA_PERS ((int)gaPersonalityTraits::TOTAL_GA_PERS)
 
-			//They'll consist each of a set of offsets for each action variation
-			//So TOTAL_GA_PERS x Modes offsets x Action Categories
-			typedef std::array<std::array<std::array<float, TOTAL_CATEGORIES>, TOTAL_MODES>, TOTAL_GA_PERS>
-				gaPersonalityOffsets_arr;
+		//They'll consist each of a set of offsets for each action variation
+		//So TOTAL_GA_PERS x Modes offsets x Action Categories
+		typedef std::array<std::array<std::array<float, TOTAL_CATEGORIES>, TOTAL_MODES>, TOTAL_GA_PERS>
+			gaPersonalityOffsets_arr;
 
-			static constexpr gaPersonalityOffsets_arr gaPersonalityOffsets = {{
+		static constexpr gaPersonalityOffsets_arr gaPersonalityOffsets = {{
 			
-				{{                         //GA_PERS_0  
-					//SELF:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//IMMEDIATE:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//REQUEST:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-				}},
-				{{                         //GA_PERS_1 
-					//SELF:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//IMMEDIATE:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//REQUEST:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-				}},	
-				{{                         //GA_PERS_2       
-					//SELF:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//IMMEDIATE:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//REQUEST:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-				}},	
-				{{                         //GA_PERS_3       
-					//SELF:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//IMMEDIATE:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//REQUEST:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-				}},	
-				{{                         //GA_PERS_4       
-					//SELF:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//IMMEDIATE:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//REQUEST:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-				}},	
-				{{                         //GA_PERS_5       
-					//SELF:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//IMMEDIATE:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//REQUEST:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-				}},
-				{{                         //GA_PERS_6       
-					//SELF:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//IMMEDIATE:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//REQUEST:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-				}},
-				{{                         //GA_PERS_7       
-					//SELF:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//IMMEDIATE:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-					//REQUEST:
-					{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
-				}}		
-			}};
+			{{                         //GA_PERS_0  
+				//SELF:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+			}},
+			{{                         //GA_PERS_1 
+				//SELF:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+			}},	
+			{{                         //GA_PERS_2       
+				//SELF:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+			}},	
+			{{                         //GA_PERS_3       
+				//SELF:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+			}},	
+			{{                         //GA_PERS_4       
+				//SELF:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+			}},	
+			{{                         //GA_PERS_5       
+				//SELF:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+			}},
+			{{                         //GA_PERS_6       
+				//SELF:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+			}},
+			{{                         //GA_PERS_7       
+				//SELF:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//IMMEDIATE:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+				//REQUEST:
+				{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, //categories
+			}}		
+		}};
 
-			static constexpr float getOffsetFromGApersonality(gaPersonalityTraits trait,
-										  AS::actCategories category, AS::actModes mode) {
+		static constexpr float getOffsetFromGApersonality(gaPersonalityTraits trait,
+										AS::actCategories category, AS::actModes mode) {
 
-				return gaPersonalityOffsets[(int)trait][(int)mode][(int)category];
-			}
+			return gaPersonalityOffsets[(int)trait][(int)mode][(int)category];
+		}
 
-			static constexpr float getRepeatActionPenalty(bool sameTarget, AS::actModes mode) {
+		static constexpr float getRepeatActionPenalty(bool sameTarget, AS::actModes mode) {
 
-				if (sameTarget) {
-					switch (mode)
-					{
-					case AS::actModes::SELF:
-						return ACT_SCORE_PENALTY_REPEAT_SELF;
-					case AS::actModes::IMMEDIATE:
-						return ACT_SCORE_PENALTY_EXACT_REPEAT_IMMEDIATE;
-					case AS::actModes::REQUEST:
-						return ACT_SCORE_PENALTY_EXACT_REPEAT_REQUEST;
-					default:
-						return 0.0f;
-					}
-				}
-				else {
-					switch (mode)
-					{
-					case AS::actModes::SELF:
-						return ACT_SCORE_PENALTY_REPEAT_SELF;
-					case AS::actModes::IMMEDIATE:
-						return ACT_SCORE_PENALTY_DIFFERENT_TARGET_REPEAT_IMMEDIATE;
-					case AS::actModes::REQUEST:
-						return ACT_SCORE_PENALTY_DIFFERENT_TARGET_REPEAT_REQUEST;
-					default:
-						return 0.0f;
-					}
+			if (sameTarget) {
+				switch (mode)
+				{
+				case AS::actModes::SELF:
+					return ACT_SCORE_PENALTY_REPEAT_SELF;
+				case AS::actModes::IMMEDIATE:
+					return ACT_SCORE_PENALTY_EXACT_REPEAT_IMMEDIATE;
+				case AS::actModes::REQUEST:
+					return ACT_SCORE_PENALTY_EXACT_REPEAT_REQUEST;
+				default:
+					return 0.0f;
 				}
 			}
+			else {
+				switch (mode)
+				{
+				case AS::actModes::SELF:
+					return ACT_SCORE_PENALTY_REPEAT_SELF;
+				case AS::actModes::IMMEDIATE:
+					return ACT_SCORE_PENALTY_DIFFERENT_TARGET_REPEAT_IMMEDIATE;
+				case AS::actModes::REQUEST:
+					return ACT_SCORE_PENALTY_DIFFERENT_TARGET_REPEAT_REQUEST;
+				default:
+					return 0.0f;
+				}
+			}
+		}
+
 	}
 }
 

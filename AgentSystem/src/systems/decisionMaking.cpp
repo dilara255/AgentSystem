@@ -39,6 +39,13 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_p
              AD::notions_t* notions_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
                int totalNeighbors, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
+AD::decisionRecord_t* getDecisionRecordPtr(const AS::scope scope, const int agent,
+						   AD::networksDecisionsReflection_t* ndr_ptr);
+
+void copyTopScores(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
+									            AD::scoresRecord_t* recordedScores_ptr);
+
+void copyLargestNotions(const AD::notionWeights_t wp, AD::notionsRecord_t* notionRecord_ptr);
 
 AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
 					 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
@@ -395,7 +402,8 @@ void applyPersonalityOffsetsAndRepetitionPenalties(AD::allScoresAnyScope_t* sp, 
 //Also returns innactive action in case of error.
 //TODO: full testing (including the sorting)
 AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr, 
-											int agent, AS::scope scope, 
+											int agent, AS::scope scope,
+    AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr, 
 					   AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	//We first sort scores from least to most worriesome:
 	std::sort(&allScores_ptr->allScores[0], 
@@ -462,7 +470,9 @@ void prepareForMitigationRound(AD::notionWeights_t wp, AD::notions_t* np,
 		wp[notion] = 0;
 	}
 	
-	//Now for each action on the shortlist we will, for each notion:
+	assert(totalAmbitionScoreForGoals >= MIN_ACT_WHY_BOTHER_THRESOLD);
+
+	//Now for each action in the shortlist we will, for each notion:
 	//- See how much it adds worry to this action;
 	//- Add to it's weight, based on that and on the action's ambition score.
 	for (int action = 0; action < goalShortlistSize; action++) {
@@ -481,7 +491,7 @@ void prepareForMitigationRound(AD::notionWeights_t wp, AD::notions_t* np,
 			float howMuchThisNotionIsAworryForThisAction =
 				np->self[notion] * AD::notionWeightsAgainst.at(cat).at(mode).at(notion);
 			
-			wp[notion] =+ relativeAmbition * howMuchThisNotionIsAworryForThisAction;
+			wp[notion] += relativeAmbition * howMuchThisNotionIsAworryForThisAction;
 		}
 
 		//Now we have to choose between using average or speficic neighbor notions:
@@ -502,11 +512,13 @@ void prepareForMitigationRound(AD::notionWeights_t wp, AD::notions_t* np,
 			float howMuchThisNotionIsAworryForThisAction = notionsNeighbor_ptr[notion]
 							* AD::notionWeightsAgainst.at(cat).at(mode).at(notionWeightID);
 			
-			wp[notion] =+ relativeAmbition * howMuchThisNotionIsAworryForThisAction;
+			wp[notion] += relativeAmbition * howMuchThisNotionIsAworryForThisAction;
 		}
 	}
 }
 
+//The more an action contributed to the initial ambitions, the more the next steps will
+//Take it in account as a goal
 void updateWeightsForMitigation(AD::notionWeights_t wp, AD::notions_t* np,
 			                       AD::allScoresAnyScope_t* allScores_ptr,
 		       				     AD::extraScore_t* extraScoreReceived_ptr,
@@ -534,6 +546,7 @@ void updateWeightsForMitigation(AD::notionWeights_t wp, AD::notions_t* np,
 	float lowTotalContributionMultiplier = std::min(1.0f, totalExtraScore);
 	
 	assert(ACT_EXTRA_SCORE_CONTRIBUTION_MITIGATION_WEIGHTS <= 1);
+
 	float proportionOfExtrasOnNewWeight =
 		ACT_EXTRA_SCORE_CONTRIBUTION_MITIGATION_WEIGHTS * lowTotalContributionMultiplier;
 
@@ -592,10 +605,10 @@ void updateWeightsForMitigation(AD::notionWeights_t wp, AD::notions_t* np,
 
 //Mitigation uses the mitigation weights to award extra score to actions which might
 //mitigate the worries which are blocking us from executing the highest ambition actions
-void mitigate(AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np,
-								    AD::allScoresAnyScope_t* allScores_ptr,
-								     AD::extraScore_t* extraScoresReceived, 
-	                                              int mitigationRoundsDone) {
+void mitigate(const AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np,
+								          AD::allScoresAnyScope_t* allScores_ptr,
+								           AD::extraScore_t* extraScoresReceived, 
+	                                                    int mitigationRoundsDone) {
 
 	//TODO-CRITICAL: This will be part of agent's personalities in the future: FIX then
 	int choiceShortlistSize = ACT_CHOICE_SHORTLIST_SIZE;
@@ -664,6 +677,7 @@ void mitigate(AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np,
 //TODO: test A LOT (and make sure sorting is working as expected)
 AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScores_ptr, 
 	                                    AD::notions_t* np, int agent, AS::scope scope,
+                   AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
 	                                  AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
 	AS::actionData_t chosenAction;
@@ -688,9 +702,15 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 
 	int mitigationAttempts = 0;
 	AD::notionWeights_t inconvennienceWeightsForExtraScoring; //for mitigation rounds
+	
 	//We'll also keep the extra score given each round. The more an action helps alleviate
 	//the inconvenniences, the more it will contribute to the weights next step.
 	AD::extraScore_t extraScoresReceived[MAX_ACT_CHOICE_SHORTLIST_SIZE]; 
+
+	//Dear diary:
+	AD::decisionRecord_t* record_ptr = getDecisionRecordPtr(scope, agent,
+						                 networksDecisionsReflection_ptr);
+	record_ptr->totalMitigationRounds = 0;
 
 	//Now for the loop:
 	//Note that on first pass scores are sorted by ambition;
@@ -733,6 +753,21 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 
 		std::sort(&allScores_ptr->allScores[0], &allScores_ptr->allScores[lastToSort], 
 		                                                AD::descendingOverallUtilityCompare);
+
+		//Let's jounal about our worries:
+		int* mitigationRound_ptr = &(record_ptr->totalMitigationRounds);
+
+		auto worriesRecord_ptr = 
+			&(record_ptr->mitigationAttempts[*mitigationRound_ptr].worries);
+		copyLargestNotions(&inconvennienceWeightsForExtraScoring[0], worriesRecord_ptr);
+
+		//And our general outlook on life:
+		auto scoreRecord_ptr = 
+			&(record_ptr->mitigationAttempts[*mitigationRound_ptr].newIdeas);
+		copyTopScores(scope, allScores_ptr, scoreRecord_ptr);
+
+		//Also, let's not forget how far we've come:
+		*mitigationRound_ptr++;
 
 		//While: Did we find something good enough? If not, should we keep trying?
 	}
@@ -790,7 +825,8 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 	else {
 		
 		//We didn't find anything interesting enough, so let's play it safe:
-		return doLeastHarmful(allScores_ptr, agent, scope, errorsCounter_ptr);
+		return doLeastHarmful(allScores_ptr, agent, scope, networksDecisionsReflection_ptr,
+			                                                             errorsCounter_ptr);
    }
 }
 
@@ -826,11 +862,13 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 	//Out strategy will depend on how ambitious we're feeling:
 	if(maxAmbition < whyBother){ 
 		//nothing stands out, so just:
-		chosenAction = doLeastHarmful(sp, agent, scope, errorsCounter_ptr);
+		chosenAction = doLeastHarmful(sp, agent, scope, networksDecisionsReflection_ptr,
+			                                                          errorsCounter_ptr);
 	}
 	else {
 		//some ideas sound nice, so:
-		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope, errorsCounter_ptr);
+		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope, 
+			           networksDecisionsReflection_ptr, errorsCounter_ptr);
 	}
 
 	//If we choose to do nothing, chosenAction.ids.slotIsUsed will be 0, else, 1, so:
@@ -842,6 +880,8 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 		if(isValid) {
 			setChoiceDetails(chosenAction.details.intensity, whyBother, justDoIt, 
 											&chosenAction, dp, errorsCounter_ptr);
+
+			//DEC-REF: Store choice
 		}
 		else {
 			errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_VARIATION);
@@ -911,14 +951,18 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 		{
 		case AD::notionMeanStrategies::AVG:
 			np->averages[notion] = AD::arithmeticAverageNotions(totalNeighbors, np, notion);
+			break;
 		case AD::notionMeanStrategies::RMS:
 			np->averages[notion] = AD::rootMeanSquareNotions(totalNeighbors, np, notion, 
 																	  errorsCounter_ptr);
+			break;
 		case AD::notionMeanStrategies::HAR:
 			np->averages[notion] = AD::harmonicMeanNotions(totalNeighbors, np, notion, 
 																	errorsCounter_ptr);
+			break;
 		default:
 			np->averages[notion] = AD::arithmeticAverageNotions(totalNeighbors, np, notion);
+			break;
 		}
 	}
 }
@@ -981,14 +1025,80 @@ void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 		{
 		case AD::notionMeanStrategies::AVG:
 			np->averages[notion] = AD::arithmeticAverageNotions(totalNeighbors, np, notion);
+			break;
 		case AD::notionMeanStrategies::RMS:
 			np->averages[notion] = AD::rootMeanSquareNotions(totalNeighbors, np, notion, 
 																	  errorsCounter_ptr);
+			break;
 		case AD::notionMeanStrategies::HAR:
 			np->averages[notion] = AD::harmonicMeanNotions(totalNeighbors, np, notion, 
 																	errorsCounter_ptr);
+			break;
 		default:
 			np->averages[notion] = AD::arithmeticAverageNotions(totalNeighbors, np, notion);
+			break;
 		}
+	}
+}
+
+AD::decisionRecord_t* getDecisionRecordPtr(const AS::scope scope, const int agent,
+						               AD::networksDecisionsReflection_t* ndr_ptr) {
+		
+	AD::decisionRecord_t* decisionRecord_ptr = NULL;
+	if(scope == AS::scope::LOCAL) { 
+		decisionRecord_ptr = 
+			&(ndr_ptr->LAdecisionReflection.at(agent));
+	}
+	else {
+		decisionRecord_ptr = 
+			&(ndr_ptr->GAdecisionReflection.at(agent));
+	}
+		
+	return decisionRecord_ptr;
+}
+
+void copyTopScores(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
+									            AD::scoresRecord_t* recordedScores_ptr) {
+
+	assert(allScores_ptr->actualTotalScores >= SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE);
+
+	int keepTrackOf = SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE;
+
+	for (int scoreID = 0; scoreID < keepTrackOf; scoreID++) {
+		auto score_ptr = &(allScores_ptr->allScores[scoreID].ambitions);
+		auto scoreRecord_ptr = &(recordedScores_ptr->record[scoreID]);
+
+		scoreRecord_ptr->score = score_ptr->score;
+		scoreRecord_ptr->label.scope = scope;
+		scoreRecord_ptr->label.category = (AS::actCategories)score_ptr->actCategory;
+		scoreRecord_ptr->label.mode = (AS::actModes)score_ptr->actMode;
+		scoreRecord_ptr->neighbor = score_ptr->neighbor;
+	}
+}
+
+void copyLargestNotions(const AD::notionWeights_t wp, 
+	           AD::notionsRecord_t* notionRecord_ptr) {
+
+	assert(AD::TOTAL_NOTIONS >= NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE);
+
+	static AD::notion_t notionWeights[AD::TOTAL_NOTIONS];
+
+	for (int notion = 0; notion < (int)AD::notionsSelf::TOTAL; notion++) {
+		notionWeights[notion].score = wp[notion];
+		notionWeights[notion].label.setNotionSelf((AD::notionsSelf)notion);
+	}
+
+	for (int notion = 0; notion < (int)AD::notionsNeighbor::TOTAL; notion++) {
+		int index = notion + (int)AD::notionsSelf::TOTAL;
+
+		notionWeights[index].score = wp[notion];
+		notionWeights[index].label.setNotionNeighbor((AD::notionsNeighbor)notion);
+	}
+
+	std::sort(&notionWeights[0], &notionWeights[AD::TOTAL_NOTIONS - 1], 
+		                                   AD::descendingNotionCompare);
+
+	for (int notion = 0; notion < NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE; notion++) {
+		notionRecord_ptr->record[notion] = notionWeights[notion];
 	}
 }

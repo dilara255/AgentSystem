@@ -25,6 +25,7 @@ namespace AS {
 					   AC_RECEIVED_BAD_SYSTEM_POINTERS, AC_RECEIVED_BAD_ACTION_PTR,
 					   DS_LAST_ACTION_SCORED_IS_INVALID, 
 					   DS_FIRST_UNSCORED_ACTION_NOT_AS_EXPECTED, DS_CHOSE_INVALID_VARIATION,
+					   DS_FAILED_TO_GET_RECORD_PTR,
 		               TOTAL};
 	//PS: Preparation Step; RS: Receive/Send; DS: Decision Step; AC: Action; AS: Agent Step;
 	//DP: Diplomacy; DS: Decision Step

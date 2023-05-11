@@ -163,21 +163,27 @@ namespace AS {
 		typedef struct score_st {
 			float score;
 			actionLabel_t label;
+			int neighbor;
 		} score_t;
 
 		typedef struct scoresRecord_st {
 			score_t record[SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE];
-			int fieldsUsed = 0;
+			int fieldsUsed = SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE;
 		} AS_API scoresRecord_t;
 
 		typedef struct notion_st {
 			float score;
 			notionLabel_t label;
+
 		} notion_t;
+
+		inline bool descendingNotionCompare(notion_t notionA, notion_t notionB) {
+			return (notionA.score > notionB.score);
+		}
 
 		typedef struct notionsRecord_st {
 			notion_t record[NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE];
-			int fieldsUsed = 0;
+			int fieldsUsed = NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE;
 		} AS_API notionsRecord_t;
 			
 		typedef struct mitigationRecord_st {
@@ -192,8 +198,9 @@ namespace AS {
 			notionsRecord_t initialNotionsFor;
 			mitigationRecord_t mitigationAttempts[MAX_MITIGATION_ROUNDS];
 			scoresRecord_t finalOptions;
+			score_t finalChoice;
 
-			int mitigationRounds = 0;
+			int totalMitigationRounds = 0;
 			uint64_t tickLastUpdate = 0;
 		} AS_API decisionRecord_t;
 
