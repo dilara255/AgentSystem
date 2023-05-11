@@ -215,7 +215,7 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 		int idOther = state_ptr->neighbourIDs[neighbor];
 				
 		if ((stance == AS::diploStance::TRADE) ||
-		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
+		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {  //this deals with the trade side
 			
 			float share = GA::calculateShareOfPartnersTrade(idOther, stance, dp, 
 				                                                errorsCounter_ptr);
@@ -223,28 +223,74 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 			param_ptr->lastTradeIncome += GA::calculateTradeIncome(share, idOther, dp);
 
 			//Raise relations and infiltration in proportion to share of Trade:
-			state_ptr->relations.dispositionToNeighbors[neighbor] +=
-					share * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
-			decision_ptr->infiltration[neighbor] +=
-				    share * MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+				< MAX_DISPOSITION_FOR_INCREASE_FROM_TRADE ) {
+
+				state_ptr->relations.dispositionToNeighbors[neighbor] +=
+						share * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+			}
+
+			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+				< MAX_INFILTRATION_FOR_INCREASE_FROM_TRADE ) {
+
+				decision_ptr->infiltration[neighbor] +=
+						share * MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
+			}
 		}
 
 		else if (stance == AS::diploStance::WAR) {
+
 			//Lower relations and infiltration because of war:
-			state_ptr->relations.dispositionToNeighbors[neighbor] -=
-					INFILTRATION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
-			decision_ptr->infiltration[neighbor] -=
-				    INFILTRATION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
+			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+				< MIN_DISPOSITION_FOR_DECREASE_FROM_WAR ) {
+				
+				state_ptr->relations.dispositionToNeighbors[neighbor] -=
+						DISPOSITION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
+			}
+
+			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+				< MIN_INFILTRATION_FOR_DECREASE_FROM_WAR ) {
+				
+				decision_ptr->infiltration[neighbor] -=
+						INFILTRATION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
+			}
 		}
 
-		if ((stance == AS::diploStance::ALLY) ||
-		    (stance == AS::diploStance::ALLY_WITH_TRADE)) {
+		if (stance == AS::diploStance::ALLY) {
 
 			//Raise relations and infiltration because of alliance:
-			state_ptr->relations.dispositionToNeighbors[neighbor] +=
+			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+				< MAX_DISPOSITION_FOR_INCREASE_FROM_ALLIANCE ) {
+
+				state_ptr->relations.dispositionToNeighbors[neighbor] +=
 					DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
-			decision_ptr->infiltration[neighbor] +=
+			}
+
+			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+				< MAX_DISPOSITION_FOR_INCREASE_FROM_ALLIANCE ) {
+
+				decision_ptr->infiltration[neighbor] +=
 				    INFILTRATION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
+			}
+		}
+
+		//Ally with trade can get extra disposition and infiltration, on top of the trade:
+		if (stance == AS::diploStance::ALLY_WITH_TRADE) {
+
+			//Raise relations and infiltration because of alliance:
+			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+				< MAX_DISPOSITION_FOR_INCREASE_FROM_ALLIANCE_WITH_TRADE ) {
+
+				state_ptr->relations.dispositionToNeighbors[neighbor] +=
+					DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
+			}
+
+			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+				< MAX_DISPOSITION_FOR_INCREASE_FROM_ALLIANCE_WITH_TRADE ) {
+
+				decision_ptr->infiltration[neighbor] +=
+				    INFILTRATION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
+			}
 		}
 
 		//We also change infiltration according to neighbors disposition
@@ -256,16 +302,27 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 			AS::getGAsIDonNeighbor(agentId, idOther, partnerState_ptr);
 		bool found = (idOnNeighbor != NATURAL_RETURN_ERROR);
 
-		if(found){
+		if(!found){
+			errorsCounter_ptr->incrementError(AS::errors::AS_GA_NOT_NEIGHBOR_OF_NEIGHBOR);
+		}
+		else {
+
 			float neighborsDisposition = 
 				partnerState_ptr->relations.dispositionToNeighbors[idOnNeighbor];
 
-			decision_ptr->infiltration[neighbor] += timeMultiplier * neighborsDisposition
-								* INFILTRATION_CHANGE_FROM_NEIGHBOR_DISPOSITION_PER_SECOND;
+			bool shouldChangeInfiltration =
+				( (neighborsDisposition >= 0) 
+					&& (neighborsDisposition > decision_ptr->infiltration[neighbor]) )
+				||
+				( (neighborsDisposition < 0) 
+					&& (neighborsDisposition < decision_ptr->infiltration[neighbor]) );
+
+			if (shouldChangeInfiltration) {
+
+				decision_ptr->infiltration[neighbor] += timeMultiplier * neighborsDisposition
+									* INFILTRATION_CHANGE_FROM_NEIGHBOR_DISPOSITION_PER_SECOND;
+			}
 		}
-		else {
-			errorsCounter_ptr->incrementError(AS::errors::AS_GA_NOT_NEIGHBOR_OF_NEIGHBOR);
-		}	
 	}
 	
 	//actually add the resources from all the trade:
