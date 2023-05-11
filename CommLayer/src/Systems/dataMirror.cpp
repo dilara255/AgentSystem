@@ -60,6 +60,14 @@ namespace CL {
 		(*mirrorData_ptr_ptr) = &data;
 		data_cptr = (const mirror_t*)&data;
 
+		result = 
+			data.decisionReflectionMirror.reinitialize(MAX_LA_QUANTITY, (MAX_GA_QUANTITY - 1));
+		if (!result) {
+			LOG_CRITICAL("Couldn't initialize the decision reflector mirror");
+			m_isInitialized = false;
+			return false;
+		}
+
 		LOG_INFO("Data Mirror System Initialized!");
 
 		return true;
@@ -261,6 +269,30 @@ namespace CL {
 		data.actionMirror.dataGAs = *actionPtrs.actionsGAs_cptr;
 
 		data.actionMirror.setHasData(true);
+
+		return true;
+	}
+
+	bool DataMirrorSystem::receiveReplacementDecisionReflectionData(
+			const AS::Decisions::networksDecisionsReflection_t* decisionReflection_cptr) {
+
+		if(!decisionReflection_cptr->initialized || !data.decisionReflectionMirror.initialized) {
+			LOG_ERROR("decisionReflection data structures not initialized");
+			return false;
+		}
+
+		size_t LAsize = decisionReflection_cptr->LAdecisionReflection.size();
+		size_t GAsize = decisionReflection_cptr->LAdecisionReflection.size();
+
+		size_t mirrorLAsize = data.decisionReflectionMirror.LAdecisionReflection.size();
+		size_t mirrorGAsize = data.decisionReflectionMirror.LAdecisionReflection.size();
+
+		if( (LAsize != mirrorLAsize) || (GAsize != mirrorGAsize) ) {
+			LOG_ERROR("Mirror received decisionReflection data of different size");
+			return false;
+		}
+
+		data.decisionReflectionMirror = *decisionReflection_cptr;
 
 		return true;
 	}

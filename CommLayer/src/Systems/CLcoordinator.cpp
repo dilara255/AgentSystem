@@ -40,12 +40,12 @@ namespace CL {
 	}
 
 	bool isASdataPointerInitialized() {
-		bool mirroPtrIsNUll = (ASmirrorData_cptr == NULL);
-		bool ASmirroIsInitialized = (ASmirror.isInitialized());
-		if (mirroPtrIsNUll || !ASmirroIsInitialized) {
+		bool mirrorPtrIsNUll = (ASmirrorData_cptr == NULL);
+		bool ASmirrorIsInitialized = (ASmirror.isInitialized());
+		if (mirrorPtrIsNUll || !ASmirrorIsInitialized) {
 			#if (defined AS_DEBUG) || VERBOSE_RELEASE
 				printf("AS mirror data ptr null? %d. AS mirror initialized? %d.\n",
-								    (int)mirroPtrIsNUll, (int)ASmirroIsInitialized);
+								    (int)mirrorPtrIsNUll, (int)ASmirrorIsInitialized);
 			#endif
 			return false;
 		}
@@ -199,6 +199,7 @@ namespace CL {
 						   const std::vector <GA::coldData_t>* coldDataGAs_cptr,
 						   const std::vector <GA::stateData_t>* stateGAs_cptr,
 						   const std::vector <GA::decisionData_t>* decisionGAs_cptr,
+						   const AS::Decisions::networksDecisionsReflection_t* decisionReflection_cptr, 
 						   bool silent) {
 
 		if (!isASdataPointerInitialized()) {
@@ -232,6 +233,7 @@ namespace CL {
 		result &= ASmirror.receiveReplacementParams(params);
 		result &= ASmirror.receiveReplacementAgentData(agentDataPtrs);
 		result &= ASmirror.receiveReplacementActionData(actionPtrs);
+		result &= ASmirror.receiveReplacementDecisionReflectionData(decisionReflection_cptr);
 
 		if (!result) { 
 			LOG_ERROR("Data transfer to ASmirror failed"); //TODO: use errorCounter instead

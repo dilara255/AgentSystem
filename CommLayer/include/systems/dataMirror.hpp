@@ -21,6 +21,8 @@ namespace CL {
 		bool receiveReplacementParams(const AS::networkParameters_t* params_cptr);
 		bool receiveReplacementAgentData(CL::agentToMirrorVectorPtrs_t dataPtrs);
 		bool receiveReplacementActionData(actionToMirrorVectorPtrs_t actionPtrs);
+		bool receiveReplacementDecisionReflectionData(
+			const AS::Decisions::networksDecisionsReflection_t* decisionReflection_cptr);
 
 		//WARNING: TODO: These are not implemented and not used so far remove?
 		/*
