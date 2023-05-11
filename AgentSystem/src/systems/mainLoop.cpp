@@ -195,6 +195,7 @@ void step(AS::chopControl_st chopControl, float timeMultiplier, float decisionTi
                       AS::g_agentDataControllerPtrs_ptr, AS::g_actionSystem_ptr,
 						timeMultiplier, numLAs, numGAs, AS::g_errorsCounter_ptr, 
 		                        (const AS::ActionSystem*)AS::g_actionSystem_ptr, 
+		                                       AS::g_decisionReflectionData_ptr,
 		                                     makeDecisions, AS::g_prnServer_ptr, 
 		                                                 decisionTimeMultiplier);
 }

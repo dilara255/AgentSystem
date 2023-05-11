@@ -26,6 +26,7 @@ AS::actionData_t makeDecisionLA(int agent,
 				 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr,
 	             AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
 				 const AS::ActionSystem* actionSystem_cptr,
+	             AS::Decisions::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
 				 const float secondsSinceLastDecisionStep, int currentActions);
 
 //Action returns as innactive in case no decision is made
@@ -35,6 +36,7 @@ AS::actionData_t makeDecisionGA(int agent,
 				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,
 	             AS::WarningsAndErrorsCounter* errorsCounter_ptr, 
 				 const AS::ActionSystem* actionSystem_cptr,
+	             AS::Decisions::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
 				 const float secondsSinceLastDecisionStep, int currentActions);
 
 LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPointers_t* dp);
@@ -58,6 +60,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	                 float timeMultiplier, int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr,
 									   const AS::ActionSystem* actionSystem_cptr,
+   AS::Decisions::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
 	                            bool makeDecisions, AS::PRNserver* prnServer_ptr,
                                               float secondsSinceLastDecisionStep) {
 	
@@ -107,6 +110,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 				actionData_t chosenAction = 
 						makeDecisionLA(agent, dp, state_ptr, &referenceReads, 
 							           errorsCounter_ptr, actionSystem_cptr,
+							           networksDecisionsReflection_ptr,
 							           g_secondsSinceLastDecisionStep, currentActions);
 				
 				//In case no decision is made, makeDecisionLA returns an innactive action, so:
@@ -146,6 +150,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 				actionData_t chosenAction = 
 						makeDecisionGA(agent , dp, state_ptr, &referenceReads, 
 									   errorsCounter_ptr, actionSystem_cptr,
+							           networksDecisionsReflection_ptr,
 							           g_secondsSinceLastDecisionStep, currentActions);
 
 				//In case no decision is made, makeDecisionGA returns an innactive action, so:
