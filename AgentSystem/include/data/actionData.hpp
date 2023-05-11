@@ -109,4 +109,10 @@ namespace AS {
 		enum class fields { IDS, TICKS, DETAILS,
 			                TOTAL_ACTION_FIELDS };
 	} AS_API actionData_t;
+
+	namespace Decisions {
+
+
+
+	}
 }
