@@ -42,10 +42,16 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* agentDataPtrs_p
 AD::decisionRecord_t* getDecisionRecordPtr(const AS::scope scope, const int agent,
 						   AD::networksDecisionsReflection_t* ndr_ptr);
 
+void copyTopAmbitions(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
+									               AD::scoresRecord_t* recordedScores_ptr);
+
 void copyTopScores(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
 									            AD::scoresRecord_t* recordedScores_ptr);
 
-void copyLargestNotions(const AD::notionWeights_t wp, AD::notionsRecord_t* notionRecord_ptr);
+void copyLargestWeights(const AD::notionWeights_t wp, AD::notionsRecord_t* notionRecord_ptr);
+
+void copyLargestNotions(const AD::notions_t* np, const int neighbors,
+	                           AD::notionsRecord_t* notionRecord_ptr);
 
 AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp, 
 					 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
@@ -676,10 +682,10 @@ void mitigate(const AD::notionWeights_t mitigationWeights_arr, AD::notions_t* np
 //Also returns innactive action in case of error.
 //TODO: test A LOT (and make sure sorting is working as expected)
 AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScores_ptr, 
-	                                    AD::notions_t* np, int agent, AS::scope scope,
+	                AD::notions_t* np, int agent, AS::scope scope, int totalNeighbors,
                    AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
 	                                  AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
-
+	
 	AS::actionData_t chosenAction;
 	chosenAction.ids.slotIsUsed = 0;
 	chosenAction.ids.active = 0;
@@ -711,6 +717,11 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 	AD::decisionRecord_t* record_ptr = getDecisionRecordPtr(scope, agent,
 						                 networksDecisionsReflection_ptr);
 	record_ptr->totalMitigationRounds = 0;
+
+	//These are our ambitions:
+	copyTopAmbitions(scope, allScores_ptr, &(record_ptr->initialAmbitions));
+	//And these are our reasons:
+	copyLargestNotions(np, totalNeighbors, &(record_ptr->initialNotionsFor));
 
 	//Now for the loop:
 	//Note that on first pass scores are sorted by ambition;
@@ -754,20 +765,24 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 		std::sort(&allScores_ptr->allScores[0], &allScores_ptr->allScores[lastToSort], 
 		                                                AD::descendingOverallUtilityCompare);
 
-		//Let's jounal about our worries:
 		int* mitigationRound_ptr = &(record_ptr->totalMitigationRounds);
+		if((*mitigationRound_ptr) < MAX_MITIGATION_ROUNDS) {
+			
+			//Let's jounal about our worries:
+			int* mitigationRound_ptr = &(record_ptr->totalMitigationRounds);
 
-		auto worriesRecord_ptr = 
-			&(record_ptr->mitigationAttempts[*mitigationRound_ptr].worries);
-		copyLargestNotions(&inconvennienceWeightsForExtraScoring[0], worriesRecord_ptr);
+			auto worriesRecord_ptr = 
+				&(record_ptr->mitigationAttempts[*mitigationRound_ptr].worries);
+			copyLargestWeights(&inconvennienceWeightsForExtraScoring[0], worriesRecord_ptr);
 
-		//And our general outlook on life:
-		auto scoreRecord_ptr = 
-			&(record_ptr->mitigationAttempts[*mitigationRound_ptr].newIdeas);
-		copyTopScores(scope, allScores_ptr, scoreRecord_ptr);
-
-		//Also, let's not forget how far we've come:
-		*mitigationRound_ptr++;
+			//And our general outlook on life:
+			auto scoreRecord_ptr = 
+				&(record_ptr->mitigationAttempts[*mitigationRound_ptr].newIdeas);
+			copyTopScores(scope, allScores_ptr, scoreRecord_ptr);
+			
+			//Also, let's not forget how far we've come:
+			*mitigationRound_ptr += 1;
+		}
 
 		//While: Did we find something good enough? If not, should we keep trying?
 	}
@@ -867,8 +882,8 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 	}
 	else {
 		//some ideas sound nice, so:
-		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope, 
-			           networksDecisionsReflection_ptr, errorsCounter_ptr);
+		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope, totalNeighbors,
+							           networksDecisionsReflection_ptr, errorsCounter_ptr);
 	}
 
 	//If we choose to do nothing, chosenAction.ids.slotIsUsed will be 0, else, 1, so:
@@ -1065,6 +1080,25 @@ void copyTopScores(const AS::scope scope, const AD::allScoresAnyScope_t* allScor
 	int keepTrackOf = SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE;
 
 	for (int scoreID = 0; scoreID < keepTrackOf; scoreID++) {
+		auto score_ptr = &(allScores_ptr->allScores[scoreID].overallUtility);
+		auto scoreRecord_ptr = &(recordedScores_ptr->record[scoreID]);
+
+		scoreRecord_ptr->score = score_ptr->score;
+		scoreRecord_ptr->label.scope = scope;
+		scoreRecord_ptr->label.category = (AS::actCategories)score_ptr->actCategory;
+		scoreRecord_ptr->label.mode = (AS::actModes)score_ptr->actMode;
+		scoreRecord_ptr->neighbor = score_ptr->neighbor;
+	}
+}
+
+void copyTopAmbitions(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
+									               AD::scoresRecord_t* recordedScores_ptr) {
+
+	assert(allScores_ptr->actualTotalScores >= SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE);
+
+	int keepTrackOf = SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE;
+
+	for (int scoreID = 0; scoreID < keepTrackOf; scoreID++) {
 		auto score_ptr = &(allScores_ptr->allScores[scoreID].ambitions);
 		auto scoreRecord_ptr = &(recordedScores_ptr->record[scoreID]);
 
@@ -1076,7 +1110,7 @@ void copyTopScores(const AS::scope scope, const AD::allScoresAnyScope_t* allScor
 	}
 }
 
-void copyLargestNotions(const AD::notionWeights_t wp, 
+void copyLargestWeights(const AD::notionWeights_t wp, 
 	           AD::notionsRecord_t* notionRecord_ptr) {
 
 	assert(AD::TOTAL_NOTIONS >= NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE);
@@ -1092,7 +1126,7 @@ void copyLargestNotions(const AD::notionWeights_t wp,
 		int index = notion + (int)AD::notionsSelf::TOTAL;
 
 		notionWeights[index].score = wp[notion];
-		notionWeights[index].label.setNotionNeighbor((AD::notionsNeighbor)notion);
+		notionWeights[index].label.setNotionAverage((AD::notionsNeighbor)notion);
 	}
 
 	std::sort(&notionWeights[0], &notionWeights[AD::TOTAL_NOTIONS - 1], 
@@ -1100,5 +1134,45 @@ void copyLargestNotions(const AD::notionWeights_t wp,
 
 	for (int notion = 0; notion < NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE; notion++) {
 		notionRecord_ptr->record[notion] = notionWeights[notion];
+	}
+}
+
+void copyLargestNotions(const AD::notions_t* np, const int totalNeighbors,
+	                           AD::notionsRecord_t* notionRecord_ptr) {
+
+	assert(AD::TOTAL_NOTIONS >= NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE);
+	
+	constexpr int maxNotions = AD::TOTAL_NOTIONS + (MAX_NEIGHBORS * (int)AD::notionsNeighbor::TOTAL);
+
+	static AD::notion_t notionScores[maxNotions];
+
+	for (int notion = 0; notion < (int)AD::notionsSelf::TOTAL; notion++) {
+		notionScores[notion].score = np->self[notion];
+		notionScores[notion].label.setNotionSelf((AD::notionsSelf)notion);
+	}
+
+	for (int notion = 0; notion < (int)AD::notionsNeighbor::TOTAL; notion++) {
+		int index = notion + (int)AD::notionsSelf::TOTAL;
+
+		notionScores[index].score = np->averages[notion];
+		notionScores[index].label.setNotionAverage((AD::notionsNeighbor)notion);
+	}
+
+	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++){
+		for (int notion = 0; notion < (int)AD::notionsNeighbor::TOTAL; notion++) {
+			int index = notion + AD::TOTAL_NOTIONS;
+
+			notionScores[index].score = np->neighbors[neighbor][notion];
+			notionScores[index].label.setNotionNeighbor((AD::notionsNeighbor)notion, neighbor);
+		}
+	}
+
+	int actualNotions = AD::TOTAL_NOTIONS + (totalNeighbors * (int)AD::notionsNeighbor::TOTAL);
+
+	std::sort(&notionScores[0], &notionScores[actualNotions - 1], 
+		                                 AD::descendingNotionCompare);
+
+	for (int notion = 0; notion < NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE; notion++) {
+		notionRecord_ptr->record[notion] = notionScores[notion];
 	}
 }

@@ -131,17 +131,30 @@ namespace AS {
 		constexpr int TOTAL_NOTIONS = (int)notionsSelf::TOTAL + (int)notionsNeighbor::TOTAL;
 
 		//TODO: is this really the best way to label notions?
+		#define IS_ABOUT_AVERAGE (-1)
 		typedef struct notionLabel_st {
 			notionsSelf self = notionsSelf::NOT_NOTION_SELF;
 			notionsNeighbor neighbor = notionsNeighbor::NOT_NOTION_NEIGHBOR;
+			int neighborID = IS_ABOUT_AVERAGE;
+
+			bool isAboutAverage() {
+				return (isNeighbor() && (neighborID == IS_ABOUT_AVERAGE));
+			}
 
 			void setNotionSelf(notionsSelf notion) {
 				self = notion;
 				neighbor = notionsNeighbor::NOT_NOTION_NEIGHBOR;
 			}
 
-			void setNotionNeighbor(notionsNeighbor notion) {
+			void setNotionAverage(notionsNeighbor notion) {
 				neighbor = notion;
+				neighborID = IS_ABOUT_AVERAGE;
+				self = notionsSelf::NOT_NOTION_SELF;
+			}
+
+			void setNotionNeighbor(notionsNeighbor notion, int newNeighborID) {
+				neighbor = notion;
+				neighborID = newNeighborID;
 				self = notionsSelf::NOT_NOTION_SELF;
 			}
 
@@ -200,8 +213,9 @@ namespace AS {
 			scoresRecord_t finalOptions;
 			score_t finalChoice;
 
+			bool decidedToDoLeastHarmful = false;
 			int totalMitigationRounds = 0;
-			uint64_t tickLastUpdate = 0;
+			int decisionAttemptCounter = 0;
 		} AS_API decisionRecord_t;
 
 		typedef struct networksDecisionsReflection_st {
