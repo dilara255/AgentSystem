@@ -112,7 +112,30 @@ namespace AS {
 
 	namespace Decisions {
 
+		typedef struct scoresRecord_st {
+			float scores[SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE];
+			int fieldsUsed = 0;
+		} scoresRecord_t;
 
+		typedef struct notionsRecord_st {
+			float notions[NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE];
+			int fieldsUsed = 0;
+		} notionsRecord_t;
+			
+		typedef struct mitigationRecord_st {
+			notionsRecord_t worries[MAX_MITIGATION_ROUNDS];
+			scoresRecord_t helpfulOptions[MAX_MITIGATION_ROUNDS];
+			scoresRecord_t newIdeas[MAX_MITIGATION_ROUNDS];
+			int mitigationRounds = 0;
+		} mitigationRecord_t;
 
+		typedef struct decisionRecord_st {
+			scoresRecord_t initialAmbitions;
+			notionsRecord_t initialNotionsFor;
+			mitigationRecord_t mitigationAttempts;
+			scoresRecord_t finalOptions;
+
+			uint64_t tickLastUpdate = 0;
+		} decisionRecord_t;
 	}
 }

@@ -188,7 +188,7 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	                                 state_ptr, decision_ptr, dp, errorsCounter_ptr);
 
 	//finally, LAs "pay tax" to GA (and can receive resources from the GA if in debt):
-	res_ptr->current -= taxPayedPerSecond(*res_ptr) * timeMultiplier;
+	res_ptr->current -= taxOwed(*res_ptr, timeMultiplier);
 
 	//let's also make sure disposition and infiltration remain bounded to [-1,1]
 	auto infiltrationArr_ptr = &(decision_ptr->infiltration[0]);
@@ -250,8 +250,7 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	}
 	
 	//Get resoures from tax...
-	param_ptr->lastTaxIncome = taxPayedPerSecond(state_ptr->parameters.LAesourceTotals)
-							   * timeMultiplier;
+	param_ptr->lastTaxIncome = taxOwed(state_ptr->parameters.LAesourceTotals, timeMultiplier);
 	param_ptr->GAresources += param_ptr->lastTaxIncome;
 
 	//Get resources from trade and update infiltration and disposition to each neighbor:

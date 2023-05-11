@@ -7,6 +7,10 @@ float AS::taxPayedPerSecond(AS::resources_t resources) {
 	return ((float)GA_TAX_RATE_PER_SECOND * resources.current);
 }
 
+float AS::taxOwed(AS::resources_t resources, float timeMultiplier) {
+	return AS::taxPayedPerSecond(resources) * timeMultiplier;
+}
+
 float AS::calculateUpkeep(float strenght, float guard, float threshold) {
 	float guardPaidForByDefended = guard *EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
 	float effectiveTroopSize = guardPaidForByDefended + strenght - threshold;

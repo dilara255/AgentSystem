@@ -17,6 +17,12 @@ namespace LA{
 	                            LA::stateData_t* state_ptr, LA::decisionData_st* decision_ptr,
 	        AS::dataControllerPointers_t* dp, AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
+	//Finds out this agents share, gets the full value, and returns the actual income
+	float calculateTradeFromPartner(int partnerID, AS::diploStance theirStance,
+				                    AS::dataControllerPointers_t* agentDataPtrs_ptr,
+	                                AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+		                            float timeMultiplier);
+
 	//Trade share depends on stance and on the partners stance to it's neighbors
 	//(if they do a lot of trade or are at war, your share goes down)
 	float calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStance,
@@ -46,6 +52,12 @@ namespace GA{
 	                    AS::dataControllerPointers_t* dp, float timeMultiplier,
 	                           AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
+	//Finds out this agents share, gets the full value, and returns the actual income
+	float calculateTradeFromPartner(int partnerID, AS::diploStance theirStance,
+				                    AS::dataControllerPointers_t* agentDataPtrs_ptr,
+	                                AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+		                            float timeMultiplier);
+
 	//Trade share depends on stance and on the partners stance to it's neighbors
 	//(if they do a lot of trade or are at war, your share goes down)
 	float calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStance,
@@ -55,6 +67,7 @@ namespace GA{
 	//Total trade value of a GA is a portion of it's current resources (not income)
 	//That gets divided between partners and also goes down in case of war
 	//NOTE: can be negative so long as GAs can get in debt!
+	//NOTE: this is NOT PER SECOND: uses tax gains, wich are already per unit of time.
 	float calculateTradeIncome(float agentsShare, int partnerID,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr);
 }
