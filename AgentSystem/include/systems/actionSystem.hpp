@@ -645,10 +645,36 @@ namespace AS {
 
 				return gaPersonalityOffsets[(int)trait][(int)mode][(int)category];
 			}
+
+			static constexpr float getRepeatActionPenalty(bool sameTarget, AS::actModes mode) {
+
+				if (sameTarget) {
+					switch (mode)
+					{
+					case AS::actModes::SELF:
+						return ACT_SCORE_PENALTY_REPEAT_SELF;
+					case AS::actModes::IMMEDIATE:
+						return ACT_SCORE_PENALTY_EXACT_REPEAT_IMMEDIATE;
+					case AS::actModes::REQUEST:
+						return ACT_SCORE_PENALTY_EXACT_REPEAT_REQUEST;
+					default:
+						return 0.0f;
+					}
+				}
+				else {
+					switch (mode)
+					{
+					case AS::actModes::SELF:
+						return ACT_SCORE_PENALTY_REPEAT_SELF;
+					case AS::actModes::IMMEDIATE:
+						return ACT_SCORE_PENALTY_DIFFERENT_TARGET_REPEAT_IMMEDIATE;
+					case AS::actModes::REQUEST:
+						return ACT_SCORE_PENALTY_DIFFERENT_TARGET_REPEAT_REQUEST;
+					default:
+						return 0.0f;
+					}
+				}
+			}
 	}
 }
-
-	
-	
-	
 

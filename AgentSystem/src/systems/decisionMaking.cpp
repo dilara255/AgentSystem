@@ -351,12 +351,10 @@ void applyPersonalityOffsetsAndRepetitionPenalties(AD::allScoresAnyScope_t* sp, 
 			if ((agentsActions_cptr->actions[act].actMode == mode) &&
 				(agentsActions_cptr->actions[act].actCategory == cat)) {
 
-				if (agentsActions_cptr->actions[act].neighbor == neighbor) {
-					penalty += ACT_SCORE_PENALTY_EXACT_REPEAT;
-				}
-				else {
-					penalty += ACT_SCORE_PENALTY_DIFFERENT_TARGET_REPEAT;
-				}
+				bool isSameTarget = (agentsActions_cptr->actions[act].neighbor == neighbor);
+
+				penalty += 
+					AS::Decisions::getRepeatActionPenalty(isSameTarget, (AS::actModes)mode);
 			}
 		}
 
