@@ -312,4 +312,29 @@ float GA::calculateTradeIncome(float agentsShare, int partnerID,
 
 	return agentsShare * totalPartnerTradeValue;
 }
+
+float LA::calculateTradeFromPartner(int partnerID, AS::diploStance theirStance,
+				                    AS::dataControllerPointers_t* agentDataPtrs_ptr,
+	                                AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+	                                float timeMultiplier) {
+
+	float share = LA::calculateShareOfPartnersTrade(partnerID, theirStance,
+				                                    agentDataPtrs_ptr, errorsCounter_ptr);
+
+	float incomePerSecond =
+		LA::calculateTradeIncomePerSecondFromNetwork(share, partnerID, agentDataPtrs_ptr);
+
+	return incomePerSecond * timeMultiplier;
+}
+
+float GA::calculateTradeFromPartner(int partnerID, AS::diploStance theirStance,
+				                    AS::dataControllerPointers_t* agentDataPtrs_ptr,
+	                                AS::WarningsAndErrorsCounter* errorsCounter_ptr,
+	                                float timeMultiplier) {
+
+	float share = GA::calculateShareOfPartnersTrade(partnerID, theirStance,
+				                                    agentDataPtrs_ptr, errorsCounter_ptr);
+
+	return (GA::calculateTradeIncome(share, partnerID, agentDataPtrs_ptr) * timeMultiplier);
+}
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          

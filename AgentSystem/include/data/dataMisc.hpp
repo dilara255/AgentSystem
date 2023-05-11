@@ -9,6 +9,7 @@ namespace AS {
 	AS_API float nextActionsCost(int currentActions);
 	AS_API float calculateUpkeep(float strenght, float guard, float threshold);
 	AS_API float taxPayedPerSecond(AS::resources_t resources);
+	AS_API float taxOwed(AS::resources_t resources, float timeMultiplier);
 	AS_API float calculateTradeIncomePerSecondFromResources(float agentsShare, 
 															float partnersIncome,
 												            float partnersUpkeep);
