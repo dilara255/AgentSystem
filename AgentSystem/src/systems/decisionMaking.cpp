@@ -45,6 +45,9 @@ AD::decisionRecord_t* getDecisionRecordPtr(const AS::scope scope, const int agen
 void copyTopAmbitions(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
 									               AD::scoresRecord_t* recordedScores_ptr);
 
+void copyLeastWorries(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
+									               AD::scoresRecord_t* recordedScores_ptr);
+
 void copyTopScores(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
 									            AD::scoresRecord_t* recordedScores_ptr);
 
@@ -411,10 +414,16 @@ AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr,
 											int agent, AS::scope scope,
     AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr, 
 					   AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
+
 	//We first sort scores from least to most worriesome:
 	std::sort(&allScores_ptr->allScores[0], 
 		      &allScores_ptr->allScores[allScores_ptr->actualTotalScores - 1], 
 		      AD::ascendingWorriesCompare);
+
+	//Then we journal our woes:
+	AD::decisionRecord_t* record_ptr = getDecisionRecordPtr(scope, agent,
+						                 networksDecisionsReflection_ptr);
+	copyLeastWorries(scope, allScores_ptr, &(record_ptr->finalOptions));
 
 	//Then we try to choose the least worriesome action with overallUtility >= 0:
 	int i = 0;
@@ -453,6 +462,10 @@ AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr,
 	else {
 		choice.ids.slotIsUsed = 0; //Marks as "doNothing"
 	}
+
+	//Alas, our faith has long been sealed!
+	record_ptr->finalChoice = choice;
+	record_ptr->decidedToDoLeastHarmful = true;
 
 	return choice;
 }
@@ -787,6 +800,11 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 		//While: Did we find something good enough? If not, should we keep trying?
 	}
 
+	if(record_ptr->totalMitigationRounds == 0) { //otherwise we recorded this already
+		//Let it be known to all what our final options were:
+		copyTopScores(scope, allScores_ptr, &(record_ptr->finalOptions));
+	}
+
 	//We've either found something nice to do or gave up trying. Is anything good enough?
 
 	int choiceIndex = 0; //index zero is the highest overall score
@@ -834,6 +852,9 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 		choice.ids.origin = agent;
 		choice.ids.target = decision_ptr->neighbor;
 		choice.details.intensity = decision_ptr->score;
+
+		record_ptr->finalChoice = choice;
+		record_ptr->decidedToDoLeastHarmful = false;
 
 		return choice;
 	}
@@ -1100,6 +1121,25 @@ void copyTopAmbitions(const AS::scope scope, const AD::allScoresAnyScope_t* allS
 
 	for (int scoreID = 0; scoreID < keepTrackOf; scoreID++) {
 		auto score_ptr = &(allScores_ptr->allScores[scoreID].ambitions);
+		auto scoreRecord_ptr = &(recordedScores_ptr->record[scoreID]);
+
+		scoreRecord_ptr->score = score_ptr->score;
+		scoreRecord_ptr->label.scope = scope;
+		scoreRecord_ptr->label.category = (AS::actCategories)score_ptr->actCategory;
+		scoreRecord_ptr->label.mode = (AS::actModes)score_ptr->actMode;
+		scoreRecord_ptr->neighbor = score_ptr->neighbor;
+	}
+}
+
+void copyLeastWorries(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
+									               AD::scoresRecord_t* recordedScores_ptr) {
+
+	assert(allScores_ptr->actualTotalScores >= SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE);
+
+	int keepTrackOf = SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE;
+
+	for (int scoreID = 0; scoreID < keepTrackOf; scoreID++) {
+		auto score_ptr = &(allScores_ptr->allScores[scoreID].worries);
 		auto scoreRecord_ptr = &(recordedScores_ptr->record[scoreID]);
 
 		scoreRecord_ptr->score = score_ptr->score;
