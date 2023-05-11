@@ -110,24 +110,82 @@ namespace AS {
 			                TOTAL_ACTION_FIELDS };
 	} AS_API actionData_t;
 
+	typedef struct {
+		AS::scope scope;
+		AS::actCategories category;
+		AS::actModes mode;
+	} AS_API actionLabel_t;
+
 	namespace Decisions {
 
+		enum class notionsSelf { LOW_INCOME_TO_STR, LOW_DEFENSE_TO_RESOURCES, LOW_CURRENCY, 
+								 S3, S4, S5, S6, S7,
+								 TOTAL, NOT_NOTION_SELF };
+		typedef	float AS_API notionsSelf_t[(int)notionsSelf::TOTAL];
+		
+		enum class notionsNeighbor { LOW_DEFENSE_TO_RESOURCES, IS_STRONG, WORRIES_ME, 
+			                         I_TRUST_THEM, N4, N5, N6, N7, N8, N9, N10, N11,
+		                             TOTAL, NOT_NOTION_NEIGHBOR };
+		typedef	float AS_API notionsNeighbor_t[(int)notionsNeighbor::TOTAL];
+
+		constexpr int TOTAL_NOTIONS = (int)notionsSelf::TOTAL + (int)notionsNeighbor::TOTAL;
+
+		//TODO: is this really the best way to label notions?
+		typedef struct notionLabel_st {
+			notionsSelf self = notionsSelf::NOT_NOTION_SELF;
+			notionsNeighbor neighbor = notionsNeighbor::NOT_NOTION_NEIGHBOR;
+
+			void setNotionSelf(notionsSelf notion) {
+				self = notion;
+				neighbor = notionsNeighbor::NOT_NOTION_NEIGHBOR;
+			}
+
+			void setNotionNeighbor(notionsNeighbor notion) {
+				neighbor = notion;
+				self = notionsSelf::NOT_NOTION_SELF;
+			}
+
+			bool isSet() {
+				return 
+					(neighbor != notionsNeighbor::NOT_NOTION_NEIGHBOR)
+					|| (self != notionsSelf::NOT_NOTION_SELF);
+			}
+
+			bool isSelf() {
+				return self != notionsSelf::NOT_NOTION_SELF;
+			}
+
+			bool isNeighbor() {
+				return neighbor != notionsNeighbor::NOT_NOTION_NEIGHBOR;
+			}
+		} AS_API notionLabel_t;
+
+		typedef struct score_st {
+			float score;
+			actionLabel_t label;
+		} score_t;
+
 		typedef struct scoresRecord_st {
-			float scores[SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE];
+			score_t record[SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE];
 			int fieldsUsed = 0;
-		} scoresRecord_t;
+		} AS_API scoresRecord_t;
+
+		typedef struct notion_st {
+			float score;
+			notionLabel_t label;
+		} notion_t;
 
 		typedef struct notionsRecord_st {
-			float notions[NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE];
+			notion_t record[NOTIONS_TO_KEEP_TRACK_EACH_DECISION_STAGE];
 			int fieldsUsed = 0;
-		} notionsRecord_t;
+		} AS_API notionsRecord_t;
 			
 		typedef struct mitigationRecord_st {
 			notionsRecord_t worries;
 			scoresRecord_t helpfulOptions;
 			scoresRecord_t newIdeas;
 
-		} mitigationRecord_t;
+		} AS_API mitigationRecord_t;
 
 		typedef struct decisionRecord_st {
 			scoresRecord_t initialAmbitions;
@@ -137,7 +195,7 @@ namespace AS {
 
 			int mitigationRounds = 0;
 			uint64_t tickLastUpdate = 0;
-		} decisionRecord_t;
+		} AS_API decisionRecord_t;
 
 		typedef struct networksDecisionsReflection_st {
 			std::vector<decisionRecord_t> LAdecisionReflection;
@@ -172,6 +230,6 @@ namespace AS {
 
 				return initialize(numberLAs, numberEffectiveGAs);
 			}
-		} networksDecisionsReflection_t;
+		} AS_API networksDecisionsReflection_t;
 	}
 }

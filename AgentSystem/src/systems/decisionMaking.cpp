@@ -23,6 +23,7 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 							     int agent, AS::dataControllerPointers_t* dp, 
 								 	     AS::scope scope, int totalNeighbors,
 	                               const AS::ActionSystem* actionSystem_cptr,
+          AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
 	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
 int getTotalPossibleActualScores(int neighbors) {
@@ -43,6 +44,7 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 					 LA::stateData_t* state_ptr, LA::readsOnNeighbor_t* referenceReads_ptr, 
 	                 AS::WarningsAndErrorsCounter* errorsCounter_ptr,
 					 const AS::ActionSystem* actionSystem_cptr,
+	                 AS::Decisions::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
 					 const float secondsSinceLastDecisionStep, int currentActions) {
 	
 	AS::actionData_t nullAction;
@@ -79,7 +81,8 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	
 	AS::actionData_t choice =
 		chooseAction(&notions, &scores, agent, dp, AS::scope::LOCAL, neighbors, 
-			                              actionSystem_cptr, errorsCounter_ptr);
+			                actionSystem_cptr, networksDecisionsReflection_ptr,
+															 errorsCounter_ptr);
 
 	//TODO: add more sanity checks
 	bool isTargetValid = (choice.ids.target >= 0)
@@ -102,6 +105,7 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 				 GA::stateData_t* state_ptr, GA::readsOnNeighbor_t* referenceReads_ptr,
 	             AS::WarningsAndErrorsCounter* errorsCounter_ptr,
 				 const AS::ActionSystem* actionSystem_cptr,
+	             AS::Decisions::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
 				 const float secondsSinceLastDecisionStep, int currentActions) {
 
 	AS::actionData_t nullAction;
@@ -137,7 +141,8 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 
 	AS::actionData_t choice = 
 		chooseAction(&notions, &scores, agent, dp, AS::scope::GLOBAL, neighbors, 
-										   actionSystem_cptr, errorsCounter_ptr);
+							 actionSystem_cptr, networksDecisionsReflection_ptr,
+							 								  errorsCounter_ptr);
 	
 	//TODO: add more sanity checks
 	bool isTargetValid = (choice.ids.target >= 0)
@@ -789,10 +794,13 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
    }
 }
 
+namespace AD = AS::Decisions;
+
 AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 							     int agent, AS::dataControllerPointers_t* dp, 
 							             AS::scope scope, int totalNeighbors,
 	                               const AS::ActionSystem* actionSystem_cptr,
+          AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
  	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
 	//TODO-CRITICAL: use agent's values after that's implemented

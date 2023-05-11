@@ -42,6 +42,7 @@ namespace AS {
 										   int numberLAs, int numberEffectiveGAs,
 		                             WarningsAndErrorsCounter* errorsCounter_ptr, 
 		                               const AS::ActionSystem* actionSystem_cptr,
+   AS::Decisions::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
 							    bool makeDecisions, AS::PRNserver* prnServer_ptr,
 		                                      float secondsSinceLastDecisionStep);
 

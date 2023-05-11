@@ -328,18 +328,6 @@ namespace AS {
 	//TODO: Move these?
 	namespace Decisions {
 		
-		enum class notionsSelf { LOW_INCOME_TO_STR, LOW_DEFENSE_TO_RESOURCES, LOW_CURRENCY, 
-								 S3, S4, S5, S6, S7,
-								 TOTAL };
-		typedef	float AS_API notionsSelf_t[(int)notionsSelf::TOTAL];
-		
-		enum class notionsNeighbor { LOW_DEFENSE_TO_RESOURCES, IS_STRONG, WORRIES_ME, 
-			                         I_TRUST_THEM, N4, N5, N6, N7, N8, N9, N10, N11,
-		                             TOTAL };
-		typedef	float AS_API notionsNeighbor_t[(int)notionsNeighbor::TOTAL];
-
-		constexpr int TOTAL_NOTIONS = (int)notionsSelf::TOTAL + (int)notionsNeighbor::TOTAL;
-
 		typedef struct notions_st {
 
 			notionsSelf_t self;
