@@ -51,6 +51,10 @@ void copyLeastWorries(const AS::scope scope, const AD::allScoresAnyScope_t* allS
 void copyTopScores(const AS::scope scope, const AD::allScoresAnyScope_t* allScores_ptr, 
 									            AD::scoresRecord_t* recordedScores_ptr);
 
+void copyExtraScores(const AS::scope scope, const AD::extraScore_t* extraScores_ptr,
+	                                   const AD::allScoresAnyScope_t* allScores_ptr,
+	                      int shortlistSize, AD::scoresRecord_t* recordedScores_ptr);
+
 void copyLargestWeights(const AD::notionWeights_t wp, AD::notionsRecord_t* notionRecord_ptr);
 
 void copyLargestNotions(const AD::notions_t* np, const int neighbors,
@@ -788,6 +792,12 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 				&(record_ptr->mitigationAttempts[*mitigationRound_ptr].worries);
 			copyLargestWeights(&inconvennienceWeightsForExtraScoring[0], worriesRecord_ptr);
 
+			//Our hopes:
+			auto extraScoreRecord_ptr =
+				&(record_ptr->mitigationAttempts[*mitigationRound_ptr].newIdeas);
+			copyExtraScores(scope, &extraScoresReceived[0], allScores_ptr,
+	                            choiceShortlistSize, extraScoreRecord_ptr);
+
 			//And our general outlook on life:
 			auto scoreRecord_ptr = 
 				&(record_ptr->mitigationAttempts[*mitigationRound_ptr].newIdeas);
@@ -916,8 +926,6 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 		if(isValid) {
 			setChoiceDetails(chosenAction.details.intensity, whyBother, justDoIt, 
 											&chosenAction, dp, errorsCounter_ptr);
-
-			//DEC-REF: Store choice
 		}
 		else {
 			errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_VARIATION);
@@ -1109,6 +1117,31 @@ void copyTopScores(const AS::scope scope, const AD::allScoresAnyScope_t* allScor
 		scoreRecord_ptr->label.category = (AS::actCategories)score_ptr->actCategory;
 		scoreRecord_ptr->label.mode = (AS::actModes)score_ptr->actMode;
 		scoreRecord_ptr->neighbor = score_ptr->neighbor;
+	}
+}
+
+void copyExtraScores(const AS::scope scope, const AD::extraScore_t* extraScores_ptr,
+	                                   const AD::allScoresAnyScope_t* allScores_ptr,
+	                      int shortlistSize, AD::scoresRecord_t* recordedScores_ptr) {
+
+	recordedScores_ptr->fieldsUsed = 
+			std::min(shortlistSize, SCORES_TO_KEEP_TRACK_EACH_DECISION_STAGE);	
+	int keepTrackOf = recordedScores_ptr->fieldsUsed;
+
+	for (int scoreID = 0; scoreID < keepTrackOf; scoreID++) {
+		auto scoreRecord_ptr = &(recordedScores_ptr->record[scoreID]);
+
+		scoreRecord_ptr->score = extraScores_ptr[scoreID].score;
+		scoreRecord_ptr->label.scope = scope;
+		
+		int idOnShortlist = extraScores_ptr[scoreID].actionIdOnChoiceShortlist;
+
+		scoreRecord_ptr->label.category = 
+			(AS::actCategories)allScores_ptr->allScores[idOnShortlist].ambitions.actCategory;
+		scoreRecord_ptr->label.mode = 
+			(AS::actModes)allScores_ptr->allScores[idOnShortlist].ambitions.actMode;
+		scoreRecord_ptr->neighbor = 
+			allScores_ptr->allScores[idOnShortlist].ambitions.neighbor;
 	}
 }
 
