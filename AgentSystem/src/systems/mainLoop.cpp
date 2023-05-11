@@ -32,6 +32,7 @@ namespace AS{
 	ActionSystem* g_actionSystem_ptr; 
 	dataControllerPointers_t* g_agentDataControllerPtrs_ptr;
 	networkParameters_t* g_currentNetworkParams_ptr;
+	Decisions::networksDecisionsReflection_t* g_decisionReflectionData_ptr;
 
 	static WarningsAndErrorsCounter* g_errorsCounter_ptr;
 	int g_warnings;
@@ -462,7 +463,8 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 						    ActionSystem* actionSystem_ptr, 
 							dataControllerPointers_t* agentDataControllerPtrs_ptr,
 							networkParameters_t* currentNetworkParams_ptr,
-	                        AS::PRNserver* prnServer_ptr){
+	                        AS::PRNserver* prnServer_ptr,
+							Decisions::networksDecisionsReflection_t* decisionReflectionData_ptr){
 
 	LOG_TRACE("Getting Main Loop Control Pointers...");
 
@@ -472,7 +474,8 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 					  || (actionSystem_ptr == NULL)
 					  || (agentDataControllerPtrs_ptr == NULL)
 					  || (currentNetworkParams_ptr == NULL)
-		              || (prnServer_ptr == NULL);
+		              || (prnServer_ptr == NULL)
+					  || (decisionReflectionData_ptr == NULL);
 		
 	if (hasNullPtr) {
 		LOG_ERROR("At least one of the passed pointers is NULL");
@@ -486,6 +489,7 @@ bool AS::initMainLoopControl(bool* shouldMainLoopBeRunning_ptr,
 	g_agentDataControllerPtrs_ptr = agentDataControllerPtrs_ptr;
 	g_currentNetworkParams_ptr = currentNetworkParams_ptr;
 	g_prnServer_ptr = prnServer_ptr;
+	g_decisionReflectionData_ptr = decisionReflectionData_ptr;
 
 	LOG_INFO("Done");
 	return true;

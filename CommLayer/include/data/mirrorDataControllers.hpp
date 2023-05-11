@@ -167,7 +167,8 @@ namespace CL {
 		AS::networkParameters_t networkParams;
 		CL::agentMirrorControllerPtrs_t agentMirrorPtrs;
 		CL::ActionMirrorController actionMirror;
-	}mirror_t;
+		AS::Decisions::networksDecisionsReflection_t decisionReflectionMirror;
+	} mirror_t;
 
 	//TODO: ACTUALLY USE THIS SO THE MIRROR IS NOT ALL CONFUSED
 	//(MAYBE CREATE A "MIRROR VIEW" CLASS OR DATA STRUCTURE AND INITIALIZE IT WITH MIRROR?

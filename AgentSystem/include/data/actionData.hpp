@@ -123,19 +123,55 @@ namespace AS {
 		} notionsRecord_t;
 			
 		typedef struct mitigationRecord_st {
-			notionsRecord_t worries[MAX_MITIGATION_ROUNDS];
-			scoresRecord_t helpfulOptions[MAX_MITIGATION_ROUNDS];
-			scoresRecord_t newIdeas[MAX_MITIGATION_ROUNDS];
-			int mitigationRounds = 0;
+			notionsRecord_t worries;
+			scoresRecord_t helpfulOptions;
+			scoresRecord_t newIdeas;
+
 		} mitigationRecord_t;
 
 		typedef struct decisionRecord_st {
 			scoresRecord_t initialAmbitions;
 			notionsRecord_t initialNotionsFor;
-			mitigationRecord_t mitigationAttempts;
+			mitigationRecord_t mitigationAttempts[MAX_MITIGATION_ROUNDS];
 			scoresRecord_t finalOptions;
 
+			int mitigationRounds = 0;
 			uint64_t tickLastUpdate = 0;
 		} decisionRecord_t;
+
+		typedef struct networksDecisionsReflection_st {
+			std::vector<decisionRecord_t> LAdecisionReflection;
+			std::vector<decisionRecord_t> GAdecisionReflection;
+
+			bool initialized = false;
+
+			void clear() {
+				LAdecisionReflection.clear();
+				GAdecisionReflection.clear();
+				initialized = false;
+			}
+
+			bool initialize(int numberLAs, int numberEffectiveGAs) {
+				if(numberLAs < 0 || numberEffectiveGAs < 0 ){ return false; }
+				
+				decisionRecord_t emptyRecord;
+
+				LAdecisionReflection.resize(numberLAs);
+				GAdecisionReflection.resize(numberEffectiveGAs);
+
+				initialized = true;
+
+				return true;
+			}
+
+			bool reinitialize(int numberLAs, int numberEffectiveGAs) {
+				clear();
+
+				LAdecisionReflection.shrink_to_fit();
+				GAdecisionReflection.shrink_to_fit();
+
+				return initialize(numberLAs, numberEffectiveGAs);
+			}
+		} networksDecisionsReflection_t;
 	}
 }

@@ -40,11 +40,13 @@ namespace AS {
 	ActionSystem actionSystem; 
 	dataControllerPointers_t agentDataControllerPtrs;
 	networkParameters_t* currentNetworkParams_ptr;
+	AS::Decisions::networksDecisionsReflection_t decisionReflectionData;
 
 	const ActionSystem* actionSystem_cptr;
 	const ActionDataController* actionDataController_cptr;
 	const networkParameters_t* currentNetworkParams_cptr;
 	const dataControllerPointers_t* agentDataControllers_cptr;
+	const AS::Decisions::networksDecisionsReflection_t* decisionReflectionData_cptr;
 }
 
 bool AS::quit() {
@@ -120,6 +122,17 @@ bool AS::initializeASandCL() {
 		return false;
 	}
 
+	result = decisionReflectionData.initialize(MAX_LA_QUANTITY, (MAX_GA_QUANTITY - 1));
+	if(result) { 
+		decisionReflectionData_cptr = 
+			(const AS::Decisions::networksDecisionsReflection_t*)&decisionReflectionData;
+		result = decisionReflectionData_cptr->initialized;
+	}
+	if(!result) {
+		LOG_CRITICAL("Failed to initialize decision reflection data structures!");
+		return false;
+	}
+
 	result = CL::init(currentNetworkParams_cptr);
 	if (!result) {
 		LOG_CRITICAL("Something went wrong initialing the Communications Layer!");
@@ -128,7 +141,7 @@ bool AS::initializeASandCL() {
 
 	result = initMainLoopControl(&shouldMainLoopBeRunning, &mainLoopId, &mainLoopThread,
 		               &actionSystem, &agentDataControllerPtrs, currentNetworkParams_ptr,
-		               &prnServer);
+		               &prnServer, &decisionReflectionData);
 	if(!result) {
 		LOG_CRITICAL("Something went wrong initialing Main Loop Controller!");
 		return false;
@@ -153,6 +166,7 @@ bool AS::sendReplacementDataToCL(bool silent) {
 				agentDataControllers_cptr->GAcoldData_ptr->getDataCptr(),
 				agentDataControllers_cptr->GAstate_ptr->getDataCptr(),
 				agentDataControllers_cptr->GAdecision_ptr->getDataCptr(),
+				decisionReflectionData_cptr,
 				silent);	
 }
 
@@ -247,6 +261,12 @@ bool AS::loadNetworkFromFile(std::string name, bool runNetwork, bool disableDeci
 	}
 
 	//TODO: check capacities and sizes to make sure things are in order?
+
+	result = decisionReflectionData.reinitialize(MAX_LA_QUANTITY, (MAX_GA_QUANTITY - 1));
+	if (!result) {
+		LOG_ERROR("Failed to reinitialize decisionReflection data");
+		goto cleanUpAndReturn;
+	}
 
 	agentDataControllerPtrs.haveData = true;
 	currentNetworkParams.isNetworkInitialized = true;

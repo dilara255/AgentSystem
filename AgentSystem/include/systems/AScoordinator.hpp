@@ -10,6 +10,7 @@ This includes:
 */
 
 #include "data/agentDataControllers.hpp"
+#include "data/actionData.hpp"
 #include "systems/warningsAndErrorsCounter.hpp"
 #include "systems/PRNserver.hpp"
 
@@ -24,7 +25,9 @@ namespace AS {
 							 ActionSystem* actionSystem_ptr, 
 							 dataControllerPointers_t* agentDataControllerPtrs_ptr,
 							 networkParameters_t* currentNetworkParams_ptr,
-	                         AS::PRNserver* prnServer_ptr);
+	                         AS::PRNserver* prnServer_ptr,
+							 Decisions::networksDecisionsReflection_t* decisionReflectionData_ptr);
+
 	bool sendReplacementDataToCL(bool silent);
 	void mainLoop(bool fixedTimeStep = false);
 

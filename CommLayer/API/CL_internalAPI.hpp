@@ -32,6 +32,7 @@ namespace CL {
 							  const std::vector <GA::coldData_t>* coldDataGAs_cptr,
  							  const std::vector <GA::stateData_t>* stateGAs_cptr,
   							  const std::vector <GA::decisionData_t>* decisionGAs_cptr,
+						      const AS::Decisions::networksDecisionsReflection_t* decisionReflection_cptr,
 					          bool silent);
 
 	//Used for synchronization (sp?), ie, for saving. 
