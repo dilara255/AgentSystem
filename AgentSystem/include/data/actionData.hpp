@@ -211,7 +211,7 @@ namespace AS {
 			notionsRecord_t initialNotionsFor;
 			mitigationRecord_t mitigationAttempts[MAX_MITIGATION_ROUNDS];
 			scoresRecord_t finalOptions;
-			score_t finalChoice;
+			actionData_t finalChoice;
 
 			bool decidedToDoLeastHarmful = false;
 			int totalMitigationRounds = 0;
