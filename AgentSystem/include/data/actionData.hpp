@@ -207,15 +207,24 @@ namespace AS {
 		} AS_API mitigationRecord_t;
 
 		typedef struct decisionRecord_st {
+			//If we didn't just doTheLeastHarmful, this holds our top ambitions:
 			scoresRecord_t initialAmbitions;
-			notionsRecord_t initialNotionsFor;
+			//This holds the initial top notions, no matter the choice strategy:
+			notionsRecord_t initialTopNotions;
+			//If there are mitigation attempts, for each of them this holds:
+			//- the notions with the top weights;
+			//- the actions wich got the most extra score;
+			//- the actions with highest overall score after that;
 			mitigationRecord_t mitigationAttempts[MAX_MITIGATION_ROUNDS];
+			//This holds the final top scoring actions, in case we try to choose the best,
+			//Or the least worriesome actions, in case we choose to do the least harmful:
 			scoresRecord_t finalOptions;
+			//And this holds the chosen action:
 			actionData_t finalChoice;
 
 			bool decidedToDoLeastHarmful = false;
-			int totalMitigationRounds = 0;
-			int decisionAttemptCounter = 0;
+			int totalMitigationRounds = 0; //in the last decision, so we don't access old data
+			int decisionAttemptCounter = 0; //can be used as a marker for changes
 		} AS_API decisionRecord_t;
 
 		typedef struct networksDecisionsReflection_st {

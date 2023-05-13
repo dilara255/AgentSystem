@@ -10,6 +10,8 @@ namespace AS::Decisions {
 	typedef std::array<std::array<std::array<float, TOTAL_NOTIONS>, TOTAL_MODES>, TOTAL_CATEGORIES>
 		notionsWeightsArray_t;
 
+	constexpr float tank = -999999.99f;
+
 	static constexpr notionsWeightsArray_t notionWeights = {{
 			
 		//Weights apply to both LAs and GAs. Meaningless for undefined action variation.
@@ -17,103 +19,103 @@ namespace AS::Decisions {
 
 		{{                         //STRENGHT  
 			//SELF:
+			{-0.7f, 1.0f, -0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+			  0.6f, 0.8f, 0.6f, -0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			/*Changed for testing. Original:
 			{-0.7f, 2.5f, -0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				1.0f, 0.5f, 1.0f, -0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-				/*Changed for testing. Original:
-			{-0.7f, 2.5f, -0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				1.0f, 0.5f, 1.0f, -0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-				*/
+			 1.0f, 0.5f, 1.0f, -0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			*/
 			//IMMEDIATE:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//REQUEST:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank}
 		}},
 		{{                         //RESOURCES 
 			//SELF:
+			{0.8f, -0.6f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+			 0.0f, 0.0f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			/*Changed for testing. Original:
 			{0.5f, -0.6f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				0.0f, 0.0f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-				/*Changed for testing. Original:
-				{0.5f, -0.6f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				0.0f, 0.0f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-				*/
+			 0.0f, 0.0f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			*/
 			//IMMEDIATE:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//REQUEST:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank}
 		}},	
 		{{                         //ATTACK       
 			//SELF:
-			{0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//IMMEDIATE:
+			{0.5f, -0.6f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+			 0.8f, -1.0f, 0.4f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			/**Changed for testing. Original:
 			{0.4f, -0.6f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				0.8f, -1.0f, 0.5f, -3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-				/**Changed for testing. Original:
-				{0.4f, -0.6f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				0.8f, -1.0f, 0.5f, -3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-				*/
+			 0.8f, -1.0f, 0.5f, -3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			*/
 			//REQUEST:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank}
 		}},	
 		{{                         //GUARD       
 			//SELF:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//IMMEDIATE:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//REQUEST:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank}
 		}},	
 		{{                         //SPY       
 			//SELF:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//IMMEDIATE:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//REQUEST:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank}
 		}},	
 		{{                         //SABOTAGE       
 			//SELF:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//IMMEDIATE:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//REQUEST:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank}
 		}},
 		{{                         //DIPLOMACY       
 			//SELF:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//IMMEDIATE:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//REQUEST:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank}
 		}},
 		{{                         //CONQUEST       
 			//SELF:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//IMMEDIATE:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//REQUEST:
-			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                          
-				0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+			{tank, tank, tank, tank, tank, tank, tank, tank,                 
+			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank}
 		}}		
 	}};
 

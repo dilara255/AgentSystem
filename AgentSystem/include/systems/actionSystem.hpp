@@ -340,7 +340,11 @@ namespace AS {
 		#define NEIGHBOR_ID_FOR_SELF (-1)
 		#define SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT (-1)
 		#define DEFAULT_AWFUL_SCORE (-999999) //should be negative : )
-
+		inline int getNeighborIDforSelfAsSeenInActionIDsAsAnInt() {
+			ids_t ids;
+			ids.target = NEIGHBOR_ID_FOR_SELF;
+			return (int)ids.target;
+		}
 		typedef struct actionScore_st {
 			int32_t actCategory = SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT;
 			int32_t actMode = SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT;
@@ -402,6 +406,8 @@ namespace AS {
 			int actionIdOnChoiceShortlist;
 		} extraScore_t;
 
+		typedef extraScore_t totalExtraScores_t[MAX_ACT_CHOICE_SHORTLIST_SIZE];
+
 		inline bool descendingExtraScoreCompare(extraScore_t scoreA, extraScore_t scoreB) {
 			return (scoreA.score > scoreB.score);
 		}
@@ -454,20 +460,22 @@ namespace AS {
 		//The exponents set the shapness of the effect. They should be small, positive numbers
 
 		static constexpr float dfExp = NTN_STD_DELINEARIZATION_EXPONENT;
-
+		static constexpr float N4Exp = NTN_N4_TRUST_DELINEARIZATION_EXPONENT;
+		static constexpr float S1Exp = NTN_S1_LOW_DEF_TO_RES_DELINEARIZATION_EXPONENT;
+		
 		//For LA's:
 		static constexpr float notionsDelinearizationExposLA[TOTAL_NOTIONS] = {
 			//Notions Self:
-			dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp,
+			dfExp, S1Exp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp,
 			//Notions Neighbors:
-			dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp
+			S1Exp, dfExp, dfExp, N4Exp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp
 		};
 		//For GA's:
 		static constexpr float notionsDelinearizationExposGA[TOTAL_NOTIONS] = {
 			//Notions Self:
-			dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp,
+			dfExp, S1Exp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp,
 			//Notions Neighbors:
-			dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp
+			S1Exp, dfExp, dfExp, N4Exp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp, dfExp
 		};
 
 		static constexpr float getDelinearizationExpoSelf(notionsSelf notion, 
@@ -496,20 +504,22 @@ namespace AS {
 		//Any base >= these will be mapped to 1;
 
 		static constexpr float maxBs = NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
+		static constexpr float N4mxB = NTN_N4_TRUST_MAX_EFFECTIVE_NOTION_BASE;
+		static constexpr float S1mxB = NTN_S1_LOW_DEF_TO_RES_MAX_EFFECTIVE_NOTION_BASE;
 
 		//For LA's:
 		static constexpr float notionsMaxEffectiveBasesLA[TOTAL_NOTIONS] = {
 			//Notions Self:
-			maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs,
+			maxBs, S1mxB, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs,
 			//Notions Neighbors:
-			maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs
+			maxBs, maxBs, maxBs, N4mxB, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs
 		};
 		//For GA's:
 		static constexpr float notionsMaxEffectiveBasesGA[TOTAL_NOTIONS] = {
 			//Notions Self:
-			maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs,
+			maxBs, S1mxB, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs,
 			//Notions Neighbors:
-			maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs
+			maxBs, maxBs, maxBs, N4mxB, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs, maxBs
 		};
 
 		static constexpr float getEffectiveMaxBaseSelf(notionsSelf notion, 

@@ -20,7 +20,7 @@ const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
 const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
 const float testPace = 4.0f;
 
-#define PRINT_VIZ true
+#define PRINT_VIZ false
 #define SHOULD_PAUSE_ON_NEW false
 
 namespace TV{
@@ -343,9 +343,19 @@ namespace TV{
 		return AS::nextActionsCost(currentValidActions);
 	}
 
-	void printLAdecisionData(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr) {
+	void printLAdecisionData(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr,
+		                                        std::vector<int>* decisionsMadePerLA_ptr) {
 
 		float costNext = costNextAgentsAction(agent, actionsVec_ptr);
+
+		auto reflection_ptr = 
+			&(CL::ASmirrorData_cptr->decisionReflectionMirror.LAdecisionReflection.at(agent));
+
+		auto choiceIDs_ptr = &(reflection_ptr->finalChoice.ids);
+		int idSelf = AS::Decisions::getNeighborIDforSelfAsSeenInActionIDsAsAnInt();
+
+		printf("\n\tChoice: %d_%d @%d (self = %d)\n\n", 
+			choiceIDs_ptr->category, choiceIDs_ptr->mode, choiceIDs_ptr->target, idSelf);
 
 		printf("\tDECISION: $ Next: %6.2f | CCC_M (NTN+, NTN-) | CCC_M? CCC_M (NTN+, NTN-) | CCC_M -> x, YY\n", costNext);
 	}
@@ -358,22 +368,24 @@ namespace TV{
 		system("cls");
 	}
 
-	void printStandardAgent(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr) {
+	void printStandardAgent(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr,
+		                                       std::vector<int>* decisionsMadePerLA_ptr) {
 
 		printLAheaderAndstateData(agent);
 		printLAneighborData(agent);
-		printLAdecisionData(agent, actionsVec_ptr);
+		printLAdecisionData(agent, actionsVec_ptr, decisionsMadePerLA_ptr);
 		printLAactionData(agent, actionsVec_ptr);
 	}
 
 	void screenStepStandard(int numberLAs, std::vector<TV::actionChanges_t>* actionsVec_ptr,
+		                                           std::vector<int>* decisionsMadePerLA_ptr,
 		                     std::chrono::seconds timePassed, std::chrono::seconds loopTime) {
 		
 		resetScreen(); puts("");
 
 		for(int agent = 0; agent < numberLAs; agent++){
 				
-			printStandardAgent(agent, actionsVec_ptr);
+			printStandardAgent(agent, actionsVec_ptr, decisionsMadePerLA_ptr);
 			printSeparation();
 		}
 
@@ -414,6 +426,9 @@ namespace TV{
 		std::vector<TV::actionChanges_t> actionsVec;
 		initializeActionsVec(&actionsVec, numberLAs);
 
+		std::vector<int> decisionsMadePerLA;
+		decisionsMadePerLA.resize(numberLAs);
+
 		bool vizActive = PRINT_VIZ;
 		bool newAction = false;
 		while (timePassed < loopTime) {
@@ -421,7 +436,8 @@ namespace TV{
 			newAction = updateActionsAndCheckForChanges(&actionsVec, numberLAs);
 
 			if(vizActive){
-				screenStepStandard(numberLAs, &actionsVec, timePassed, loopTime);
+				screenStepStandard(numberLAs, &actionsVec, &decisionsMadePerLA,
+					                                      timePassed, loopTime);
 
 				if(newAction && SHOULD_PAUSE_ON_NEW) { pauseLoop(&loopTime); }		
 			}

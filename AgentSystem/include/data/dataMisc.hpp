@@ -6,6 +6,8 @@
 
 namespace AS {
 
+	AS_API constexpr float getStanceImpactFactorFromTrade();
+	AS_API constexpr float getStanceImpactFactorFromWar();
 	AS_API float nextActionsCost(int currentActions);
 	AS_API float calculateUpkeep(float strenght, float guard, float threshold);
 	AS_API float taxPayedPerSecond(AS::resources_t resources);
@@ -13,6 +15,8 @@ namespace AS {
 	AS_API float calculateTradeIncomePerSecondFromResources(float agentsShare, 
 															float partnersIncome,
 												            float partnersUpkeep);
+	//TODO: ideally this should get the actual time passed between decision rounds
+	AS_API float projectDispositionChangeInRefTime(float dispositionChange);
 
 	AS_API constexpr char diploStanceToChar(AS::diploStance stance);
 	AS_API constexpr char scopeToChar(AS::scope scope);

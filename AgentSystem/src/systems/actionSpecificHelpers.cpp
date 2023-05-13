@@ -20,7 +20,7 @@ float AS::RES_S_L_necessaryFunding(float intensity) {
 	//to help reign that in:
 
 	return ACT_RES_S_L_COST_PER_REF_INCOME * relativeChange
-			* (1 + (ACT_RES_S_L_COS_RELATIVE_WEIGHT_SQUARE_TERM * relativeChange) );
+			* (1 + (ACT_RES_S_L_COST_RELATIVE_WEIGHT_SQUARE_TERM * relativeChange) );
 }
 
 float AS::STR_S_L_necessaryFunding(float intensity) {

@@ -57,14 +57,14 @@ Name: LA_0
     Relation with Neighbor 1 (id 2): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
       Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
   #Action Offsets {from LA's personality | from GA's actions}:
-    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 0: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 1: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 2: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 3: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 4: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 5: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 6: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 7: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
 
 LA Id: 1, belongs to GA: 1, On? 1, Decisions? 1
 Name: LA_1
@@ -77,14 +77,14 @@ Name: LA_1
     Relation with Neighbor 1 (id 2): stance: 4, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
       Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
   #Action Offsets {from LA's personality | from GA's actions}:
-    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 0: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 1: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 2: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 3: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 4: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 5: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 6: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 7: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
 
 LA Id: 2, belongs to GA: 2, On? 1, Decisions? 1
 Name: LA_2
@@ -97,14 +97,14 @@ Name: LA_2
     Relation with Neighbor 1 (id 1): stance: 4, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
       Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
   #Action Offsets {from LA's personality | from GA's actions}:
-    Category 0: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 1: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 2: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 3: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 4: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 5: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 6: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
-    Category 7: immediate: {-0.100000 | -0.100000}, request:  {-0.100000 | -0.100000}, self: {-0.100000 | -0.100000}
+    Category 0: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 1: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 2: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 3: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 4: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 5: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 6: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
+    Category 7: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
 
 #GA Action Data:
 
