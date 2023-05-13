@@ -18,13 +18,40 @@ float AS::calculateUpkeep(float strenght, float guard, float threshold) {
 	return std::max(0.0f, effectiveTroopSize * LA_UPKEEP_PER_EXCESS_STRENGHT);
 }
 
+constexpr float AS::getStanceImpactFactorFromTrade(){
+		
+	return MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND 
+	       * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS
+		   * NTN_DIPLO_STANCE_WEIGHT_PROPORTION_TO_REFS;
+}
+
+constexpr float AS::getStanceImpactFactorFromWar(){
+		
+	return PROPORTIONAL_WEIGHT_OF_WAR_COMPARED_TO_TRADE * AS::getStanceImpactFactorFromTrade();
+}
+
+float AS::projectDispositionChangeInRefTime(float dispositionChange) {
+
+	float msLikelyPassed =
+			AS_MILLISECONDS_PER_DECISION_ROUND * AS_GENERAL_PACE;
+	float rateOfChange = dispositionChange / msLikelyPassed;
+
+	float projectedChange = 
+			rateOfChange * NOTIONS_AND_ACTIONS_REF_PERIOD_SECS * MILLIS_IN_A_SECOND;
+
+	return std::clamp(projectedChange, -NTN_MAX_ABSOLUTE_DISPOSITION_EXTRAPOLATION,
+										NTN_MAX_ABSOLUTE_DISPOSITION_EXTRAPOLATION);
+}
+
 //TODO: document math
 float AS::nextActionsCost(int currentActions) {
 
-	if(currentActions == 0) { return 0.0f; } //first is a freeby
+	if(currentActions <= ACT_FREE_ACTIONS) { return 0.0f; } //there may be freebies
 
-	float multiplier = currentActions
-		+ ACT_SUPERLINEAR_WEIGHT * powf((float)(currentActions - 1), (float)ACT_SUPERLINEAR_EXPO);
+	int effectiveCurrentActions = currentActions - ACT_FREE_ACTIONS;
+
+	float multiplier = effectiveCurrentActions
+		+ ACT_SUPERLINEAR_WEIGHT * powf((float)(effectiveCurrentActions), (float)ACT_SUPERLINEAR_EXPO);
 	
 	return multiplier * BASE_ACT_COST;
 }
