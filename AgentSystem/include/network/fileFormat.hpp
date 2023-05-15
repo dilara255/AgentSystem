@@ -51,12 +51,12 @@ static const char* lastGAwarning = "\n#The last GA is reserved for local agents 
 static const char* LAidentity = "\nLA Id: %d, belongs to GA: %d, On? %d, Decisions? %d\n";
 static const char* LAname = "Name: %s\n";
 static const char* LAposition = "  Pos: X %f, Y %f\n";
-static const char* LAstrenght = "  Strenght: %f (+ %f), Guard: %f (+ %f), Threshold to cost upkeed: %f. Under Attack? %d\n";
-static const char* LAresources = "  Current Resources: %f (+ %f), income: %f, upkeep: %f\n";
+static const char* LAstrenght = "  Strenght: %f (+ %f), Guard: %f (+ %f), Threshold to cost upkeed: %f. Troops on attacks: %f. War attrition: %f /s. Under Attack? %d\n";
+static const char* LAresources = "  Current Resources: %f (+ %f), income: %f, upkeep: %f, tax: %f /s, trade: %f /s\n";
 static const char* LArelationsInfo = "    Relation with Neighbor %d (id %d): stance: %d, disposition: %f (last: %f), infiltration: %f\n";
 
 static const char* LAreadsOnNeighbor = "      Reads: resources: %f (+ %f) (income: %f), strenght: %f (+ %f), Guard: %f (+ %f)\n"; 
 static const char* LAcategoryOffsets = "    Category %d: immediate: {%f | %f}, request:  {%f | %f}, self: {%f | %f}\n";
 
-static const char* LAaction = "LA Action %d (LA %d): IDs: %u, Phase Time Elapsed: %lu (Total: %lu), Intensity: %f, Aux: %f\n";
-static const char* GAaction = "GA Action %d (GA %d): IDs: %u, Phase Time Elapsed: %lu (Total: %lu), Intensity: %f, Aux: %f\n";
+static const char* LAaction = "LA Action %d (LA %d): IDs: %u, Phase Time Elapsed: %lu (Total: %lu), Intensity: %f, Aux: %f, ShortTerm: %f, LongTerm: %f\n";
+static const char* GAaction = "GA Action %d (GA %d): IDs: %u, Phase Time Elapsed: %lu (Total: %lu), Intensity: %f, Aux: %f, ShortTerm: %f, LongTerm: %f\n";

@@ -400,6 +400,10 @@ namespace CL::ClientData {
 				//Blocks Client Data.
 				bool CL_API changeIncomeTo(uint32_t agentID, float newValue);
 
+				bool CL_API changeTaxRateTo(uint32_t agentID, float newValue);
+
+				bool CL_API changeTradeRateTo(uint32_t agentID, float newValue);
+
 			private:
 				friend class LAparametersHandler;
 
@@ -409,10 +413,11 @@ namespace CL::ClientData {
 
 				virtual bool transferAll(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 
-				//Client Data should be blocked upstream from this
+				//Client Data should be blocked upstream from these
 				bool transferCurrent(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
-				
 				bool transferIncome(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				bool transferTaxRate(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				bool transferTradeRate(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 				
 				StateControllerLA* m_data_ptr;
 			};
@@ -426,6 +431,8 @@ namespace CL::ClientData {
 				bool CL_API changeCurrentUpkeep(uint32_t agentID, float newValue);
 				bool CL_API changeGuard(uint32_t agentID, float newValue);
 				bool CL_API changeThresholdForUpkeed(uint32_t agentID, float newValue);
+				bool CL_API changeOnAttacks(uint32_t agentID, float newValue);
+				bool CL_API changeAttritionLossRate(uint32_t agentID, float newValue);
 
 			protected:
 				friend class LAparametersHandler;
@@ -441,7 +448,9 @@ namespace CL::ClientData {
 				bool transferGuard(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
 				bool transferThresholdForUpkeed(uint32_t agentID, 
 				                                ASdataControlPtrs_t recepientPtrs);
-				
+				bool transferOnAttacks(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+				bool transferAttritionLossRate(uint32_t agentID, ASdataControlPtrs_t recepientPtrs);
+
 				StateControllerLA* m_data_ptr;
 			};
 

@@ -403,6 +403,8 @@ namespace AS {
 		float* resources_ptr =
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters.resources.current);
 		
+		assert(isfinite(*resources_ptr));
+
 		if ((*resources_ptr) >= action_ptr->details.processingAux) {
 
 			*resources_ptr -= action_ptr->details.processingAux;
@@ -418,8 +420,13 @@ namespace AS {
 
 	void intensityToRatePrepEnd(actionData_t* action_ptr) {
 
-		//The intensity is divided by the next phase's time, becoming a rate
-		action_ptr->details.intensity /= action_ptr->phaseTiming.total;
+		if (action_ptr->phaseTiming.total == 0) {
+			action_ptr->details.intensity = 0;
+		}
+		else {
+			//The intensity is divided by the next phase's time, becoming a rate
+			action_ptr->details.intensity /= action_ptr->phaseTiming.total;
+		}
 
 		//Then the usual stuff is done:
 		defaultPrepEnd(action_ptr);
@@ -478,7 +485,9 @@ namespace AS {
 		float fundsForIdealGain = STR_S_L_necessaryFunding(idealGain);
 
 		//How much of that can we pay now?
-		float* resources_ptr = &(params_ptr->resources.current);		
+		float* resources_ptr = &(params_ptr->resources.current);	
+
+		assert(isfinite(*resources_ptr));
 
 		float newFunds = 0;
 		if ( (*resources_ptr) >= fundingPending) {
@@ -487,8 +496,11 @@ namespace AS {
 		else if ( (*resources_ptr) > 0 ) {
 			newFunds = (*resources_ptr);
 		}
-		else {
+		else if ( (*resources_ptr) > AS::getMaxDebt(params_ptr->resources.updateRate) ) {
 			newFunds = fundsForIdealGain * ACT_STR_S_L_OVERDRAFT_FUNDS_PROPORTION;
+		}
+		else { //we're in too much debt, so just let the time pass:
+			return defaultTick(tickTenthsOfMs, action_ptr);
 		}
 
 		//Charge for the funds:
@@ -523,6 +535,8 @@ namespace AS {
 	//RESOURCES:
 
 	void RES_S_L_PrepEnd(actionData_t* action_ptr) {
+		
+		assert(isfinite(action_ptr->details.intensity));
 
 		//Aux was set to hold how many funds haven't been paid yet
 		//This changes that to how much HAS BEEN ALREADY paid
@@ -540,6 +554,8 @@ namespace AS {
 		//(and the phase is advanced as usual):
 		intensityToRatePrepEnd(action_ptr);
 
+		assert(isfinite(action_ptr->details.intensity));
+
 		return;
 	}
 
@@ -548,6 +564,9 @@ namespace AS {
 		int agent = action_ptr->ids.origin;
 		auto params_ptr = 
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters);
+
+		assert(isfinite(params_ptr->resources.updateRate));
+		assert(isfinite(action_ptr->details.intensity));
 
 		//Try to pay as much as possible of the remaining funding:
 		uint32_t timeLeft = action_ptr->phaseTiming.total - action_ptr->phaseTiming.elapsed;
@@ -561,12 +580,15 @@ namespace AS {
 
 		//Calculate how much INC we should get this tick if fully funded:
 		float idealGain = action_ptr->details.intensity * tickTenthsOfMs;
+		assert(isfinite(idealGain));
 
 		//Then we calculate how much that would cost in fundings:
 		float fundsForIdealGain = RES_S_L_necessaryFunding(idealGain);
 
 		//How much of that can we pay now?
-		float* resources_ptr = &(params_ptr->resources.current);	
+		float* resources_ptr = &(params_ptr->resources.current);
+
+		assert(isfinite(*resources_ptr));
 
 		float newFunds = 0;
 		if ( (*resources_ptr) >= fundingPending) {
@@ -575,27 +597,39 @@ namespace AS {
 		else if( (*resources_ptr) > 0 ) {
 			newFunds = (*resources_ptr);
 		}
-		else {
+		else if( (*resources_ptr) > AS::getMaxDebt(params_ptr->resources.updateRate) ) {
 			newFunds = fundsForIdealGain * ACT_RES_S_L_OVERDRAFT_FUNDS_PROPORTION;
 		}
+		else { //We're in too much debt, but some income increase will come for free:
+			newFunds = fundsForIdealGain * ACT_RES_S_L_PITTY_FUNDS_PROPORTION;
+		}
 
-		//Charge for the funds:
+		//Gain the funds:
 		*funds_ptr += newFunds;
-		*resources_ptr -= newFunds;
+		//And charge for them, but only if we're above the max debt line:
+		if ((*resources_ptr) > AS::getMaxDebt(params_ptr->resources.updateRate)) {
+			*resources_ptr -= newFunds;
+		}
 
 		//Of course we won't try to pay over our intended maximum:
 		float effectiveMaximumExpenseThisTick = 
 						std::min(fundsForIdealGain, resourcesLeftToPay);
 
 		//How much of that can we pay for from our funding?
-		float ratioToGain = std::min(1.0f, ((*funds_ptr) / effectiveMaximumExpenseThisTick) );
+		float ratioToGain = 1.0f;
+		if (effectiveMaximumExpenseThisTick > 0) {
+			ratioToGain = std::min(1.0f, ((*funds_ptr) / effectiveMaximumExpenseThisTick) );
+			assert(isfinite(ratioToGain));
+		}			
 		 
-		//Now we pay for that that and raise the str:
+		//Now we pay for that and raise the str:
 		*funds_ptr -= (ratioToGain * effectiveMaximumExpenseThisTick);
 		*funds_ptr = std::max(0.0f, (*funds_ptr) ); //to avoid any floating point weirdness
 
 		//Gain INC:
 		params_ptr->resources.updateRate += (ratioToGain * idealGain);
+
+		assert(isfinite(params_ptr->resources.updateRate));
 		
 		//We want to tick normally, but since the effect may be partial,
 		//we offset that by an increase in total time proportional to the gain in STR:
@@ -604,6 +638,8 @@ namespace AS {
 			action_ptr->phaseTiming.total +=
 					(uint32_t)floor((1 - (double)ratioToGain)*tickTenthsOfMs);
 		}
+
+		assert(isfinite(*resources_ptr));
 		
 		return defaultTick(tickTenthsOfMs, action_ptr);
 	}
@@ -635,6 +671,8 @@ namespace AS {
 					&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
 				
 				agent_ptr->parameters.resources.current += costForRefund;
+
+				assert(isfinite(agent_ptr->parameters.resources.current));
 			}
 
 			defaultConclusionEnd(action_ptr);
@@ -698,9 +736,16 @@ namespace AS {
 			//The attack will be launched as well as it can be:
 			*intensity_ptr -= troopsMissing;
 
-			//TODO: maybe set a maximum loss to abort the attack?
+			//That is, if there is still an attack to launch at all:
+			if ((*intensity_ptr) < ACT_ATT_I_L_MINIMUM_SIZER_FOR_REDUCED_ATTACK) {
+				invalidateAction(action_ptr);
+				return;
+			}
 		}
 		
+		//We record our initial forces, both on the agent and the action side:
+		ourState_ptr->parameters.strenght.onAttacks = (*intensity_ptr);
+		action_ptr->details.longTermAux = (*intensity_ptr);
 
 		//Then, we calculate a base travel time according to distance and a parameter:
 		pos_t ourPosition = ourState_ptr->locationAndConnections.position;
@@ -741,6 +786,8 @@ namespace AS {
 			&(defendersDecision_ptr->reads[attackerIDonDefender].readOf[strenghtField]);
 
 		float attackSize = action_ptr->details.intensity;
+
+		assert (attackSize > 0);
 
 		//Do they think we've attacked with all our might?
 		float attackToReadNormalizedDifference =
@@ -794,7 +841,7 @@ namespace AS {
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(defender).parameters.strenght);
 
 		float defences = defendersStrData_ptr->current + defendersStrData_ptr->externalGuard;
-		
+
 		assert(defences >= 0); //first turn around, zero is valid
 
 		//How do the forces compare, effectively?
@@ -804,7 +851,7 @@ namespace AS {
 		//We also take the sqrt of the force sizes: a bunch of guys can't fight a few together
 		//The signs on the multipliers preserve the meaning (positive: attacker ahead)
 
-		float moraleFactor = ATT_I_L_MORALE_IMPACT_FACTOR * action_ptr->details.processingAux;
+		float moraleFactor = ACT_ATT_I_L_MORALE_IMPACT_FACTOR * action_ptr->details.processingAux;
 
 		float effectiveDefences = std::sqrt (defences ) * (1 - moraleFactor);
 		
@@ -856,11 +903,13 @@ namespace AS {
 			defendersStrData_ptr->externalGuard -= defendersLosses;
 		}
 		else {
-			defendersLosses -= defendersStrData_ptr->externalGuard;
+			float defendersLossesFromStr = defendersLosses - defendersStrData_ptr->externalGuard;
 			defendersStrData_ptr->externalGuard = 0;
-			defendersStrData_ptr->current -= defendersLosses;
+			defendersStrData_ptr->current -= defendersLossesFromStr;
+			defendersStrData_ptr->current = std::max(0.0f, defendersStrData_ptr->current);
 		}
-		defences -= defendersLosses;
+		defences = defendersStrData_ptr->externalGuard + defendersStrData_ptr->current;
+
 
 		//Now we check if both sides still have troops:
 		float irrelevantForce = 0.1f;
@@ -985,7 +1034,11 @@ namespace AS {
 
 				auto defendersResourceInfo_ptr = &(defendersState_ptr->parameters.resources);
 
+				assert(isfinite(defendersResourceInfo_ptr->current));
+				assert(isfinite(defendersResourceInfo_ptr->updateRate));
+
 				float resources = defendersResourceInfo_ptr->current;
+
 				float effectiveDefendersResources = 
 						resources * (1 - ACT_ATT_I_L_MIN_PROPORTIONAL_RESOURCE_RESERVE_FROM_LOOT);
 
@@ -1000,6 +1053,8 @@ namespace AS {
 				//This is the loot:
 				*aux_ptr = std::min(effectiveDefendersResources, totalCarryCapactiy);
 				defendersResourceInfo_ptr->current -= *aux_ptr;
+
+				assert(isfinite(defendersResourceInfo_ptr->current));
 
 				//Looting damages infrastructure, which lowers the lootee's income.
 				//(proportional to loot/resources, to the original income, and to a parameter)
@@ -1016,6 +1071,8 @@ namespace AS {
 									* ACT_ATT_I_L_INCOME_PROPORTION_NOT_PROTECTED_FROM_LOOT;
 
 				defendersResourceInfo_ptr->updateRate -= unprotectedIncome * lootProportion;
+
+				assert(isfinite(defendersResourceInfo_ptr->updateRate));
 			}
 		}
 
@@ -1028,19 +1085,23 @@ namespace AS {
 
 		assert(action_ptr->details.intensity >= 0);
 
-		float returnees = action_ptr->details.intensity;
+		int agent = action_ptr->ids.origin;
+		auto agentState_ptr = &(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
 
+		//The agent no longer counts the sent troops as being on attack:
+		agentState_ptr->parameters.strenght.onAttacks -= action_ptr->details.longTermAux;
+			
+		//But how many of them actually returned?
+		float returnees = action_ptr->details.intensity;
 		if(returnees > 0) { 
-			
-			int agent = action_ptr->ids.origin;
-			
-			auto agentState_ptr = &(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
-			
+						
 			//First of all, take any loot in:
 			agentState_ptr->parameters.resources.current += 
 									ACT_ATT_I_L_PROPORTION_OF_LOOT_ACTUALLY_PROFITED 
 									* action_ptr->details.processingAux;
 		
+			assert(isfinite(agentState_ptr->parameters.resources.current));
+
 			//The more people returned compared to the original size and the faster the fight,
 			//the more info they'll have been able to get:
 

@@ -49,8 +49,8 @@ Name: GA_02
 LA Id: 0, belongs to GA: 0, On? 1, Decisions? 1
 Name: LA_0
   Pos: X 150.000000, Y 225.000000
-  Strenght: 25.000000 (+ 0.000000), Guard: 15.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000. Under Attack? 0
-  Current Resources: 100.000000 (+ 0.000000), income: 1.000000, upkeep: 0.502500
+  Strenght: 25.000000 (+ 0.000000), Guard: 15.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000. Troops on attacks: 0.000000. War attrition: 0.000000 /s. Under Attack? 0
+  Current Resources: 100.000000 (+ 0.000000), income: 1.000000, upkeep: 0.502500, tax: 0.000000 /s, trade: 0.000000 /s
   Connected LAs (bitfield): 6 0 0 0
     Relation with Neighbor 0 (id 1): stance: 0, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
       Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
@@ -69,8 +69,8 @@ Name: LA_0
 LA Id: 1, belongs to GA: 1, On? 1, Decisions? 1
 Name: LA_1
   Pos: X 125.000000, Y 50.000000
-  Strenght: 50.000000 (+ 0.000000), Guard: 0.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000. Under Attack? 0
-  Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500
+  Strenght: 50.000000 (+ 0.000000), Guard: 0.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000. Troops on attacks: 0.000000. War attrition: 0.000000 /s. Under Attack? 0
+  Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500, tax: 0.000000 /s, trade: 0.000000 /s
   Connected LAs (bitfield): 5 0 0 0
     Relation with Neighbor 0 (id 0): stance: 0, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
       Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
@@ -89,8 +89,8 @@ Name: LA_1
 LA Id: 2, belongs to GA: 2, On? 1, Decisions? 1
 Name: LA_2
   Pos: X 375.000000, Y 70.000000
-  Strenght: 0.000000 (+ 0.000000), Guard: 40.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000. Under Attack? 0
-  Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500
+  Strenght: 0.000000 (+ 0.000000), Guard: 40.000000 (+ 0.000000), Threshold to cost upkeed: 40.000000. Troops on attacks: 0.000000. War attrition: 0.000000 /s. Under Attack? 0
+  Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500, tax: 0.000000 /s, trade: 0.000000 /s
   Connected LAs (bitfield): 3 0 0 0
     Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
       Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
@@ -108,30 +108,30 @@ Name: LA_2
 
 #GA Action Data:
 
-GA Action 0 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 1 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 2 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 3 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 4 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 5 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 6 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 7 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 8 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 9 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 10 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-GA Action 11 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+GA Action 0 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 1 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 2 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 3 (GA 0): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 4 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 5 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 6 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 7 (GA 1): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 8 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 9 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 10 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+GA Action 11 (GA 2): IDs: 4194304, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
 
 #LA Action Data:
 
-LA Action 0 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 1 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 2 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 3 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 4 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 5 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 6 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 7 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 8 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 9 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 10 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
-LA Action 11 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000
+LA Action 0 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 1 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 2 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 3 (LA 0): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 4 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 5 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 6 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 7 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 8 (LA 1): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 9 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 10 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000
+LA Action 11 (LA 2): IDs: 0, Phase Time Elapsed: 0 (Total: 0), Intensity: 0.000000, Aux: 0.000000, ShortTerm: 0.000000, LongTerm: 0.000000

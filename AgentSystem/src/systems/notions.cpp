@@ -53,8 +53,12 @@ namespace AS::Decisions::LA {
 					        PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 
 		auto state_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentID));
+		auto strenght_ptr = &(state_ptr->parameters.strenght);
 
-		float upkeep = state_ptr->parameters.strenght.currentUpkeep;
+		float upkeep = 
+			AS::calculateUpkeep(strenght_ptr->current + strenght_ptr->onAttacks, 
+								strenght_ptr->externalGuard, 
+								strenght_ptr->thresholdToCostUpkeep);
 		
 		float effectiveIncome = NTN_UPKEEP_TO_BASE_INCOME_RATIO_TO_WORRY 
 								* state_ptr->parameters.resources.updateRate;
@@ -100,8 +104,13 @@ namespace AS::Decisions::LA {
 		auto agentParameters_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentID).parameters);
 		
 		//Now we get the actual value of our defenses:
+		float onAttackEffectiveDefense = 
+				NTN_S1_LOW_DEF_TO_RES_PROPORTION_OF_ON_ATTACK_AS_DEFENSE
+					* agentParameters_ptr->strenght.onAttacks;
+
 		float agentsDefense = agentParameters_ptr->strenght.current
-							  + agentParameters_ptr->strenght.externalGuard;
+							  + agentParameters_ptr->strenght.externalGuard
+							  + onAttackEffectiveDefense;
 		
 		assert(agentsDefense >= 0); //there could always be some floating point weirdness
 
@@ -195,6 +204,10 @@ namespace AS::Decisions::LA {
 		
 		float agentsResources = agentParameters_ptr->resources.current;	
 		if (agentsResources < small) { ///we also don't want to deal with zeros
+			if (agentsResources < 0) {
+				//we're in debt, so we'll pretend the reference is higher:
+				refResources -= agentsResources;
+			}
 			agentsResources = small;
 		}
 
@@ -207,7 +220,7 @@ namespace AS::Decisions::LA {
 			upkeep = small;
 		}
 
-		float secondsToBankrup = refResources / upkeep;
+		float secondsToBankrup = agentsResources / upkeep;
 
 		assert(secondsToBankrup > 0);
 

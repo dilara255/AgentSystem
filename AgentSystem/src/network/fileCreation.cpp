@@ -281,14 +281,17 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
         resultAux = fprintf(fp, LAstrenght, DEFAULT_LA_STRENGHT, DEFAULT_REQUESTS, 
                                           DEFAULT_REINFORCEMENT, DEFAULT_REQUESTS,
-                                           DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP, 0);
+                                              DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP, 
+                     DEFAULT_LA_TROOPS_ON_ATTACKS, DEFAULT_LA_ATTRITION_LOSS_RATE,
+                                                                                0);
         if (resultAux <= 0) result = 0;
 
         float upkeep = AS::calculateUpkeep(DEFAULT_LA_STRENGHT,DEFAULT_REINFORCEMENT, 
 		                                         DEFAULT_LA_STR_THRESHOLD_FOR_UPKEEP);
 
         resultAux = fprintf(fp, LAresources, DEFAULT_LA_RESOURCES, DEFAULT_REQUESTS, 
-                                                          DEFAULT_LA_INCOME, upkeep);
+                                                          DEFAULT_LA_INCOME, upkeep,
+                                         DEFAULT_LA_TAX_RATE, DEFAULT_LA_TRADE_RATE);
         if (resultAux <= 0) result = 0;
 
         AZ::FlagField128 connectionField;
@@ -416,7 +419,8 @@ int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE
         resultAux = fprintf(fp, GAaction, i, i / (maxActions),
                             action.ids, action.phaseTiming.elapsed, 
                             action.phaseTiming.total, action.details.intensity,
-                            action.details.processingAux);
+                            action.details.processingAux,
+                            action.details.shortTermAux, action.details.longTermAux);
         if (resultAux < 0) result = 0;
     }
 
@@ -431,7 +435,8 @@ int insertActionsWithDefaults(int numberLAs, int numberGAs, int maxActions, FILE
         resultAux = fprintf(fp, LAaction, i, i / (maxActions),
                             action.ids, action.phaseTiming.elapsed, 
                             action.phaseTiming.total, action.details.intensity,
-                            action.details.processingAux);
+                            action.details.processingAux,
+                            action.details.shortTermAux, action.details.longTermAux);
         if (resultAux < 0) result = 0;
     }
    
@@ -615,6 +620,8 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
                         state.parameters.strenght.externalGuard,
                         decision.requestsForSelf.expected[expecGuardID],
                         state.parameters.strenght.thresholdToCostUpkeep,
+                        state.parameters.strenght.onAttacks,
+                        state.parameters.strenght.attritionLossRate,
                         state.underAttack);
         if (resultAux <= 0) result = 0;
 
@@ -623,7 +630,9 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         resultAux = fprintf(fp, LAresources, state.parameters.resources.current,
                                   decision.requestsForSelf.expected[expecResID],
                                           state.parameters.resources.updateRate, 
-                                        state.parameters.strenght.currentUpkeep);
+                                        state.parameters.strenght.currentUpkeep,
+                                             state.parameters.resources.taxRate,
+                                           state.parameters.resources.tradeRate);
         if (resultAux <= 0) result = 0;
 
         resultAux = fprintf(fp, connectedLAbitfield, 
@@ -702,7 +711,8 @@ bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         resultAux = fprintf(fp, GAaction, i, i / (pp->maxActions),
                                 action.ids, action.phaseTiming.elapsed, 
                                 action.phaseTiming.total,
-                                action.details.intensity, action.details.processingAux);
+                                action.details.intensity, action.details.processingAux,
+                                action.details.shortTermAux, action.details.longTermAux);
         if (resultAux < 0) result = 0;
     }
 
@@ -718,7 +728,8 @@ bool insertActionsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
         resultAux = fprintf(fp, LAaction, i, i / (pp->maxActions),
                                 action.ids, action.phaseTiming.elapsed, 
                                 action.phaseTiming.total,
-                                action.details.intensity, action.details.processingAux);
+                                action.details.intensity, action.details.processingAux,
+                                action.details.shortTermAux, action.details.longTermAux);
         if (resultAux < 0) result = 0;
     }
 

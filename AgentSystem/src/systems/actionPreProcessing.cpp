@@ -13,7 +13,8 @@
 
 namespace AS{
 		
-	float calculateDesiredIntensityMultiplier(float score, float whyBother, float JustDoIt);
+	float calculateDesiredIntensityMultiplier(float score, float whyBother, float iGuess, 
+		                                                                  float justDoIt);
 	
 	//This is the dispatcher: pretty much just a big switch : )
 	//Takes an action and dispatches it to the appropriate function to set it's details
@@ -26,10 +27,12 @@ namespace AS{
 	//Sets phase and elapsed time to 0, stes the target, calculates an intensity multiplier
 	//and them dispatches the action to have it's other details set: 
 	//intensity, processingAux and total phase time for the preparation phase
-	void setChoiceDetails(float score, float whyBother, float JustDoIt,
+	void setChoiceDetails(float score, float whyBother, float iGuess, float JustDoIt,
 		                  AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 							                 WarningsAndErrorsCounter* errorsCounter_ptr) {
 		
+		assert(score > whyBother);
+
 		//We're creating the action, so:
 		action_ptr->ids.phase = (int)actPhases::SPAWN;
 		action_ptr->phaseTiming.elapsed = 0;
@@ -61,7 +64,9 @@ namespace AS{
 		//Now we'll set the actual details, as well as the first phases duration.
 		//For this, we first calculate an intensity multiplier:
 		float desiredIntensityMultiplier =
-			calculateDesiredIntensityMultiplier(score, whyBother, JustDoIt);
+			calculateDesiredIntensityMultiplier(score, whyBother, iGuess, JustDoIt);
+
+		assert(isfinite(desiredIntensityMultiplier));
 
 		//And then dispatch the action to the proper function to the rest of the work:
 		dispatchActionDetailSetting(desiredIntensityMultiplier, action_ptr, dp, 
@@ -70,43 +75,55 @@ namespace AS{
 		return;
 	}
 
-	//Todo: test
-	float calculateDesiredIntensityMultiplier(float score, float whyBother, float JustDoIt) {
+	//Makes sure the delimiters are consistent and calculates desired intensity from score
+	float calculateDesiredIntensityMultiplier(float score, float whyBother, float iGuess, 
+																	      float justDoIt) {
 		
-		//first we make sure that whyBother and JustDoIt are on a valid range:
+		//first we make sure that whyBother, iGuess and justDoIt are on valid ranges:
 		whyBother = 
 			std::clamp(whyBother, MIN_ACT_WHY_BOTHER_THRESOLD, MAX_ACT_WHY_BOTHER_THRESOLD);
 
+		float minimumIGuess = std::max(MIN_ACT_I_GUESS_THRESOLD,
+							             (whyBother + MIN_DECISION_THRESHOLD_SEPARATIONS) );
+
+		iGuess = 
+			std::clamp(iGuess, minimumIGuess, MAX_ACT_I_GUESS_THRESOLD);	
 
 		float minimumJustDoIt = std::max(MIN_ACT_JUST_DO_IT_THRESOLD,
-							             (whyBother + MIN_DECISION_THRESHOLD_SEPARATIONS) );
+							             (iGuess + MIN_DECISION_THRESHOLD_SEPARATIONS) );
 			
-		JustDoIt = std::clamp(JustDoIt, minimumJustDoIt, MAX_ACT_JUST_DO_IT_THRESOLD);
+		justDoIt = std::clamp(justDoIt, minimumJustDoIt, MAX_ACT_JUST_DO_IT_THRESOLD);
 		
 		//then we calculate the desiredIntensityMultiplier:
-		float opinionWidth = JustDoIt - whyBother;
 
-		//The ranges are:
+		//The final score ranges are:
 
-		//[0, ACT_INTENSITY_WHY_BOTHER], for score <= whyBother
-		//(ACT_INTENSITY_WHY_BOTHER, ACT_INTENSITY_JUST_DO_IT), for score in-between
+		// ACT_MIN_INTENSITY, for score in [whyBother, iGuess]
+		//(ACT_INTENSITY_I_GUESS, ACT_INTENSITY_JUST_DO_IT), for score in-between
 		//[ACT_INTENSITY_JUST_DO_IT, ACT_INTENSITY_SCORE_1+), for score above JustDoIt
 
 		//NOTE: if score > 1, intensity > ACT_INTENSITY_SCORE_1 (expected)
+		//NOTE: if score < why bother, the action shouldn't even have been chosen
 
-		if (score <= whyBother) {
-			float proportionOnRange = (score/whyBother);
-			return ACT_INTENSITY_WHY_BOTHER * proportionOnRange;
+		assert(score >= whyBother);
+
+		if (score <= iGuess) {
+			float rangeWidth = iGuess - whyBother;
+			float proportionOnRange = (score - whyBother/rangeWidth);
+
+			return ACT_MIN_INTENSITY 
+				   + (ACT_INTENSITY_DIFFERENCE_TO_I_GUESS * proportionOnRange);
 		}
-		else if (score < JustDoIt) {
-			float proportionOnRange = (score - whyBother)/opinionWidth;
-			return ACT_INTENSITY_WHY_BOTHER + 
-					(ACT_INTENSITY_DIFFERENCE_TO_JUST_DO_IT * proportionOnRange);
+		else if (score < justDoIt) {
+			float rangeWidth = justDoIt - iGuess;
+			float proportionOnRange = (score - iGuess)/rangeWidth;
+			return ACT_INTENSITY_I_GUESS
+				   + (ACT_INTENSITY_DIFFERENCE_TO_JUST_DO_IT * proportionOnRange);
 		}
-		else if (score >= JustDoIt) {
-			float proportionOnRange = (score - JustDoIt)/(1 - JustDoIt);
-			return ACT_INTENSITY_JUST_DO_IT + 
-					(ACT_INTENSITY_DIFFERENCE_TO_SCORE_1 * proportionOnRange);
+		else if (score >= justDoIt) {
+			float proportionOnRange = (score - justDoIt)/(1.0f - justDoIt);
+			return ACT_INTENSITY_JUST_DO_IT 
+				   + (ACT_INTENSITY_DIFFERENCE_TO_SCORE_1 * proportionOnRange);
 		}	
 
 		assert(false); //we should never get here but the compiler was complaining : p
@@ -152,9 +169,11 @@ namespace AS{
 		float newTroops = 
 			effectiveStrenght * ACT_STR_S_L_REF_PROPORTION_OF_STR * desiredIntensityMultiplier;
 		
+		assert(isfinite(newTroops));
+
 		newTroops = std::ceil(newTroops);
 
-		action_ptr->details.intensity = newTroops;
+		action_ptr->details.intensity = newTroops;		
 
 		//This is the funding necessary to raise these troops:
 		action_ptr->details.processingAux = AS::STR_S_L_necessaryFunding(newTroops);
@@ -181,6 +200,8 @@ namespace AS{
 							AS::actionData_t* action_ptr, AS::dataControllerPointers_t* dp,
 		                                    AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
+		assert(desiredIntensityMultiplier > 0);
+
 		int agent = action_ptr->ids.origin;
 		auto agentParams_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agent).parameters);
 
@@ -190,7 +211,11 @@ namespace AS{
 		float effectiveIncome = std::max(income, ACT_RES_S_L_REF_SMALL_INCOME);
 
 		float raise = 
-			income * ACT_RES_S_L_REF_PROPORTION_OF_INCOME * desiredIntensityMultiplier;
+			effectiveIncome * ACT_RES_S_L_REF_PROPORTION_OF_INCOME * desiredIntensityMultiplier;
+
+		assert(isfinite(raise));
+		assert(raise > 0);
+
 		action_ptr->details.intensity = raise;
 
 		//This is the funding necessary to raise the income:
@@ -200,6 +225,8 @@ namespace AS{
 		double effectiveRaiseForTiming = std::cbrt(raise / ACT_REF_INCOME);
 		effectiveRaiseForTiming *= effectiveRaiseForTiming;
 
+		assert(effectiveRaiseForTiming > 0);
+		
 		double preparationTime = 
 			ACT_RES_S_L_BASE_PREP_TENTHS_OF_MS_PER_REF_INCOME * effectiveRaiseForTiming;
 
@@ -263,6 +290,8 @@ namespace AS{
 		
 		//In case we got carried away and chose an attack larger than our strenght:
 		attackSize = std::clamp(attackSize, 0.0f, agentStrenght);
+
+		assert(isfinite(attackSize));
 
 		//We can now set the intensity:
 		action_ptr->details.intensity = attackSize;
@@ -337,6 +366,8 @@ namespace AS{
 		
 		suggestionIntensity = std::clamp(suggestionIntensity, 0.0f, 
 			                             ACT_MAX_SUGESTION_INTENSITY);
+
+		assert(isfinite(suggestionIntensity));
 
 		action_ptr->details.intensity = suggestionIntensity;
 

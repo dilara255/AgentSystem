@@ -20,6 +20,10 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 		auto str_ptr = &state_ptr->parameters.strenght;
 		int partnerID = state_ptr->locationAndConnections.neighbourIDs[neighbor];	
 
+		//We first zero some old data:
+		res_ptr->tradeRate = 0;
+		str_ptr->attritionLossRate = 0;
+
 		//The changes depend on the diplomatic stance to the neighbor:
 		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[neighbor];
 
@@ -28,9 +32,12 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 
 			float share = LA::calculateShareOfPartnersTrade(partnerID, stance, dp, 
 				                                                errorsCounter_ptr);
-			res_ptr->current += 
-						LA::calculateTradeIncomePerSecondFromNetwork(share, partnerID, dp) 
-												 * timeMultiplier;
+			
+			float tradePerSecond = 
+				LA::calculateTradeIncomePerSecondFromNetwork(share, partnerID, dp);
+			res_ptr->tradeRate += tradePerSecond;
+
+			res_ptr->current += tradePerSecond * timeMultiplier;
 			
 			//raise relations and infiltration in proportion to share of trade:
 			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
@@ -40,19 +47,22 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 						share * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
 			 }
 
-			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+			if(decision_ptr->infiltration[neighbor] 
 				< MAX_INFILTRATION_FOR_INCREASE_FROM_TRADE ) {
 
 				decision_ptr->infiltration[neighbor] +=
 						share * MAX_INFILTRATION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
 			}
 		}
-
 		else if ((stance == AS::diploStance::WAR)) {
+			
 			int partnerID = state_ptr->locationAndConnections.neighbourIDs[neighbor];
-			str_ptr->current -= 
-				LA::calculateAttritionLossesPerSecond(agentId, partnerID, dp)
-				* timeMultiplier;
+			
+			float attritionLossesPerSecond =  
+				LA::calculateAttritionLossesPerSecond(agentId, partnerID, dp);
+			str_ptr->attritionLossRate += attritionLossesPerSecond;
+
+			str_ptr->current -= attritionLossesPerSecond * timeMultiplier;
 			
 			//lower relations and infiltration because of war:
 			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
@@ -61,7 +71,7 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 				state_ptr->relations.dispositionToNeighbors[neighbor] -=
 						INFILTRATION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
 			}
-			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+			if(decision_ptr->infiltration[neighbor] 
 				> MIN_INFILTRATION_FOR_DECREASE_FROM_WAR ) {
 
 				decision_ptr->infiltration[neighbor] -=
@@ -78,7 +88,7 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 				state_ptr->relations.dispositionToNeighbors[neighbor] +=
 						DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
 			}
-			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+			if(decision_ptr->infiltration[neighbor]  
 				< MAX_INFILTRATION_FOR_INCREASE_FROM_ALLIANCE ) {
 
 				decision_ptr->infiltration[neighbor] +=
@@ -97,7 +107,7 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 						DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
 			 }
 
-			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+			if(decision_ptr->infiltration[neighbor]  
 				< MAX_INFILTRATION_FOR_INCREASE_FROM_ALLIANCE_WITH_TRADE ) {
 
 				decision_ptr->infiltration[neighbor] +=
@@ -124,10 +134,14 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 
 			bool shouldChangeInfiltration =
 				( (neighborsDisposition >= 0) 
-					&& (neighborsDisposition > decision_ptr->infiltration[neighbor]) )
+					&& (neighborsDisposition > decision_ptr->infiltration[neighbor])
+					&& (decision_ptr->infiltration[neighbor] 
+						 < MAX_INFILTRATION_FOR_INCREASE_FROM_DISPO) )
 				||
 				( (neighborsDisposition < 0) 
-					&& (neighborsDisposition < decision_ptr->infiltration[neighbor]) );
+					&& (neighborsDisposition < decision_ptr->infiltration[neighbor]) 
+					&& (decision_ptr->infiltration[neighbor] 
+						 > MIN_INFILTRATION_FOR_DECREASE_FROM_DISPO) );
 
 			if (shouldChangeInfiltration) {
 
@@ -168,10 +182,9 @@ float LA::calculateShareOfPartnersTrade(int partnerID, AS::diploStance theirStan
 float AS::calculateTradeIncomePerSecondFromResources(float agentsShare, float partnersIncome,
 												                    float partnersUpkeep) {
 
-	float totalPartnerTradeValue = TRADE_FACTOR_LA_PER_SECOND 
-		                           * (partnersIncome - partnersUpkeep);
+	float partnersEffectiveIncome = std::max(0.0f, partnersIncome - partnersUpkeep);
 
-	return agentsShare * totalPartnerTradeValue;
+	return agentsShare * partnersEffectiveIncome * TRADE_FACTOR_LA_PER_SECOND;
 }
 
 float LA::calculateTradeIncomePerSecondFromNetwork(float agentsShare, int partnerID,
@@ -230,7 +243,7 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 						share * MAX_DISPOSITION_RAISE_FROM_TRADE_PER_SECOND * timeMultiplier;
 			}
 
-			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+			if(decision_ptr->infiltration[neighbor] 
 				< MAX_INFILTRATION_FOR_INCREASE_FROM_TRADE ) {
 
 				decision_ptr->infiltration[neighbor] +=
@@ -247,8 +260,7 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 				state_ptr->relations.dispositionToNeighbors[neighbor] -=
 						DISPOSITION_LOSS_FROM_WAR_PER_SECOND * timeMultiplier;
 			}
-
-			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
+			if(decision_ptr->infiltration[neighbor]  
 				< MIN_INFILTRATION_FOR_DECREASE_FROM_WAR ) {
 				
 				decision_ptr->infiltration[neighbor] -=
@@ -266,8 +278,8 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 					DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
 			}
 
-			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
-				< MAX_DISPOSITION_FOR_INCREASE_FROM_ALLIANCE ) {
+			if(decision_ptr->infiltration[neighbor] 
+				< MAX_INFILTRATION_FOR_INCREASE_FROM_ALLIANCE ) {
 
 				decision_ptr->infiltration[neighbor] +=
 				    INFILTRATION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
@@ -284,9 +296,8 @@ void GA::applyTradeInfiltrationAndDispostionChanges(GA::stateData_t* state_ptr,
 				state_ptr->relations.dispositionToNeighbors[neighbor] +=
 					DISPOSITION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
 			}
-
-			if(state_ptr->relations.dispositionToNeighbors[neighbor] 
-				< MAX_DISPOSITION_FOR_INCREASE_FROM_ALLIANCE_WITH_TRADE ) {
+			if(decision_ptr->infiltration[neighbor] 
+				< MAX_INFILTRATION_FOR_INCREASE_FROM_ALLIANCE_WITH_TRADE ) {
 
 				decision_ptr->infiltration[neighbor] +=
 				    INFILTRATION_RAISE_FROM_ALLIANCE_PER_SECOND * timeMultiplier;
@@ -365,7 +376,7 @@ float GA::calculateTradeIncome(float agentsShare, int partnerID,
 
 
 	float totalPartnerTradeValue = 
-		(float)(partner.parameters.lastTaxIncome * TRADE_FACTOR_GA);
+		(float)(std::max(0.0f, partner.parameters.lastTaxIncome) * TRADE_FACTOR_GA);
 
 	return agentsShare * totalPartnerTradeValue;
 }

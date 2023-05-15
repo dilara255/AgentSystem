@@ -31,7 +31,7 @@ namespace LA{
 
 	//Total trade value of a LA is a portion of it's liquid income (income minus upkeep)
 	//That gets divided between partners and also goes down in case of war
-	//NOTE: can be negative if partners income minus upkeep gets negative!
+	//NOTE: will be zero if partners income minus upkeep is negative
 	float calculateTradeIncomePerSecondFromNetwork(float agentsShare, int partnerID,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr);
 	
@@ -66,7 +66,7 @@ namespace GA{
 
 	//Total trade value of a GA is a portion of it's current resources (not income)
 	//That gets divided between partners and also goes down in case of war
-	//NOTE: can be negative so long as GAs can get in debt!
+	//NOTE: will be zero if partner is in debt
 	//NOTE: this is NOT PER SECOND: uses tax gains, wich are already per unit of time.
 	float calculateTradeIncome(float agentsShare, int partnerID,
 				                        AS::dataControllerPointers_t* agentDataPtrs_ptr);

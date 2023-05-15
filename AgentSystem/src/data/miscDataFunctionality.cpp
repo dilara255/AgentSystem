@@ -46,9 +46,9 @@ float AS::projectDispositionChangeInRefTime(float dispositionChange) {
 //TODO: document math
 float AS::nextActionsCost(int currentActions) {
 
-	if(currentActions <= ACT_FREE_ACTIONS) { return 0.0f; } //there may be freebies
+	if(currentActions < ACT_FREE_ACTIONS) { return 0.0f; } //there may be freebies
 
-	int effectiveCurrentActions = currentActions - ACT_FREE_ACTIONS;
+	int effectiveCurrentActions = currentActions - (ACT_FREE_ACTIONS - 1);
 
 	float multiplier = effectiveCurrentActions
 		+ ACT_SUPERLINEAR_WEIGHT * powf((float)(effectiveCurrentActions), (float)ACT_SUPERLINEAR_EXPO);
@@ -309,6 +309,8 @@ AS::actionData_t AS::getDefaultAction(AS::scope scope) {
 	
 	data.details.intensity = 0.0f;
 	data.details.processingAux = 0.0f;
+	data.details.shortTermAux = 0.0f;
+	data.details.longTermAux = 0.0f;
 	data.phaseTiming.elapsed = 0;
 	data.phaseTiming.total = 0;
 	

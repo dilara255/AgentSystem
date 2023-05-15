@@ -114,7 +114,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 							           g_secondsSinceLastDecisionStep, currentActions);
 				
 				//In case no decision is made, makeDecisionLA returns an innactive action, so:
-				if(chosenAction.ids.slotIsUsed){
+				if( AS::isActionValid(&chosenAction) ) {
 					chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr, 
 														     errorsCounter_ptr);
 				}
@@ -154,7 +154,7 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 							           g_secondsSinceLastDecisionStep, currentActions);
 
 				//In case no decision is made, makeDecisionGA returns an innactive action, so:
-				if(chosenAction.ids.slotIsUsed){
+				if( AS::isActionValid(&chosenAction) ){
 					chargeForAndSpawnAction(chosenAction, dp, actionSystem_ptr,
 														     errorsCounter_ptr);
 				}
@@ -168,6 +168,31 @@ void AS::stepAgents(int LAdecisionsToTakeThisChop, int GAdecisionsToTakeThisChop
 	nextDecisionGAindex %= numberEffectiveGAs;
 }
 
+//TODO-CRITICAL: this is time-step dependent (naive numerical integration)
+void defectFromDebt(LA::stateData_t* state_ptr, 
+	                AS::dataControllerPointers_t* dp, float timeMultiplier) {
+
+	auto str_ptr = &(state_ptr->parameters.strenght.current);
+
+	float strToDefect = (*str_ptr) * STR_PROPORTION_DEFECTED_PER_SECOND * timeMultiplier;
+	*str_ptr -= strToDefect;
+
+	float strToShareNeighbors = strToDefect * STR_DEFECTION_PROPORTION_TO_GO_TO_NEIGHBORS;
+
+	int totalNeighbors = state_ptr->locationAndConnections.connectedNeighbors.howManyAreOn();
+
+	float neighborShare = 0;
+	if(totalNeighbors > 0) {
+		neighborShare = strToShareNeighbors / totalNeighbors;
+	}
+	auto LAstates_ptr = dp->LAstate_ptr->getDirectDataPtr();
+
+	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++) {
+		int neighborID = state_ptr->locationAndConnections.neighbourIDs[neighbor];
+		LAstates_ptr->at(neighborID).parameters.strenght.current += neighborShare;
+	}
+}
+
 void updateLA(LA::stateData_t* state_ptr, int agentId, 
 	          AS::dataControllerPointers_t* dp, float timeMultiplier,
 	                 AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
@@ -175,16 +200,33 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	if (state_ptr->onOff == false) {
 		return;
 	}
-
+	
 	auto res_ptr = &state_ptr->parameters.resources;
 	auto str_ptr = &state_ptr->parameters.strenght;
+
+	assert(isfinite(res_ptr->current));
 
 	str_ptr->currentUpkeep = AS::calculateUpkeep(str_ptr->current, str_ptr->externalGuard, 
 													       str_ptr->thresholdToCostUpkeep);
 	
+	assert(isfinite(str_ptr->currentUpkeep));
+	assert(isfinite(res_ptr->updateRate));
+
+	float maxDebt = AS::getMaxDebt(res_ptr->updateRate);
+	float liquidIncome = res_ptr->updateRate - str_ptr->currentUpkeep;
+
 	//now we can update the current resources:
-	res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep) * timeMultiplier;
+	if( (liquidIncome >= 0) || (res_ptr->current > maxDebt) ) {
+		//Note that if the agent is in too much debt, no more will be charged
+		res_ptr->current += (res_ptr->updateRate - str_ptr->currentUpkeep) * timeMultiplier;
+	}
+	else if ((liquidIncome < 0) && (res_ptr->current <= maxDebt)) {
+		//we're deep in debt and still bleeding money: our troops are defecting
+		defectFromDebt(state_ptr, dp, timeMultiplier);
+	}
 	
+	assert(isfinite(res_ptr->current));
+		
 	//But resources, infiltration and relations can also change due to diplomacy:
 	//TODO: EXTRACT and leave definition on diplomacy.cpp
 	auto decision_ptr = &(dp->LAdecision_ptr->getDirectDataPtr()->at(agentId));
@@ -193,7 +235,9 @@ void updateLA(LA::stateData_t* state_ptr, int agentId,
 	                                 state_ptr, decision_ptr, dp, errorsCounter_ptr);
 
 	//finally, LAs "pay tax" to GA (and can receive resources from the GA if in debt):
-	res_ptr->current -= taxOwed(*res_ptr, timeMultiplier);
+	res_ptr->taxRate = taxPayedPerSecond(*res_ptr);
+
+	res_ptr->current -= res_ptr->taxRate * timeMultiplier;
 
 	//let's also make sure disposition and infiltration remain bounded to [-1,1]
 	auto infiltrationArr_ptr = &(decision_ptr->infiltration[0]);
@@ -252,6 +296,8 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 			LAstates_cptr->at(id).parameters.strenght.current;
 		param_ptr->LAguardTotal += 
 			LAstates_cptr->at(id).parameters.strenght.externalGuard;
+
+		assert(isfinite(param_ptr->LAesourceTotals.current));
 	}
 	
 	//Get resoures from tax...
@@ -266,7 +312,6 @@ void updateGA(GA::stateData_t* state_ptr, int agentId,
 	//and make sure disposition and infiltration remain bounded to [-1,1]
 	auto infiltrationArr_ptr = &(decision_ptr->infiltration[0]);
 	auto dispositionArr_ptr = &(state_ptr->relations.dispositionToNeighbors[0]);
-
 
 	int quantityNeighbours = state_ptr->connectedGAs.howManyAreOn();
 	for (int neighbor = 0; neighbor < quantityNeighbours; neighbor++) {
@@ -423,6 +468,7 @@ void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t*
 		for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
 
 			assert(isfinite(refs_ptr->readOf[field]));
+			assert(isfinite(realValues.readOf[field]));
 
 			//this is the payload:
 			updateRead(&readsOnNeighbor_ptr->readOf[field], realValues.readOf[field], 
@@ -451,6 +497,7 @@ void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t*
 		for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
 			
 			assert(isfinite(refs_ptr->readOf[field]));
+			assert(isfinite(realValues.readOf[field]));
 
 			//this is the payload:
 			updateRead(&(readsOnNeighbor_ptr->readOf[field]), realValues.readOf[field], 
@@ -474,6 +521,8 @@ LA::readsOnNeighbor_t getRealValuesLA(AS::dataControllerPointers_t* dp, int neig
 	real.readOf[(int)LA::readsOnNeighbor_t::fields::STRENGHT] = 
 						neighborState_ptr->parameters.strenght.current;
 	
+	assert(isfinite(neighborState_ptr->parameters.resources.current));
+
 	return real;
 }
 

@@ -34,7 +34,7 @@ namespace AS::Decisions {
 		}},
 		{{                         //RESOURCES 
 			//SELF:
-			{0.8f, -0.6f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+			{1.0f, -0.8f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
 			 0.0f, 0.0f, -0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 			/*Changed for testing. Original:
 			{0.5f, -0.6f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
@@ -52,8 +52,8 @@ namespace AS::Decisions {
 			{tank, tank, tank, tank, tank, tank, tank, tank,                 
 			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
 			//IMMEDIATE:
-			{0.5f, -0.6f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
-			 0.8f, -1.0f, 0.4f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{0.7f, -0.6f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
+			 1.0f, -1.2f, 0.4f, -2.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 			/**Changed for testing. Original:
 			{0.4f, -0.6f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                 
 			 0.8f, -1.0f, 0.5f, -3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},

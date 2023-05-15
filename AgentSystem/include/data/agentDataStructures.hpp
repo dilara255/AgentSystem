@@ -43,8 +43,10 @@ namespace AS {
 	typedef struct {
 		float current;
 		float updateRate;
+		float taxRate;
+		float tradeRate;
 
-		enum class fields { CURRENT, INCOME,
+		enum class fields { CURRENT, INCOME, TAX, TRADE,
 							TOTAL_RESOURCE_FIELDS };
 	} AS_API resources_t;
 
@@ -53,8 +55,10 @@ namespace AS {
 		float externalGuard;
 		float thresholdToCostUpkeep;
 		float currentUpkeep;
+		float onAttacks;
+		float attritionLossRate;
 
-		enum class fields { CURRENT, GUARDING, THRESHOLD, UPKEEP,
+		enum class fields { CURRENT, GUARDING, THRESHOLD, UPKEEP, ATTACK, ATTRITION,
 			                TOTAL_STRENGHT_FIELDS };
 	} AS_API strenght_t;
 
