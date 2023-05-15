@@ -410,8 +410,10 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
                         &state.parameters.strenght.externalGuard,
                         &decision.requestsForSelf.expected[expecGuardID],
                         &state.parameters.strenght.thresholdToCostUpkeep,
+                        &state.parameters.strenght.onAttacks,
+                        &state.parameters.strenght.attritionLossRate,
                         &state.underAttack);
-    if (tokens != 6) {
+    if (tokens != 8) {
         LOG_ERROR("Error reading strenght tokens from LA. Aborting load.");
         return false;
     }
@@ -420,8 +422,9 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
 
     tokens = fscanf(fp, LAresources, 
         &state.parameters.resources.current, &decision.requestsForSelf.expected[expecResID],
-        &state.parameters.resources.updateRate, &state.parameters.strenght.currentUpkeep);
-    if (tokens != 4) {
+        &state.parameters.resources.updateRate, &state.parameters.strenght.currentUpkeep,
+        &state.parameters.resources.taxRate, &state.parameters.resources.tradeRate);
+    if (tokens != 6) {
         LOG_ERROR("Error reading resource tokens from LA. Aborting load.");
         return false;
     }
@@ -536,8 +539,9 @@ bool addGAactionFromFile(int id, FILE* fp, AS::ActionDataController* ap) {
     int tokens = fscanf(fp, GAaction, &actionID, &agentID, &action.ids, 
                                       &action.phaseTiming.elapsed, 
                                       &action.phaseTiming.total, 
-                                      &action.details.intensity, &action.details.processingAux);
-    if (tokens != 7) {
+                                      &action.details.intensity, &action.details.processingAux,
+                                      &action.details.shortTermAux, &action.details.longTermAux);
+    if (tokens != 9) {
         LOG_ERROR("Error reading GA Action tokens from file. Aborting load.");
         return false;
     }
@@ -553,8 +557,9 @@ bool addLAactionFromFile(int id, FILE* fp, AS::ActionDataController* ap) {
     int tokens = fscanf(fp, LAaction, &actionID, &agentID, &action.ids,
                                       &action.phaseTiming.elapsed, 
                                       &action.phaseTiming.total,
-                                      &action.details.intensity, &action.details.processingAux);
-    if (tokens != 7) {
+                                      &action.details.intensity, &action.details.processingAux,
+                                      &action.details.shortTermAux, &action.details.longTermAux);
+    if (tokens != 9) {
         LOG_ERROR("Error reading GA Action tokens from file. Aborting load.");
         return false;
     }

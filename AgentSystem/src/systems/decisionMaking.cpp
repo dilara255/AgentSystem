@@ -70,8 +70,7 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 					 const float secondsSinceLastDecisionStep, int currentActions) {
 	
 	AS::actionData_t nullAction;
-	nullAction.ids.slotIsUsed = 0; //not an actual action
-	nullAction.ids.active = 0; //just to be sure	
+	AS::invalidateAction(&nullAction);
 
 	if (!dp->LAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return nullAction;
@@ -131,7 +130,7 @@ AS::actionData_t makeDecisionGA(int agent, AS::dataControllerPointers_t* dp,
 				 const float secondsSinceLastDecisionStep, int currentActions) {
 
 	AS::actionData_t nullAction;
-	nullAction.ids.slotIsUsed = 0;
+	AS::invalidateAction(&nullAction);
 
 	if (!dp->GAdecision_ptr->getDataCptr()->at(agent).shouldMakeDecisions) {
 		return nullAction;
@@ -417,7 +416,7 @@ void applyPersonalityOffsetsAndRepetitionPenalties(AD::allScoresAnyScope_t* sp, 
 //Also returns innactive action in case of error.
 //TODO: full testing (including the sorting)
 AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr, 
-											int agent, AS::scope scope,
+		                   int agent, AS::scope scope, float whyBother,
     AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr, 
 					   AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
@@ -436,7 +435,7 @@ AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr,
 	bool chose = false;
 	while ( (!chose) && (i < allScores_ptr->actualTotalScores) ) {
 
-		if (allScores_ptr->allScores[i].overallUtility.score > 0.0f) {
+		if (allScores_ptr->allScores[i].overallUtility.score > whyBother) {
 			chose = true;
 		}
 		else {
@@ -466,7 +465,7 @@ AS::actionData_t doLeastHarmful(AD::allScoresAnyScope_t* allScores_ptr,
 		choice.details.intensity = decision_ptr->score;
 	}
 	else {
-		choice.ids.slotIsUsed = 0; //Marks as "doNothing"
+		AS::invalidateAction(&choice); //Marks as "doNothing"
 	}
 
 	//Alas, our faith has long been sealed!
@@ -495,7 +494,7 @@ void prepareForMitigationRound(AD::notionWeights_t* wp, AD::notions_t* np,
 		(*wp)[notion] = 0;
 	}
 	
-	assert(totalAmbitionScoreForGoals >= MIN_ACT_WHY_BOTHER_THRESOLD);
+	assert(totalAmbitionScoreForGoals >= MIN_ACT_I_GUESS_THRESOLD);
 
 	//Now for each action in the shortlist we will, for each notion:
 	//- See how much it adds worry to this action;
@@ -709,8 +708,7 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 	                                  AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
 	AS::actionData_t chosenAction;
-	chosenAction.ids.slotIsUsed = 0;
-	chosenAction.ids.active = 0;
+	AS::invalidateAction(&chosenAction);
 
 	//We'll try to make a choice. If the most desired action passes a treshold, we do that
 	//On the first round, we try our top desire. In later rounds, the highest overallUtility.
@@ -724,9 +722,11 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 		      AD::descendingAmbitionsCompare);
 
 	//TODO-CRITICAL: These will be part of agent's personalities in the future: FIX then
+	float whyBother = ACT_WHY_BOTHER_THRESOLD;
+	float iGuess = ACT_I_GUESS_THRESOLD;
 	float justDoIt = ACT_JUST_DO_IT_THRESOLD;
 	int maxMitigationAttempts = ACT_MITIGATION_ROUNDS;
-	int choiceShortlistSize = ACT_CHOICE_SHORTLIST_SIZE;
+	int choiceShortlistSize = ACT_CHOICE_SHORTLIST_SIZE;	
 
 	int mitigationAttempts = 0;
 	AD::notionWeights_t inconvennienceWeightsForExtraScoring; //for mitigation rounds
@@ -839,11 +839,10 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 		}		
 	}
 
-	//TODO-CRITICAL: This will be part of agent's personalities in the future: FIX then
-	float whyBother = ACT_WHY_BOTHER_THRESOLD;
+	auto utility = allScores_ptr->allScores[choiceIndex].overallUtility.score;
 
 	//Either way, our preferred choice is at choiceIndex now, so if it's interesting:
-	if(allScores_ptr->allScores[choiceIndex].overallUtility.score >= whyBother) { 
+	if(utility >= iGuess) { 
 		
 		//the best score is good enough, so let's build and return that action!
 		AS::actionData_t choice;
@@ -871,12 +870,17 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 
 		return choice;
 	}
-	else {
+	else if (utility >= whyBother) {
 		
 		//We didn't find anything interesting enough, so let's play it safe:
-		return doLeastHarmful(allScores_ptr, agent, scope, networksDecisionsReflection_ptr,
-			                                                             errorsCounter_ptr);
-   }
+		return doLeastHarmful(allScores_ptr, agent, scope, whyBother, 
+			      networksDecisionsReflection_ptr, errorsCounter_ptr);
+	}
+	else { //don't bother
+		AS::actionData_t nonChoice;
+		AS::invalidateAction(&nonChoice);
+		return nonChoice;
+	}
 }
 
 namespace AD = AS::Decisions;
@@ -888,8 +892,12 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
           AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
  	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
+	//If the agent can't pay for the next actions base cost, then do nothing:
+
+
 	//TODO-CRITICAL: use agent's values after that's implemented
 	float whyBother = ACT_WHY_BOTHER_THRESOLD;
+	float iGuess = ACT_I_GUESS_THRESOLD;
 	float justDoIt = ACT_JUST_DO_IT_THRESOLD;
 
 	//We start out by calculating the scores:
@@ -924,26 +932,30 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 	//Then we make a choice:
 	AS::actionData_t chosenAction;
 	//Our strategy will depend on how ambitious we're feeling:
-	if(maxAmbition < whyBother){ 
-		//nothing stands out, so just:
-		chosenAction = doLeastHarmful(sp, agent, scope, networksDecisionsReflection_ptr,
-			                                                          errorsCounter_ptr);
-	}
-	else {
+	if(maxAmbition >= iGuess){ 
 		//some ideas sound nice, so:
 		chosenAction = chooseBestOptionOrThinkHarder(sp, np, agent, scope, totalNeighbors,
 							           networksDecisionsReflection_ptr, errorsCounter_ptr);
 	}
+	else if(maxAmbition >= whyBother) {
+		//nothing stands out, so just:
+		chosenAction = doLeastHarmful(sp, agent, scope, whyBother,
+			   networksDecisionsReflection_ptr, errorsCounter_ptr);
+	}
+	else {
+		//don't even bother:
+		AS::invalidateAction(&chosenAction);
+	}
 
 	//If we choose to do nothing, chosenAction.ids.slotIsUsed will be 0, else, 1, so:
-	if(chosenAction.ids.slotIsUsed) { //we have actually chosen to do something!
+	if( AS::isActionValid(&chosenAction) ) { //we have actually chosen to do something!
 
 		bool isValid = AD::isValid(chosenAction.ids.category, 
 								   chosenAction.ids.mode, chosenAction.ids.scope);
 
 		if(isValid) {
-			setChoiceDetails(chosenAction.details.intensity, whyBother, justDoIt, 
-											&chosenAction, dp, errorsCounter_ptr);
+			setChoiceDetails(chosenAction.details.intensity, whyBother, iGuess, justDoIt, 
+											        &chosenAction, dp, errorsCounter_ptr);
 		}
 		else {
 			errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_VARIATION);

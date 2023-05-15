@@ -9,6 +9,15 @@
 
 namespace AS{
 
+	float getMaxDebt(float currentBaseIncome) {
+		float effectiveIncome = std::max(currentBaseIncome, MINIMUM_REF_INCOME);
+		return (-currentBaseIncome)*MAX_DEBT_TO_INCOME_RATIO;
+	}
+
+	bool isActionValid(const actionData_t* action_ptr) {
+		return (action_ptr->ids.active && action_ptr->ids.slotIsUsed);
+	}
+
 	void invalidateAction(actionData_t* action_ptr) {
 		action_ptr->ids.active = 0;
 		action_ptr->ids.slotIsUsed = 0;

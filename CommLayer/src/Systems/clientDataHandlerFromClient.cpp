@@ -499,7 +499,15 @@ namespace CL{
 		return false;
 	}
 
+	bool CL_API CL::ClientData::LAresourcesHandler::changeTaxRateTo(uint32_t agentID, float newValue)
+	{
+		return false;
+	}
 
+	bool CL_API CL::ClientData::LAresourcesHandler::changeTradeRateTo(uint32_t agentID, float newValue)
+	{
+		return false;
+	}
 
 //PARAMS: STRENGHT
 
@@ -566,7 +574,15 @@ namespace CL{
 		return false;
 	}
 
+	bool CL_API ClientData::LAstrenghtHandler::changeOnAttacks(uint32_t agentID, float newValue)
+	{
+		return false;
+	}
 
+	bool CL_API ClientData::LAstrenghtHandler::changeAttritionLossRate(uint32_t agentID, float newValue)
+	{
+		return false;
+	}
 
 //LOCAL_AGENT: DECISION
 

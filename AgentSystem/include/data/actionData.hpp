@@ -96,6 +96,8 @@ namespace AS {
 	typedef struct {
 		float intensity;
 		float processingAux;
+		float shortTermAux;
+		float longTermAux;
 
 		enum class fields { INTENSITY, AUX,
 			                TOTAL_ACTION_FIELDS	};

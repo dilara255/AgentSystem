@@ -480,7 +480,15 @@ namespace CL {
 		return false;
 	}
 
+	bool CL::ClientData::LAresourcesHandler::transferTaxRate(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
 
+	bool CL::ClientData::LAresourcesHandler::transferTradeRate(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
 
 //PARAMS: STRENGHT
 
@@ -527,7 +535,15 @@ namespace CL {
 		return false;
 	}
 
+	bool ClientData::LAstrenghtHandler::transferOnAttacks(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
 
+	bool ClientData::LAstrenghtHandler::transferAttritionLossRate(uint32_t agentID, ASdataControlPtrs_t recepientPtrs)
+	{
+		return false;
+	}
 
 //LA_DECISION
 

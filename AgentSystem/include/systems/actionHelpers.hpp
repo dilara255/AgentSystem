@@ -16,6 +16,7 @@ namespace AS {
 										const ActionSystem* asp, AS::scope scope, int agent, 
 							            AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
+	inline bool isActionValid(const actionData_t* action_ptr);
 	inline void invalidateAction(actionData_t* action_ptr);
 
 	//Populates activeActions_ptr with the agents active actions (from the start).
@@ -25,6 +26,8 @@ namespace AS {
 	void populateAgentsActiveActions(const ActionSystem* asp, AS::scope scope, int agent,
 		                               AS::Decisions::agentsActions_t* activeActions_ptr, 
 		                                 AS::WarningsAndErrorsCounter* errorsCounter_ptr);
+
+	float getMaxDebt(float currentBaseIncome);
 
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,
 		                               AS::WarningsAndErrorsCounter* errorsCounter_ptr);

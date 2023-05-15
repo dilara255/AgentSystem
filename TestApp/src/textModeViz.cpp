@@ -18,9 +18,9 @@ const char* networkFilenameSaveName = "textModeViz_run0.txt";
 const std::chrono::seconds testTime = std::chrono::seconds(600);
 const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
 const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
-const float testPace = 4.0f;
+const float testPace = 20.0f;
 
-#define PRINT_VIZ false
+#define PRINT_VIZ true
 #define SHOULD_PAUSE_ON_NEW false
 
 namespace TV{
@@ -354,9 +354,10 @@ namespace TV{
 		auto choiceIDs_ptr = &(reflection_ptr->finalChoice.ids);
 		int idSelf = AS::Decisions::getNeighborIDforSelfAsSeenInActionIDsAsAnInt();
 
+		/*
 		printf("\n\tChoice: %d_%d @%d (self = %d)\n\n", 
 			choiceIDs_ptr->category, choiceIDs_ptr->mode, choiceIDs_ptr->target, idSelf);
-
+		*/
 		printf("\tDECISION: $ Next: %6.2f | CCC_M (NTN+, NTN-) | CCC_M? CCC_M (NTN+, NTN-) | CCC_M -> x, YY\n", costNext);
 	}
 
