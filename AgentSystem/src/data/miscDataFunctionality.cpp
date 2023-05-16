@@ -12,7 +12,7 @@ float AS::taxOwed(AS::resources_t resources, float timeMultiplier) {
 }
 
 float AS::calculateUpkeep(float strenght, float guard, float threshold) {
-	float guardPaidForByDefended = guard *EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
+	float guardPaidForByDefended = guard * EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED;
 	float effectiveTroopSize = guardPaidForByDefended + strenght - threshold;
 	
 	return std::max(0.0f, effectiveTroopSize * LA_UPKEEP_PER_EXCESS_STRENGHT);

@@ -9,6 +9,72 @@
 
 namespace AS{
 
+	float getMaxDebt(float currentBaseIncome) {
+		float effectiveIncome = std::max(currentBaseIncome, MINIMUM_REF_INCOME);
+		return (-currentBaseIncome)*MAX_DEBT_TO_INCOME_RATIO;
+	}
+
+	//Expects values per second, uses default definition for bankrupcy
+	//Returns NEGATIVE if the agent is not loosing resources
+	float secondsToBankrupt(float income, float resources, float upkeep, 
+		                                         float trade, float tax) {
+	
+		float resourcesRemaining = resources - getMaxDebt(income);
+		if(resourcesRemaining <= 0) { return 0; }
+
+		float liquidIncomePerSecond = income + trade - (upkeep + tax);
+		if(liquidIncomePerSecond >= 0) { return -1; }
+
+		return resourcesRemaining / std::abs(liquidIncomePerSecond);
+	}
+
+	float getResponsibleTroopsToRaise(LA::stateData_t* state_ptr, float desiredIntensity) {
+		
+		auto strenght_ptr = &(state_ptr->parameters.strenght);
+		auto resources_ptr = &(state_ptr->parameters.resources);
+
+		float currentTimeToBankrupcy = secondsToBankrupt(resources_ptr->updateRate, 
+			                   resources_ptr->current, strenght_ptr->currentUpkeep, 
+			                      resources_ptr->tradeRate, resources_ptr->taxRate);
+
+		bool isLoosingResources = (currentTimeToBankrupcy >= 0);
+
+		if(isLoosingResources 
+		   && (currentTimeToBankrupcy 
+			   < ACT_STR_S_L_MINIMUM_SECONDS_TO_BANKRUPCY_WITH_NEW_TROOPS) ) {
+
+			return desiredIntensity * ACT_STR_S_L_PITTY_INTENSITY_PROPORTION; 
+		}
+		
+		float desiredStr = 
+			strenght_ptr->current + strenght_ptr->onAttacks + desiredIntensity;
+
+		float upkeepAtDesiredIntensity =
+			AS::calculateUpkeep(desiredStr, strenght_ptr->externalGuard, 
+				                    strenght_ptr->thresholdToCostUpkeep);
+
+		float desiredTroopsTimeToBankrupcy = secondsToBankrupt(resources_ptr->updateRate, 
+			                            resources_ptr->current, upkeepAtDesiredIntensity, 
+			                            resources_ptr->tradeRate, resources_ptr->taxRate);
+
+		bool wouldBeLoosingResources = (desiredTroopsTimeToBankrupcy >= 0);
+
+		if ( (!wouldBeLoosingResources)
+			 || (desiredTroopsTimeToBankrupcy 
+		         > ACT_STR_S_L_MINIMUM_SECONDS_TO_BANKRUPCY_WITH_NEW_TROOPS) ) {
+
+			return desiredIntensity;
+		}
+
+		float troopProportionAllowed =
+						desiredTroopsTimeToBankrupcy 
+								/ ACT_STR_S_L_MINIMUM_SECONDS_TO_BANKRUPCY_WITH_NEW_TROOPS;
+
+		assert(troopProportionAllowed <= 1);
+
+		return (desiredIntensity * std::max(troopProportionAllowed, ACT_STR_S_L_PITTY_INTENSITY_PROPORTION) );
+	}
+
 	void incrementTroopsOnAttack(float* onAttacks_ptr, float intensity) {
 		*onAttacks_ptr += std::round(intensity);
 	}
@@ -17,11 +83,6 @@ namespace AS{
 		*onAttacks_ptr -= std::round(originalIntensity);
 
 		assert( (*onAttacks_ptr) >= 0 );
-	}
-
-	float getMaxDebt(float currentBaseIncome) {
-		float effectiveIncome = std::max(currentBaseIncome, MINIMUM_REF_INCOME);
-		return (-currentBaseIncome)*MAX_DEBT_TO_INCOME_RATIO;
 	}
 
 	bool isActionValid(const actionData_t* action_ptr) {

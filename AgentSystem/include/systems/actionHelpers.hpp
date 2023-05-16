@@ -27,6 +27,11 @@ namespace AS {
 		                               AS::Decisions::agentsActions_t* activeActions_ptr, 
 		                                 AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
+	float secondsToBankrupt(float income, float resources, float upkeep, 
+		                                         float trade, float tax);
+
+	float getResponsibleTroopsToRaise(LA::stateData_t* state_ptr, float desiredIntensity);
+
 	void incrementTroopsOnAttack(float* onAttacks_ptr, float intensity);
 
 	void decrementTroopsOnAttack(float* onAttacks_ptr, float originalIntensity);
