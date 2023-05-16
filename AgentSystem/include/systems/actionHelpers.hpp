@@ -27,6 +27,10 @@ namespace AS {
 		                               AS::Decisions::agentsActions_t* activeActions_ptr, 
 		                                 AS::WarningsAndErrorsCounter* errorsCounter_ptr);
 
+	void incrementTroopsOnAttack(float* onAttacks_ptr, float intensity);
+
+	void decrementTroopsOnAttack(float* onAttacks_ptr, float originalIntensity);
+
 	float getMaxDebt(float currentBaseIncome);
 
 	int getQuantityOfCurrentActions(scope scope, int agentID, ActionSystem const * asp,

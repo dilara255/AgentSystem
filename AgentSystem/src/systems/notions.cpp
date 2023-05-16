@@ -231,7 +231,7 @@ namespace AS::Decisions::LA {
 		float bankruptTimeProportion = referenceBankruptTime / secondsToBankrup;
 
 		//Finally, the notionBase will be the worst (highest) proportion:
-		float notionBase = std::max(resourcesProportion, referenceBankruptTime);
+		float notionBase = std::max(resourcesProportion, bankruptTimeProportion);
 
 		//Since we've sanitized the terms before, we expect that:
 		assert(std::isfinite(notionBase));
@@ -290,62 +290,28 @@ namespace AS::Decisions::LA {
 		//We use proportions to the references as a way to normalize,
 		//since defence and resources don't necessarely have a direct convertion
 
-		//Defence is defined as strenght + guard, so to calculate the refDefenf:
-		int strenghtIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
-		float refStrenght = refReads_ptr->readOf[strenghtIndex];
-
-		int guardIndex = (int)PURE_LA::readsOnNeighbor_t::fields::GUARD;
-		float refGuard = refReads_ptr->readOf[guardIndex];
 		
-		float refDefense = refGuard + refStrenght;
-
-		//And these are the refResources:
-		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
-		float refResources = refReads_ptr->readOf[resourcesIndex];
-
-		//Now we get the reads on the defenses:
+		//First, what do we expect from our neighbor?
 		auto readsOfNeighbor_ptr = 
 				&(dp->LAdecision_ptr->getDataCptr()->at(agentID).reads[neighbor]);
 
+		int strenghtIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
+		int guardIndex = (int)PURE_LA::readsOnNeighbor_t::fields::GUARD;
+		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
+
 		float neighborDefense = readsOfNeighbor_ptr->readOf[guardIndex]
 							  + readsOfNeighbor_ptr->readOf[strenghtIndex];
-
-		float small = 0.1f; //to avoid blowups on division : )
-
-		if (refDefense < small) {
-			refDefense = small;
-		}
-		float defenceProportionRefReads = neighborDefense / refDefense;		
-
-		//defenceProportion will be a divident later, so:
-		if (defenceProportionRefReads < small) {
-			defenceProportionRefReads = small;
-		}
-
-		//Same idea, for resources:
 		float neighborResources = readsOfNeighbor_ptr->readOf[resourcesIndex];
-
-		if (refResources < small) {
-			refResources = small;
+		
+		if (neighborDefense < DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS) {
+			neighborDefense = DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS;
 		}
-		float resourcesProportionRefReads = neighborResources / refResources;
-
-		//Since we may have increased the defenceProportion a bit, 
-		//let's extend resourcesProportion the same courtesy:
-		if (resourcesProportionRefReads < small) {
-			resourcesProportionRefReads = small;
+		if (neighborResources < DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS) {
+			neighborResources = DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS;
 		}
-
-		//Finally, this proportion is the notionBase we want:
-		float notionBaseFromRefReads = resourcesProportionRefReads / defenceProportionRefReads;
-
-		//Since we've sanitized the terms before, we expect that:
-		assert(std::isfinite(notionBaseFromRefReads));
-		assert(notionBaseFromRefReads >= 0);
 
 		//We want to avoid a situation where everyone is just really lax with their defenses
-		//So the actual score will be based on the geometric mean between this
-		//and how well we compare to a proportion of REF_STR and REF_RES
+		//So we start by getting some fixed reference points:
 
 		double defenseProportionFromFixedRefs = neighborDefense / ACT_REF_DEFENSE;
 		double resourcesProportionFromFixedRefs = neighborResources / ACT_REFERENCE_RESOURCES;
@@ -353,15 +319,56 @@ namespace AS::Decisions::LA {
 		double baseFromNetworkReferenceValues =
 			resourcesProportionFromFixedRefs / defenseProportionFromFixedRefs;
 		
+		//But we also want the notion to respond to overall changes in the network,
+		//So we will calculate the same proportion but based on our reference reads:
+		
+		float refStrenght = refReads_ptr->readOf[strenghtIndex];
+		float refGuard = refReads_ptr->readOf[guardIndex];
+
+		float refDefense = refGuard + refStrenght;		
+		float refResources = refReads_ptr->readOf[resourcesIndex];
+
+		if (refDefense < DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS) {
+			refDefense = DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS;
+		}
+		if (refResources < DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS) {
+			refResources = DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS;
+		}
+		if (refResources < DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS) {
+			refResources = DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS;
+		}
+
+		//Now, we don't want particularly low, possibly bad, reads to dominate. So:
+		const float minProportion =
+			NTN_N0_LOW_DEF_TO_RES_MIN_PROPORTION_OF_REF_READS_TO_FIXED_REFERENCES;
+
+		if (refDefense < (ACT_REF_DEFENSE * minProportion)) {
+			refDefense = ACT_REF_DEFENSE * minProportion;
+		}
+		if (refResources < (ACT_REFERENCE_RESOURCES * minProportion)) {
+			refResources = ACT_REFERENCE_RESOURCES * minProportion;
+		}
+
+		float defenceProportionRefReads = neighborDefense / refDefense;		
+		float resourcesProportionRefReads = neighborResources / refResources;
+
+		//Then:
+		float notionBaseFromRefReads = resourcesProportionRefReads / defenceProportionRefReads;
+
+		//Since we've sanitized the terms before, we expect that:
+		assert(std::isfinite(notionBaseFromRefReads));
+		assert(notionBaseFromRefReads >= 0);
+
+		//Now we take the geometric mean from both proportions, to avoid catastrohpizing:
 		float effectiveProportion =
 			(float)std::sqrt(baseFromNetworkReferenceValues * notionBaseFromRefReads);
 
-		//If effectiveProportion == 1, we believe their defenses are even with their resources
+		//If effectiveProportion == 1, we believe their defenses and resources are "even"
 		//How high does the proportion have to go for us to care maximally?
-		float worryLevel = 
+		float careLevel = 
 			(effectiveProportion / NTN_N0_LOW_DEF_TO_RES_PROPORTION_FOR_MAX_SCORE);
 
-		float notionBase = worryLevel * NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
+		float notionBase = careLevel * NTN_STD_MAX_EFFECTIVE_NOTION_BASE;
 
 		assert(std::isfinite(notionBase));
 		assert(notionBase >= 0);
@@ -370,17 +377,14 @@ namespace AS::Decisions::LA {
 	}
 
 	//N1: IS_STRONG
-	//Is their strenght above my defenses? Or is it higher than the reference?
-	//We choose the worst propotion as the base for this notions
+	//Are their defenses above my strenght? Or is their strenght higher than the reference?
+	//We choose the worst propotion as the base for this notion
 	float calcNotionBaseN1(int neighbor, int agentID, AS::dataControllerPointers_t* dp, 
 										  PURE_LA::readsOnNeighbor_t* refReads_ptr) {
 		
 		//Defence is defined as strenght + guard, so to calculate our defenses:
-		auto agentsStrenght_ptr 
-					= (&dp->LAstate_ptr->getDataCptr()->at(agentID).parameters.strenght);
-
-		float agentsDefenses = 
-					agentsStrenght_ptr->current + agentsStrenght_ptr->externalGuard;
+		auto agentsStrenght =
+					dp->LAstate_ptr->getDataCptr()->at(agentID).parameters.strenght.current;
 
 		//Now we read the neighbor's and the reference strenght:
 		int strenghtIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
@@ -391,28 +395,33 @@ namespace AS::Decisions::LA {
 
 		float neighborStrenght = readsOfNeighbor_ptr->readOf[strenghtIndex];
 
+		int guardIndex = (int)PURE_LA::readsOnNeighbor_t::fields::GUARD;
+		float neighborDefenses = neighborStrenght + readsOfNeighbor_ptr->readOf[guardIndex];
+
 		float small = 0.1f; 
 		//to avoid blowups on division:
-		if (agentsDefenses < small) {
-			agentsDefenses = small;
+		if (agentsStrenght < small) {
+			agentsStrenght = small;
 		}
 		if (refStrenght < small) {
 			refStrenght = small;
 		}
 		//and just to be fair (and keep values positive):
-		if (neighborStrenght < small) {
-			neighborStrenght = small;
+		if (neighborDefenses < small) {
+			neighborDefenses = small;
 		}
 
 		//Now we can calculate the proportions we want:
-		float neighborsStrenghtToAgentsDefenses = neighborStrenght / agentsDefenses;
 		float neighborsStrenghtToReference = neighborStrenght / refStrenght;
+		float neighborsDefencesToAgentsStrenght = neighborDefenses /agentsStrenght;
 
 		//The worst (highest) proportion will be our notion base:
 		float effectiveProportion = 
-			std::max(neighborsStrenghtToAgentsDefenses, neighborsStrenghtToReference);
+			std::max(neighborsDefencesToAgentsStrenght, neighborsStrenghtToReference);
 
-		//If effectiveProportion == 1, we believe our defenses are even with their str
+		//If effectiveProportion <= 1, we believe:
+		//- that our str is a match for their defenses; and
+		//- that their attack-ready strenght is at most on par with our references;
 		//How high does the proportion have to go for us to worry maximally?
 		float worryLevel = 
 			(effectiveProportion / NTN_N1_STRONG_PROPORTION_FOR_MAX_SCORE);
@@ -451,7 +460,9 @@ namespace AS::Decisions::LA {
 		float dispositionChange = disposition - lastDisposition;
 
 		//We project our future disposition:
-		float projectedDispositionChange = projectDispositionChangeInRefTime(dispositionChange);
+		float projectedDispositionChange = 
+					NTN_DISPOSITION_CHANGE_MULTIPLIER
+						* projectDispositionChangeInRefTime(dispositionChange);
 		
 		float effectiveDisposition = disposition + projectedDispositionChange;			
 		
@@ -477,17 +488,20 @@ namespace AS::Decisions::LA {
 		uncertainty *= uncertainty; 
 
 		//From effectiveDisposition and uncertainty, we calculate mistrustStrenghtMultiplier:
-		float dislike = std::abs(std::min(0.0f, effectiveDisposition));
+		float dislike = 0 - effectiveDisposition;
 
 		float mistrustStrenghtMultiplier = 
-						NTN_MISTRUST_THREATH_MULTIPLIER * (dislike + uncertainty);
+					NTN_MISTRUST_THREATH_MULTIPLIER * (dislike + uncertainty);
+		mistrustStrenghtMultiplier = 
+					std::max(NTN_MIN_MISTRUST_THREATH_MULTIPLIER, mistrustStrenghtMultiplier);
 
 		//TODO: extract comparison
 		//Now to compare the strenghts:
-		float ourStrenght = ourState_ptr->parameters.strenght.current;
+		float ourDefences = ourState_ptr->parameters.strenght.current 
+								+ ourState_ptr->parameters.strenght.externalGuard;
 		float small = 0.1f;
-		if (ourStrenght < small) {
-			ourStrenght = small;
+		if (ourDefences < small) {
+			ourDefences = small;
 		}
 
 		int strIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
@@ -497,9 +511,9 @@ namespace AS::Decisions::LA {
 			theirStrenght = small;
 		}
 		//If we're unsure about their forces, we won't assume they're weaker than us:
-		theirStrenght = std::max(uncertainty * ourStrenght, theirStrenght);
+		theirStrenght = std::max(uncertainty * ourDefences, theirStrenght);
 
-		float strenghtProportion = theirStrenght / ourStrenght;
+		float strenghtProportion = theirStrenght / ourDefences;
 
 		//We don't want to freak out because of a strong agent we don't particularly distrust:
 		float maxStrenghtProportion = NTN_MISTRUST_THREATH_OVERSHOOT_FACTOR
@@ -541,7 +555,9 @@ namespace AS::Decisions::LA {
 		float dispositionChange = disposition - lastDisposition;
 
 		//We project our future disposition:
-		float projectedDispositionChange = projectDispositionChangeInRefTime(dispositionChange);
+		float projectedDispositionChange = 
+						NTN_DISPOSITION_CHANGE_MULTIPLIER 
+							* projectDispositionChangeInRefTime(dispositionChange);
 		
 		float effectiveDisposition = disposition + projectedDispositionChange;			
 		
@@ -573,8 +589,8 @@ namespace AS::Decisions::LA {
 		}
 
 		changeFromStance =
-			std::clamp(changeFromStance, -NTN_N4_TRUST_MAX_ABSOLUT_CHANGE_FROM_STANCE,
-										  NTN_N4_TRUST_MAX_ABSOLUT_CHANGE_FROM_STANCE);
+			std::clamp(changeFromStance, -NTN_N4_TRUST_MAX_ABSOLUTE_CHANGE_FROM_STANCE,
+										  NTN_N4_TRUST_MAX_ABSOLUTE_CHANGE_FROM_STANCE);
 		
 		//This is our effective LOCAL disposition
 		effectiveDisposition += changeFromStance;
@@ -632,7 +648,7 @@ namespace AS::Decisions::LA {
 				effectiveGAdisposition = GAdisposition;
 
 				//We project their future disposition:
-				float projectedDispositionChange = projectDispositionChangeInRefTime(dispositionChange);
+				float projectedDispositionChange = projectDispositionChangeInRefTime(changeInGAdisposition);
 
 				effectiveGAdisposition += projectedDispositionChange;
 				//And then add the impact from the diplomatic stance:
@@ -655,8 +671,8 @@ namespace AS::Decisions::LA {
 
 				changeFromGAstance =
 					std::clamp(changeFromGAstance, 
-						       -NTN_N4_TRUST_MAX_ABSOLUT_CHANGE_FROM_STANCE,
-								NTN_N4_TRUST_MAX_ABSOLUT_CHANGE_FROM_STANCE);
+						       -NTN_N4_TRUST_MAX_ABSOLUTE_CHANGE_FROM_STANCE,
+								NTN_N4_TRUST_MAX_ABSOLUTE_CHANGE_FROM_STANCE);
 
 				effectiveGAdisposition += changeFromGAstance;
 			}
@@ -665,6 +681,7 @@ namespace AS::Decisions::LA {
 		//Now we add the effectiveGAdisposition, with a weight, to our effectiveDisposition
 		//But only if the GAs are actually neighbors:
 		float GAweight = GAsAreNeighbors * NTN_GA_DIPLOMACY_WEIGHT_FOR_LAS;
+		GAweight *= std::abs(effectiveGAdisposition); //strong opinions matter more
 			
 		assert(GAweight >= 0);
 		assert(GAweight <= 1);

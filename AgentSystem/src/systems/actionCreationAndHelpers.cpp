@@ -9,6 +9,16 @@
 
 namespace AS{
 
+	void incrementTroopsOnAttack(float* onAttacks_ptr, float intensity) {
+		*onAttacks_ptr += std::round(intensity);
+	}
+
+	void decrementTroopsOnAttack(float* onAttacks_ptr, float originalIntensity) {
+		*onAttacks_ptr -= std::round(originalIntensity);
+
+		assert( (*onAttacks_ptr) >= 0 );
+	}
+
 	float getMaxDebt(float currentBaseIncome) {
 		float effectiveIncome = std::max(currentBaseIncome, MINIMUM_REF_INCOME);
 		return (-currentBaseIncome)*MAX_DEBT_TO_INCOME_RATIO;

@@ -8,7 +8,7 @@
 #include "systems/actionHelpers.hpp"
 #include "systems/actionCreation.hpp"
 #include "systems/notions.hpp"
-#include "systems/notionWeights.h"
+#include "systems/notionWeights.hpp"
 
 #include "network/parameters.hpp"
 
@@ -892,9 +892,6 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
           AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
  	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 	
-	//If the agent can't pay for the next actions base cost, then do nothing:
-
-
 	//TODO-CRITICAL: use agent's values after that's implemented
 	float whyBother = ACT_WHY_BOTHER_THRESOLD;
 	float iGuess = ACT_I_GUESS_THRESOLD;
