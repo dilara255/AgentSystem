@@ -315,10 +315,10 @@ namespace TV{
 			float disposition = agentState_ptr->relations.dispositionToNeighbors[neighbor];
 			float infiltration = decisionData_ptr->infiltration[neighbor];
 			
-			float resources = decisionData_ptr->reads[neighbor].readOf[resorucesReadField];
-			float income = decisionData_ptr->reads[neighbor].readOf[incomeReadField];
-			float strenght = decisionData_ptr->reads[neighbor].readOf[strenghtReadField];
-			float guard = decisionData_ptr->reads[neighbor].readOf[guardReadField];
+			float resources = decisionData_ptr->reads[neighbor].of[resorucesReadField].read;
+			float income = decisionData_ptr->reads[neighbor].of[incomeReadField].read;
+			float strenght = decisionData_ptr->reads[neighbor].of[strenghtReadField].read;
+			float guard = decisionData_ptr->reads[neighbor].of[guardReadField].read;
 			
 			printf("\tNEIGHBOR: %d | %c, disp: %+3.2f | %+3.2f ? | %+10.2f $ (%+6.2f $/sec) | %7.2f S , %7.2f D\n",
 									neighborID, stanceChar, disposition, 

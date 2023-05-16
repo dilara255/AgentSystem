@@ -566,11 +566,11 @@ bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
             int readGuardID = (int)GA::readsOnNeighbor_t::fields::GUARD_LAS;
 
             resultAux = fprintf(fp, GAreadsOnNeighbor,
-                decision.reads[neighbor].readOf[readResID], expecsNeighbor[expecResID], 
-                decision.reads[neighbor].readOf[readTaxID], expecsNeighbor[expecTaxID], 
-                decision.reads[neighbor].readOf[readTradeID], expecsNeighbor[expecTradeID], 
-                decision.reads[neighbor].readOf[readStrenghtID], expecsNeighbor[expecStrenghtID], 
-                decision.reads[neighbor].readOf[readGuardID], expecsNeighbor[expecGuardID]);
+                decision.reads[neighbor].of[readResID].read, expecsNeighbor[expecResID], 
+                decision.reads[neighbor].of[readTaxID].read, expecsNeighbor[expecTaxID], 
+                decision.reads[neighbor].of[readTradeID].read, expecsNeighbor[expecTradeID], 
+                decision.reads[neighbor].of[readStrenghtID].read, expecsNeighbor[expecStrenghtID], 
+                decision.reads[neighbor].of[readGuardID].read, expecsNeighbor[expecGuardID]);
             if (resultAux <= 0) result = 0;
         }
     }
@@ -655,7 +655,7 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
             if (resultAux <= 0) result = 0;
 
             auto expecsNeighbor = &(decision.requestsForNeighbors[neighbor].expected[0]);
-            auto readsNeighbor = &(decision.reads[neighbor].readOf[0]);
+            auto readsNeighbor = &(decision.reads[neighbor].of[0]);
 
             int readResID = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
             int readIncomeID = (int)LA::readsOnNeighbor_t::fields::INCOME;
@@ -663,10 +663,10 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
             int readGuardID = (int)LA::readsOnNeighbor_t::fields::GUARD;
 
             resultAux = fprintf(fp, LAreadsOnNeighbor, 
-                            readsNeighbor[readResID], expecsNeighbor[expecResID], 
-                            readsNeighbor[readIncomeID],
-                            readsNeighbor[readStrenghtID], expecsNeighbor[expecStrenghtID], 
-                            readsNeighbor[readGuardID], expecsNeighbor[expecGuardID]);
+                            readsNeighbor[readResID].read, expecsNeighbor[expecResID], 
+                            readsNeighbor[readIncomeID].read,
+                            readsNeighbor[readStrenghtID].read, expecsNeighbor[expecStrenghtID], 
+                            readsNeighbor[readGuardID].read, expecsNeighbor[expecGuardID]);
             if (resultAux <= 0) result = 0;
         }
 

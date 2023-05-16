@@ -467,13 +467,13 @@ void updateReadsLA(int agent, AS::dataControllerPointers_t* dp, LA::stateData_t*
 
 		for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
 
-			assert(isfinite(refs_ptr->readOf[field]));
-			assert(isfinite(realValues.readOf[field]));
+			assert(isfinite(refs_ptr->of[field].read));
+			assert(isfinite(realValues.of[field].read));
 
 			//this is the payload:
-			updateRead(&readsOnNeighbor_ptr->readOf[field], realValues.readOf[field], 
-		             refs_ptr->readOf[field], infiltration, prnServer_ptr->getNext(), 
-													  g_secondsSinceLastDecisionStep);
+			updateRead(&readsOnNeighbor_ptr->of[field].read, realValues.of[field].read, 
+		              refs_ptr->of[field].read, infiltration, prnServer_ptr->getNext(), 
+													   g_secondsSinceLastDecisionStep);
 		}
 	}	
 }
@@ -496,13 +496,13 @@ void updateReadsGA(int agent, AS::dataControllerPointers_t* dp, GA::stateData_t*
 
 		for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
 			
-			assert(isfinite(refs_ptr->readOf[field]));
-			assert(isfinite(realValues.readOf[field]));
+			assert(isfinite(refs_ptr->of[field].read));
+			assert(isfinite(realValues.of[field].read));
 
 			//this is the payload:
-			updateRead(&(readsOnNeighbor_ptr->readOf[field]), realValues.readOf[field], 
-						refs_ptr->readOf[field], infiltration, prnServer_ptr->getNext(), 
-														g_secondsSinceLastDecisionStep);
+			updateRead(&(readsOnNeighbor_ptr->of[field].read), realValues.of[field].read, 
+						refs_ptr->of[field].read, infiltration, prnServer_ptr->getNext(), 
+														  g_secondsSinceLastDecisionStep);
 		}
 	}	
 }
@@ -512,13 +512,13 @@ LA::readsOnNeighbor_t getRealValuesLA(AS::dataControllerPointers_t* dp, int neig
 	LA::readsOnNeighbor_t real;
 	auto neighborState_ptr = &(dp->LAstate_ptr->getDirectDataPtr()->at(neighborID));
 
-	real.readOf[(int)LA::readsOnNeighbor_t::fields::GUARD] = 
+	real.of[(int)LA::readsOnNeighbor_t::fields::GUARD].read = 
 						neighborState_ptr->parameters.strenght.externalGuard;
-	real.readOf[(int)LA::readsOnNeighbor_t::fields::INCOME] = 
+	real.of[(int)LA::readsOnNeighbor_t::fields::INCOME].read = 
 						neighborState_ptr->parameters.resources.updateRate;
-	real.readOf[(int)LA::readsOnNeighbor_t::fields::RESOURCES] = 
+	real.of[(int)LA::readsOnNeighbor_t::fields::RESOURCES].read = 
 						neighborState_ptr->parameters.resources.current;
-	real.readOf[(int)LA::readsOnNeighbor_t::fields::STRENGHT] = 
+	real.of[(int)LA::readsOnNeighbor_t::fields::STRENGHT].read = 
 						neighborState_ptr->parameters.strenght.current;
 	
 	assert(isfinite(neighborState_ptr->parameters.resources.current));
@@ -531,15 +531,15 @@ GA::readsOnNeighbor_t getRealValuesGA(AS::dataControllerPointers_t* dp, int neig
 	GA::readsOnNeighbor_t real;
 	auto neighborState_ptr = &(dp->GAstate_ptr->getDirectDataPtr()->at(neighborID));
 
-	real.readOf[(int)GA::readsOnNeighbor_t::fields::GA_RESOURCES] = 
+	real.of[(int)GA::readsOnNeighbor_t::fields::GA_RESOURCES].read = 
 						neighborState_ptr->parameters.GAresources;
-	real.readOf[(int)GA::readsOnNeighbor_t::fields::GUARD_LAS] = 
+	real.of[(int)GA::readsOnNeighbor_t::fields::GUARD_LAS].read = 
 						neighborState_ptr->parameters.LAguardTotal;
-	real.readOf[(int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS] = 
+	real.of[(int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS].read = 
 						neighborState_ptr->parameters.LAstrenghtTotal;
-	real.readOf[(int)GA::readsOnNeighbor_t::fields::TAX_INCOME] = 
+	real.of[(int)GA::readsOnNeighbor_t::fields::TAX_INCOME].read = 
 						neighborState_ptr->parameters.lastTaxIncome;
-	real.readOf[(int)GA::readsOnNeighbor_t::fields::TRADE_INCOME] = 
+	real.of[(int)GA::readsOnNeighbor_t::fields::TRADE_INCOME].read = 
 						neighborState_ptr->parameters.lastTradeIncome;
 	
 	return real;
@@ -562,25 +562,25 @@ LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPoint
 	auto GAstate_ptr = &(dp->GAstate_ptr->getDataCptr()->at(state_ptr->GAid));
 	auto GAparams_ptr = &(GAstate_ptr->parameters);
 
-	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::GUARD] =
+	GAreferences.of[(int)LA::readsOnNeighbor_t::fields::GUARD].read =
 										GAparams_ptr->LAguardTotal;
 	assert(isfinite(GAparams_ptr->LAguardTotal));
 
-	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::INCOME] =
+	GAreferences.of[(int)LA::readsOnNeighbor_t::fields::INCOME].read =
 										GAparams_ptr->LAesourceTotals.updateRate;
 	assert(isfinite(GAparams_ptr->LAesourceTotals.updateRate));
 
-	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::RESOURCES] =
+	GAreferences.of[(int)LA::readsOnNeighbor_t::fields::RESOURCES].read =
 										GAparams_ptr->LAesourceTotals.current;
 	assert(isfinite(GAparams_ptr->LAesourceTotals.current));
 
-	GAreferences.readOf[(int)LA::readsOnNeighbor_t::fields::STRENGHT] =
+	GAreferences.of[(int)LA::readsOnNeighbor_t::fields::STRENGHT].read =
 										GAparams_ptr->LAstrenghtTotal;
 	assert(isfinite(GAparams_ptr->LAstrenghtTotal));
 
 	LA::readsOnNeighbor_t references; 
 	for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
-			references.readOf[field] = 0;
+			references.of[field].read = 0;
 	}
 
 	int totalNeighbors = state_ptr->locationAndConnections.numberConnectedNeighbors;
@@ -592,8 +592,8 @@ LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPoint
 		totalAbsoluteInfiltration += absIniltration;
 		for (int field = 0; field < (int)LA::readsOnNeighbor_t::fields::TOTAL; field++) {
 
-			references.readOf[field] += 
-				(decision_ptr->reads[neighbor].readOf[field] * absIniltration);
+			references.of[field].read += 
+				(decision_ptr->reads[neighbor].of[field].read * absIniltration);
 		}
 	}
 
@@ -603,13 +603,13 @@ LA::readsOnNeighbor_t calculateLAreferences(int agentId, AS::dataControllerPoint
 
 		float effectiveReference = 0;
 		if (totalAbsoluteInfiltration == 0) {
-			effectiveReference = references.readOf[field] / totalAbsoluteInfiltration;
+			effectiveReference = references.of[field].read / totalAbsoluteInfiltration;
 		}
 
-		references.readOf[field] = (D * effectiveReference) 
-									+ (E * GAreferences.readOf[field] / totalLAs);
+		references.of[field].read = (D * effectiveReference) 
+									+ (E * GAreferences.of[field].read / totalLAs);
 		
-		assert(isfinite(references.readOf[field]));
+		assert(isfinite(references.of[field].read));
 	}
 
 	return references;
@@ -629,29 +629,29 @@ GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPoint
 	auto GAparams_ptr = &(state_ptr->parameters);
 
 	//TODO: extract this
-	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::GA_RESOURCES] =
+	GAreferences.of[(int)GA::readsOnNeighbor_t::fields::GA_RESOURCES].read =
 										GAparams_ptr->GAresources;
 	assert(isfinite(GAparams_ptr->GAresources));
 
-	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::GUARD_LAS] =
+	GAreferences.of[(int)GA::readsOnNeighbor_t::fields::GUARD_LAS].read =
 										GAparams_ptr->LAguardTotal;
 	assert(isfinite(GAparams_ptr->LAguardTotal));
 
-	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS] =
+	GAreferences.of[(int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS].read =
 										GAparams_ptr->LAstrenghtTotal;
 	assert(isfinite(GAparams_ptr->LAstrenghtTotal));
 
-	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::TAX_INCOME] =
+	GAreferences.of[(int)GA::readsOnNeighbor_t::fields::TAX_INCOME].read =
 										GAparams_ptr->lastTaxIncome;
 	assert(isfinite(GAparams_ptr->lastTaxIncome));
 
-	GAreferences.readOf[(int)GA::readsOnNeighbor_t::fields::TRADE_INCOME] =
+	GAreferences.of[(int)GA::readsOnNeighbor_t::fields::TRADE_INCOME].read =
 										GAparams_ptr->lastTradeIncome;
 	assert(isfinite(GAparams_ptr->lastTradeIncome));
 	
 	GA::readsOnNeighbor_t references; 
 	for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
-			references.readOf[field] = 0;
+			references.of[field].read = 0;
 	}
 
 	int totalNeighbors = state_ptr->connectedGAs.howManyAreOn();
@@ -663,10 +663,10 @@ GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPoint
 		totalAbsoluteInfiltration += absoluteIniltration;
 		for (int field = 0; field < (int)GA::readsOnNeighbor_t::fields::TOTAL; field++) {
 
-			references.readOf[field] += 
-				(decision_ptr->reads[neighbor].readOf[field] * absoluteIniltration);
+			references.of[field].read += 
+				(decision_ptr->reads[neighbor].of[field].read * absoluteIniltration);
 
-			assert(isfinite(references.readOf[field]));
+			assert(isfinite(references.of[field].read));
 		}
 	}
 
@@ -674,12 +674,13 @@ GA::readsOnNeighbor_t calculateGAreferences(int agentId, AS::dataControllerPoint
 		
 		float effectiveReference = 0;
 		if( totalAbsoluteInfiltration != 0 ){
-			effectiveReference = references.readOf[field] / totalAbsoluteInfiltration;
+			effectiveReference = references.of[field].read / totalAbsoluteInfiltration;
 		}
 				
-		references.readOf[field] = (D * effectiveReference) + (E * GAreferences.readOf[field]);
+		references.of[field].read = 
+				(D * effectiveReference) + (E * GAreferences.of[field].read);
 
-		assert(isfinite(references.readOf[field]));
+		assert(isfinite(references.of[field].read));
 	}
 
 	return references;
