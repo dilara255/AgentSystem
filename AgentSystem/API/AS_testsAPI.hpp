@@ -25,6 +25,8 @@ namespace AS {
 	AS_API bool testMainLoopStopAndRestart();
 	AS_API bool testNeighbourIDsetting();
 	AS_API bool testChoppedPRNdrawing(bool printResults, bool dump);
+	AS_API bool testNormalDrawing(bool printResults, bool dump);
+	AS_API bool testRedDrawing(bool printResults, bool dump);
 	AS_API bool testActionVariationsInfo(bool printResults = false);
 	AS_API bool testMultipleAgentChopCalculations(bool log = false);
 	AS_API bool testWarningAndErrorCountingAndDisplaying(bool printResults = false);

@@ -21,13 +21,68 @@ Has methods to:
 #include "fileHelpers.h"
 
 static const char* defaultPRNGdumpFilename = "dumpPRNG.txt";
+static const char* defaultNormalPRNGFilename = "normalPRNG.txt";
+static const char* defaultRedPRNGFilename = "redPRNG.txt";
 
-//TODO: REFACTOR: change signature to: (int chopIndex, int totalChops, int PRNsToDrawTotal)
-//- Calculate here PRNsToDrawThisChop, given these and the private member "drawn";
-//- Time the actual drawing;
-//- Return a structure with relevant info for testing and benchmarking;
-//-- Includes timing, which mainLoop can also accumulate into a "totalMicrosDrawingPRNs";
-//(move explanation to .hpp)
+void AS::PRNserver::clearServer() {
+	zeroAccumulatedDrawTime();
+	clearDrawInfoErrors();
+	resetSeedsToDefaults();
+	drawn = 0;
+	nextToUse = 0;
+}
+
+float AS::PRNserver::normalFromUniformsMean0(float stdDev) {
+
+	constexpr int whitePRNs = WHITE_PRNS_FOR_NORMAL_APPROX;
+
+	float normal = 0;
+	//First we add our white PRNs
+	for (int i = 0; i < whitePRNs; i++) {
+		normal += getNext();
+	}
+
+	//Then we discount half their widht, to get the mean to zero:
+	constexpr float halfWidht = whitePRNs/2.0f;
+	normal -= halfWidht;
+
+	//The stdDev will now be sqrt(whitePRNs/12): multiplying by this brings it to one:
+	static const float inverseSqrtPRNsOver12 = std::sqrt(12.0f/whitePRNs);
+	normal *= inverseSqrtPRNsOver12;
+
+	//We should now have be effectively drawing from a mean zero stdDev one distribution
+	//Just to check, the possible extrema are aprox sqrt(3 * whitePRNs), or:
+	assert(normal >= -(halfWidht * inverseSqrtPRNsOver12) );
+	assert(normal <=  (halfWidht * inverseSqrtPRNsOver12) );
+
+	//Finally we multiply by the desired stdDev to stretch the distribution:
+	return normal * stdDev;
+}
+
+float AS::PRNserver::getRedNext(float previous, float effectiveStdDev) {
+
+	float offset = normalFromUniformsMean0(effectiveStdDev);
+
+	float next = previous + offset;
+
+	if (next > 1) {
+		//if next is above 2, this will not be "right", but statistically it shouldn't matter:
+		next = 1 - (next - std::floor(next));
+	}
+	else if (next < 0) {
+		next = std::ceil(next) - next;
+	}
+
+	return next;
+}
+
+float AS::PRNserver::getRedNextGivenTime(float previous, float period, float stdDevAtRefPeriod, 
+																		       float refPeriod) {
+
+	float effectiveStdDev = stdDevAtRefPeriod * std::sqrt(period/refPeriod);
+	return getRedNext(previous, effectiveStdDev);
+}
+
 AS::drawInfo_t AS::PRNserver::drawPRNs(int chopIndex, int totalChops, int PRNsToDrawTotal) {
 	
 	if (chopIndex == 0) {
@@ -95,11 +150,62 @@ AS::drawInfo_t AS::PRNserver::drawPRNs(int chopIndex, int totalChops, int PRNsTo
 	return m_drawInfo;
 }
 
+bool AS::PRNserver::dumpData(std::string filename) {
+
+	LOG_TRACE("Dumping PRNG info");
+
+	std::string name;
+
+	if (filename == "") {
+        name = std::string(defaultPRNGdumpFilename);
+    }
+    else {
+        name = filename;
+    }
+
+	FILE* fp = AZ::acquireFilePointerToSave(name, false, defaultFilePath);
+
+	if (fp == NULL) {
+        LOG_ERROR("Couldn't create the file (check if folders exist), aborting creation...");
+        return false;
+    }
+
+	LOG_TRACE("File Acquired, will write");
+
+	int result = 1;
+	int resultAux = 0;
+
+	resultAux = fprintf(fp, "PRNG DUMP:\nGENERATED this set: %d (total accumulated time: %lld nanos):\n\n", 
+			drawn, m_drawInfo.accumulatedDrawTime.count());
+    result *= (resultAux > 0);
+
+	resultAux = fprintf(fp, "Current Seeds: %llu, %llu, %llu, %llu\n\nPRNs:\n\n",
+				                 seeds[0], seeds[1], seeds[2], seeds[3]);
+    result *= (resultAux > 0);
+
+	for (int i = 0; i < drawn; i++) {
+		 fprintf(fp, "%f\n", PRNs[i]);
+		 result *= (resultAux > 0);
+	}
+
+    resultAux = fputs("\n**** END OF PRNG DUMP ****\n", fp);
+	if (resultAux == EOF) {result *= 0;}
+
+	resultAux =  fclose(fp);
+	if (resultAux == EOF) {result *= 0;}
+
+	if (!result) {
+		LOG_ERROR("Failed Writting PRNG Dump to File!");
+	}
+	return result;
+}
+
 #define PRNSRVR_CHECKED_CONDITIONS_ON_TEST 4
 bool AS::PRNserver::testAndBenchChoppedDrawing(int howManyToDraw, int totalChops,
 			                                    bool printResults, bool dumpPRNs) {
 
-	LOG_TRACE("Testing and benchmarking chopped PRN gerneration...");
+	LOG_DEBUG("Testing and benchmarking chopped PRN gerneration...");
+	GETCHAR_PAUSE;
 
 	if(howManyToDraw > MAX_PRNS) {
 		LOG_ERROR("Trying to draw more than the maximum number of PRNs: will abort test");
@@ -188,55 +294,159 @@ bool AS::PRNserver::testAndBenchChoppedDrawing(int howManyToDraw, int totalChops
 	for (int i = 0; i < PRNSRVR_CHECKED_CONDITIONS_ON_TEST; i++) {
 		result &= (errorsFound[i] == 0);
 	}
+
+	clearServer();
+
 	return result;
 }
 
-bool AS::PRNserver::dumpData(std::string filename) {
+bool AS::PRNserver::testNormalDrawing(bool printResults, bool dumpPRNs) {
 
-	LOG_TRACE("Dumping PRNG info");
+	LOG_DEBUG("Testing and benchmarking drawing PRNs from approximate normal distribution...");
+	GETCHAR_PAUSE;
 
-	std::string name;
-
-	if (filename == "") {
-        name = std::string(defaultPRNGdumpFilename);
-    }
-    else {
-        name = filename;
-    }
-
-	FILE* fp = AZ::acquireFilePointerToSave(name, false, defaultFilePath);
-
-	if (fp == NULL) {
-        LOG_ERROR("Couldn't create the file (check if folders exist), aborting creation...");
-        return false;
-    }
-
-	LOG_TRACE("File Acquired, will write");
-
-	int result = 1;
-	int resultAux = 0;
-
-	resultAux = fprintf(fp, "PRNG DUMP:\nGENERATED this set: %d (total accumulated time: %lld nanos):\n\n", 
-			drawn, m_drawInfo.accumulatedDrawTime.count());
-    result *= (resultAux > 0);
-
-	resultAux = fprintf(fp, "Current Seeds: %llu, %llu, %llu, %llu\n\nPRNs:\n\n",
-				                 seeds[0], seeds[1], seeds[2], seeds[3]);
-    result *= (resultAux > 0);
-
-	for (int i = 0; i < drawn; i++) {
-		 fprintf(fp, "%f\n", PRNs[i]);
-		 result *= (resultAux > 0);
+	int howManyToDraw = std::min(1000, MAX_PRNS);
+	if (howManyToDraw < 100) {
+		LOG_ERROR("MAX_PRNS is too low to make statistical analisys, will abort test");
+		return false;
 	}
 
-    resultAux = fputs("\n**** END OF PRNG DUMP ****\n", fp);
-	if (resultAux == EOF) {result *= 0;}
+	drawPRNs(0, 1, howManyToDraw * WHITE_PRNS_FOR_NORMAL_APPROX);
 
-	resultAux =  fclose(fp);
-	if (resultAux == EOF) {result *= 0;}
+	std::vector<float> prns;
+	prns.reserve(howManyToDraw);
 
-	if (!result) {
-		LOG_ERROR("Failed Writting PRNG Dump to File!");
+	auto start = std::chrono::steady_clock::now();
+	for (int i = 0; i < howManyToDraw; i++) {
+		prns.push_back(normalFromUniformsMean0(1.0f));
 	}
+	auto end = std::chrono::steady_clock::now();
+
+	auto periodNS = 
+		(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)).count();
+
+	double mean = 0;
+	double meanOfSquares = 0;
+	for (int i = 0; i < howManyToDraw; i++) {
+		double prnByTotal = prns.at(i)/howManyToDraw;
+		mean += prnByTotal;
+		meanOfSquares += (prns.at(i) * prnByTotal);
+	}
+
+	assert(meanOfSquares >= 0);
+	assert(meanOfSquares >= mean*mean);
+
+	double stdDev = std::sqrt(meanOfSquares - mean*mean);
+
+	const double expectedMean = 0;
+	const double expectedStdDEv = 1.0;
+	double absMeanDifference = std::abs(expectedMean - mean);
+	double absStdDevDifference = std::abs(expectedStdDEv - stdDev);
+
+	double maxAllowedDifference = 10.0 / howManyToDraw;
+
+	bool result = (absMeanDifference < maxAllowedDifference) 
+		           && (absStdDevDifference < maxAllowedDifference);
+
+	if (printResults) {
+		if (result) {
+			LOG_INFO("Values drawn have the expected (approximate) statistical properties!");
+		}
+		else {
+			LOG_ERROR("Values drawn diverged too much from the expected statitstical properties!");
+		}
+		printf("Drawn: %d, at %f ns per number. Mean %f, StdDev %f (expected: %f and %f)\n",
+			howManyToDraw, (double)periodNS/howManyToDraw, mean, stdDev, expectedMean, expectedStdDEv);
+	}
+	if (dumpPRNs) {
+
+		FILE* fp = AZ::acquireFilePointerToSave(defaultNormalPRNGFilename, false, 
+			                                                     defaultFilePath);
+
+		fprintf(fp, "Drawn: %d, at %f ns per number. Mean %f, StdDev %f (expected: %f and %f)\n\n",
+			howManyToDraw, (double)periodNS/howManyToDraw, mean, stdDev, expectedMean, expectedStdDEv);
+
+		for (int i = 0; i < howManyToDraw; i++) {
+			fprintf(fp, "%f\n", prns.at(i));
+		}
+
+		fclose(fp);
+	}
+
+	clearServer();
+
 	return result;
+}
+
+bool AS::PRNserver::testRedDrawing(bool printResults, bool dumpPRNs) {
+
+	LOG_DEBUG("Testing and benchmarking drawing red-ish PRNs...");
+	LOG_WARN("THE ACTUAL TEST IS NOT YET IMPLEMENTED (will print/save data and return true)");
+	GETCHAR_PAUSE;
+
+	//TODO: implement actual tests
+
+	int howManyToDraw = std::min(1000, MAX_PRNS);
+	if (howManyToDraw < 100) {
+		LOG_ERROR("MAX_PRNS is too low to make statistical analisys, will abort test");
+		return false;
+	}
+
+	drawPRNs(0, 1, howManyToDraw * WHITE_PRNS_FOR_NORMAL_APPROX);
+
+	std::vector<float> prns;
+	prns.reserve(howManyToDraw);
+
+	//We we'll test for 10 ref periods:
+	float testPeriodPerDraw = 10.0f / howManyToDraw;
+
+	float red = 0.5;
+
+	auto start = std::chrono::steady_clock::now();
+	for (int i = 0; i < howManyToDraw; i++) {
+		red = getRedNextGivenTime(red, testPeriodPerDraw, 1.0f, 1.0f);
+		prns.push_back(red);
+	}
+	auto end = std::chrono::steady_clock::now();
+
+	auto periodNS = 
+		(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start)).count();
+
+	double mean = 0;
+	double meanOfSquares = 0;
+	for (int i = 0; i < howManyToDraw; i++) {
+		double prnByTotal = prns.at(i)/howManyToDraw;
+		mean += prnByTotal;
+		meanOfSquares += (prns.at(i) * prnByTotal);
+	}
+
+	assert(meanOfSquares >= 0);
+	assert(meanOfSquares >= mean*mean);
+
+	double stdDev = std::sqrt(meanOfSquares - mean*mean);
+
+	if (printResults) {
+		LOG_TRACE("Test not implemented: will return true either way. Check results summary:");
+
+		printf("Drawn: %d, at %f ns per number. Mean %f, StdDev %f\n",
+			    howManyToDraw, (double)periodNS/howManyToDraw, mean, stdDev);
+	}
+	if (dumpPRNs) {
+
+		FILE* fp = AZ::acquireFilePointerToSave(defaultRedPRNGFilename, false, 
+			                                                  defaultFilePath);
+
+		fprintf(fp, "Drawn: %d, at %f ns per number. Mean %f, StdDev %f\n\n",
+			howManyToDraw, (double)periodNS/howManyToDraw, mean, stdDev);
+
+		for (int i = 0; i < howManyToDraw; i++) {
+			fprintf(fp, "%f\n", prns.at(i));
+		}
+
+		fclose(fp);
+	}
+
+	clearServer();
+
+	return true;
 }
