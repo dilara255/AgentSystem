@@ -43,11 +43,30 @@ namespace AS{
 		PRNserver() {seeds[0] = DEFAULT_PRNG_SEED0; seeds[1] = DEFAULT_PRNG_SEED1;
 			         seeds[2] = DEFAULT_PRNG_SEED2; seeds[3] = DEFAULT_PRNG_SEED3;}
 
-		//Draws and stores floats in [0,1] range. Nanos/PRN in test system:
+		//Draws and stores floats in [0,1] range. 
+		//- Calculate here PRNsToDrawThisChop, given the inputs and the private member "drawn";
+		//- Time the actual drawing;
+		//- Return a structure with relevant info for testing and benchmarking;
+		//-- Includes timing, which mainLoop can also accumulate into a "totalMicrosDrawingPRNs";
+		// Nanos/PRN in test system:
 		//Debug x64: ~22, Debug x86: ~35, Release x64: ~3.7, Release x86: ~12.5 
 		drawInfo_t drawPRNs(int chopIndex, int totalChops, int PRNsToDrawTotal);
 
+		//Gets a PRN in the [0,1] range.
 		float getNext() {return PRNs[nextToUse++];}
+		//Uses uniform [0,1] PRNs to approximate drawing from a normal distribution
+		//Result is in the range [-+ (stdDev * sqrt(3 * uniformPRNs))] (3*stdDev for PRNs = 3)
+		inline float normalFromUniformsMean0(float stdDev);
+		//Approximates brownian motion from previous, after many steps at "effectiveStdDev"
+		//Uses an approximate normal distribution to draw offsets
+		//Expects previous in the range [0,1]. Will "bounce" back to this range to clamp next.
+		inline float getRedNext(float previous, float effectiveStdDev);
+		//Approximates brownian motion from previous, after many steps over period,
+		//and trying to keep the main statistical properties of a motion with
+		//stdDev stdDevAtRefPeriod for a period refPeriod, independent of actual period
+		//Expects previous in the range [0,1]. Will "bounce" back to this range to clamp next.
+		float getRedNextGivenTime(float previous, float period, float stdDevAtRefPeriod, 
+																		float refPeriod);
 		uint64_t getSeed(int index) const {return seeds[index];}
 		void setSeed(int index, uint64_t newSeed) {seeds[index] = newSeed;}
 
@@ -55,16 +74,21 @@ namespace AS{
 		//and the PRNs themselves. Has a default filename. Saves on default networks folder
 		bool dumpData(std::string = "");
 
+		void clearServer();
+		void resetSeedsToDefaults() {seeds[0] = DEFAULT_PRNG_SEED0; seeds[1] = DEFAULT_PRNG_SEED1;
+								     seeds[2] = DEFAULT_PRNG_SEED2; seeds[3] = DEFAULT_PRNG_SEED3;}
+		void zeroAccumulatedDrawTime() {m_drawInfo.accumulatedDrawTime = std::chrono::nanoseconds(0);}
+		std::chrono::nanoseconds getAccumulatedDrawTime(){return m_drawInfo.accumulatedDrawTime;}
+		void clearDrawInfoErrors() { m_drawInfo.error = false; }
+		
 		//Tests the chopping for coverage of the whole expected range and overwriting.
 		//Returns false if either fails. Also times the drawing. Covers changing chop sizes.
 		//Optionally print results (default true) and dumps PRNs to file (default false)
 		bool testAndBenchChoppedDrawing(int howManyToDraw, int totalChops,
 			                            bool printResults = true, bool dumpPRNs = false);
+		bool testNormalDrawing(bool printResults = true, bool dumpPRNs = false);
+		bool testRedDrawing(bool printResults = true, bool dumpPRNs = false);
 
-		void zeroAccumulatedDrawTime() {m_drawInfo.accumulatedDrawTime = std::chrono::nanoseconds(0);}
-		std::chrono::nanoseconds getAccumulatedDrawTime(){return m_drawInfo.accumulatedDrawTime;}
-		void clearDrawInfoErrors() { m_drawInfo.error = false; }
-		
 	private:
 		int drawn = 0;
 		int nextToUse = 0;

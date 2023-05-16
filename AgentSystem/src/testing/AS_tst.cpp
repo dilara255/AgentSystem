@@ -217,6 +217,18 @@ namespace AS {
 		return result;
 	}
 
+	bool testRedDrawing(bool printResults, bool dump) {
+		PRNserver* server = new PRNserver();
+
+		return server->testRedDrawing(printResults, dump);
+	}
+
+	bool testNormalDrawing(bool printResults, bool dump) {
+		PRNserver* server = new PRNserver();
+
+		return server->testNormalDrawing(printResults, dump);
+	}
+
 	bool testChoppedPRNdrawing(bool printResults, bool dump) {
 		
 		LOG_DEBUG("Will test drawing PRNs in parts using the PRNserver class\n", 1);

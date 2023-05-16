@@ -67,6 +67,7 @@ and data sizes static.
 #define SECONDS_PER_ERROR_DISPLAY (5) //will be floored to multiple of step time in ms
 #define NOTIONS_AND_ACTIONS_REF_PERIOD_SECS (150.0f) //"simulated" seconds, independent of pace
 #define REF_RESOURCES (100.0f)
+#define WHITE_PRNS_FOR_NORMAL_APPROX (3)
 
 //Economy:
 #define EXTERNAL_GUARD_UPKEEP_RATIO_BY_DEFENDED (0.5f)

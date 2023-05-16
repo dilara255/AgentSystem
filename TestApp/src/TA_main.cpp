@@ -46,7 +46,7 @@ void quickTestInit(bool run, bool disableDecisions, bool blockActions) {
 #define TEST_BATTERIES 4
 //TODO: the names of the test categories do not make complete sense any more
 enum batterySizes { HELPER_FUNC_TESTS = 7, BASIC_INIT_COMM_TESTS = 4,
-				    SPECIFIC_DATA_FUNCTIONALITY_TESTS = 11,
+				    SPECIFIC_DATA_FUNCTIONALITY_TESTS = 13,
 					SPECIFIC_THREADED_LOOP_TESTS = 13 };
 
 int batterySizes[TEST_BATTERIES] = {HELPER_FUNC_TESTS, BASIC_INIT_COMM_TESTS, 
@@ -223,9 +223,13 @@ int testsBattery(void) {
 
 	battery2[8] = AS::testChoppedPRNdrawing(printSteps, true); 
 
-	battery2[9] = AS::testDecisionStepTiming(printSteps); 
+	battery2[9] = AS::testNormalDrawing(printSteps, true);
 
-	battery2[10] = AS::testUpdateRead(true, false, readUpdatingTestFilename);
+	battery2[10] = AS::testRedDrawing(printSteps, true);
+
+	battery2[11] = AS::testDecisionStepTiming(printSteps); 
+
+	battery2[12] = AS::testUpdateRead(true, false, readUpdatingTestFilename);
 
 	int resultsBattery2 = 0;
 	for(int i = 0; i < SPECIFIC_DATA_FUNCTIONALITY_TESTS; i++) { 
