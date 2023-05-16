@@ -858,10 +858,13 @@ namespace AS {
 		*defendersReadOnAttackersStrenght_ptr =
 					std::max(*defendersReadOnAttackersStrenght_ptr, 0.0f);
 
+		//What do the seers say?
+		action_ptr->details.shortTermAux = g_prnServer_ptr->getNext();
+
 		//The fight has just begun, but already our men wonder: how long can this battle last?
 		action_ptr->phaseTiming.total = AS::ATT_I_L_attackTime(attackSize);
 
-		//Other than that, it's all done as usual:
+		//Anyway:
 		defaultPhaseEnd(action_ptr);
 	}
 
@@ -903,7 +906,14 @@ namespace AS {
 		//First, we need to know how the balance of the forces is:
 		float balancePoint = effectiveAttack / (effectiveAttack + effectiveDefences);
 		//Two prns are used to make the distribution a triangle centered on 0.5:
-		float draw = (g_prnServer_ptr->getNext() + g_prnServer_ptr->getNext()) / 2;
+		
+		float* draw_ptr = &(action_ptr->details.shortTermAux);
+		float period = ((float)tickTenthsOfMs / TENTHS_OF_MS_IN_A_SECOND);
+
+		*draw_ptr = g_prnServer_ptr->getRedNextGivenTime((*draw_ptr), period, 
+						      ACT_ATT_I_L_BATTLE_RED_PRN_STD_DEV_AT_REF_TIME,
+				                         NOTIONS_AND_ACTIONS_REF_PERIOD_SECS);
+		float draw = *draw_ptr;
 
 		//The score change is proportional to the timestep (so high frequency doesn't blow it).
 		//Also, larger battles should tend to take longer: we use a reference time for that
