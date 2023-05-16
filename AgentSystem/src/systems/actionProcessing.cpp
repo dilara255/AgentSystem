@@ -783,7 +783,7 @@ namespace AS {
 		//They realize their errors about our forces:
 		int strenghtField = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
 		float* defendersReadOnAttackersStrenght_ptr =
-			&(defendersDecision_ptr->reads[attackerIDonDefender].readOf[strenghtField]);
+			&(defendersDecision_ptr->reads[attackerIDonDefender].of[strenghtField].read);
 
 		float attackSize = action_ptr->details.intensity;
 
@@ -997,7 +997,7 @@ namespace AS {
 		int str = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
 
 		float* intensity_ptr = &(action_ptr->details.intensity);
-		defendersDecision_ptr->reads[attackerIndexOnDefender].readOf[str] += (*intensity_ptr);
+		defendersDecision_ptr->reads[attackerIndexOnDefender].of[str].read += (*intensity_ptr);
 
 		//Now we deal with the returnees:
 		
@@ -1147,13 +1147,13 @@ namespace AS {
 				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(neighbor).parameters.strenght);
 
 			int str = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
-			decision_ptr->reads[neighborIndexOnAgent].readOf[str] *= (1 - effectiveReturneeRatio);
-			decision_ptr->reads[neighborIndexOnAgent].readOf[str] += 
+			decision_ptr->reads[neighborIndexOnAgent].of[str].read *= (1 - effectiveReturneeRatio);
+			decision_ptr->reads[neighborIndexOnAgent].of[str].read += 
 										   effectiveReturneeRatio * neighborStrenght_ptr->current;
 
 			int grd = (int)LA::readsOnNeighbor_t::fields::GUARD;
-			decision_ptr->reads[neighborIndexOnAgent].readOf[grd] *= (1 - effectiveReturneeRatio);
-			decision_ptr->reads[neighborIndexOnAgent].readOf[grd] += 
+			decision_ptr->reads[neighborIndexOnAgent].of[grd].read *= (1 - effectiveReturneeRatio);
+			decision_ptr->reads[neighborIndexOnAgent].of[grd].read += 
 									 effectiveReturneeRatio * neighborStrenght_ptr->externalGuard;
 			
 			//Finally we accept out troops back in the GUARD (to recover):

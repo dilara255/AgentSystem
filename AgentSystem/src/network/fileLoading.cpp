@@ -288,11 +288,11 @@ bool addGAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int numEf
         int readGuardID = (int)GA::readsOnNeighbor_t::fields::GUARD_LAS;
 
         tokens = fscanf(fp, GAreadsOnNeighbor, 
-            &(decision.reads[neighbor].readOf[readResID]), &expecsNeighbor[expecResID], 
-            &(decision.reads[neighbor].readOf[readTaxID]), &expecsNeighbor[expecTaxID], 
-            &(decision.reads[neighbor].readOf[readTradeID]), &expecsNeighbor[expecTradeID], 
-            &(decision.reads[neighbor].readOf[readStrenghtID]), &expecsNeighbor[expecStrenghtID], 
-            &(decision.reads[neighbor].readOf[readGuardID]), &expecsNeighbor[expecGuardID]);
+            &(decision.reads[neighbor].of[readResID].read), &expecsNeighbor[expecResID], 
+            &(decision.reads[neighbor].of[readTaxID].read), &expecsNeighbor[expecTaxID], 
+            &(decision.reads[neighbor].of[readTradeID].read), &expecsNeighbor[expecTradeID], 
+            &(decision.reads[neighbor].of[readStrenghtID].read), &expecsNeighbor[expecStrenghtID], 
+            &(decision.reads[neighbor].of[readGuardID].read), &expecsNeighbor[expecGuardID]);
         if (tokens != 10) {
             LOG_ERROR("Error reading GA read on neighbors tokens. Aborting load.");
             return false;
@@ -477,7 +477,7 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
         decision.infiltration[neighbor] = infiltration;
 
         auto expecsNeighbor = &(decision.requestsForNeighbors[neighbor].expected[0]);
-        auto readsNeighbor = &(decision.reads[neighbor].readOf[0]);
+        auto readsNeighbor = &(decision.reads[neighbor].of[0]);
 
         int readResID = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
         int readIncomeID = (int)LA::readsOnNeighbor_t::fields::INCOME;
@@ -485,10 +485,10 @@ bool addLAfromFile(int id, FILE* fp, AS::dataControllerPointers_t* dp, int maxNe
         int readGuardID = (int)LA::readsOnNeighbor_t::fields::GUARD;
 
         tokens = fscanf(fp, LAreadsOnNeighbor, 
-                        &readsNeighbor[readResID], &expecsNeighbor[expecResID], 
-                        &readsNeighbor[readIncomeID],
-                        &readsNeighbor[readStrenghtID], &expecsNeighbor[expecStrenghtID], 
-                        &readsNeighbor[readGuardID], &expecsNeighbor[expecGuardID]);
+                        &readsNeighbor[readResID].read, &expecsNeighbor[expecResID], 
+                        &readsNeighbor[readIncomeID].read,
+                        &readsNeighbor[readStrenghtID].read, &expecsNeighbor[expecStrenghtID], 
+                        &readsNeighbor[readGuardID].read, &expecsNeighbor[expecGuardID]);
         if (tokens != 7) {
             LOG_ERROR("Error reading LA neighbor reads tokens. Will Abort loading.");
             return false;

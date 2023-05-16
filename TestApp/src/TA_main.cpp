@@ -661,7 +661,7 @@ bool testReads(bool print, float secondsToRun) {
 			int neighborID = thisState_ptr->neighbourIDs[neighbor];
 			
 			int field = (int)GA::readsOnNeighbor_t::fields::GA_RESOURCES;
-			float read = reads_ptr[neighbor].readOf[field];
+			float read = reads_ptr[neighbor].of[field].read;
 			float real = GAstateVector->at(neighborID).parameters.GAresources;
 
 			float small = 1;
@@ -707,7 +707,7 @@ bool testReads(bool print, float secondsToRun) {
 			int neighborID = thisState_ptr->locationAndConnections.neighbourIDs[neighbor];
 			
 			int field = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
-			float read = reads_ptr[neighbor].readOf[field];
+			float read = reads_ptr[neighbor].of[field].read;
 			float real = LAstateVector->at(neighborID).parameters.resources.current;
 
 			float small = 1;
@@ -760,7 +760,7 @@ bool testReads(bool print, float secondsToRun) {
 		for (int neighbor = 0; neighbor < totalConnections; neighbor++) {
 					
 			int field = (int)GA::readsOnNeighbor_t::fields::GA_RESOURCES;
-			float read = reads_ptr[neighbor].readOf[field];
+			float read = reads_ptr[neighbor].of[field].read;
 
 			float expected = valuesToBeSavedPerNeighborPerGA.at(thisGA).at(neighbor);
 			float difference = read - expected;
@@ -787,7 +787,7 @@ bool testReads(bool print, float secondsToRun) {
 		for (int neighbor = 0; neighbor < totalConnections; neighbor++) {
 					
 			int field = (int)LA::readsOnNeighbor_t::fields::RESOURCES;
-			float read = reads_ptr[neighbor].readOf[field];
+			float read = reads_ptr[neighbor].of[field].read;
 
 			float expected = valuesToBeSavedPerNeighborPerLA.at(thisLA).at(neighbor);
 			float difference = read - expected;

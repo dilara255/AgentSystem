@@ -144,6 +144,11 @@ namespace AS {
 							GA_RESOURCES, TAX_INCOME, TRADE_INCOME,
 			                TOTAL_GA_PARAMETER_FIELDS };
 	} AS_API GAparameterTotals_t;
+
+	typedef struct read_st {
+		float read = 0.0f;
+		float lastPrn = 0.0f;
+	} AS_API read_t;
 }
 
 //And finally we compose these into the structures the system will use:
@@ -175,7 +180,7 @@ namespace LA {
 		enum class fields { RESOURCES, INCOME, STRENGHT, GUARD,
 			                TOTAL};
 
-		float readOf[(int)fields::TOTAL];
+		AS::read_t of[(int)fields::TOTAL];
 	}  AS_API readsOnNeighbor_t;
 
 	typedef struct {
@@ -230,7 +235,7 @@ namespace GA {
 							GA_RESOURCES, TAX_INCOME, TRADE_INCOME,
 			                TOTAL};
 
-		float readOf[(int)fields::TOTAL];
+		AS::read_t of[(int)fields::TOTAL];
 	}  AS_API readsOnNeighbor_t;
 
 	typedef struct {

@@ -90,16 +90,16 @@ namespace AS::Decisions::LA {
 
 		//Defence is defined as strenght + guard, so to calculate the refDefenf:
 		int strenghtIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
-		float refStrenght = refReads_ptr->readOf[strenghtIndex];
+		float refStrenght = refReads_ptr->of[strenghtIndex].read;
 
 		int guardIndex = (int)PURE_LA::readsOnNeighbor_t::fields::GUARD;
-		float refGuard = refReads_ptr->readOf[guardIndex];
+		float refGuard = refReads_ptr->of[guardIndex].read;
 		
 		float refDefense = refGuard + refStrenght;
 		
 		//And these are the refResources:
 		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
-		float refResources = refReads_ptr->readOf[resourcesIndex];
+		float refResources = refReads_ptr->of[resourcesIndex].read;
 
 		auto agentParameters_ptr = &(dp->LAstate_ptr->getDataCptr()->at(agentID).parameters);
 		
@@ -193,7 +193,7 @@ namespace AS::Decisions::LA {
 		//We first calculate how our resources compare to our reference resources:
 		
 		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
-		float refResources = refReads_ptr->readOf[resourcesIndex];
+		float refResources = refReads_ptr->of[resourcesIndex].read;
 
 		float small = 0.1f;
 		if (refResources < small) { //we don't want to deal wih negatives
@@ -299,9 +299,9 @@ namespace AS::Decisions::LA {
 		int guardIndex = (int)PURE_LA::readsOnNeighbor_t::fields::GUARD;
 		int resourcesIndex = (int)PURE_LA::readsOnNeighbor_t::fields::RESOURCES;
 
-		float neighborDefense = readsOfNeighbor_ptr->readOf[guardIndex]
-							  + readsOfNeighbor_ptr->readOf[strenghtIndex];
-		float neighborResources = readsOfNeighbor_ptr->readOf[resourcesIndex];
+		float neighborDefense = readsOfNeighbor_ptr->of[guardIndex].read
+							  + readsOfNeighbor_ptr->of[strenghtIndex].read;
+		float neighborResources = readsOfNeighbor_ptr->of[resourcesIndex].read;
 		
 		if (neighborDefense < DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS) {
 			neighborDefense = DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS;
@@ -322,11 +322,11 @@ namespace AS::Decisions::LA {
 		//But we also want the notion to respond to overall changes in the network,
 		//So we will calculate the same proportion but based on our reference reads:
 		
-		float refStrenght = refReads_ptr->readOf[strenghtIndex];
-		float refGuard = refReads_ptr->readOf[guardIndex];
+		float refStrenght = refReads_ptr->of[strenghtIndex].read;
+		float refGuard = refReads_ptr->of[guardIndex].read;
 
 		float refDefense = refGuard + refStrenght;		
-		float refResources = refReads_ptr->readOf[resourcesIndex];
+		float refResources = refReads_ptr->of[resourcesIndex].read;
 
 		if (refDefense < DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS) {
 			refDefense = DEFAULT_SMALL_FLOAT_FOR_QUOTIENTS;
@@ -388,15 +388,15 @@ namespace AS::Decisions::LA {
 
 		//Now we read the neighbor's and the reference strenght:
 		int strenghtIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
-		float refStrenght = refReads_ptr->readOf[strenghtIndex];
+		float refStrenght = refReads_ptr->of[strenghtIndex].read;
 
 		auto readsOfNeighbor_ptr = 
 				&(dp->LAdecision_ptr->getDataCptr()->at(agentID).reads[neighbor]);
 
-		float neighborStrenght = readsOfNeighbor_ptr->readOf[strenghtIndex];
+		float neighborStrenght = readsOfNeighbor_ptr->of[strenghtIndex].read;
 
 		int guardIndex = (int)PURE_LA::readsOnNeighbor_t::fields::GUARD;
-		float neighborDefenses = neighborStrenght + readsOfNeighbor_ptr->readOf[guardIndex];
+		float neighborDefenses = neighborStrenght + readsOfNeighbor_ptr->of[guardIndex].read;
 
 		float small = 0.1f; 
 		//to avoid blowups on division:
@@ -506,7 +506,7 @@ namespace AS::Decisions::LA {
 
 		int strIndex = (int)PURE_LA::readsOnNeighbor_t::fields::STRENGHT;
 		float theirStrenght = 
-			ourDecisionData_ptr->reads[neighbor].readOf[strIndex];
+			ourDecisionData_ptr->reads[neighbor].of[strIndex].read;
 		if (theirStrenght < small) {
 			theirStrenght = small;
 		}
@@ -786,7 +786,7 @@ namespace AS::Decisions::GA {
 		auto state_ptr = &(dp->GAstate_ptr->getDataCptr()->at(agentID));
 
 		int strIndex = (int)PURE_GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
-		float refStrenght = refReads_ptr->readOf[strIndex];
+		float refStrenght = refReads_ptr->of[strIndex].read;
 
 		float strenght = state_ptr->parameters.LAstrenghtTotal;
 		float strenghtRatio = 1.0f;
@@ -796,7 +796,7 @@ namespace AS::Decisions::GA {
 		}		
 		
 		int taxIndex = (int)PURE_GA::readsOnNeighbor_t::fields::TAX_INCOME;
-		float refTax = refReads_ptr->readOf[taxIndex];
+		float refTax = refReads_ptr->of[taxIndex].read;
 
 		float tax = state_ptr->parameters.lastTaxIncome;
 		float taxRatio = 1.0f;
@@ -883,26 +883,26 @@ namespace AS::Decisions::GA {
 		//The lower the guard is compared to the reference, the higher this is
 		
 		int strenghtIndex = (int)PURE_GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
-		float refStrenght = refReads_ptr->readOf[strenghtIndex];
+		float refStrenght = refReads_ptr->of[strenghtIndex].read;
 
 		int guardIndex = (int)PURE_GA::readsOnNeighbor_t::fields::GUARD_LAS;
-		float refGuard = refReads_ptr->readOf[guardIndex] + refStrenght;
+		float refGuard = refReads_ptr->of[guardIndex].read + refStrenght;
 
 		int resourcesIndex = (int)PURE_GA::readsOnNeighbor_t::fields::GA_RESOURCES;
-		float refResources = refReads_ptr->readOf[resourcesIndex];
+		float refResources = refReads_ptr->of[resourcesIndex].read;
 
 		auto readsOfNeighbor_ptr = 
 				&(dp->GAdecision_ptr->getDataCptr()->at(agentID).reads[neighbor]);
 
-		float neighborGuard = readsOfNeighbor_ptr->readOf[guardIndex]
-							  + readsOfNeighbor_ptr->readOf[strenghtIndex];
+		float neighborGuard = readsOfNeighbor_ptr->of[guardIndex].read
+							  + readsOfNeighbor_ptr->of[strenghtIndex].read;
 
 		float guardProportion = 1.0f;
 		if (refGuard > 0) {
 			guardProportion = neighborGuard / refGuard;
 		}
 
-		float neighborResources = readsOfNeighbor_ptr->readOf[resourcesIndex];
+		float neighborResources = readsOfNeighbor_ptr->of[resourcesIndex].read;
 
 		float resourcesProportion = 1.0f;
 		if (refResources > 0) {

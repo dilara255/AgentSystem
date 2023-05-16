@@ -261,7 +261,7 @@ namespace AS{
 		int strenghtIndex = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
 
 		float enemyStrenght = 
-				decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
+				decision_ptr.reads[targetsIndexOnAgent].of[strenghtIndex].read;
 				
 		//We'll set the action's intensty to be the attack size
 		float attackSize = 0;
@@ -348,7 +348,7 @@ namespace AS{
 			int strenghtIndex = (int)GA::readsOnNeighbor_t::fields::STRENGHT_LAS;
 
 			enemyStrenght = 
-					decision_ptr.reads[targetsIndexOnAgent].readOf[strenghtIndex];
+					decision_ptr.reads[targetsIndexOnAgent].of[strenghtIndex].read;
 		}
 		
 		float attackMarginProportion = 
