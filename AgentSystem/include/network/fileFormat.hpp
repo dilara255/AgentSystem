@@ -45,7 +45,7 @@ static const char* connectedLAbitfield = "  Connected LAs (bitfield): %d %d %d %
 static const char* connectedGAbitfield = "  Connected GAs (bitfield): %d\n";
 static const char* GArelationsInfo = "    Relation with Neighbor %d (id %d): stance: %d, disposition: %f (last step: %f), infiltration: %f\n";
 
-static const char* GAreadsOnNeighbor = "      Reads: GAs resources: %f (+ %f), Tax: %f (+ %f), Trade: %f (+ %f). LAs strenght: %f (+ %f), Guard: %f (+ %f)\n"; 
+static const char* GAreadsOnNeighbor = "      Reads: GAs resources: %f [%f] (+ %f), Tax: %f [%f] (+ %f), Trade: %f [%f] (+ %f). LAs strenght: %f [%f] (+ %f), Guard: %f [%f] (+ %f)\n"; 
 static const char* lastGAwarning = "\n#The last GA is reserved for local agents not belonging to any GA\n\n";
 
 static const char* LAidentity = "\nLA Id: %d, belongs to GA: %d, On? %d, Decisions? %d\n";
@@ -55,7 +55,7 @@ static const char* LAstrenght = "  Strenght: %f (+ %f), Guard: %f (+ %f), Thresh
 static const char* LAresources = "  Current Resources: %f (+ %f), income: %f, upkeep: %f, tax: %f /s, trade: %f /s\n";
 static const char* LArelationsInfo = "    Relation with Neighbor %d (id %d): stance: %d, disposition: %f (last: %f), infiltration: %f\n";
 
-static const char* LAreadsOnNeighbor = "      Reads: resources: %f (+ %f) (income: %f), strenght: %f (+ %f), Guard: %f (+ %f)\n"; 
+static const char* LAreadsOnNeighbor = "      Reads: resources: %f [%f] (+ %f) (income: %f [%f]), strenght: %f [%f] (+ %f), Guard: %f [%f] (+ %f)\n"; 
 static const char* LAcategoryOffsets = "    Category %d: immediate: {%f | %f}, request:  {%f | %f}, self: {%f | %f}\n";
 
 static const char* LAaction = "LA Action %d (LA %d): IDs: %u, Phase Time Elapsed: %lu (Total: %lu), Intensity: %f, Aux: %f, ShortTerm: %f, LongTerm: %f\n";

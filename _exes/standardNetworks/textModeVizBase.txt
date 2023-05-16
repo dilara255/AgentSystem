@@ -14,9 +14,9 @@ Name: GA_0
   Connected LAs (bitfield): 1 0 0 0
   Connected GAs (bitfield): 6
     Relation with Neighbor 0 (id 1): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
-      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+      Reads: GAs resources: 0.000000 [0.000000] (+ 5.500000), Tax: 0.001200 [0.000000] (+ 5.500000), Trade: 0.000600 [0.000000] (+ 5.500000). LAs strenght: 150.000000 [0.000000] (+ 5.500000), Guard: 0.300000 [0.000000] (+ 5.500000)
     Relation with Neighbor 1 (id 2): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
-      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+      Reads: GAs resources: 0.000000 [0.000000] (+ 5.500000), Tax: 0.001200 [0.000000] (+ 5.500000), Trade: 0.000600 [0.000000] (+ 5.500000). LAs strenght: 150.000000 [0.000000] (+ 5.500000), Guard: 0.300000 [0.000000] (+ 5.500000)
 
 GA Id: 1, On? 1, Decisions? 1
 Name: GA_1
@@ -26,9 +26,9 @@ Name: GA_1
   Connected LAs (bitfield): 2 0 0 0
   Connected GAs (bitfield): 5
     Relation with Neighbor 0 (id 0): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
-      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+      Reads: GAs resources: 0.000000 [0.000000] (+ 5.500000), Tax: 0.001200 [0.000000] (+ 5.500000), Trade: 0.000600 [0.000000] (+ 5.500000). LAs strenght: 150.000000 [0.000000] (+ 5.500000), Guard: 0.300000 [0.000000] (+ 5.500000)
     Relation with Neighbor 1 (id 2): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
-      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+      Reads: GAs resources: 0.000000 [0.000000] (+ 5.500000), Tax: 0.001200 [0.000000] (+ 5.500000), Trade: 0.000600 [0.000000] (+ 5.500000). LAs strenght: 150.000000 [0.000000] (+ 5.500000), Guard: 0.300000 [0.000000] (+ 5.500000)
 
 GA Id: 2, On? 1, Decisions? 1
 Name: GA_02  
@@ -38,9 +38,9 @@ Name: GA_02
   Connected LAs (bitfield): 4 0 0 0
   Connected GAs (bitfield): 3
     Relation with Neighbor 0 (id 0): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
-      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+      Reads: GAs resources: 0.000000 [0.000000] (+ 5.500000), Tax: 0.001200 [0.000000] (+ 5.500000), Trade: 0.000600 [0.000000] (+ 5.500000). LAs strenght: 150.000000 [0.000000] (+ 5.500000), Guard: 0.300000 [0.000000] (+ 5.500000)
     Relation with Neighbor 1 (id 1): stance: 1, disposition: 0.000000 (last step: 0.000000), infiltration: 0.000000
-      Reads: GAs resources: 0.000000 (+ 5.500000), Tax: 0.001600 (+ 5.500000), Trade: 0.000800 (+ 5.500000). LAs strenght: 200.000000 (+ 5.500000), Guard: 0.400000 (+ 5.500000)
+      Reads: GAs resources: 0.000000 [0.000000] (+ 5.500000), Tax: 0.001200 [0.000000] (+ 5.500000), Trade: 0.000600 [0.000000] (+ 5.500000). LAs strenght: 150.000000 [0.000000] (+ 5.500000), Guard: 0.300000 [0.000000] (+ 5.500000)
 
 #The last GA is reserved for local agents not belonging to any GA
 
@@ -53,9 +53,9 @@ Name: LA_0
   Current Resources: 100.000000 (+ 0.000000), income: 1.000000, upkeep: 0.502500, tax: 0.000000 /s, trade: 0.000000 /s
   Connected LAs (bitfield): 6 0 0 0
     Relation with Neighbor 0 (id 1): stance: 0, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
-      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+      Reads: resources: 100.000000 [0.000000] (+ 5.500000) (income: 1.000000 [0.000000]), strenght: 50.000000 [0.000000] (+ 5.500000), Guard: 0.100000 [0.000000] (+ 5.500000)
     Relation with Neighbor 1 (id 2): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
-      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+      Reads: resources: 100.000000 [0.000000] (+ 5.500000) (income: 1.000000 [0.000000]), strenght: 50.000000 [0.000000] (+ 5.500000), Guard: 0.100000 [0.000000] (+ 5.500000)
   #Action Offsets {from LA's personality | from GA's actions}:
     Category 0: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
     Category 1: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
@@ -73,9 +73,9 @@ Name: LA_1
   Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500, tax: 0.000000 /s, trade: 0.000000 /s
   Connected LAs (bitfield): 5 0 0 0
     Relation with Neighbor 0 (id 0): stance: 0, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
-      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+      Reads: resources: 100.000000 [0.000000] (+ 5.500000) (income: 1.000000 [0.000000]), strenght: 50.000000 [0.000000] (+ 5.500000), Guard: 0.100000 [0.000000] (+ 5.500000)
     Relation with Neighbor 1 (id 2): stance: 4, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
-      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+      Reads: resources: 100.000000 [0.000000] (+ 5.500000) (income: 1.000000 [0.000000]), strenght: 50.000000 [0.000000] (+ 5.500000), Guard: 0.100000 [0.000000] (+ 5.500000)
   #Action Offsets {from LA's personality | from GA's actions}:
     Category 0: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
     Category 1: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
@@ -93,9 +93,9 @@ Name: LA_2
   Current Resources: 100.000000 (+ 0.000000), income: 0.500000, upkeep: 0.502500, tax: 0.000000 /s, trade: 0.000000 /s
   Connected LAs (bitfield): 3 0 0 0
     Relation with Neighbor 0 (id 0): stance: 2, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
-      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+      Reads: resources: 100.000000 [0.000000] (+ 5.500000) (income: 1.000000 [0.000000]), strenght: 50.000000 [0.000000] (+ 5.500000), Guard: 0.100000 [0.000000] (+ 5.500000)
     Relation with Neighbor 1 (id 1): stance: 4, disposition: 0.000000 (last: 0.000000), infiltration: 0.000000
-      Reads: resources: 100.000000 (+ 5.500000) (income: 0.500000), strenght: 50.000000 (+ 5.500000), Guard: 0.100000 (+ 5.500000)
+      Reads: resources: 100.000000 [0.000000] (+ 5.500000) (income: 1.000000 [0.000000]), strenght: 50.000000 [0.000000] (+ 5.500000), Guard: 0.100000 [0.000000] (+ 5.500000)
   #Action Offsets {from LA's personality | from GA's actions}:
     Category 0: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}
     Category 1: immediate: {0.000000 | 0.000000}, request:  {0.000000 | 0.000000}, self: {0.000000 | 0.000000}

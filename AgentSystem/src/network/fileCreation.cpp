@@ -192,12 +192,20 @@ int insertGAsWithDefaults(int numberGAs, FILE* fp) {
                 result = 0;
             }
 
+            float zeroPrn = 0.0f;
+
             resultAux = fprintf(fp, GAreadsOnNeighbor,
-                DEFAULT_GA_RESOURCES, DEFAULT_REQUESTS, 
-                defaultTotalLAres * GA_TAX_RATE_PER_SECOND * targetTime, DEFAULT_REQUESTS,
+                DEFAULT_GA_RESOURCES, zeroPrn, 
+                DEFAULT_REQUESTS, 
+                defaultTotalLAres * GA_TAX_RATE_PER_SECOND * targetTime, zeroPrn,
+                DEFAULT_REQUESTS,
                 defaultTotalLAres * GA_TAX_RATE_PER_SECOND * TRADE_FACTOR_GA * targetTime,
-                DEFAULT_REQUESTS, defaultTotalLAstrenght, DEFAULT_REQUESTS,
-                defaultTotalLAguard, DEFAULT_REQUESTS);
+                zeroPrn,
+                DEFAULT_REQUESTS, 
+                defaultTotalLAstrenght, zeroPrn,
+                DEFAULT_REQUESTS,
+                defaultTotalLAguard, zeroPrn,
+                DEFAULT_REQUESTS);
             if (resultAux <= 0) result = 0;
         }
     }
@@ -331,11 +339,13 @@ int insertLAsWithDefaults(int numberLAs, int maxNeighbors, int numberGAs, FILE* 
 
                 neighbor++; //found neighbor, so increment neighbor index on agent
 
-                 resultAux = fprintf(fp, LAreadsOnNeighbor, 
-                                    DEFAULT_LA_RESOURCES, DEFAULT_REQUESTS, 
-                                    DEFAULT_LA_INCOME,
-                                    DEFAULT_LA_STRENGHT, DEFAULT_REQUESTS, 
-                                    DEFAULT_REINFORCEMENT, DEFAULT_REQUESTS);
+                float zeroPrn = 0.0f;
+
+                resultAux = fprintf(fp, LAreadsOnNeighbor, 
+                                    DEFAULT_LA_RESOURCES, zeroPrn, DEFAULT_REQUESTS, 
+                                    DEFAULT_LA_INCOME, zeroPrn,
+                                    DEFAULT_LA_STRENGHT, zeroPrn, DEFAULT_REQUESTS, 
+                                    DEFAULT_REINFORCEMENT, zeroPrn, DEFAULT_REQUESTS);
                 if (resultAux <= 0) result = 0;
             }
         }
@@ -566,11 +576,21 @@ bool insertGAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
             int readGuardID = (int)GA::readsOnNeighbor_t::fields::GUARD_LAS;
 
             resultAux = fprintf(fp, GAreadsOnNeighbor,
-                decision.reads[neighbor].of[readResID].read, expecsNeighbor[expecResID], 
-                decision.reads[neighbor].of[readTaxID].read, expecsNeighbor[expecTaxID], 
-                decision.reads[neighbor].of[readTradeID].read, expecsNeighbor[expecTradeID], 
-                decision.reads[neighbor].of[readStrenghtID].read, expecsNeighbor[expecStrenghtID], 
-                decision.reads[neighbor].of[readGuardID].read, expecsNeighbor[expecGuardID]);
+                decision.reads[neighbor].of[readResID].read, 
+                decision.reads[neighbor].of[readResID].lastPrn, 
+                expecsNeighbor[expecResID], 
+                decision.reads[neighbor].of[readTaxID].read, 
+                decision.reads[neighbor].of[readTaxID].lastPrn, 
+                expecsNeighbor[expecTaxID], 
+                decision.reads[neighbor].of[readTradeID].read, 
+                decision.reads[neighbor].of[readTradeID].lastPrn, 
+                expecsNeighbor[expecTradeID], 
+                decision.reads[neighbor].of[readStrenghtID].read, 
+                decision.reads[neighbor].of[readStrenghtID].lastPrn, 
+                expecsNeighbor[expecStrenghtID], 
+                decision.reads[neighbor].of[readGuardID].read, 
+                decision.reads[neighbor].of[readGuardID].lastPrn, 
+                expecsNeighbor[expecGuardID]);
             if (resultAux <= 0) result = 0;
         }
     }
@@ -663,10 +683,13 @@ bool insertLAsFromNetwork(FILE* fp, const AS::dataControllerPointers_t* dp,
             int readGuardID = (int)LA::readsOnNeighbor_t::fields::GUARD;
 
             resultAux = fprintf(fp, LAreadsOnNeighbor, 
-                            readsNeighbor[readResID].read, expecsNeighbor[expecResID], 
-                            readsNeighbor[readIncomeID].read,
-                            readsNeighbor[readStrenghtID].read, expecsNeighbor[expecStrenghtID], 
-                            readsNeighbor[readGuardID].read, expecsNeighbor[expecGuardID]);
+                            readsNeighbor[readResID].read, readsNeighbor[readResID].lastPrn,
+                            expecsNeighbor[expecResID], 
+                            readsNeighbor[readIncomeID].read, readsNeighbor[readIncomeID].lastPrn,
+                            readsNeighbor[readStrenghtID].read, readsNeighbor[readStrenghtID].lastPrn,
+                            expecsNeighbor[expecStrenghtID], 
+                            readsNeighbor[readGuardID].read, readsNeighbor[readGuardID].lastPrn,
+                            expecsNeighbor[expecGuardID]);
             if (resultAux <= 0) result = 0;
         }
 
