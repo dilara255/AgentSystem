@@ -744,7 +744,7 @@ namespace AS {
 		}
 		
 		//We record our initial forces, both on the agent and the action side:
-		ourState_ptr->parameters.strenght.onAttacks = (*intensity_ptr);
+		AS::incrementTroopsOnAttack(&ourState_ptr->parameters.strenght.onAttacks, *intensity_ptr);
 		action_ptr->details.longTermAux = (*intensity_ptr);
 
 		//Then, we calculate a base travel time according to distance and a parameter:
@@ -1089,7 +1089,8 @@ namespace AS {
 		auto agentState_ptr = &(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
 
 		//The agent no longer counts the sent troops as being on attack:
-		agentState_ptr->parameters.strenght.onAttacks -= action_ptr->details.longTermAux;
+		AS::decrementTroopsOnAttack(&agentState_ptr->parameters.strenght.onAttacks, 
+			                                       action_ptr->details.longTermAux);
 			
 		//But how many of them actually returned?
 		float returnees = action_ptr->details.intensity;
