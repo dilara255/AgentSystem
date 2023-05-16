@@ -58,6 +58,7 @@ namespace AS {
 	
 	void intensityToRatePrepEnd(actionData_t* action_ptr);
 	void postergatePhaseEnd(actionData_t* action_ptr);
+	void refundingConclusionEnd(actionData_t* action_ptr);
 
 	//These are not swappable in as the initial call, but can be called from a standard
 	//function and will do their thing and reroute to another standard one to finish:
@@ -69,6 +70,7 @@ namespace AS {
 						//LOCAL:
 						//SELF: 
 	//STR_S_L:
+	void STR_S_L_onSpawn(actionData_t* action_ptr);
 	void STR_S_L_PrepEnd(actionData_t* action_ptr);
 	uint32_t STR_S_L_effectTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 
@@ -213,6 +215,7 @@ namespace AS {
 								  //SELF:
 		//STRENGHT:
 		int str = (int)AS::actCategories::STRENGHT;
+		g_processingFunctions[local][str][self].onSpawn = STR_S_L_onSpawn;
 		g_processingFunctions[local][str][self].onTick[prep] = chargingTick;
 		g_processingFunctions[local][str][self].onEnd[prep] = STR_S_L_PrepEnd;
 		g_processingFunctions[local][str][self].onTick[travel] = justEndThePhase;
@@ -346,16 +349,6 @@ namespace AS {
 		action_ptr->ids.slotIsUsed = 0;
 	}
 
-	//Doesn't change time ellapsed or advance phase. Instead, add to the total time.
-	void postergatePhaseEnd(actionData_t* action_ptr){
-
-		action_ptr->phaseTiming.total += 
-			MAX_PROPORTIONAL_STEP_DURATION_ERROR *
-					AS_MILLISECONDS_PER_STEP * TENTHS_OF_MS_IN_A_MILLI;
-
-		return;
-	}
-
 	uint32_t passtroughTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
 
 		return tickTenthsOfMs;
@@ -418,6 +411,16 @@ namespace AS {
 		return defaultTick(tickTenthsOfMs, action_ptr);
 	}
 
+	//Doesn't change time ellapsed or advance phase. Instead, add to the total time.
+	void postergatePhaseEnd(actionData_t* action_ptr){
+
+		action_ptr->phaseTiming.total += 
+			MAX_PROPORTIONAL_STEP_DURATION_ERROR *
+					AS_MILLISECONDS_PER_STEP * TENTHS_OF_MS_IN_A_MILLI;
+
+		return;
+	}
+
 	void intensityToRatePrepEnd(actionData_t* action_ptr) {
 
 		if (action_ptr->phaseTiming.total == 0) {
@@ -434,6 +437,30 @@ namespace AS {
 		return;
 	}
 
+	//To be used when aborting onSpawns: refunds the agent and kills the action
+	void refundingConclusionEnd(actionData_t* action_ptr) {
+
+		int agent = action_ptr->ids.origin;
+		int actionsCountingThis = 
+			AS::getQuantityOfCurrentActions((AS::scope)action_ptr->ids.scope, agent,
+													g_actionSystem_ptr, g_errors_ptr);
+		assert(actionsCountingThis >= 1);
+			
+		float costForRefund = AS::nextActionsCost(actionsCountingThis - 1);
+
+		if (costForRefund > 0) {
+			auto agent_ptr =
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
+				
+			agent_ptr->parameters.resources.current += costForRefund;
+
+			assert(isfinite(agent_ptr->parameters.resources.current));
+		}
+
+		defaultConclusionEnd(action_ptr);
+		return;
+	}
+
 				//SPECIFIC ACTION PROCESSING FUNCIONS:
 
 							//LOCAL:
@@ -441,6 +468,36 @@ namespace AS {
 							//SELF: 	
 	//STRENGHT:
 	
+	//We check if raising the desired troops is economically feasible:
+	void STR_S_L_onSpawn(actionData_t* action_ptr) {
+
+		assert(g_agentDataControllers_ptr != NULL);
+
+		int agent = action_ptr->ids.origin;
+		auto agentState_ptr = 
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
+
+		float finalIntensity = 
+			AS::getResponsibleTroopsToRaise(agentState_ptr, action_ptr->details.intensity);
+
+		action_ptr->details.intensity = finalIntensity;
+
+		assert(finalIntensity >= 0);
+
+		if (finalIntensity <= 0) {
+			
+			//This is not worth the trouble
+			//Did the agent actually pay anything for this? If so, let's refund that:
+			refundingConclusionEnd(action_ptr);
+			return;
+		}	
+		else {
+			defaultOnSpawn(action_ptr);
+			return;
+		}
+
+	}
+
 	void STR_S_L_PrepEnd(actionData_t* action_ptr) {
 
 		//Aux was set to hold how many funds haven't been paid yet
@@ -655,41 +712,25 @@ namespace AS {
 
 		float intensity = action_ptr->details.intensity;
 
-		if (intensity <= ACT_ATT_I_L_MINIMUM_ATTACK_INTENSITY) {
-			//This is not worth the trouble
-			//Did the agent actually pay anything for this? If so, let's refund that:
+		if (intensity >= ACT_ATT_I_L_MINIMUM_ATTACK_INTENSITY) {
+
 			int agent = action_ptr->ids.origin;
-			int actionsCountingThis = 
-				AS::getQuantityOfCurrentActions((AS::scope)action_ptr->ids.scope, agent,
-													   g_actionSystem_ptr, g_errors_ptr);
-			assert(actionsCountingThis >= 1);
-			
-			float costForRefund = AS::nextActionsCost(actionsCountingThis - 1);
-
-			if (costForRefund > 0) {
-				auto agent_ptr =
-					&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
-				
-				agent_ptr->parameters.resources.current += costForRefund;
-
-				assert(isfinite(agent_ptr->parameters.resources.current));
-			}
-
-			defaultConclusionEnd(action_ptr);
-			return;
-		}
-		else {
-			int agent = action_ptr->ids.origin;
-
-			auto agentStrenght_ptr =
-				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters.strenght);
-
+			auto agentState_ptr = 
+				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
+		
+			auto agentStrenght_ptr = &(agentState_ptr->parameters.strenght);
 			assert(agentStrenght_ptr != NULL);
 
 			agentStrenght_ptr->current -= intensity;
 			agentStrenght_ptr->externalGuard += intensity;
 			
 			defaultOnSpawn(action_ptr);
+			return;
+		}
+		else {
+			//This is not worth the trouble
+			//Did the agent actually pay anything for this? If so, let's refund that:
+			refundingConclusionEnd(action_ptr);
 			return;
 		}				
 	}
