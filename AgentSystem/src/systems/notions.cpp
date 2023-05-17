@@ -111,8 +111,10 @@ namespace AS::Decisions::LA {
 		float agentsDefense = agentParameters_ptr->strenght.current
 							  + agentParameters_ptr->strenght.externalGuard
 							  + onAttackEffectiveDefense;
-		
-		assert(agentsDefense >= 0); //there could always be some floating point weirdness
+
+		assert(agentParameters_ptr->strenght.current >= 0);
+		assert(agentParameters_ptr->strenght.externalGuard >= 0);
+		assert(onAttackEffectiveDefense >= 0);
 
 		float small = 0.1f; //to avoid blowups on division : )
 
