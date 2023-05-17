@@ -688,11 +688,10 @@ void mitigate(const AD::notionWeights_t* mitigationWeights_ptr, AD::notions_t* n
 
 		float dampeningFactor = powf(dampeningBase, (float)mitigationRoundsDone);
 		
-		extraScore *= dampeningFactor;
+		extraScore *= dampeningFactor * extraScoreMultiplier;
 
 		//Finally we add the extra score:
-		allScores_ptr->allScores[action].overallUtility.score +=
-										extraScore * extraScoreMultiplier;
+		allScores_ptr->allScores[action].overallUtility.score += extraScore;
 		//and keep track of it, but only if the action seems helpful:
 		extraScoresReceived[action].score = std::max(0.0f, extraScore); 
 		extraScoresReceived[action].actionIdOnChoiceShortlist = action;
@@ -783,7 +782,7 @@ AS::actionData_t chooseBestOptionOrThinkHarder(AD::allScoresAnyScope_t* allScore
 
 			//...our hopes...
 			auto extraScoreRecord_ptr =
-				&(record_ptr->mitigationAttempts[*mitigationRound_ptr].newIdeas);
+				&(record_ptr->mitigationAttempts[*mitigationRound_ptr].helpfulOptions);
 			copyExtraScores(scope, &extraScoresReceived, allScores_ptr,
 	                            choiceShortlistSize, extraScoreRecord_ptr);
 		}
