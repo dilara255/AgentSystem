@@ -781,7 +781,7 @@ namespace AS {
 			*intensity_ptr -= troopsMissing;
 
 			//That is, if there is still an attack to launch at all:
-			if ((*intensity_ptr) < ACT_ATT_I_L_MINIMUM_SIZER_FOR_REDUCED_ATTACK) {
+			if ((*intensity_ptr) < ACT_ATT_I_L_MINIMUM_SIZE_FOR_REDUCED_ATTACK) {
 				invalidateAction(action_ptr);
 				return;
 			}
@@ -815,8 +815,6 @@ namespace AS {
 
 		auto defendersState_ptr =
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(defender));
-
-		defendersState_ptr->underAttack++;
 
 		int attackerIDonDefender = AS::getNeighborsIndexOnLA(attacker, defendersState_ptr);
 		
@@ -864,28 +862,34 @@ namespace AS {
 		//What do the seers say?
 		action_ptr->details.shortTermAux = g_prnServer_ptr->getNext();
 
-		//The battle is about to begin, but already our men wonder: how long can it last?
-		action_ptr->phaseTiming.total = AS::ATT_I_L_attackTime(attackSize);
-
 		//Are we too feeble? Should we just gather whatever intel we can and flee?
-		if (attackToDefenceNormalizedDifference < ACT_ATT_I_L_THRESHOLD_FOR_SCOUTING) {
-			//ALAS - can we make the run for it? The fewer we are, the lightr our feet!
+		if ( (attackSize / defendersDefences) < ACT_ATT_I_L_THRESHOLD_FOR_SCOUTING) {
+			//ALAS - can we even make the run for it? The fewer we are, the lightr our feet!
 			if (action_ptr->details.shortTermAux > attackToDefenceNormalizedDifference) {
 				//As we flee, we gather our memories of our formidable foes:
-				//TODO: DO
+				action_ptr->details.shortTermAux = defendersDefences;
+
+				action_ptr->details.processingAux = 0.0f; //no time for loot! : /
+				action_ptr->details.longTermAux = ACT_ATT_I_L_LONG_TERM_AUX_ON_SCOUTING_RUN;
+				
 				ATT_I_L_fleePhaseEnd(action_ptr);
 				return;
-			}
-
-			
+			}			
 		}
+
+		//The battle is about to begin, but already our men wonder: how long can it last?
+		action_ptr->phaseTiming.total = AS::ATT_I_L_attackTime(attackSize);
+		defendersState_ptr->underAttack++;
 
 		//Aanyway:
 		defaultPhaseEnd(action_ptr);
 	}
 
 	void ATT_I_L_fleePhaseEnd(actionData_t* action_ptr) {
-		//TODO: DO
+		//Fleeing is a return trip, as fast as the original travel: same total time, but:
+		action_ptr->phaseTiming.elapsed = 0;
+		action_ptr->ids.phase = (int)AS::actPhases::RETURN;
+		return;
 	}
 
 	uint32_t ATT_I_L_effectTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
@@ -1170,8 +1174,35 @@ namespace AS {
 		AS::decrementTroopsOnAttack(&agentState_ptr->parameters.strenght.onAttacks, 
 			                                       action_ptr->details.longTermAux);
 			
-		//But how many of them actually returned?
+		//But how many of them actually returned? DO they have tales to tell about our enemies?
 		float returnees = action_ptr->details.intensity;
+
+		int neighbor = action_ptr->ids.target;
+		int neighborIndexOnAgent = getNeighborsIndexOnLA(neighbor, agentState_ptr);
+		auto decision_ptr = 
+			&(g_agentDataControllers_ptr->LAdecision_ptr->getDirectDataPtr()->at(agent));
+		int str = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
+		int grd = (int)LA::readsOnNeighbor_t::fields::GUARD;
+
+		if (action_ptr->details.longTermAux == ACT_ATT_I_L_LONG_TERM_AUX_ON_SCOUTING_RUN) {
+			//This will be considered a scouting run. 
+			//We'll get info as a returning attack, bellow, but also some extra as a baseline:
+
+			float readDefences = 
+				decision_ptr->reads->of[str].read + decision_ptr->reads->of[grd].read;
+			float defencesFound = action_ptr->details.shortTermAux;
+			float differenceInDefences = action_ptr->details.shortTermAux - readDefences;
+
+			float trustInReturneesTales = returnees / defencesFound;
+			assert(trustInReturneesTales < 1);
+
+			//Our guys couldn't tell who was a native or a reinforcement, so:
+			float strToAddToEachField = 
+				std::sqrt(trustInReturneesTales) * differenceInDefences / 2.0f;
+
+			decision_ptr->reads->of[str].read += strToAddToEachField;
+			decision_ptr->reads->of[grd].read += strToAddToEachField;
+		}
 		if(returnees > 0) { 
 						
 			//First of all, take any loot in:
@@ -1204,13 +1235,6 @@ namespace AS {
 
 			//We get infiltration points proportional to the effectiveReturneeRatio:
 
-			int neighbor = action_ptr->ids.target;
-
-			int neighborIndexOnAgent = getNeighborsIndexOnLA(neighbor, agentState_ptr);
-
-			auto decision_ptr = 
-				&(g_agentDataControllers_ptr->LAdecision_ptr->getDirectDataPtr()->at(agent));
-
 			decision_ptr->infiltration[neighborIndexOnAgent] +=
 								effectiveReturneeRatio * ACT_ATT_I_L_BASE_INFO_FROM_RETURNEES;
 			
@@ -1224,12 +1248,10 @@ namespace AS {
 			auto neighborStrenght_ptr = 
 				&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(neighbor).parameters.strenght);
 
-			int str = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
 			decision_ptr->reads[neighborIndexOnAgent].of[str].read *= (1 - effectiveReturneeRatio);
 			decision_ptr->reads[neighborIndexOnAgent].of[str].read += 
 										   effectiveReturneeRatio * neighborStrenght_ptr->current;
-
-			int grd = (int)LA::readsOnNeighbor_t::fields::GUARD;
+			
 			decision_ptr->reads[neighborIndexOnAgent].of[grd].read *= (1 - effectiveReturneeRatio);
 			decision_ptr->reads[neighborIndexOnAgent].of[grd].read += 
 									 effectiveReturneeRatio * neighborStrenght_ptr->externalGuard;
