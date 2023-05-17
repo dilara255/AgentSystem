@@ -865,7 +865,7 @@ namespace AS {
 		//Are we too feeble? Should we just gather whatever intel we can and flee?
 		if ( (attackSize / defendersDefences) < ACT_ATT_I_L_THRESHOLD_FOR_SCOUTING) {
 			//ALAS - can we even make the run for it? The fewer we are, the lightr our feet!
-			if (action_ptr->details.shortTermAux > attackToDefenceNormalizedDifference) {
+			if ( action_ptr->details.shortTermAux > (attackSize / defendersDefences) ) {
 				//As we flee, we gather our memories of our formidable foes:
 				action_ptr->details.shortTermAux = defendersDefences;
 
@@ -1170,9 +1170,18 @@ namespace AS {
 		int agent = action_ptr->ids.origin;
 		auto agentState_ptr = &(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
 
+		bool fled = 
+			(action_ptr->details.longTermAux == ACT_ATT_I_L_LONG_TERM_AUX_ON_SCOUTING_RUN);
+		
+		float originalTroops = action_ptr->details.longTermAux;
+		if (fled) {
+			//If our troops fled, that was market on longTermAux, and intensity is unchanged:
+			originalTroops = action_ptr->details.intensity;
+		}
+
 		//The agent no longer counts the sent troops as being on attack:
 		AS::decrementTroopsOnAttack(&agentState_ptr->parameters.strenght.onAttacks, 
-			                                       action_ptr->details.longTermAux);
+														            originalTroops);
 			
 		//But how many of them actually returned? DO they have tales to tell about our enemies?
 		float returnees = action_ptr->details.intensity;
@@ -1184,7 +1193,7 @@ namespace AS {
 		int str = (int)LA::readsOnNeighbor_t::fields::STRENGHT;
 		int grd = (int)LA::readsOnNeighbor_t::fields::GUARD;
 
-		if (action_ptr->details.longTermAux == ACT_ATT_I_L_LONG_TERM_AUX_ON_SCOUTING_RUN) {
+		if (fled) {
 			//This will be considered a scouting run. 
 			//We'll get info as a returning attack, bellow, but also some extra as a baseline:
 
