@@ -83,6 +83,7 @@ namespace AS {
 	void ATT_I_L_onSpawn(actionData_t* action_ptr);
 	void ATT_I_L_PrepEnd(actionData_t* action_ptr);
 	void ATT_I_L_travelEnd(actionData_t* action_ptr);
+	void ATT_I_L_fleePhaseEnd(actionData_t* action_ptr);
 	//ATT_I_L_effectTick uses a random number
 	uint32_t ATT_I_L_effectTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr);
 	void ATT_I_L_EffectEnd(actionData_t* action_ptr);
@@ -723,6 +724,8 @@ namespace AS {
 
 			agentStrenght_ptr->current -= intensity;
 			agentStrenght_ptr->externalGuard += intensity;
+
+			action_ptr->details.longTermAux = intensity;
 			
 			defaultOnSpawn(action_ptr);
 			return;
@@ -861,11 +864,28 @@ namespace AS {
 		//What do the seers say?
 		action_ptr->details.shortTermAux = g_prnServer_ptr->getNext();
 
-		//The fight has just begun, but already our men wonder: how long can this battle last?
+		//The battle is about to begin, but already our men wonder: how long can it last?
 		action_ptr->phaseTiming.total = AS::ATT_I_L_attackTime(attackSize);
 
-		//Anyway:
+		//Are we too feeble? Should we just gather whatever intel we can and flee?
+		if (attackToDefenceNormalizedDifference < ACT_ATT_I_L_THRESHOLD_FOR_SCOUTING) {
+			//ALAS - can we make the run for it? The fewer we are, the lightr our feet!
+			if (action_ptr->details.shortTermAux > attackToDefenceNormalizedDifference) {
+				//As we flee, we gather our memories of our formidable foes:
+				//TODO: DO
+				ATT_I_L_fleePhaseEnd(action_ptr);
+				return;
+			}
+
+			
+		}
+
+		//Aanyway:
 		defaultPhaseEnd(action_ptr);
+	}
+
+	void ATT_I_L_fleePhaseEnd(actionData_t* action_ptr) {
+		//TODO: DO
 	}
 
 	uint32_t ATT_I_L_effectTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
@@ -1003,6 +1023,13 @@ namespace AS {
 			action_ptr->details.processingAux = 
 				std::min(0.0f, action_ptr->details.processingAux);
 
+			keepFighting = false;
+		}
+
+		bool scoreEnd = 
+			std::abs(action_ptr->details.processingAux) >= ACT_ATT_I_L_ABS_SCORE_TO_END_FIGHT;
+
+		if(keepFighting && scoreEnd) {
 			keepFighting = false;
 		}
 		
