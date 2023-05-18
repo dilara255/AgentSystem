@@ -347,22 +347,62 @@ namespace TV{
 		return AS::nextActionsCost(currentValidActions);
 	}
 
+	void printInitialThoughtsOnDecision(const float costNext, 
+										const AS::Decisions::notionsRecord_t*, 
+										const AS::Decisions::scoresRecord_t*) {
+
+		printf("\tDECISION: $ Next: %6.2f | CCC_M (NTN+, NTN-) | CCC_M? CCC_M (NTN+, NTN-) | CCC_M -> x, YY\n", costNext);
+	}
+
+	void printMitigationRound(const AS::Decisions::mitigationRecord_t* mitigation_ptr) {
+
+	}
+
+	void printFinalDecision(const bool choseLeastHarmful, const bool  triedToMitigate, 
+		                    const bool choiceWasAboveJustDoIt, const bool decidedToDoNothing, 
+		                    const bool initialAmbitionTooLow, const AS::actionData_t* choice_ptr) {
+
+	}
+
 	void printLAdecisionData(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr,
 		                                        std::vector<int>* decisionsMadePerLA_ptr) {
-
-		float costNext = costNextAgentsAction(agent, actionsVec_ptr);
 
 		auto reflection_ptr = 
 			&(CL::ASmirrorData_cptr->decisionReflectionMirror.LAdecisionReflection.at(agent));
 
-		auto choiceIDs_ptr = &(reflection_ptr->finalChoice.ids);
-		int idSelf = AS::Decisions::getNeighborIDforSelfAsSeenInActionIDsAsAnInt();
+		//This is the info we have about the agent's decision-making:
+		auto ambitions_ptr = &(reflection_ptr->initialAmbitions);
+		auto initialNotions_ptr = &(reflection_ptr->initialTopNotions);
+		auto firstMitigation_ptr = &(reflection_ptr->mitigationAttempts[0]);
+		auto secondMitigation_ptr = &(reflection_ptr->mitigationAttempts[1]);
+		auto choice_ptr = &(reflection_ptr->finalChoice);
+		float costNext = costNextAgentsAction(agent, actionsVec_ptr);
 
-		/*
-		printf("\n\tChoice: %d_%d @%d (self = %d)\n\n", 
-			choiceIDs_ptr->category, choiceIDs_ptr->mode, choiceIDs_ptr->target, idSelf);
+		//These will help us determine how the decision process went:
+		bool isNewDecision = 
+			decisionsMadePerLA_ptr->at(agent) > reflection_ptr->decisionAttemptCounter;
+		bool choseLeastHarmful = reflection_ptr->decidedToDoLeastHarmful;
+		int mitigationRounds = reflection_ptr->totalMitigationRounds;
+		bool triedToMitigate = mitigationRounds > 0;
+		bool choiceWasAboveJustDoIt = choice_ptr->details.intensity >= ACT_JUST_DO_IT_THRESOLD;
+		bool decidedToDoNothing = choice_ptr->ids.slotIsUsed && choice_ptr->ids.active;
+		bool initialAmbitionTooLow = ambitions_ptr->record[0].score < ACT_WHY_BOTHER_THRESOLD;
+		/* Maybe use in function to print variation?
+		bool isTargetSelf = 
+					reflection_ptr->finalChoice.ids.target == 
+								AS::Decisions::getNeighborIDforSelfAsSeenInActionIDsAsAnInt();
 		*/
-		printf("\tDECISION: $ Next: %6.2f | CCC_M (NTN+, NTN-) | CCC_M? CCC_M (NTN+, NTN-) | CCC_M -> x, YY\n", costNext);
+		//Through them we deduce a result mesage:
+		std::string conclusionMsg = "";
+
+		
+		//We'll have four lines to show: initial, mitigation1, mitigation2, final:
+		printInitialThoughtsOnDecision(costNext, initialNotions_ptr, ambitions_ptr);
+		printMitigationRound(firstMitigation_ptr);
+		printMitigationRound(secondMitigation_ptr);
+		printFinalDecision(choseLeastHarmful, triedToMitigate, choiceWasAboveJustDoIt, 
+						   decidedToDoNothing, initialAmbitionTooLow, choice_ptr);
+		
 	}
 
 	void printSeparation() {
@@ -422,20 +462,19 @@ namespace TV{
 		LOG_DEBUG("Will start visualization Main Loop...",20);
 		GETCHAR_FORCE_PAUSE;
 
-		auto start = std::chrono::steady_clock::now();
-		auto timePassed = std::chrono::seconds(0);
-		printf("\n\n\n\nWill run test for %llu seconds...\n", loopTime.count());
-
 		int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
 
 		std::vector<TV::actionChanges_t> actionsVec;
 		initializeActionsVec(&actionsVec, numberLAs);
-
+		
 		std::vector<int> decisionsMadePerLA;
 		decisionsMadePerLA.resize(numberLAs);
 
 		bool vizActive = PRINT_VIZ;
 		bool newAction = false;
+		auto timePassed = std::chrono::seconds(0);
+		auto start = std::chrono::steady_clock::now();
+		printf("\n\n\n\nWill run test for %llu seconds...\n", loopTime.count());
 		while (timePassed < loopTime) {
 			
 			newAction = updateActionsAndCheckForChanges(&actionsVec, numberLAs);
