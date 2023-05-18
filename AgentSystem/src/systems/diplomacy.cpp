@@ -9,6 +9,13 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 	                          LA::stateData_t* state_ptr, LA::decisionData_st* decision_ptr,
 	      AS::dataControllerPointers_t* dp, AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
 
+	//We first zero some old data:
+	auto res_ptr = &state_ptr->parameters.resources;
+	auto str_ptr = &state_ptr->parameters.strenght;
+
+	res_ptr->tradeRate = 0;
+	str_ptr->attritionLossRate = 0;
+
 	int quantityNeighbours = state_ptr->locationAndConnections.numberConnectedNeighbors;
 	for (int neighbor = 0; neighbor < quantityNeighbours; neighbor++) {
 		
@@ -16,13 +23,7 @@ void LA::applyAttritionTradeInfiltrationAndDispostionChanges(int agentId, float 
 		state_ptr->relations.dispositionToNeighborsLastStep[neighbor] = 
 							state_ptr->relations.dispositionToNeighbors[neighbor];
 
-		auto res_ptr = &state_ptr->parameters.resources;
-		auto str_ptr = &state_ptr->parameters.strenght;
 		int partnerID = state_ptr->locationAndConnections.neighbourIDs[neighbor];	
-
-		//We first zero some old data:
-		res_ptr->tradeRate = 0;
-		str_ptr->attritionLossRate = 0;
 
 		//The changes depend on the diplomatic stance to the neighbor:
 		AS::diploStance stance = state_ptr->relations.diplomaticStanceToNeighbors[neighbor];

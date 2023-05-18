@@ -480,10 +480,13 @@ namespace AS {
 
 		float finalIntensity = 
 			AS::getResponsibleTroopsToRaise(agentState_ptr, action_ptr->details.intensity);
+		float totalFundsNeeded = STR_S_L_necessaryFunding(finalIntensity);
 
 		action_ptr->details.intensity = finalIntensity;
+		action_ptr->details.processingAux = totalFundsNeeded;
 
 		assert(finalIntensity >= 0);
+		assert(totalFundsNeeded >= 0);
 
 		if (finalIntensity <= 0) {
 			
@@ -502,11 +505,15 @@ namespace AS {
 	void STR_S_L_PrepEnd(actionData_t* action_ptr) {
 
 		//Aux was set to hold how many funds haven't been paid yet
-		//This changes that to how much HAS BEEN ALREADY paid
+		assert(action_ptr->details.processingAux >= 0);
+		assert(action_ptr->details.intensity >= 0); //and these are the troops to raise
 
+		//This changes that to how much HAS BEEN ALREADY paid
 		float totalFundsNeeded = STR_S_L_necessaryFunding(action_ptr->details.intensity);
+		assert(totalFundsNeeded >= 0);
 		action_ptr->details.processingAux = 
 							totalFundsNeeded - action_ptr->details.processingAux;
+		assert(action_ptr->details.processingAux >= 0);
 
 		//Then the time for the next phase is set to be the same from the preparation phase
 		//times a parametrized multiplier:
@@ -522,6 +529,8 @@ namespace AS {
 
 	uint32_t STR_S_L_effectTick(uint32_t tickTenthsOfMs, actionData_t* action_ptr) {
 
+		assert(action_ptr->details.intensity >= 0);
+
 		int agent = action_ptr->ids.origin;
 		auto params_ptr = 
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters);
@@ -533,11 +542,13 @@ namespace AS {
 			STR_S_L_necessaryFunding(action_ptr->details.intensity * timeLeft);
 		
 		float* funds_ptr = &(action_ptr->details.processingAux);
+		assert( (*funds_ptr) >= 0);
 
 		float fundingPending = std::max(0.0f, resourcesLeftToPay - (*funds_ptr));
 
 		//Calculate how much STR we should get this tick if fully funded:
 		float idealGain = action_ptr->details.intensity * tickTenthsOfMs;
+		assert(idealGain >= 0);
 
 		//Then we calculate how much that would cost in fundings:
 		float fundsForIdealGain = STR_S_L_necessaryFunding(idealGain);
@@ -564,21 +575,27 @@ namespace AS {
 		//Charge for the funds:
 		*funds_ptr += newFunds;
 		*resources_ptr -= newFunds;
+		assert( (*funds_ptr) >= 0);
 
 		//Of course we won't try to pay over our intended maximum:
 		float effectiveMaximumExpenseThisTick = 
 						std::min(fundsForIdealGain, resourcesLeftToPay);
+		assert(effectiveMaximumExpenseThisTick >= 0);
 
 		//How much of that can we pay for from our funding?
 		float ratioToGain = std::min(1.0f, ((*funds_ptr) / effectiveMaximumExpenseThisTick) );
-		 
+		assert(ratioToGain >= 0);
+
 		//Now we pay for that that and raise the str:
 		*funds_ptr -= (ratioToGain * effectiveMaximumExpenseThisTick);
 		*funds_ptr = std::max(0.0f, (*funds_ptr) ); //to avoid any floating point weirdness
+		assert( (*funds_ptr) >= 0 );
 
 		//Gain STR:
+		assert(params_ptr->strenght.current >= 0);
 		params_ptr->strenght.current += (ratioToGain * idealGain);
-		
+		assert(params_ptr->strenght.current >= 0);
+
 		//We want to tick normally, but since the effect may be partial,
 		//we offset that by an increase in total time proportional to the gain in STR:
 		if (ratioToGain < 1.0f) {
@@ -722,10 +739,21 @@ namespace AS {
 			auto agentStrenght_ptr = &(agentState_ptr->parameters.strenght);
 			assert(agentStrenght_ptr != NULL);
 
-			agentStrenght_ptr->current -= intensity;
-			agentStrenght_ptr->externalGuard += intensity;
+			assert(agentStrenght_ptr->current >= 0);
+			assert(agentStrenght_ptr->externalGuard >= 0);
 
-			action_ptr->details.longTermAux = intensity;
+			//We can't attack with troops wich don't exist:
+			float actualIntensity = std::min(agentStrenght_ptr->current, intensity);
+			assert(actualIntensity >= ACT_ATT_I_L_MINIMUM_ATTACK_INTENSITY);
+
+			agentStrenght_ptr->current -= actualIntensity;
+			agentStrenght_ptr->externalGuard += actualIntensity;
+
+			assert(agentStrenght_ptr->current >= 0);
+			assert(agentStrenght_ptr->externalGuard >= 0);
+
+			action_ptr->details.longTermAux = actualIntensity;
+			action_ptr->details.intensity = actualIntensity;
 			
 			defaultOnSpawn(action_ptr);
 			return;
@@ -759,8 +787,11 @@ namespace AS {
 		float* externalGuard_ptr = &(ourState_ptr->parameters.strenght.externalGuard);
 		float* intensity_ptr = &(action_ptr->details.intensity);
 
+		assert((* intensity_ptr) >= 0);
+
 		if (*externalGuard_ptr >= *intensity_ptr) {
 			*externalGuard_ptr -= action_ptr->details.intensity;	
+			assert( (*externalGuard_ptr) >= 0 );
 		}
 		else {
 			float* strenght_ptr = &(ourState_ptr->parameters.strenght.current);
@@ -779,6 +810,9 @@ namespace AS {
 			
 			//The attack will be launched as well as it can be:
 			*intensity_ptr -= troopsMissing;
+			
+			assert( (*strenght_ptr) >= 0 );
+			assert( (*intensity_ptr) >= 0 );
 
 			//That is, if there is still an attack to launch at all:
 			if ((*intensity_ptr) < ACT_ATT_I_L_MINIMUM_SIZE_FOR_REDUCED_ATTACK) {
@@ -839,6 +873,8 @@ namespace AS {
 
 		float defendersDefences = defendersState_ptr->parameters.strenght.current
 								  + defendersState_ptr->parameters.strenght.externalGuard;
+
+		assert(defendersDefences >= 0);
 
 		//Are they impressed?
 		float attackToDefenceNormalizedDifference = 
@@ -969,7 +1005,9 @@ namespace AS {
 		float deffenderShareOfLosses = 0.5f - drawOffset;
 
 		//For the attacker, the losses come from the action intensity:
+		assert( (*intensity_ptr) >= 0 );
 		*intensity_ptr -= totalLosses * attackerShareOfLosses;
+		*intensity_ptr = std::max(0.0f, *intensity_ptr);
 
 		//For the defender, we take away the guard first, then the strenght:
 		float defendersLosses = totalLosses * deffenderShareOfLosses;
@@ -985,8 +1023,8 @@ namespace AS {
 		}
 		defences = defendersStrData_ptr->externalGuard + defendersStrData_ptr->current;
 
-
 		//Now we check if both sides still have troops:
+		assert( (*intensity_ptr) >= 0 );
 		float irrelevantForce = 0.1f;
 		bool keepFighting = true;
 
@@ -1080,12 +1118,13 @@ namespace AS {
 
 		float* intensity_ptr = &(action_ptr->details.intensity);
 		defendersDecision_ptr->reads[attackerIndexOnDefender].of[str].read += (*intensity_ptr);
+		assert( (*intensity_ptr) >= 0);
 
 		//Now we deal with the returnees:
 		
 		//In order to set the return time, we will need:
 		uint32_t* phaseTotal_ptr = &(action_ptr->phaseTiming.total);
-		auto attackerState_ptr =
+		const LA::stateData_t* attackerState_ptr =
 				&(g_agentDataControllers_ptr->LAstate_ptr->getDataCptr()->at(attackerID));
 		
 		AS::pos_t attackerPos = attackerState_ptr->locationAndConnections.position;
@@ -1169,6 +1208,9 @@ namespace AS {
 
 		int agent = action_ptr->ids.origin;
 		auto agentState_ptr = &(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent));
+
+		assert(agentState_ptr->parameters.strenght.current >= 0);
+		assert(agentState_ptr->parameters.strenght.externalGuard >= 0);
 
 		bool fled = 
 			(action_ptr->details.longTermAux == ACT_ATT_I_L_LONG_TERM_AUX_ON_SCOUTING_RUN);
@@ -1276,6 +1318,9 @@ namespace AS {
 			action_ptr->phaseTiming.total = 0;
 		}
 		
+		assert(agentState_ptr->parameters.strenght.current >= 0);
+		assert(agentState_ptr->parameters.strenght.externalGuard >= 0);
+		assert(action_ptr->details.intensity >= 0);
 
 		//Then we advance the phase normally:
 		defaultPhaseEnd(action_ptr);
@@ -1289,6 +1334,9 @@ namespace AS {
 		auto strenght_ptr = 
 			&(g_agentDataControllers_ptr->LAstate_ptr->getDirectDataPtr()->at(agent).parameters.strenght);
 
+		assert(strenght_ptr->current >= 0);
+		assert(strenght_ptr->externalGuard >= 0);
+
 		if (strenght_ptr->externalGuard >= action_ptr->details.intensity) {
 
 			strenght_ptr->externalGuard -= action_ptr->details.intensity;
@@ -1298,6 +1346,9 @@ namespace AS {
 			strenght_ptr->current += strenght_ptr->externalGuard;		
 			strenght_ptr->externalGuard = 0;
 		}
+
+		assert(strenght_ptr->current >= 0);
+		assert(strenght_ptr->externalGuard >= 0);
 
 		defaultConclusionEnd(action_ptr);
 	}
