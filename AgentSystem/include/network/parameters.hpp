@@ -81,7 +81,7 @@ and data sizes static.
 #define LA_UPKEEP_PER_EXCESS_STRENGHT (0.1f)
 #define TRADE_FACTOR_LA_PER_SECOND (0.5f) //applies to liquid income rate (LAs)
 #define TRADE_FACTOR_GA (0.5f) //applied to last tax income (already takes time in account)
-#define ATTRITION_FACTOR_PER_SECOND (0.00025f)
+#define ATTRITION_FACTOR_PER_SECOND (0.001f)
 #define GA_TAX_RATE_PER_SECOND (0.001f)
 #define LA_REF_STR_PROPORTION_THRESHOLD_FOR_UPKEEP (0.2f)
 #define REF_TIME_TO_BANKRUPT (2.5f * SECONDS_IN_A_MINUTE)

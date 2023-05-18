@@ -271,6 +271,11 @@ namespace TV{
 		strenght_ptr->current; strenght_ptr->currentUpkeep; strenght_ptr->externalGuard;
 		strenght_ptr->thresholdToCostUpkeep;
 
+		float tax = -resources_ptr->taxRate;
+		float trade = resources_ptr->tradeRate;
+		float onAttacks = strenght_ptr->onAttacks;
+		float attrition = -strenght_ptr->attritionLossRate;
+
 		int attacksUnder = agentState_ptr->underAttack;
 
 		if(attacksUnder != 0){ 
@@ -282,12 +287,11 @@ namespace TV{
 			printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | name: %s\n",
 			    agent, agentState_ptr->GAid, position.x, position.y, agentName.c_str());
 		}
-		
 
-		printf("\tSTATE | %+10.2f $ (%+6.2f $/sec) | %7.2f S , %7.2f D (%+5.2f $/sec)\n",
-			                         resources_ptr->current, resources_ptr->updateRate,
-			                        strenght_ptr->current, strenght_ptr->externalGuard,
-			                                              -strenght_ptr->currentUpkeep);
+		printf("\tSTATE | %+8.1f $ (%5.3f %+5.3f %+5.2f $/sec) | %5.0f S, %5.0f D (%+4.3f /s), %5.2f A (%+5.2f $/sec)\n",
+								resources_ptr->current, trade, tax, resources_ptr->updateRate,
+			         strenght_ptr->current, strenght_ptr->externalGuard, attrition, onAttacks,
+			                                                     -strenght_ptr->currentUpkeep);
 	}
 
 	void printLAneighborData(int agent) {
