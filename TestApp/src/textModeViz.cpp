@@ -21,7 +21,7 @@ const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
 const float testPace = 40.0f;
 
 #define PRINT_VIZ true
-#define SHOULD_PAUSE_ON_NEW false
+#define SHOULD_PAUSE_ON_NEW true
 
 namespace TV{
 	
@@ -84,13 +84,13 @@ namespace TV{
 	bool startNetworkAtPace(float pace) {
 		LOG_DEBUG("Running network...\n",1);
 		
+		AS::changePace(pace);
+
 		if (!AS::run(true)) {
 			LOG_CRITICAL("Failed to run network");
 			GETCHAR_FORCE_PAUSE;
 			return false;
-		}
-
-		AS::changePace(pace);
+		}	
 
 		return true;
 	}
@@ -116,19 +116,35 @@ namespace TV{
 		}
 	}	
 
-	//Returns true if there are significant changes
+	//Returns true if there are significant changes on actions or decisions made
 	bool updateActionsAndCheckForChanges(std::vector<TV::actionChanges_t>* actionsVec_ptr, 
-											                              int numberLAs) {
+		                    std::vector<TV::decisionHasChanges_t>* decisionHasChanges_ptr,
+											                                int numberLAs) {
 		int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
 		assert( actionsVec_ptr->size() == (maxActionsPerAgent * numberLAs) ); //from init
 
+		auto decisionReflection_ptr = 
+					&(CL::ASmirrorData_cptr->decisionReflectionMirror.LAdecisionReflection);
 		auto LAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataLAs);
 
 		AS::actionData_t newActionData;
 		int local = (int)AS::scope::LOCAL; //we're only dealing with locals for now
 
-		bool foundNewAction = false;
+		bool foundChanges = false;
 		for(int agent = 0; agent < numberLAs; agent++){
+
+			//First we check for changes in decisions:
+			decisionHasChanges_ptr->at(agent).hasChanged = 
+				decisionReflection_ptr->at(agent).decisionAttemptCounter
+					> decisionHasChanges_ptr->at(agent).lastAmountOfDecisions;
+			
+			if (decisionHasChanges_ptr->at(agent).hasChanged) {
+				foundChanges = true;
+				decisionHasChanges_ptr->at(agent).lastAmountOfDecisions =
+						decisionReflection_ptr->at(agent).decisionAttemptCounter;
+			}			
+
+			//And then the actions for (reasonanly important) changes:
 			for (int action = 0; action < maxActionsPerAgent; action++) {
 
 				int actionIndex = AS::getAgentsActionIndex(agent, action, maxActionsPerAgent);
@@ -141,7 +157,7 @@ namespace TV{
 					//Change in IDs mean something important happened
 					bool isNew = ((oldAction_ptr->ids != newActionData.ids)
 						           && (newActionData.ids.phase != (int)AS::actPhases::SPAWN));
-					foundNewAction |= isNew;
+					foundChanges |= isNew;
 					actionsVec_ptr->at(actionIndex).hasChanged = isNew;
 				}
 				
@@ -150,7 +166,7 @@ namespace TV{
 			}
 		}
 
-		return foundNewAction;
+		return foundChanges;
 	}
 
 	float setStyleAndcalculateDisplayIntensity(AS::actionData_t actionData, bool* isRate) {
@@ -229,7 +245,6 @@ namespace TV{
 		       "**********************************************************************\n";
 	const char* newArrow = ">>--NEW-->";
 
-
 	void printLAactionData(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr) {
 		
 		int maxActions = CL::ASmirrorData_cptr->networkParams.maxActions;
@@ -256,7 +271,25 @@ namespace TV{
 		}
 	}
 		
-	void printLAheaderAndstateData(int agent) {
+	float costNextAgentsAction(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr) {
+
+		int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
+		int startingIndex = maxActionsPerAgent * agent;
+		int boundingIndex = startingIndex + maxActionsPerAgent;
+
+		int currentValidActions = 0;
+		for (int action = startingIndex; action < boundingIndex; action++) {
+			if (actionsVec_ptr->at(action).data.ids.slotIsUsed
+				&& actionsVec_ptr->at(action).data.ids.active) {
+				currentValidActions++;
+			}
+		}
+
+		return AS::nextActionsCost(currentValidActions);
+	}
+
+	void printLAheaderAndstateData(int agent,  
+		                           std::vector<TV::actionChanges_t>* actionsVec_ptr) {
 		
 		std::string agentName = 
 			CL::ASmirrorData_cptr->agentMirrorPtrs.LAcoldData_ptr->data.at(agent).name;
@@ -277,15 +310,17 @@ namespace TV{
 		float attrition = -strenght_ptr->attritionLossRate;
 
 		int attacksUnder = agentState_ptr->underAttack;
+		float costNextAction = costNextAgentsAction(agent, actionsVec_ptr);
 
 		if(attacksUnder != 0){ 
-			printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | name: %s | Under %d attacks!\n",
-			    agent, agentState_ptr->GAid, position.x, position.y, agentName.c_str(), 
-			                                                              attacksUnder);
+			printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | Name: %s | $ Next Action: %6.2f | Under %d attacks!\n",
+			       agent, agentState_ptr->GAid, position.x, position.y, agentName.c_str(), 
+			       costNextAction, attacksUnder);
 		}
 		else {
-			printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | name: %s\n",
-			    agent, agentState_ptr->GAid, position.x, position.y, agentName.c_str());
+			printf("LA%d (GA %d) | X: %+4.2f, Y: %+4.2f | Name: %s | $ Next Action: %6.2f\n",
+			          agent, agentState_ptr->GAid, position.x, position.y, agentName.c_str(), 
+				                                                              costNextAction);
 		}
 
 		printf("\tSTATE | %+8.1f $ (%5.3f %+5.3f %+5.2f $/sec) | %5.0f S, %5.0f D (%+4.3f /s), %5.2f A (%+5.2f $/sec)\n",
@@ -330,42 +365,46 @@ namespace TV{
 		}
 	}
 
-	float costNextAgentsAction(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr) {
+	void printInitialThoughtsOnDecision(const AS::Decisions::notionsRecord_t*, 
+										const AS::Decisions::scoresRecord_t*,
+		                                bool isNewDecision) {
 
-		int maxActionsPerAgent = CL::ASmirrorData_cptr->networkParams.maxActions;
-		int startingIndex = maxActionsPerAgent * agent;
-		int boundingIndex = startingIndex + maxActionsPerAgent;
+		if(isNewDecision) { printf(newArrow); }
+		printf("\tI feel like %s (%3.2f) and %s (%3.2f). I'd like to %s%c (%3.2f)\n",
+			"AVG_WELL_DEFENDED", 0.68f, "IAM_LOW_INCOME", 0.53f, "RES_S_L -> ", 'x', 0.63f);
+	}
 
-		int currentValidActions = 0;
-		for (int action = startingIndex; action < boundingIndex; action++) {
-			if (actionsVec_ptr->at(action).data.ids.slotIsUsed
-				&& actionsVec_ptr->at(action).data.ids.active) {
-				currentValidActions++;
-			}
+	void printMitigationRound(const AS::Decisions::mitigationRecord_t* mitigation_ptr,
+		                      bool isNewDecision, bool printActualDecisionInfo) {
+
+		if(isNewDecision) { printf(newArrow); }
+		if(printActualDecisionInfo) {
+			printf("I worry that %s (%3.2f). %s might help. I'm, leaning to %s (%3.2f)\n",
+				"LA2_IS_STRONG", 0.44, "STR_S_L", "RES_S_L", (0.6f));
 		}
-
-		return AS::nextActionsCost(currentValidActions);
-	}
-
-	void printInitialThoughtsOnDecision(const float costNext, 
-										const AS::Decisions::notionsRecord_t*, 
-										const AS::Decisions::scoresRecord_t*) {
-
-		printf("\tDECISION: $ Next: %6.2f | CCC_M (NTN+, NTN-) | CCC_M? CCC_M (NTN+, NTN-) | CCC_M -> x, YY\n", costNext);
-	}
-
-	void printMitigationRound(const AS::Decisions::mitigationRecord_t* mitigation_ptr) {
-
+		else {
+			printf("\t---- -- - -  ---------- - - - - ---------- - - - -- --- \n");
+		}
 	}
 
 	void printFinalDecision(const bool choseLeastHarmful, const bool  triedToMitigate, 
 		                    const bool choiceWasAboveJustDoIt, const bool decidedToDoNothing, 
-		                    const bool initialAmbitionTooLow, const AS::actionData_t* choice_ptr) {
+		                    const bool initialAmbitionTooLow, const AS::actionData_t* choice_ptr,
+		                      bool isNewDecision) {
 
+		//First, we use the data to determine what it is we want to print:
+		bool notSureButNoTime = false;
+		bool thisSoundsGood = true;
+		bool nothingIsWorthTHeTrouble = true;
+		bool illJustAvoidProblems = false;
+		
+		if(isNewDecision) { printf(newArrow); }
+		printf("\t----- - -- - -%d, %d, %d, %d ----- - -- - ------------- \n",
+			nothingIsWorthTHeTrouble, illJustAvoidProblems, notSureButNoTime, thisSoundsGood);
 	}
 
 	void printLAdecisionData(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr,
-		                                        std::vector<int>* decisionsMadePerLA_ptr) {
+		                   std::vector<TV::decisionHasChanges_t>* decisionHasChanges_ptr) {
 
 		auto reflection_ptr = 
 			&(CL::ASmirrorData_cptr->decisionReflectionMirror.LAdecisionReflection.at(agent));
@@ -373,36 +412,30 @@ namespace TV{
 		//This is the info we have about the agent's decision-making:
 		auto ambitions_ptr = &(reflection_ptr->initialAmbitions);
 		auto initialNotions_ptr = &(reflection_ptr->initialTopNotions);
+
+		int mitigationRounds = reflection_ptr->totalMitigationRounds;
 		auto firstMitigation_ptr = &(reflection_ptr->mitigationAttempts[0]);
-		auto secondMitigation_ptr = &(reflection_ptr->mitigationAttempts[1]);
+		int lastMitigationRound = std::max(0, (mitigationRounds - 1) );
+		auto lastMitigation_ptr = &(reflection_ptr->mitigationAttempts[lastMitigationRound]);
+
 		auto choice_ptr = &(reflection_ptr->finalChoice);
-		float costNext = costNextAgentsAction(agent, actionsVec_ptr);
 
 		//These will help us determine how the decision process went:
-		bool isNewDecision = 
-			decisionsMadePerLA_ptr->at(agent) > reflection_ptr->decisionAttemptCounter;
+		bool isNewDecision = decisionHasChanges_ptr->at(agent).hasChanged;
 		bool choseLeastHarmful = reflection_ptr->decidedToDoLeastHarmful;
-		int mitigationRounds = reflection_ptr->totalMitigationRounds;
+		
 		bool triedToMitigate = mitigationRounds > 0;
 		bool choiceWasAboveJustDoIt = choice_ptr->details.intensity >= ACT_JUST_DO_IT_THRESOLD;
 		bool decidedToDoNothing = choice_ptr->ids.slotIsUsed && choice_ptr->ids.active;
 		bool initialAmbitionTooLow = ambitions_ptr->record[0].score < ACT_WHY_BOTHER_THRESOLD;
-		/* Maybe use in function to print variation?
-		bool isTargetSelf = 
-					reflection_ptr->finalChoice.ids.target == 
-								AS::Decisions::getNeighborIDforSelfAsSeenInActionIDsAsAnInt();
-		*/
-		//Through them we deduce a result mesage:
-		std::string conclusionMsg = "";
-
 		
 		//We'll have four lines to show: initial, mitigation1, mitigation2, final:
-		printInitialThoughtsOnDecision(costNext, initialNotions_ptr, ambitions_ptr);
-		printMitigationRound(firstMitigation_ptr);
-		printMitigationRound(secondMitigation_ptr);
+		printInitialThoughtsOnDecision(initialNotions_ptr, ambitions_ptr, isNewDecision);
+		printMitigationRound(firstMitigation_ptr, isNewDecision, mitigationRounds > 0);
+		printMitigationRound(lastMitigation_ptr, isNewDecision, mitigationRounds > 1);
 		printFinalDecision(choseLeastHarmful, triedToMitigate, choiceWasAboveJustDoIt, 
-						   decidedToDoNothing, initialAmbitionTooLow, choice_ptr);
-		
+						        decidedToDoNothing, initialAmbitionTooLow, choice_ptr, 
+																		isNewDecision);
 	}
 
 	void printSeparation() {
@@ -414,23 +447,23 @@ namespace TV{
 	}
 
 	void printStandardAgent(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr,
-		                                       std::vector<int>* decisionsMadePerLA_ptr) {
+		                  std::vector<TV::decisionHasChanges_t>* decisionHasChanges_ptr) {
 
-		printLAheaderAndstateData(agent);
+		printLAheaderAndstateData(agent, actionsVec_ptr);
 		printLAneighborData(agent);
-		printLAdecisionData(agent, actionsVec_ptr, decisionsMadePerLA_ptr);
+		printLAdecisionData(agent, actionsVec_ptr, decisionHasChanges_ptr);
 		printLAactionData(agent, actionsVec_ptr);
 	}
 
 	void screenStepStandard(int numberLAs, std::vector<TV::actionChanges_t>* actionsVec_ptr,
-		                                           std::vector<int>* decisionsMadePerLA_ptr,
+		                      std::vector<TV::decisionHasChanges_t>* decisionHasChanges_ptr,
 		                     std::chrono::seconds timePassed, std::chrono::seconds loopTime) {
 		
 		resetScreen(); puts("");
 
 		for(int agent = 0; agent < numberLAs; agent++){
 				
-			printStandardAgent(agent, actionsVec_ptr, decisionsMadePerLA_ptr);
+			printStandardAgent(agent, actionsVec_ptr, decisionHasChanges_ptr);
 			printSeparation();
 		}
 
@@ -459,7 +492,7 @@ namespace TV{
 
 	void textModeVisualizationLoop(std::chrono::seconds loopTime) {
 	
-		LOG_DEBUG("Will start visualization Main Loop...",20);
+		LOG_DEBUG("Will start visualization Main Loop...", 20);
 		GETCHAR_FORCE_PAUSE;
 
 		int numberLAs = CL::ASmirrorData_cptr->networkParams.numberLAs;
@@ -467,23 +500,24 @@ namespace TV{
 		std::vector<TV::actionChanges_t> actionsVec;
 		initializeActionsVec(&actionsVec, numberLAs);
 		
-		std::vector<int> decisionsMadePerLA;
-		decisionsMadePerLA.resize(numberLAs);
+		std::vector<TV::decisionHasChanges_t> decisionHasChangesVec;
+		decisionHasChangesVec.resize(numberLAs);
 
 		bool vizActive = PRINT_VIZ;
-		bool newAction = false;
+		bool changesDetected = false;
 		auto timePassed = std::chrono::seconds(0);
 		auto start = std::chrono::steady_clock::now();
 		printf("\n\n\n\nWill run test for %llu seconds...\n", loopTime.count());
 		while (timePassed < loopTime) {
 			
-			newAction = updateActionsAndCheckForChanges(&actionsVec, numberLAs);
+			changesDetected = updateActionsAndCheckForChanges(&actionsVec, 
+				                        &decisionHasChangesVec, numberLAs);
 
 			if(vizActive){
-				screenStepStandard(numberLAs, &actionsVec, &decisionsMadePerLA,
-					                                      timePassed, loopTime);
+				screenStepStandard(numberLAs, &actionsVec, &decisionHasChangesVec,
+					                                         timePassed, loopTime);
 
-				if(newAction && SHOULD_PAUSE_ON_NEW) { pauseLoop(&loopTime); }		
+				if(changesDetected && SHOULD_PAUSE_ON_NEW) { pauseLoop(&loopTime); }		
 			}
 
 			wait(&timePassed, loopSleepTime, start);					
