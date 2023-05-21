@@ -212,7 +212,7 @@ namespace TV{
 		std::string_view cat = AS::catToString((AS::actCategories)actionData.ids.category);
 		char mode = AS::modeToChar((AS::actModes)actionData.ids.mode);
 		char phase = AS::phaseToChar((AS::actPhases)actionData.ids.phase);
-		std::string target = "slf";
+		std::string target = "SLF";
 		if (actionData.ids.target != actionData.ids.origin) {
 			target = "LA" + std::to_string(actionData.ids.target);
 		}
@@ -240,7 +240,7 @@ namespace TV{
 	}
 
 	const char* placeholderActionFormatLine = 
-		       "\t-> --------------- | ------------ | ------------------------------";
+		       "\t-> --------------- | -------------- | ------------------------------";
 	const char* separatorFormatLine = 
 		       "**********************************************************************\n";
 	const char* newArrow = ">>--NEW-->";
@@ -394,30 +394,107 @@ namespace TV{
 	void printMitigationRound(const AS::Decisions::mitigationRecord_t* mitigation_ptr,
 		                      bool isNewDecision, bool printActualDecisionInfo) {
 
+		std::string topWorryLabel = AS::notionToString(mitigation_ptr->worries.record[0].label);
+		float topWorryScore = mitigation_ptr->worries.record[0].score;
+
+		auto mostExtraLabel_ptr = &(mitigation_ptr->helpfulOptions.record[0].label);
+
+		std::string_view categoryExtra = AS::catToString(mostExtraLabel_ptr->category);
+		char modeExtra = AS::modeToChar(mostExtraLabel_ptr->mode);
+
+		std::string targetExtra = "SLF";
+		int neighborExtra = mitigation_ptr->helpfulOptions.record[0].neighbor;
+		if ( !mitigation_ptr->helpfulOptions.record[0].isAboutSelf() ) {
+			targetExtra = "LA" + std::to_string(neighborExtra);
+		}
+
+		float scoreExtra = mitigation_ptr->helpfulOptions.record[0].score;
+
+		auto overallBestLabel_ptr = &(mitigation_ptr->newIdeas.record[0].label);
+
+		std::string_view categoryBest = AS::catToString(overallBestLabel_ptr->category);
+		char modeBest = AS::modeToChar(overallBestLabel_ptr->mode);
+
+		std::string targetBest = "SLF";
+		int neighborBest = mitigation_ptr->newIdeas.record[0].neighbor;
+		if ( !mitigation_ptr->newIdeas.record[0].isAboutSelf() ) {
+			targetBest = "LA" + std::to_string(neighborBest);
+		}
+
+		float scoreBest = mitigation_ptr->newIdeas.record[0].score;
+
 		if(isNewDecision) { printf(newArrow); }
 		if(printActualDecisionInfo) {
-			printf("\tI worry that %s (%3.2f). %s might help. I'm, leaning to %s (%3.2f)\n",
-				"LA2_IS_STRONG", 0.44, "STR_S_L", "RES_S_L", (0.6f));
+			printf("\tWorry: (%3.2f) %s | %s_%c -> %s might help (%3.2f) | Leaning to %s_%c -> %s (%3.2f)\n",
+				topWorryScore, topWorryLabel.c_str(), 
+				categoryExtra.data(), modeExtra, targetExtra.c_str(), scoreExtra,
+				categoryBest.data(), modeBest, targetBest.c_str(), scoreBest);
 		}
 		else {
-			printf("\t\t---- This Mitigation Step Was Not Needed ----\n");
+			printf("\t\t\t---- This Mitigation Step Was Not Necessary ----\n");
 		}
 	}
 
-	void printFinalDecision(const bool choseLeastHarmful, const bool  triedToMitigate, 
-		                    const bool choiceWasAboveJustDoIt, const bool decidedToDoNothing, 
-		                    const bool initialAmbitionTooLow, const AS::actionData_t* choice_ptr,
-		                      bool isNewDecision) {
+	void printFinalDecision(const AS::actionData_t* choice_ptr, int agent, bool isNewDecision) {
 
-		//First, we use the data to determine what it is we want to print:
-		bool notSureButNoTime = false;
-		bool thisSoundsGood = true;
-		bool nothingIsWorthTHeTrouble = true;
-		bool illJustAvoidProblems = false;
+		auto reflection_ptr = 
+			&(CL::ASmirrorData_cptr->decisionReflectionMirror.LAdecisionReflection.at(agent));
+		bool choseLeastHarmful = reflection_ptr->decidedToDoLeastHarmful;
 		
+		//These will help us determine how the decision process went:
+		int mitigationRounds = reflection_ptr->totalMitigationRounds;
+		bool triedToMitigate = mitigationRounds > 0;
+		bool skippedMitigationRounds = mitigationRounds < ACT_MITIGATION_ROUNDS;
+		bool choiceWasAboveJustDoIt = choice_ptr->details.intensity >= ACT_JUST_DO_IT_THRESOLD;
+		bool decidedToDoNothing = !choice_ptr->ids.slotIsUsed && !choice_ptr->ids.active;
+		bool initialAmbitionAboveJustDoIt = 
+			reflection_ptr->initialAmbitions.record[0].score >= ACT_JUST_DO_IT_THRESOLD;
+
+		//We use the data to determine what it is we want to print:
+		bool nothingIsWorthTheTrouble = decidedToDoNothing;
+		bool illJustAvoidProblems = reflection_ptr->decidedToDoLeastHarmful;
+		bool notSureButNoTime = triedToMitigate && !choiceWasAboveJustDoIt;
+		bool thisSoundsGood = choiceWasAboveJustDoIt;	
+
+		//Now for the choice info:
+		float intensity = choice_ptr->details.intensity;
+
+		std::string_view cat = AS::catToString((AS::actCategories)choice_ptr->ids.category);
+		char mode = AS::modeToChar((AS::actModes)choice_ptr->ids.mode);
+		std::string target = "SLF";
+		if (choice_ptr->ids.target != AS::getNeighborIDforSelfAsSeenInActionIDsAsAnInt()) {
+			target = "LA" + std::to_string(choice_ptr->ids.target);
+		}
+		
+		//And finally the printing:
 		if(isNewDecision) { printf(newArrow); }
-		printf("\t----- - -- - -%d, %d, %d, %d ----- - -- - ------------- \n",
-			nothingIsWorthTHeTrouble, illJustAvoidProblems, notSureButNoTime, thisSoundsGood);
+
+		if (reflection_ptr->decisionAttemptCounter == 0) {
+			printf("\t\t\t---- No Decision to Display ----\n");
+			return;
+		}
+
+		if (nothingIsWorthTheTrouble) {
+			printf("\tNothing seems worth the hassle: let's DO_NOTHING\n");
+			return;
+		}
+		else if (illJustAvoidProblems) {
+			printf("\tMeh, let's just avoid trouble: %s_%c -> %s (%3.2f)\n",
+			                    cat.data(), mode, target.c_str(), intensity);
+			return;
+		}
+		else if (notSureButNoTime) {
+			printf("\tNot sure, but no time to waste: %s_%c -> %s (%3.2f)\n",
+			                    cat.data(), mode, target.c_str(), intensity);
+			return;
+		}
+		else if (thisSoundsGood) {
+			printf("\tThat sounds good: %s_%c -> %s (%3.2f)\n",
+			                    cat.data(), mode, target.c_str(), intensity);
+			return;
+		}
+
+		assert(false); //the options above should cover all possible decisions
 	}
 
 	void printLAdecisionData(int agent, std::vector<TV::actionChanges_t>* actionsVec_ptr,
@@ -436,23 +513,13 @@ namespace TV{
 		auto lastMitigation_ptr = &(reflection_ptr->mitigationAttempts[lastMitigationRound]);
 
 		auto choice_ptr = &(reflection_ptr->finalChoice);
-
-		//These will help us determine how the decision process went:
 		bool isNewDecision = decisionHasChanges_ptr->at(agent).hasChanged;
-		bool choseLeastHarmful = reflection_ptr->decidedToDoLeastHarmful;
-		
-		bool triedToMitigate = mitigationRounds > 0;
-		bool choiceWasAboveJustDoIt = choice_ptr->details.intensity >= ACT_JUST_DO_IT_THRESOLD;
-		bool decidedToDoNothing = choice_ptr->ids.slotIsUsed && choice_ptr->ids.active;
-		bool initialAmbitionTooLow = ambitions_ptr->record[0].score < ACT_WHY_BOTHER_THRESOLD;
 		
 		//We'll have four lines to show: initial, mitigation1, mitigation2, final:
 		printInitialThoughtsOnDecision(initialNotions_ptr, ambitions_ptr, isNewDecision);
 		printMitigationRound(firstMitigation_ptr, isNewDecision, mitigationRounds > 0);
 		printMitigationRound(lastMitigation_ptr, isNewDecision, mitigationRounds > 1);
-		printFinalDecision(choseLeastHarmful, triedToMitigate, choiceWasAboveJustDoIt, 
-						        decidedToDoNothing, initialAmbitionTooLow, choice_ptr, 
-																		isNewDecision);
+		printFinalDecision(choice_ptr, agent, isNewDecision);
 	}
 
 	void printSeparation() {
