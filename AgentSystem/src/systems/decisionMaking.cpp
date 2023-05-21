@@ -112,7 +112,7 @@ AS::actionData_t makeDecisionLA(int agent, AS::dataControllerPointers_t* dp,
 	if ( !isTargetValid && (choice.ids.slotIsUsed == 1) ) {
 
 		errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_LA_TARGET);
-		choice.ids.slotIsUsed = 0; //invalidate choice so we don't blow stuff up
+		AS::invalidateAction(&choice); //invalidate choice so we don't blow stuff up
 	}
 
 	return choice;
@@ -632,6 +632,7 @@ void updateWeightsForMitigation(AD::notionWeights_t* wp, AD::notions_t* np,
 //mitigate the worries which are blocking us from executing the highest ambition actions
 //this also TAKES AWAY score from actions wich have commom blocking factors,
 //INCLUDING our goals
+//TODO-CRITICAL: BUG: do a debugging pass: somethings seems to be off, specially on release builds
 void mitigate(const AD::notionWeights_t* mitigationWeights_ptr, AD::notions_t* np,
 								           AD::allScoresAnyScope_t* allScores_ptr,
 								            AD::extraScore_t* extraScoresReceived, 
@@ -646,6 +647,22 @@ void mitigate(const AD::notionWeights_t* mitigationWeights_ptr, AD::notions_t* n
 		int cat = allScores_ptr->allScores[action].overallUtility.actCategory;
 		int mode = allScores_ptr->allScores[action].overallUtility.actMode;
 		
+		if (cat == SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT
+			|| mode == SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT) {
+
+			//TODO-CRITICAL: pass error handler here and add error for this. Also check upstream
+			assert(false);
+			return;
+		}
+
+		if (cat >= (int)AS::actCategories::TOTAL
+			|| mode >= (int)AS::actModes::TOTAL) {
+
+			//TODO-CRITICAL: pass error handler here and add error for this. Also check upstream
+			assert(false);
+			return;
+		}
+
 		float extraScore = 0;
 
 		//First we calculate the extra score from notions related to self:
@@ -674,13 +691,22 @@ void mitigate(const AD::notionWeights_t* mitigationWeights_ptr, AD::notions_t* n
 		for (int notion = 0; notion < (int)AD::notionsNeighbor::TOTAL; notion++) {
 
 			int notionWeightID = notion + notionsSelf;
+
+			if (notionWeightID >= AS::Decisions::TOTAL_NOTIONS) {
+				//TODO-CRITICAL: leave only as assert
+				assert(false);
+				return;
+			}
+
 			float overallNotionWeightForThisAction =
 				AD::notionWeights.at(cat).at(mode).at(notionWeightID);
 			
 			extraScore += 
 				notionsNeighbor_ptr[notion] * overallNotionWeightForThisAction 
 										    * (*mitigationWeights_ptr)[notionWeightID];
-		}	
+		}
+
+		notionsNeighbor_ptr = NULL; //included for debugging, review
 
 		//sucessive mitigation rounds have their effects dampened:
 		//TODO-CRITICAL: This will be part of agent's personalities in the future: FIX then
@@ -696,6 +722,8 @@ void mitigate(const AD::notionWeights_t* mitigationWeights_ptr, AD::notions_t* n
 		extraScoresReceived[action].score = std::max(0.0f, extraScore); 
 		extraScoresReceived[action].actionIdOnChoiceShortlist = action;
 	}
+
+	return;
 }
 
 //If doNothing, returns innactive action. Else, score is recorded on action's intensity

@@ -44,10 +44,8 @@ namespace az {
 
 //MACROS for user interaction
 
-//TODO: BUG: FIX: this is using getchar() withouth taking care to exausting the buffer!
-
 inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines = 0) {
-    int ch;
+    int ch; //int to be able to tell apart EOF
     if (showMessage) {
         for(int i = 0; i < trailingNewlines; i++) {puts("\n"); }
         fputs("\t\tpress enter...", stdout);
