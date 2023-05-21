@@ -86,6 +86,7 @@ namespace AS{
 	}
 
 	bool isActionValid(const actionData_t* action_ptr) {
+		assert(action_ptr != NULL);
 		return (action_ptr->ids.active && action_ptr->ids.slotIsUsed);
 	}
 

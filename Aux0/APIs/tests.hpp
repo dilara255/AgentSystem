@@ -254,12 +254,18 @@ namespace AZ{
 
 	//Draws howManyToDraw prns into a vector. Tests:
     //Average, amount of zeroes, periods 2, 4, 8 and 16.
-    //Returns true if all tests pass. Defaults to 100M draws, minimum 16.
+    //Returns true if all tests pass. Defaults to 512k draws, minimum 16.
 	//If log == true, logs to output (eg, console) the time per draw
-	static bool testDraw4spcg32s(bool log = true, int64_t howManyTuplesToDraw = 128000) {
+	static bool testDraw4spcg32s(bool log = true, uint32_t howManyTuplesToDraw = 128000) {
 		
 		LOG_DEBUG("Will test PRN system: draw 4 at a time\n", 1); 
 		GETCHAR_PAUSE;
+
+		uint64_t totalToDraw = (uint64_t)howManyTuplesToDraw * DRAW_WIDTH;
+		if (totalToDraw >= (std::numeric_limits<uint32_t>::max())) {
+			LOG_ERROR("Too many tuples were asked - might overflow: aborting test");
+			return false;
+		}
 
 		const int mininumTotalDrawn = 16;
 
@@ -272,9 +278,9 @@ namespace AZ{
 
 		//Draws howManyToDraw prns into a vector, timing it:
 		std::vector<uint32_t> drawn;
-		int64_t totalDrawn = DRAW_WIDTH * howManyTuplesToDraw;
+		uint32_t totalDrawn = DRAW_WIDTH * howManyTuplesToDraw;
 		drawn.reserve(totalDrawn);
-		for (int i = 0; i < totalDrawn; i++) {
+		for (uint32_t i = 0; i < totalDrawn; i++) {
 			drawn.push_back(0);
 		}
 
@@ -286,7 +292,7 @@ namespace AZ{
 
 		auto startTime = std::chrono::steady_clock::now();	
 		
-		for (int i = 0; i < howManyTuplesToDraw; i++) {
+		for (uint32_t i = 0; i < howManyTuplesToDraw; i++) {
 			
 			draw4spcg32s(&seeds[0],&seeds[1],&seeds[2],&seeds[3],
 							&drawn[i*DRAW_WIDTH], &drawn[(i*DRAW_WIDTH) + 1],
@@ -300,7 +306,7 @@ namespace AZ{
 		//Tests amount of zeroes:
 
 		int zeroes = 0;
-		for (int i = 0; i < totalDrawn; i++) {	
+		for (uint32_t i = 0; i < totalDrawn; i++) {	
 			zeroes += (drawn[i] == 0);
 		}
 
@@ -322,18 +328,18 @@ namespace AZ{
 		drawnNormalized.reserve(totalDrawn);
 
 		double inverseOfUint32max = 1.0/UINT32_MAX;
-		for (int i = 0; i < totalDrawn; i++) {	
+		for (uint32_t i = 0; i < totalDrawn; i++) {	
 			drawnNormalized.push_back(drawn[i]*inverseOfUint32max);
 		}
 
 		double inverseOfTotalNumbersDrawn = 1.0/(totalDrawn - mininumTotalDrawn);
-		double avarege = 0;
+		double average = 0;
 		double averageAbsoluteDifferencePeriod2 = 0;
 		double averageAbsoluteDifferencePeriod4 = 0;
 		double averageAbsoluteDifferencePeriod8 = 0;
 		double averageAbsoluteDifferencePeriod16 = 0;
-		for (int i = mininumTotalDrawn; i < totalDrawn; i++) {	
-			avarege += drawnNormalized[i]*inverseOfTotalNumbersDrawn;
+		for (uint32_t i = mininumTotalDrawn; i < totalDrawn; i++) {	
+			average += drawnNormalized[i]*inverseOfTotalNumbersDrawn;
 			averageAbsoluteDifferencePeriod2 +=
 				fabs(drawnNormalized[i] - drawnNormalized[i-2])*inverseOfTotalNumbersDrawn;
 			averageAbsoluteDifferencePeriod4 +=
@@ -362,8 +368,8 @@ namespace AZ{
 		//Log and return result:
 
 		if (log) {
-			printf("\nPRNG test (draw4spcg32s): %lld drawn (normalized avg: %f)\n",
-				                                               totalDrawn, avarege);
+			printf("\nPRNG test (draw4spcg32s): %d drawn (normalized avg: %f)\n",
+				                                               totalDrawn, average);
 			printf("\tTiming: %f nanos per prn\n", nanosPerDraw);
 			printf("\tZeroes: %d (expected: %f)\n", zeroes, expectedZeroes);
 			printf("\tAvg. differences expected: %f (margin used: %f). Found:\n",
@@ -378,9 +384,9 @@ namespace AZ{
 
     //Draws howManyToDraw prns into a vector. Tests:
     //Average, amount of zeroes, periods 2, 4, 8 and 16
-    //Returns true if all tests pass. Defaults to 25M draws
+    //Returns true if all tests pass. Defaults to 128k draws
 	//If log == true, logs to output (eg, console) the time per draw
-	static bool testDraw1spcg32(bool log = true, int64_t howManyToDraw = 128000) {
+	static bool testDraw1spcg32(bool log = true, uint32_t howManyToDraw = 128000) {
 			const int mininumTotalDrawn = 16;
 
 		LOG_DEBUG("Will test PRN system: draw 1 at a time\n", 1); 
@@ -395,9 +401,9 @@ namespace AZ{
 
 		//Draws howManyToDraw prns into a vector, timing it:
 		std::vector<uint32_t> drawn;
-		int64_t totalDrawn = howManyToDraw;
+		uint32_t totalDrawn = howManyToDraw;
 		drawn.reserve(totalDrawn);
-		for (int i = 0; i < totalDrawn; i++) {	
+		for (uint32_t i = 0; i < totalDrawn; i++) {	
 			drawn.push_back(0);
 		}
 
@@ -405,7 +411,7 @@ namespace AZ{
 
 		auto startTime = std::chrono::steady_clock::now();
 
-		for (int i = 0; i < totalDrawn; i++) {	
+		for (uint32_t i = 0; i < totalDrawn; i++) {	
 			drawn[i] = draw1spcg32(&seed);
 		}
 
@@ -415,7 +421,7 @@ namespace AZ{
 
 		//Tests amount of zeroes:
 		int zeroes = 0;
-		for (int i = 0; i < totalDrawn; i++) {	
+		for (uint32_t i = 0; i < totalDrawn; i++) {	
 			zeroes += (drawn[i] == 0);
 		}
 
@@ -437,7 +443,7 @@ namespace AZ{
 		drawnNormalized.reserve(totalDrawn);
 
 		double inverseOfUint32max = 1.0/UINT32_MAX;
-		for (int i = 0; i < totalDrawn; i++) {	
+		for (uint32_t i = 0; i < totalDrawn; i++) {	
 			drawnNormalized.push_back(drawn[i]*inverseOfUint32max);
 		}
 
@@ -448,7 +454,7 @@ namespace AZ{
 		double averageAbsoluteDifferencePeriod8 = 0;
 		double averageAbsoluteDifferencePeriod16 = 0;
 
-		for (int i = mininumTotalDrawn; i < totalDrawn; i++) {	
+		for (uint32_t i = mininumTotalDrawn; i < totalDrawn; i++) {	
 			avarege += drawnNormalized[i]*inverseOfTotalNumbersTested;
 			averageAbsoluteDifferencePeriod2 +=
 				fabs(drawnNormalized[i] - drawnNormalized[i-2])*inverseOfTotalNumbersTested;
@@ -478,7 +484,7 @@ namespace AZ{
 		//Log and return result:
 
 		if (log) {
-			printf("\nPRNG test (draw4spcg32s): %lld drawn (normalized avg: %f)\n",
+			printf("\nPRNG test (draw4spcg32s): %d drawn (normalized avg: %f)\n",
 				                                               totalDrawn, avarege);
 			printf("\tTiming: %f nanos per prn\n", nanosPerDraw);
 			printf("\tZeroes: %d (expected: %f)\n", zeroes, expectedZeroes);

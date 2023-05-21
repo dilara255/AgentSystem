@@ -356,7 +356,9 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 		return false;
 	}
 
-	if (CL::ASmirrorData_cptr->networkParams.mainLoopTicks != 0) {
+	auto params_ptr = &(CL::ASmirrorData_cptr->networkParams);
+
+	if (params_ptr->mainLoopTicks != 0) {
 		LOG_ERROR("This tests expects a network with mainLoopTicks == 0. Aborting");
 		return false;
 	}
@@ -380,6 +382,7 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 	
 	//We want to run enough steps so that all action slots could be exhausted
 	int stepsToRun = ((maxActionsPerAgent + 1)) * AS_TOTAL_CHOPS * 2;
+	assert(stepsToRun > 0);
 
 	//And we'll need to check often to get the data we want:
 	int stepTimeMicros = AS_MILLISECONDS_PER_STEP * MICROS_IN_A_MILLI;
@@ -407,14 +410,17 @@ bool testDecisionsAndActionsForThrownErrorsAndCalculateTiming(bool print, bool d
 
 	//And log the data we want:
 	bool hasPaused = false;
-	uint64_t nextTickToRecord = 0;
-	auto params_ptr = &(CL::ASmirrorData_cptr->networkParams);
+	uint32_t nextTickToRecord = 0;
 	auto LAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataLAs);
 	auto GAactions_ptr = &(CL::ASmirrorData_cptr->actionMirror.dataGAs);
 	while (!hasPaused) {
 
-		uint64_t tickOnMirror = params_ptr->mainLoopTicks;
-		if ( (tickOnMirror >= nextTickToRecord) && (tickOnMirror < stepsToRun) ) {
+		if (params_ptr->mainLoopTicks > (std::numeric_limits<uint32_t>::max())) {
+			LOG_ERROR("Too many ticks - would overflow buffer: aborting test");
+			return false;
+		}
+		uint32_t tickOnMirror = (uint32_t)params_ptr->mainLoopTicks;
+		if ( (tickOnMirror >= nextTickToRecord) && (tickOnMirror < (uint32_t)stepsToRun) ) {
 
 			nextTickToRecord = tickOnMirror + 1;
 
