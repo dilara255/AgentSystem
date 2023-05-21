@@ -212,9 +212,9 @@ namespace TV{
 		std::string_view cat = AS::catToString((AS::actCategories)actionData.ids.category);
 		char mode = AS::modeToChar((AS::actModes)actionData.ids.mode);
 		char phase = AS::phaseToChar((AS::actPhases)actionData.ids.phase);
-		char target = 'x';
+		std::string target = "slf";
 		if (actionData.ids.target != actionData.ids.origin) {
-			target = '0' + actionData.ids.target; //expects target <= 9
+			target = "LA" + std::to_string(actionData.ids.target);
 		}
 		
 		double secondsElapsed = 
@@ -228,14 +228,14 @@ namespace TV{
 		float aux = actionData.details.processingAux;
 
 		if(!intensityIsRate){
-			printf("\t-> %6.2f/%6.2f s | %s_%c_%c -> %c | intens: %7.2f, aux: %+7.2f\n",
+			printf("\t-> %6.2f/%6.2f s | %s_%c_%c -> %s | intens: %7.2f, aux: %+7.2f\n",
 								 secondsElapsed, phaseTotal, cat.data(), mode, phase, 
-													   target, intensity, aux);
+													  target.c_str(), intensity, aux);
 		}
 		else {
-			printf("\t-> %6.2f/%6.2f s | %s_%c_%c -> %c | rate: %7.4f/s, aux: %+7.2f\n",
+			printf("\t-> %6.2f/%6.2f s | %s_%c_%c -> %s | rate: %7.4f/s, aux: %+7.2f\n",
 								 secondsElapsed, phaseTotal, cat.data(), mode, phase, 
-													   target, intensity, aux);
+													  target.c_str(), intensity, aux);
 		}
 	}
 
@@ -365,13 +365,30 @@ namespace TV{
 		}
 	}
 
-	void printInitialThoughtsOnDecision(const AS::Decisions::notionsRecord_t*, 
-										const AS::Decisions::scoresRecord_t*,
+	void printInitialThoughtsOnDecision(const AS::Decisions::notionsRecord_t* notions_ptr, 
+										const AS::Decisions::scoresRecord_t* scores_ptr,
 		                                bool isNewDecision) {
+		
+		std::string notion1Label = AS::notionToString(notions_ptr->record[0].label);
+		float notion1Score = notions_ptr->record[0].score;
+		std::string notion2Label = AS::notionToString(notions_ptr->record[1].label);
+		float notion2Score = notions_ptr->record[1].score;
+
+		auto overallBestLabel_ptr = &(scores_ptr->record[0].label);
+
+		std::string_view category = AS::catToString(overallBestLabel_ptr->category);
+		char mode = AS::modeToChar(overallBestLabel_ptr->mode);
+
+		std::string target = "SLF";
+		int neighbor = scores_ptr->record[0].neighbor;
+		if ( !scores_ptr->record[0].isAboutSelf() ) {
+			target = "LA" + std::to_string(neighbor);
+		}
 
 		if(isNewDecision) { printf(newArrow); }
-		printf("\tI feel like %s (%3.2f) and %s (%3.2f). I'd like to %s%c (%3.2f)\n",
-			"AVG_WELL_DEFENDED", 0.68f, "IAM_LOW_INCOME", 0.53f, "RES_S_L -> ", 'x', 0.63f);
+		printf("\tI feel that (%3.2f) %s and (%3.2f) %s | I'd like to %s_%c -> %s (%3.2f)\n",
+					 notion1Score, notion1Label.c_str(), notion2Score, notion2Label.c_str(),
+					     category.data(), mode, target.c_str(), scores_ptr->record[0].score);
 	}
 
 	void printMitigationRound(const AS::Decisions::mitigationRecord_t* mitigation_ptr,
@@ -379,11 +396,11 @@ namespace TV{
 
 		if(isNewDecision) { printf(newArrow); }
 		if(printActualDecisionInfo) {
-			printf("I worry that %s (%3.2f). %s might help. I'm, leaning to %s (%3.2f)\n",
+			printf("\tI worry that %s (%3.2f). %s might help. I'm, leaning to %s (%3.2f)\n",
 				"LA2_IS_STRONG", 0.44, "STR_S_L", "RES_S_L", (0.6f));
 		}
 		else {
-			printf("\t---- -- - -  ---------- - - - - ---------- - - - -- --- \n");
+			printf("\t\t---- This Mitigation Step Was Not Needed ----\n");
 		}
 	}
 

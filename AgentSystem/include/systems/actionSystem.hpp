@@ -337,14 +337,6 @@ namespace AS {
 			enum class fields { SELF, NEIGHBORS, TOTAL_LA_NOTIONS_FIELDS };
 		} AS_API notions_t;
 		
-		#define NEIGHBOR_ID_FOR_SELF (-1)
-		#define SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT (-1)
-		#define DEFAULT_AWFUL_SCORE (-999999) //should be negative : )
-		inline int getNeighborIDforSelfAsSeenInActionIDsAsAnInt() {
-			ids_t ids;
-			ids.target = NEIGHBOR_ID_FOR_SELF;
-			return (int)ids.target;
-		}
 		typedef struct actionScore_st {
 			int32_t actCategory = SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT;
 			int32_t actMode = SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT;

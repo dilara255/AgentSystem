@@ -153,6 +153,113 @@ constexpr std::string_view AS::catToString(AS::actCategories cat) {
 	}
 }
 
+std::string AS::notionTargetToString(AS::Decisions::notionLabel_t notion) {
+
+	//NOTE: The string_view returned should be a NULL-TERMINATED string literal of size 5
+
+	bool isSet = notion.isSet();
+	if (!isSet) {
+		return "????";
+	}
+
+	bool isSelf = notion.isSelf();
+	bool isAverage = notion.isAboutAverage();
+	bool isNeighbor = notion.isNeighbor();
+	
+	if(isAverage) {
+		return "AVG";
+	}
+	else if (isSelf) {
+		return "SLF";
+	}
+	else if(isNeighbor) {
+		constexpr int sizeOfField = 5;
+		char neighID[sizeOfField];
+		neighID[0] = 'A';
+		neighID[1] = 'G';
+		snprintf(&neighID[2], (sizeOfField - 2) * (sizeof(char)), "%d", notion.neighborID);
+		neighID[sizeOfField - 1] = '\n';
+		return neighID;
+	}
+	
+	assert(false); //should always be one of those if isSet
+	return "XXXXXXXXXXXXXX";
+}
+
+std::string AS::notionNameToString(AS::Decisions::notionLabel_t notion) {
+
+	bool isSet = notion.isSet();
+	if (!isSet) {
+		return "????";
+	}
+
+	bool isSelf = notion.isSelf();
+	bool isNeighbor = notion.isNeighbor();
+
+	if (isNeighbor) {
+		switch ((int)notion.neighbor)
+		{
+		case  (int)AS::Decisions::notionsNeighbor::LOW_DEFENSE_TO_RESOURCES:
+			return "LOW_DEF_TO_RES";
+		case  (int)AS::Decisions::notionsNeighbor::IS_STRONG:
+			return "IS_STRONG     ";
+		case  (int)AS::Decisions::notionsNeighbor::WORRIES_ME:
+			return "THEY_WORRY_ME ";
+		case  (int)AS::Decisions::notionsNeighbor::I_TRUST_THEM:
+			return "CAN_BE_TRUSTED";				
+		case  (int)AS::Decisions::notionsNeighbor::N4:
+			return "N4_NOT_ADDED  ";				
+		case  (int)AS::Decisions::notionsNeighbor::N5:
+			return "N5_NOT_ADDED  ";				
+		case  (int)AS::Decisions::notionsNeighbor::N6:
+			return "N6_NOT_ADDED  ";				
+		case  (int)AS::Decisions::notionsNeighbor::N7:
+			return "N7_NOT_ADDED  ";				
+		case  (int)AS::Decisions::notionsNeighbor::N8:
+			return "N8_NOT_ADDED  ";				
+		case  (int)AS::Decisions::notionsNeighbor::N9:
+			return "N9_NOT_ADDED  ";				
+		case  (int)AS::Decisions::notionsNeighbor::N10:
+			return "N10_NOT_ADDED ";				
+		case  (int)AS::Decisions::notionsNeighbor::N11:
+			return "N11_NOT_ADDED ";				
+		default:
+			return "BAD_NOTION_ID";
+		}	
+	}
+	else if (isSelf) {
+		switch ((int)notion.self)
+		{
+		case  (int)AS::Decisions::notionsSelf::LOW_INCOME_TO_STR:
+			return "LOW_INC_TO_STR";
+		case  (int)AS::Decisions::notionsSelf::LOW_DEFENSE_TO_RESOURCES:
+			return "LOW_DEF_TO_RES";
+		case  (int)AS::Decisions::notionsSelf::LOW_CURRENCY:
+			return "LOW_RESOURCES ";
+		case  (int)AS::Decisions::notionsSelf::S3:
+			return "S3_NOT_ADDED  ";
+		case  (int)AS::Decisions::notionsSelf::S4:
+			return "S4_NOT_ADDED  ";
+		case  (int)AS::Decisions::notionsSelf::S5:
+			return "S5_NOT_ADDED  ";
+		case  (int)AS::Decisions::notionsSelf::S6:
+			return "S6_NOT_ADDED  ";
+		case  (int)AS::Decisions::notionsSelf::S7:
+			return "S7_NOT_ADDED  ";
+		default:
+			return "BAD_NOTION_ID";
+		}	
+	}
+		
+	assert(false); //should always be one of those if isSet
+	return "XXXXXXXXXXXXXX";
+}
+
+std::string AS::notionToString(AS::Decisions::notionLabel_t notion) {
+	
+	return ( notionTargetToString(notion) + "_" + std::string(notionNameToString(notion)) );
+}
+
 int AS::getAgentsActionIndex(int agentID, int action, int maxActionsPerAgent) {
 	
 	if (action >= maxActionsPerAgent) {

@@ -118,6 +118,15 @@ namespace AS {
 		AS::actModes mode;
 	} AS_API actionLabel_t;
 
+	#define NEIGHBOR_ID_FOR_SELF (-1)
+	#define SCORE_CAT_AND_MODE_UNINITIALIZED_DEFAULT (-1)
+	#define DEFAULT_AWFUL_SCORE (-999999) //should be negative : )
+	inline int getNeighborIDforSelfAsSeenInActionIDsAsAnInt() {
+			ids_t ids;
+			ids.target = NEIGHBOR_ID_FOR_SELF;
+			return (int)ids.target;
+	}
+
 	namespace Decisions {
 
 		enum class notionsSelf { LOW_INCOME_TO_STR, LOW_DEFENSE_TO_RESOURCES, LOW_CURRENCY, 
@@ -133,14 +142,13 @@ namespace AS {
 		constexpr int TOTAL_NOTIONS = (int)notionsSelf::TOTAL + (int)notionsNeighbor::TOTAL;
 
 		//TODO: is this really the best way to label notions?
-		#define IS_ABOUT_AVERAGE (-1)
 		typedef struct notionLabel_st {
 			notionsSelf self = notionsSelf::NOT_NOTION_SELF;
 			notionsNeighbor neighbor = notionsNeighbor::NOT_NOTION_NEIGHBOR;
-			int neighborID = IS_ABOUT_AVERAGE;
+			int neighborID = NEIGHBOR_ID_FOR_SELF;
 
 			bool isAboutAverage() {
-				return (isNeighbor() && (neighborID == IS_ABOUT_AVERAGE));
+				return (isNeighbor() && (neighborID == NEIGHBOR_ID_FOR_SELF) );
 			}
 
 			void setNotionSelf(notionsSelf notion) {
@@ -150,7 +158,7 @@ namespace AS {
 
 			void setNotionAverage(notionsNeighbor notion) {
 				neighbor = notion;
-				neighborID = IS_ABOUT_AVERAGE;
+				neighborID = NEIGHBOR_ID_FOR_SELF;
 				self = notionsSelf::NOT_NOTION_SELF;
 			}
 
@@ -163,7 +171,7 @@ namespace AS {
 			bool isSet() {
 				return 
 					(neighbor != notionsNeighbor::NOT_NOTION_NEIGHBOR)
-					|| (self != notionsSelf::NOT_NOTION_SELF);
+					 || (self != notionsSelf::NOT_NOTION_SELF);
 			}
 
 			bool isSelf() {
@@ -179,6 +187,10 @@ namespace AS {
 			float score;
 			actionLabel_t label;
 			int neighbor;
+
+			bool isAboutSelf() const {
+				return (neighbor == NEIGHBOR_ID_FOR_SELF);
+			}
 		} score_t;
 
 		typedef struct scoresRecord_st {
