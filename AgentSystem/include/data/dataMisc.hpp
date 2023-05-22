@@ -22,8 +22,12 @@ namespace AS {
 	AS_API constexpr char modeToChar(AS::actModes mode);
 	//Returns a string_view to a null-terminated char[4]:
 	AS_API constexpr std::string_view catToString(AS::actCategories cat);
-	AS_API std::string notionToString(AS::Decisions::notionLabel_t notion);
-	AS_API std::string notionTargetToString(AS::Decisions::notionLabel_t notion);
+	//If actualTargetID is not set, uses the ID on the notionLabel
+	AS_API std::string notionToString(AS::Decisions::notionLabel_t notion,
+		                                          int actualTargetID = -1);
+	//If actualTargetID is not set, uses the ID on the notionLabel
+	AS_API std::string notionTargetToString(AS::Decisions::notionLabel_t notion,
+		                                                int actualTargetID = -1);
 	AS_API std::string notionNameToString(AS::Decisions::notionLabel_t notion);	
 
 	//This gives you the index ASSUMING you passed in valid agentID and maxActions.

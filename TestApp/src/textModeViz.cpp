@@ -367,11 +367,19 @@ namespace TV{
 
 	void printInitialThoughtsOnDecision(const AS::Decisions::notionsRecord_t* notions_ptr, 
 										const AS::Decisions::scoresRecord_t* scores_ptr,
-		                                bool isNewDecision) {
+		                                int agent, bool isNewDecision) {
 		
-		std::string notion1Label = AS::notionToString(notions_ptr->record[0].label);
+		auto neigborIDs_ptr =
+			&(CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data.at(agent).locationAndConnections.neighbourIDs[0]);
+
+		int notion1ActualNEighborID = neigborIDs_ptr[notions_ptr->record[0].label.neighborID];
+		std::string notion1Label = 
+			AS::notionToString(notions_ptr->record[0].label, notion1ActualNEighborID);
 		float notion1Score = notions_ptr->record[0].score;
-		std::string notion2Label = AS::notionToString(notions_ptr->record[1].label);
+
+		int notion2ActualNEighborID = neigborIDs_ptr[notions_ptr->record[1].label.neighborID];
+		std::string notion2Label = 
+			AS::notionToString(notions_ptr->record[1].label, notion2ActualNEighborID);
 		float notion2Score = notions_ptr->record[1].score;
 
 		auto overallBestLabel_ptr = &(scores_ptr->record[0].label);
@@ -382,7 +390,7 @@ namespace TV{
 		std::string target = "SLF";
 		int neighbor = scores_ptr->record[0].neighbor;
 		if ( !scores_ptr->record[0].isAboutSelf() ) {
-			target = "LA" + std::to_string(neighbor);
+			target = "LA" + std::to_string(neigborIDs_ptr[neighbor]);
 		}
 
 		if(isNewDecision) { printf(newArrow); }
@@ -392,9 +400,15 @@ namespace TV{
 	}
 
 	void printMitigationRound(const AS::Decisions::mitigationRecord_t* mitigation_ptr,
-		                      bool isNewDecision, bool printActualDecisionInfo) {
+		                  int agent, bool isNewDecision, bool printActualDecisionInfo) {
 
-		std::string topWorryLabel = AS::notionToString(mitigation_ptr->worries.record[0].label);
+		auto neigborIDs_ptr =
+			&(CL::ASmirrorData_cptr->agentMirrorPtrs.LAstate_ptr->data.at(agent).locationAndConnections.neighbourIDs[0]);
+
+		int topWorryActualNeighborID = 
+			neigborIDs_ptr[mitigation_ptr->worries.record[0].label.neighborID];
+		std::string topWorryLabel = 
+			AS::notionToString(mitigation_ptr->worries.record[0].label, topWorryActualNeighborID);
 		float topWorryScore = mitigation_ptr->worries.record[0].score;
 
 		auto mostExtraLabel_ptr = &(mitigation_ptr->helpfulOptions.record[0].label);
@@ -402,10 +416,11 @@ namespace TV{
 		std::string_view categoryExtra = AS::catToString(mostExtraLabel_ptr->category);
 		char modeExtra = AS::modeToChar(mostExtraLabel_ptr->mode);
 
+		//TODO: Extract
 		std::string targetExtra = "SLF";
 		int neighborExtra = mitigation_ptr->helpfulOptions.record[0].neighbor;
 		if ( !mitigation_ptr->helpfulOptions.record[0].isAboutSelf() ) {
-			targetExtra = "LA" + std::to_string(neighborExtra);
+			targetExtra = "LA" + std::to_string(neigborIDs_ptr[neighborExtra]);
 		}
 
 		float scoreExtra = mitigation_ptr->helpfulOptions.record[0].score;
@@ -415,10 +430,11 @@ namespace TV{
 		std::string_view categoryBest = AS::catToString(overallBestLabel_ptr->category);
 		char modeBest = AS::modeToChar(overallBestLabel_ptr->mode);
 
+		//TODO: Extract
 		std::string targetBest = "SLF";
 		int neighborBest = mitigation_ptr->newIdeas.record[0].neighbor;
 		if ( !mitigation_ptr->newIdeas.record[0].isAboutSelf() ) {
-			targetBest = "LA" + std::to_string(neighborBest);
+			targetBest = "LA" + std::to_string(neigborIDs_ptr[neighborBest]);
 		}
 
 		float scoreBest = mitigation_ptr->newIdeas.record[0].score;
@@ -434,6 +450,11 @@ namespace TV{
 			printf("\t\t\t---- This Mitigation Step Was Not Necessary ----\n");
 		}
 	}
+
+	static int g_nothing = 0;
+	static int g_avoid = 0;
+	static int g_notSure = 0;
+	static int g_good = 0;
 
 	void printFinalDecision(const AS::actionData_t* choice_ptr, int agent, bool isNewDecision) {
 
@@ -475,20 +496,24 @@ namespace TV{
 		}
 
 		if (nothingIsWorthTheTrouble) {
+			g_nothing++;
 			printf("\tNothing seems worth the hassle: let's DO_NOTHING\n");
 			return;
 		}
 		else if (illJustAvoidProblems) {
+			g_avoid++;
 			printf("\tMeh, let's just avoid trouble: %s_%c -> %s (%3.2f)\n",
 			                    cat.data(), mode, target.c_str(), intensity);
 			return;
 		}
 		else if (notSureButNoTime) {
+			g_notSure++;
 			printf("\tNot sure, but no time to waste: %s_%c -> %s (%3.2f)\n",
 			                    cat.data(), mode, target.c_str(), intensity);
 			return;
 		}
 		else if (thisSoundsGood) {
+			g_good++;
 			printf("\tThat sounds good: %s_%c -> %s (%3.2f)\n",
 			                    cat.data(), mode, target.c_str(), intensity);
 			return;
@@ -516,9 +541,9 @@ namespace TV{
 		bool isNewDecision = decisionHasChanges_ptr->at(agent).hasChanged;
 		
 		//We'll have four lines to show: initial, mitigation1, mitigation2, final:
-		printInitialThoughtsOnDecision(initialNotions_ptr, ambitions_ptr, isNewDecision);
-		printMitigationRound(firstMitigation_ptr, isNewDecision, mitigationRounds > 0);
-		printMitigationRound(lastMitigation_ptr, isNewDecision, mitigationRounds > 1);
+		printInitialThoughtsOnDecision(initialNotions_ptr, ambitions_ptr, agent, isNewDecision);
+		printMitigationRound(firstMitigation_ptr, agent, isNewDecision, mitigationRounds > 0);
+		printMitigationRound(lastMitigation_ptr, agent, isNewDecision, mitigationRounds > 1);
 		printFinalDecision(choice_ptr, agent, isNewDecision);
 	}
 
@@ -632,6 +657,8 @@ int TV::textModeVisualizationEntry() {
 	textModeVisualizationLoop(testTime);
 	
 	bool result = stopNetworkAndCheckForErrors();	
+
+	printf("\n%d, %d, %d, %d\n\n", g_nothing, g_avoid, g_notSure, g_good);
 
 	LOG_DEBUG("Saving results...\n",1);
 	result &= AS::saveNetworkToFile(networkFilenameSaveName, false, false, true);
