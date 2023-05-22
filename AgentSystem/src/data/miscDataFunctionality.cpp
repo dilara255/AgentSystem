@@ -153,7 +153,8 @@ constexpr std::string_view AS::catToString(AS::actCategories cat) {
 	}
 }
 
-std::string AS::notionTargetToString(AS::Decisions::notionLabel_t notion) {
+std::string AS::notionTargetToString(AS::Decisions::notionLabel_t notion,
+		                                              int actualTargetID) {
 
 	//NOTE: The string_view returned should be a NULL-TERMINATED string literal of size 5
 
@@ -177,7 +178,9 @@ std::string AS::notionTargetToString(AS::Decisions::notionLabel_t notion) {
 		char neighID[sizeOfField];
 		neighID[0] = 'A';
 		neighID[1] = 'G';
-		snprintf(&neighID[2], (sizeOfField - 2) * (sizeof(char)), "%d", notion.neighborID);
+		int neighborID = notion.neighborID;
+		if(actualTargetID != -1) { neighborID = actualTargetID; }
+		snprintf(&neighID[2], (sizeOfField - 2) * (sizeof(char)), "%d", neighborID);
 		neighID[sizeOfField - 1] = '\n';
 		return neighID;
 	}
@@ -255,9 +258,11 @@ std::string AS::notionNameToString(AS::Decisions::notionLabel_t notion) {
 	return "XXXXXXXXXXXXXX";
 }
 
-std::string AS::notionToString(AS::Decisions::notionLabel_t notion) {
+std::string AS::notionToString(AS::Decisions::notionLabel_t notion,
+		                                        int actualTargetID) {
 	
-	return ( notionTargetToString(notion) + "_" + std::string(notionNameToString(notion)) );
+	return ( notionTargetToString(notion, actualTargetID) 
+		     + "_" + std::string(notionNameToString(notion)) );
 }
 
 int AS::getAgentsActionIndex(int agentID, int action, int maxActionsPerAgent) {

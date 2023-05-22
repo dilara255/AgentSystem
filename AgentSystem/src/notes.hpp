@@ -169,10 +169,10 @@
 * -Couple of simplified decisions and actions (and watever is necessary for that);
 * -- Should just run their course and have a simple resolution; 
 * 
-* > 3. Text-mode visualization of a couple to a few agents running.
+* 3. Text-mode visualization of a couple to a few agents running.
 * - Including basic action logic for two to three actions;
 * 
-* 4. Quick system review and any pending groundwork:
+*> 4. Quick system review and any pending groundwork:
 * - Also do some benchmarking;
 * 
 * 5. basic GUI tool to inspect the system:
