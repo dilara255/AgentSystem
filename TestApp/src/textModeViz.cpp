@@ -20,7 +20,7 @@ const std::chrono::milliseconds loopSleepTime = std::chrono::milliseconds(60);
 const float testResources = 0.60f * DEFAULT_LA_RESOURCES;
 const float testPace = 40.0f;
 
-#define PRINT_VIZ false
+#define PRINT_VIZ true
 #define SHOULD_PAUSE_ON_NEW false
 
 namespace TV{
