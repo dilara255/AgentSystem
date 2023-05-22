@@ -918,7 +918,7 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 	                               const AS::ActionSystem* actionSystem_cptr,
           AD::networksDecisionsReflection_t* networksDecisionsReflection_ptr,
  	                         AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
-	
+
 	//TODO-CRITICAL: use agent's values after that's implemented
 	float whyBother = ACT_WHY_BOTHER_THRESOLD;
 	float iGuess = ACT_I_GUESS_THRESOLD;
@@ -983,10 +983,11 @@ AS::actionData_t chooseAction(AD::notions_t* np, AD::allScoresAnyScope_t* sp,
 		}
 		else {
 			errorsCounter_ptr->incrementError(AS::errors::DS_CHOSE_INVALID_VARIATION);
-			chosenAction.ids.slotIsUsed = false; //invalidate bad choice
+			AS::invalidateAction(&chosenAction); //invalidate bad choice
 		}
 	}
 
+	bool actionIsValid = AS::isActionValid(&chosenAction);
 	return chosenAction;
 }
 
@@ -1065,6 +1066,7 @@ void calculateNotionsLA(int agent, AS::dataControllerPointers_t* dp, AD::notions
 	}
 }
 
+//TODO-CRITICAL: Review and applies any relevant changes applied to the LA version
 void calculateNotionsGA(int agent, AS::dataControllerPointers_t* dp, AD::notions_t* np,
                                GA::readsOnNeighbor_t* refReads_ptr, int totalNeighbors,
 							           AS::WarningsAndErrorsCounter* errorsCounter_ptr) {
@@ -1287,7 +1289,8 @@ void copyLargestNotions(const AD::notions_t* np, const int totalNeighbors,
 
 	for (int neighbor = 0; neighbor < totalNeighbors; neighbor++){
 		for (int notion = 0; notion < (int)AD::notionsNeighbor::TOTAL; notion++) {
-			int index = notion + AD::TOTAL_NOTIONS;
+			int index = 
+				notion + AD::TOTAL_NOTIONS + (neighbor * (int)AD::notionsNeighbor::TOTAL);
 
 			notionScores[index].score = np->neighbors[neighbor][notion];
 			notionScores[index].label.setNotionNeighbor((AD::notionsNeighbor)notion, neighbor);
