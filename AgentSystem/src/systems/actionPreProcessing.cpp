@@ -167,8 +167,8 @@ namespace AS{
 		float effectiveStrenght = std::max(strenght, ACT_STR_S_L_REF_SMALL_STR);
 
 		float newTroops = 
-			effectiveStrenght * ACT_STR_S_L_REF_PROPORTION_OF_STR * desiredIntensityMultiplier;
-		
+			AS::STR_S_L_calculateNewTroops(effectiveStrenght, desiredIntensityMultiplier);
+			
 		assert(isfinite(newTroops));
 
 		newTroops = std::ceil(newTroops);
@@ -178,14 +178,8 @@ namespace AS{
 		//This is the funding necessary to raise these troops:
 		action_ptr->details.processingAux = AS::STR_S_L_necessaryFunding(newTroops);
 
-		//And now for the preparation time (which scales with the 2/3 power of troops):
-		double effectiveNewTroopsForTiming = std::cbrt(newTroops / ACT_REF_STRENGHT);
-		effectiveNewTroopsForTiming *= effectiveNewTroopsForTiming;
-
-		double preparationTime = 
-			ACT_STR_S_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR * effectiveNewTroopsForTiming;
-
-		action_ptr->phaseTiming.total = (uint32_t)preparationTime;
+		//And now for the preparation time:
+		action_ptr->phaseTiming.total = AS::STR_S_L_prepTime(newTroops);
 	}
 
 	//Resources will be invested to raise income
@@ -210,8 +204,7 @@ namespace AS{
 		float income = agentParams_ptr->resources.updateRate;
 		float effectiveIncome = std::max(income, ACT_RES_S_L_REF_SMALL_INCOME);
 
-		float raise = 
-			effectiveIncome * ACT_RES_S_L_REF_PROPORTION_OF_INCOME * desiredIntensityMultiplier;
+		float raise = AS::RES_S_L_calculateRaise(effectiveIncome, desiredIntensityMultiplier);
 
 		assert(isfinite(raise));
 		assert(raise > 0);
@@ -221,16 +214,8 @@ namespace AS{
 		//This is the funding necessary to raise the income:
 		action_ptr->details.processingAux = AS::RES_S_L_necessaryFunding(raise);
 
-		//And now for the preparation time (which scales with the 2/3 power of troops):
-		double effectiveRaiseForTiming = std::cbrt(raise / ACT_REF_INCOME);
-		effectiveRaiseForTiming *= effectiveRaiseForTiming;
-
-		assert(effectiveRaiseForTiming > 0);
-		
-		double preparationTime = 
-			ACT_RES_S_L_BASE_PREP_TENTHS_OF_MS_PER_REF_INCOME * effectiveRaiseForTiming;
-
-		action_ptr->phaseTiming.total = (uint32_t)preparationTime;
+		//And now for the preparation time:
+		action_ptr->phaseTiming.total = AS::RES_S_L_prepTime(raise);
 	}
 
 	//This decides the attack strenght and sets action intensity accordingly.

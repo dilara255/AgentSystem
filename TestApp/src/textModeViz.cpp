@@ -658,7 +658,12 @@ int TV::textModeVisualizationEntry() {
 	
 	bool result = stopNetworkAndCheckForErrors();	
 
-	printf("\n%d, %d, %d, %d\n\n", g_nothing, g_avoid, g_notSure, g_good);
+	if(result) { LOG_INFO("Network stopped. No errors founds."); }
+	else { LOG_ERROR("Some errors were found"); }
+
+	printf("\nDecisions: nothing: %d, play safe: %d, no time to think: %d, sounds good: %d\n\n", 
+												g_nothing, g_avoid, g_notSure, g_good);
+	GETCHAR_PAUSE;
 
 	LOG_DEBUG("Saving results...\n",1);
 	result &= AS::saveNetworkToFile(networkFilenameSaveName, false, false, true);

@@ -20,7 +20,7 @@ namespace AS::Decisions {
 		{{                         //STRENGHT  
 			//SELF:
 			{-0.8f, 1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-			  0.6f, 0.8f, 0.6f, -0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			  0.6f, 0.8f, 0.6f, -0.25f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 			//IMMEDIATE:
 			{tank, tank, tank, tank, tank, tank, tank, tank,                 
 			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
@@ -30,8 +30,8 @@ namespace AS::Decisions {
 		}},
 		{{                         //RESOURCES 
 			//SELF:
-			{1.0f, -0.6f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
-			 0.4f, 0.0f, -0.4f, 0.45f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{1.0f, -0.8f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,                     
+			 0.4f, 0.0f, -0.4f, 0.35f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
 			//IMMEDIATE:
 			{tank, tank, tank, tank, tank, tank, tank, tank,                 
 			 tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank, tank},
