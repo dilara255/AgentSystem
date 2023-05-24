@@ -12,6 +12,32 @@
 
 #include "systems/warningsAndErrorsCounter.hpp"
 
+uint32_t AS::basePrepTime(float base, float scaleFactor) {
+	
+	return (uint32_t)std::round(base * std::sqrt(std::sqrt(scaleFactor)));
+}
+
+float AS::STR_S_L_calculateNewTroops(float effectiveStrenght, float desirabilityMultiplier) {
+
+	return effectiveStrenght * ACT_STR_S_L_REF_PROPORTION_OF_STR * desirabilityMultiplier;
+}
+
+float AS::STR_S_L_necessaryFunding(float intensity) {
+
+	return (intensity / ACT_REF_STRENGHT) * ACT_STR_S_L_COST_PER_REF_STR;
+}
+
+uint32_t AS::STR_S_L_prepTime(float newTroops) {
+
+	return AS::basePrepTime(ACT_STR_S_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR,
+				                           (newTroops / ACT_REF_STRENGHT) );
+}
+
+float AS::RES_S_L_calculateRaise(float effectiveIncome, float desirabilityMultiplier) {
+	float baseRaise = std::cbrt(effectiveIncome);
+	return baseRaise * ACT_RES_S_L_REF_PROPORTION_OF_INCOME_TO_RAISE * desirabilityMultiplier;
+}
+
 float AS::RES_S_L_necessaryFunding(float intensity) {
 	
 	float relativeChange = (intensity / ACT_REF_INCOME);
@@ -23,17 +49,16 @@ float AS::RES_S_L_necessaryFunding(float intensity) {
 			* (1 + (ACT_RES_S_L_COST_RELATIVE_WEIGHT_SQUARE_TERM * relativeChange) );
 }
 
-float AS::STR_S_L_necessaryFunding(float intensity) {
+uint32_t AS::RES_S_L_prepTime(float raise) {
 
-	return (intensity / ACT_REF_STRENGHT) * ACT_STR_S_L_COST_PER_REF_STR;
+	return AS::basePrepTime(ACT_RES_S_L_BASE_PREP_TENTHS_OF_MS_PER_REF_INCOME,
+				                                    (raise / ACT_REF_INCOME) );
 }
 
 uint32_t AS::ATT_I_L_prepTime(float intensity) {
 
-	double effectiveAttackSize = sqrt(intensity / ACT_REF_STRENGHT);
-
-	return (uint32_t)std::round( effectiveAttackSize 
-		                         * (double)ACT_ATT_I_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR );	
+	return AS::basePrepTime(ACT_ATT_I_L_BASE_PREP_TENTHS_OF_MS_PER_REF_STR, 
+		                                   (intensity / ACT_REF_STRENGHT) );
 }
 
 uint32_t AS::ATT_I_L_attackTime(float intensity) {

@@ -601,7 +601,7 @@ namespace AS {
 		if (ratioToGain < 1.0f) {
 			//We use floor to make sure this ends, even if with *slightly* less troops
 			action_ptr->phaseTiming.total +=
-					(uint32_t)floor((1 - (double)ratioToGain)*tickTenthsOfMs);
+					(uint32_t)floor( (1 - (double)ratioToGain) * tickTenthsOfMs);
 		}
 		
 		return defaultTick(tickTenthsOfMs, action_ptr);
@@ -711,7 +711,7 @@ namespace AS {
 		if (ratioToGain < 1.0f) {
 			//We use floor to make sure this ends, even if with *slightly* less troops
 			action_ptr->phaseTiming.total +=
-					(uint32_t)floor((1 - (double)ratioToGain)*tickTenthsOfMs);
+					(uint32_t)floor( (1 - (double)ratioToGain) * tickTenthsOfMs);
 		}
 
 		assert(isfinite(*resources_ptr));

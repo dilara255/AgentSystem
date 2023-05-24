@@ -44,8 +44,18 @@ namespace AS {
 	//These are helper functionality for specific action variations.
 	//Their main goal is to help maintain parity between action processing and pre processing.
 	
+	//Times in Tehnths of MS
+	uint32_t basePrepTime(float base, float scaleFactor);
+
+	float STR_S_L_calculateNewTroops(float effectiveStrenght, float desirabilityMultiplier);
 	float STR_S_L_necessaryFunding(float intensity);
+	//Times in Tehnths of MS
+	uint32_t STR_S_L_prepTime(float newTroops);
+
+	float RES_S_L_calculateRaise(float effectiveIncome, float desirabilityMultiplier);
 	float RES_S_L_necessaryFunding(float intensity);
+	//Times in Tehnths of MS
+	uint32_t RES_S_L_prepTime(float raise);
 
 	//Times in Tehnths of MS
 	uint32_t ATT_I_L_prepTime(float intensity);
